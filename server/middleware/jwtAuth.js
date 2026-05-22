@@ -18,7 +18,7 @@ async function jwtAuth (req, res, next) {
   try {
     const payload = jwt.verify(token, SECRET)
     // Verify user still exists — catches deleted restaurant sessions immediately
-    if (_sql) {
+    if (_sql && !payload.admin) {
       const rows = await _sql`SELECT id FROM bo_users WHERE id = ${payload.id} LIMIT 1`
       if (!rows.length) return res.status(401).json({ error: 'Session expired. Please sign in again.' })
     }
