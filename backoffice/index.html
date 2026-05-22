@@ -348,15 +348,22 @@ input:checked+.toggle-slider:before{transform:translateX(17px)}
 @keyframes skeleton-shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
 
 /* ─── CONFIGURATION ──────────────────────────────── */
-.cfg-layout{display:flex;min-height:calc(100vh - 56px);gap:0}
-.cfg-nav{width:190px;flex-shrink:0;border-right:1px solid var(--border);padding:10px 8px;background:var(--bg)}
-.cfg-nav-section{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.7px;color:var(--muted);padding:10px 10px 4px}
-.cfg-tab{display:flex;align-items:center;gap:9px;padding:8px 10px;border-radius:7px;font-size:13px;font-weight:500;color:var(--muted);cursor:pointer;transition:.12s;margin-bottom:1px;border:none;background:none;width:100%;text-align:left}
-.cfg-tab:hover{background:var(--hover);color:var(--text)}
-.cfg-tab.active{background:var(--primary-light,#eff6ff);color:var(--primary)}
-.cfg-tab svg{flex-shrink:0;opacity:.7}
-.cfg-tab.active svg{opacity:1}
-.cfg-content{flex:1;padding:24px;overflow-y:auto;max-width:860px}
+.cfg-layout{min-height:calc(100vh - 56px)}
+.cfg-content{padding:24px 28px;overflow-y:auto;max-width:960px}
+/* sidebar nav group */
+.nav-group-body{overflow:hidden;max-height:0;transition:max-height .22s ease}
+.nav-group.open .nav-group-body{max-height:700px}
+.nav-chev{margin-left:auto;flex-shrink:0;transition:transform .2s;opacity:.45}
+.nav-group.open .nav-chev{transform:rotate(90deg);opacity:.75}
+.nav-group-hdr{display:flex;align-items:center;gap:9px;padding:9px 10px;border-radius:8px;color:var(--sb-text);font-size:13px;font-weight:500;cursor:pointer;transition:.12s;margin-bottom:1px;user-select:none}
+.nav-group-hdr:hover{background:rgba(255,255,255,.06);color:#e2e8f0}
+.nav-group-hdr .ni-icon{opacity:.65}
+.nav-group.open .nav-group-hdr .ni-icon{opacity:1}
+.nav-sub{display:flex;align-items:center;gap:8px;padding:7px 10px 7px 28px;border-radius:7px;font-size:12.5px;font-weight:500;color:var(--sb-text);cursor:pointer;transition:.12s;margin-bottom:1px}
+.nav-sub:hover{background:rgba(255,255,255,.06);color:#e2e8f0}
+.nav-sub.active{background:var(--sb-active);color:var(--sb-active-text)}
+.nav-sub svg{flex-shrink:0;opacity:.65;width:14px;height:14px}
+.nav-sub.active svg{opacity:1}
 .cfg-section{display:none}.cfg-section.active{display:block}
 .cfg-card{background:#fff;border:1px solid var(--border);border-radius:12px;margin-bottom:20px;overflow:hidden}
 .cfg-card-hdr{padding:14px 18px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
@@ -405,6 +412,8 @@ input:checked+.toggle-slider:before{transform:translateX(17px)}
   .sb-logo-text,.nav-item span,.sb-section,.sb-user-name,.sb-user-role,.sb-user-label{display:none}
   .nav-item{justify-content:center;padding:10px}
   .sb-logo{justify-content:center;padding:16px 8px}
+  .nav-group-body,.nav-chev,.nav-group-hdr span{display:none}
+  .nav-group-hdr{justify-content:center;padding:10px}
   .kpi-grid{grid-template-columns:repeat(3,1fr)}
   .dash-row-2,.dash-row-3{grid-template-columns:1fr 1fr}
 }
@@ -703,9 +712,41 @@ input:checked+.toggle-slider:before{transform:translateX(17px)}
         <svg class="ni-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
         <span>Downloads</span>
       </div>
-      <div class="nav-item" id="nav-config" onclick="showView('config')" role="button" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' ')showView('config')">
-        <svg class="ni-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
-        <span>Configuration</span>
+      <div class="nav-group" id="navg-config">
+        <div class="nav-group-hdr" onclick="toggleNavGroup('config')" role="button" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' ')toggleNavGroup('config')">
+          <svg class="ni-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
+          <span>Configuration</span>
+          <svg class="nav-chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+        </div>
+        <div class="nav-group-body" id="navg-config-body">
+          <div class="nav-sub" id="navsub-brand" onclick="showConfigTab('brand')" role="button" tabindex="0">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="6"/><path d="M15.477 12.89L17 22l-5-3-5 3 1.523-9.11"/></svg><span>Brand</span>
+          </div>
+          <div class="nav-sub" id="navsub-outlet" onclick="showConfigTab('outlet')" role="button" tabindex="0">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg><span>Outlet</span>
+          </div>
+          <div class="nav-sub" id="navsub-tables" onclick="showConfigTab('tables')" role="button" tabindex="0">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg><span>Tables</span>
+          </div>
+          <div class="nav-sub" id="navsub-order-types" onclick="showConfigTab('order-types')" role="button" tabindex="0">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg><span>Order Types</span>
+          </div>
+          <div class="nav-sub" id="navsub-payment" onclick="showConfigTab('payment')" role="button" tabindex="0">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg><span>Payment Methods</span>
+          </div>
+          <div class="nav-sub" id="navsub-delivery" onclick="showConfigTab('delivery')" role="button" tabindex="0">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="3" width="15" height="13"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg><span>Delivery Partners</span>
+          </div>
+          <div class="nav-sub" id="navsub-kitchens" onclick="showConfigTab('kitchens')" role="button" tabindex="0">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2v20M18 2v20M3 12h18M3 6h18M3 18h18"/></svg><span>Kitchens</span>
+          </div>
+          <div class="nav-sub" id="navsub-designations" onclick="showConfigTab('designations')" role="button" tabindex="0">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg><span>Designations</span>
+          </div>
+          <div class="nav-sub" id="navsub-tax" onclick="showConfigTab('tax')" role="button" tabindex="0">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="19" y1="5" x2="5" y2="19"/><circle cx="6.5" cy="6.5" r="2.5"/><circle cx="17.5" cy="17.5" r="2.5"/></svg><span>Tax Groups</span>
+          </div>
+        </div>
       </div>
       <div class="nav-item" id="nav-bo-settings" onclick="showView('bo-settings')" role="button" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' ')showView('bo-settings')">
         <svg class="ni-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
@@ -1550,43 +1591,6 @@ input:checked+.toggle-slider:before{transform:translateX(17px)}
 <!-- ═══ CONFIGURATION VIEW ═══════════════════════════════════════════════════ -->
 <div id="v-config" class="view">
   <div class="cfg-layout">
-
-    <!-- Sub-nav -->
-    <div class="cfg-nav">
-      <div class="cfg-nav-section">Restaurant</div>
-      <button class="cfg-tab active" id="cfgtab-brand"         onclick="showCfgTab('brand')">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="6"/><path d="M15.477 12.89L17 22l-5-3-5 3 1.523-9.11"/></svg> Brand
-      </button>
-      <button class="cfg-tab" id="cfgtab-outlet"        onclick="showCfgTab('outlet')">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg> Outlet
-      </button>
-      <button class="cfg-tab" id="cfgtab-tables"        onclick="showCfgTab('tables')">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg> Tables
-      </button>
-      <div class="cfg-nav-section">Operations</div>
-      <button class="cfg-tab" id="cfgtab-order-types"   onclick="showCfgTab('order-types')">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg> Order Types
-      </button>
-      <button class="cfg-tab" id="cfgtab-payment"       onclick="showCfgTab('payment')">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg> Payment Methods
-      </button>
-      <button class="cfg-tab" id="cfgtab-delivery"      onclick="showCfgTab('delivery')">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="3" width="15" height="13"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg> Delivery Partners
-      </button>
-      <button class="cfg-tab" id="cfgtab-kitchens"      onclick="showCfgTab('kitchens')">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2v20M18 2v20M3 12h18M3 6h18M3 18h18"/></svg> Kitchens
-      </button>
-      <div class="cfg-nav-section">Staff</div>
-      <button class="cfg-tab" id="cfgtab-designations"  onclick="showCfgTab('designations')">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg> Designations
-      </button>
-      <div class="cfg-nav-section">Tax</div>
-      <button class="cfg-tab" id="cfgtab-tax"           onclick="showCfgTab('tax')">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="19" y1="5" x2="5" y2="19"/><circle cx="6.5" cy="6.5" r="2.5"/><circle cx="17.5" cy="17.5" r="2.5"/></svg> Tax Groups
-      </button>
-    </div>
-
-    <!-- Content -->
     <div class="cfg-content">
 
       <!-- BRAND -->
@@ -2421,8 +2425,10 @@ async function saveBOSettings () {
 function showView (id) {
   document.querySelectorAll('.view').forEach(v => v.classList.remove('active'))
   document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'))
+  document.querySelectorAll('.nav-sub').forEach(s => s.classList.remove('active'))
   document.getElementById('v-' + id).classList.add('active')
-  document.getElementById('nav-' + id).classList.add('active')
+  const navEl = document.getElementById('nav-' + id)
+  if (navEl) navEl.classList.add('active')
   if (id === 'menu')      loadMenu()
   if (id === 'orders')    { setOrdersDate('today'); loadOrders() }
   if (id === 'staff')     loadStaff()
@@ -2430,9 +2436,24 @@ function showView (id) {
   if (id === 'reports')   { loadReport(); loadExpReport(); }
   if (id === 'audit')     loadAuditLog()
   if (id === 'downloads') loadDownloadsPage()
-  if (id === 'config')    cfgLoadBrand()
+  if (id === 'config')  { document.getElementById('navg-config').classList.add('open'); showCfgTab('brand') }
   if (id === 'live')      { loadLiveOrders(); startLiveRefresh() }
   else                      stopLiveRefresh()
+}
+
+function toggleNavGroup (id) {
+  if (window.innerWidth <= 1100) { showConfigTab('brand'); return }
+  document.getElementById('navg-' + id).classList.toggle('open')
+}
+
+function showConfigTab (tab) {
+  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'))
+  document.getElementById('v-config').classList.add('active')
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'))
+  document.getElementById('navg-config').classList.add('open')
+  showCfgTab(tab)
+  if (document.getElementById('v-config').getBoundingClientRect)
+    window.scrollTo(0, 0)
 }
 
 // ─── DASHBOARD ───────────────────────────────────────────────────
@@ -3973,12 +3994,13 @@ const PERM_LABELS = {
 }
 
 function showCfgTab (tab) {
-  document.querySelectorAll('.cfg-tab').forEach(t => t.classList.remove('active'))
   document.querySelectorAll('.cfg-section').forEach(s => s.classList.remove('active'))
-  const btn = document.getElementById('cfgtab-' + tab)
   const sec = document.getElementById('cfg-' + tab)
-  if (btn) btn.classList.add('active')
   if (sec) sec.classList.add('active')
+  // sync sidebar sub-item
+  document.querySelectorAll('.nav-sub').forEach(s => s.classList.remove('active'))
+  const sub = document.getElementById('navsub-' + tab)
+  if (sub) sub.classList.add('active')
   // Load data for the tab
   const loaders = {
     brand: cfgLoadBrand, outlet: cfgLoadOutlet,
