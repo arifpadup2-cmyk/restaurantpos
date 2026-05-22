@@ -18,7 +18,7 @@ module.exports = function authRouter (sql) {
       return res.status(400).json({ error: 'username: letters, numbers and _ only' })
 
     try {
-      const existing = await sql`SELECT id FROM bo_users WHERE username = ${username.toLowerCase()}`
+      const existing = await sql`SELECT id FROM bo_users WHERE LOWER(username) = ${username.toLowerCase()}`
       if (existing.length > 0)
         return res.status(409).json({ error: 'username already exists' })
 
@@ -40,7 +40,7 @@ module.exports = function authRouter (sql) {
       return res.status(400).json({ error: 'username and password required' })
 
     try {
-      const rows = await sql`SELECT * FROM bo_users WHERE username = ${username.toLowerCase()}`
+      const rows = await sql`SELECT * FROM bo_users WHERE LOWER(username) = ${username.toLowerCase()}`
       if (rows.length === 0)
         return res.status(401).json({ error: 'Invalid username or password' })
 
