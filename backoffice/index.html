@@ -1573,7 +1573,7 @@ async function initGoogleAuth () {
 
 async function handleGoogleCredential (response) {
   const errEl = document.getElementById('auth-error')
-  if (errEl) errEl.textContent = ''
+  if (errEl) { errEl.textContent = ''; errEl.style.display = 'none' }
   try {
     const r    = await fetch(API_BASE + '/auth/google', {
       method: 'POST',
@@ -1587,7 +1587,7 @@ async function handleGoogleCredential (response) {
     currentUser = data.user
     showApp()
   } catch (e) {
-    if (errEl) errEl.textContent = e.message || 'Google sign-in failed'
+    if (errEl) { errEl.textContent = e.message || 'Google sign-in failed'; errEl.style.display = 'block' }
   }
 }
 
@@ -1604,8 +1604,8 @@ async function login () {
   const pass     = document.getElementById('auth-password').value
   const remember = document.getElementById('bo-remember')?.checked
   const errEl    = document.getElementById('auth-error')
-  errEl.textContent = ''
-  if (!username || !pass) { errEl.textContent = 'Enter username and password.'; return }
+  errEl.textContent = ''; errEl.style.display = 'none'
+  if (!username || !pass) { errEl.textContent = 'Enter username and password.'; errEl.style.display = 'block'; return }
   try {
     const data = await apiFetch('POST', '/auth/login', { username, password: pass })
     token = data.token
@@ -1615,7 +1615,7 @@ async function login () {
     currentUser = data.user
     showApp()
   } catch (e) {
-    errEl.textContent = e.message || 'Login failed'
+    errEl.textContent = e.message || 'Login failed'; errEl.style.display = 'block'
   }
 }
 
@@ -1631,7 +1631,8 @@ async function register () {
     currentUser = data.user
     showApp()
   } catch (e) {
-    document.getElementById('auth-error').textContent = e.message
+    const el = document.getElementById('auth-error')
+    el.textContent = e.message; el.style.display = 'block'
   }
 }
 
