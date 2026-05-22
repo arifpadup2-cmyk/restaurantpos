@@ -1,0 +1,59 @@
+{
+  "name": "restaurant-pos",
+  "version": "2.1.0",
+  "description": "Restaurant POS System - Offline Windows App",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "build": "electron-builder --win",
+    "setup-pg": "node scripts/setup-pg.js",
+    "setup-pg:verify": "node scripts/setup-pg.js --verify",
+    "migrate": "node scripts/migrate.js",
+    "migrate:status": "node scripts/migrate.js --status",
+    "migrate:down": "node scripts/migrate.js --down"
+  },
+  "dependencies": {
+    "dotenv": "^16.6.1",
+    "electron-updater": "^6.3.9",
+    "pg": "^8.20.0",
+    "postgres": "^3.4.9",
+    "sql.js": "^1.12.0"
+  },
+  "devDependencies": {
+    "electron": "^31.0.0",
+    "electron-builder": "^24.13.3"
+  },
+  "build": {
+    "appId": "com.restaurant.pos",
+    "productName": "Restaurant POS",
+    "directories": {
+      "output": "dist"
+    },
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        }
+      ]
+    },
+    "files": [
+      "**/*",
+      "!dist/**",
+      "!node_modules/.cache/**",
+      "!.env",
+      "!.env.*",
+      "!*.md"
+    ],
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true
+    },
+    "publish": {
+      "provider": "generic",
+      "url": "http://localhost:3001/updates/"
+    }
+  }
+}

@@ -1,0 +1,403 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
+<link rel="manifest" href="/kds/manifest.json">
+<title>Kitchen Display</title>
+<style>
+:root{
+  --bg:#0f172a;--card:#1e293b;--card2:#293548;--border:#334155;
+  --text:#f1f5f9;--muted:#94a3b8;--primary:#f97316;
+  --success:#22c55e;--danger:#ef4444;--warning:#f59e0b;--info:#3b82f6;
+  --yellow-urg:#fbbf24;--red-urg:#ef4444;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--text);
+  min-height:100dvh;display:flex;flex-direction:column}
+
+/* ── HEADER ── */
+.kds-header{background:var(--card);border-bottom:2px solid var(--border);
+  display:flex;align-items:center;padding:0 20px;height:56px;gap:16px;flex-shrink:0}
+.kds-logo{font-size:20px;font-weight:800;color:var(--primary);display:flex;align-items:center;gap:8px}
+.kds-title{font-size:14px;color:var(--muted)}
+.conn-indicator{display:flex;align-items:center;gap:6px;margin-left:auto;font-size:12px;color:var(--muted)}
+.conn-dot{width:10px;height:10px;border-radius:50%;background:var(--danger);transition:.3s}
+.conn-dot.connected{background:var(--success)}
+.conn-dot.reconnecting{background:var(--warning);animation:pulse 1s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+.kds-clock{font-size:14px;font-weight:700}
+.kds-count{background:var(--card2);padding:4px 12px;border-radius:20px;font-size:13px;font-weight:700;border:1px solid var(--border)}
+
+/* ── RECONNECT BANNER ── */
+.reconn-bar{background:var(--warning);color:#000;text-align:center;
+  padding:8px;font-size:13px;font-weight:700;display:none;flex-shrink:0}
+.reconn-bar.show{display:block}
+
+/* ── ORDERS GRID ── */
+.orders-area{flex:1;padding:16px;overflow-y:auto;display:flex;flex-direction:column;gap:0}
+.orders-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:14px;align-items:start}
+.empty-kds{display:flex;flex-direction:column;align-items:center;justify-content:center;
+  flex:1;gap:16px;color:var(--muted);padding:40px}
+.empty-kds-icon{font-size:64px;opacity:.3}
+.empty-kds-text{font-size:18px;font-weight:700}
+
+/* ── ORDER CARD ── */
+.order-card{background:var(--card);border-radius:14px;border:2px solid var(--border);
+  overflow:hidden;transition:border-color .3s,background .3s}
+.order-card.urgent-yellow{border-color:var(--yellow-urg);background:rgba(251,191,36,.06)}
+.order-card.urgent-red{border-color:var(--red-urg);background:rgba(239,68,68,.08);animation:redpulse 2s infinite}
+@keyframes redpulse{0%,100%{background:rgba(239,68,68,.08)}50%{background:rgba(239,68,68,.15)}}
+.order-card.done-all{border-color:var(--success);background:rgba(34,197,94,.06)}
+
+.card-header{background:var(--card2);padding:12px 14px;display:flex;align-items:center;gap:10px}
+.card-order-num{font-size:18px;font-weight:800}
+.card-type-badge{padding:3px 10px;border-radius:10px;font-size:11px;font-weight:800;text-transform:uppercase}
+.badge-dine{background:rgba(59,130,246,.2);color:var(--info)}
+.badge-takeaway{background:rgba(249,115,22,.2);color:var(--primary)}
+.badge-delivery{background:rgba(34,197,94,.2);color:var(--success)}
+.badge-online{background:rgba(168,85,247,.2);color:#a855f7}
+.card-time{margin-left:auto;font-size:12px;color:var(--muted);font-weight:600}
+.card-timer{font-size:13px;font-weight:800;padding:3px 10px;border-radius:8px;background:var(--border)}
+.card-timer.yellow{background:var(--yellow-urg);color:#000}
+.card-timer.red{background:var(--red-urg);color:#fff}
+
+.card-info{padding:8px 14px 0;display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.card-table{font-size:14px;font-weight:700;color:var(--primary)}
+.card-customer{font-size:12px;color:var(--muted)}
+
+.card-items{padding:10px 14px}
+.order-item{display:flex;align-items:center;gap:10px;padding:8px 0;
+  border-bottom:1px solid var(--border)}
+.order-item:last-child{border-bottom:none}
+.item-qty{font-size:18px;font-weight:800;min-width:28px;text-align:center}
+.item-name{flex:1;font-size:14px;font-weight:700}
+.item-notes{font-size:11px;color:var(--primary);margin-top:2px;font-style:italic}
+.item-done-btn{padding:6px 14px;border-radius:8px;font-size:12px;font-weight:700;
+  background:var(--card2);border:1.5px solid var(--border);cursor:pointer;transition:.15s;white-space:nowrap}
+.item-done-btn:hover{background:var(--success);border-color:var(--success);color:#fff}
+.item-done-btn.done{background:rgba(34,197,94,.15);border-color:var(--success);color:var(--success)}
+.item-done-btn.done:hover{background:var(--card2);border-color:var(--border);color:var(--text)}
+.order-item.item-done .item-name{text-decoration:line-through;opacity:.5}
+.order-item.item-done .item-qty{opacity:.4}
+
+.card-footer{padding:10px 14px;border-top:1px solid var(--border);display:flex;gap:8px}
+.btn-all-done{flex:1;padding:10px;border-radius:10px;background:var(--success);
+  color:#fff;font-size:14px;font-weight:700;cursor:pointer;transition:.15s;border:none}
+.btn-all-done:hover{filter:brightness(1.1)}
+.btn-all-done:disabled{background:var(--card2);color:var(--muted);cursor:not-allowed}
+
+/* ── FILTER TABS ── */
+.filter-bar{display:flex;gap:8px;padding:12px 16px 0;flex-shrink:0;overflow-x:auto}
+.filter-bar::-webkit-scrollbar{display:none}
+.filter-tab{padding:6px 16px;border-radius:20px;background:var(--card);
+  border:1.5px solid var(--border);font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap;transition:.15s}
+.filter-tab.active{background:var(--primary);border-color:var(--primary);color:#fff}
+</style>
+</head>
+<body>
+
+<div class="kds-header">
+  <div class="kds-logo">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="26" height="26"><path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 002-2V2"/><path d="M7 2v20"/><path d="M21 15V2a5 5 0 00-5 5v6c0 1.1.9 2 2 2h3zm0 0v7"/></svg>
+    Kitchen Display
+  </div>
+  <span class="kds-title" id="kds-date"></span>
+  <span class="kds-count" id="kds-count">0 orders</span>
+  <div class="conn-indicator">
+    <div class="conn-dot" id="conn-dot"></div>
+    <span id="conn-label">Connecting…</span>
+  </div>
+  <span class="kds-clock" id="kds-clock"></span>
+</div>
+
+<div class="reconn-bar" id="reconn-bar">⚠ Lost connection — attempting to reconnect…</div>
+
+<div class="filter-bar">
+  <button class="filter-tab active" onclick="setFilter('all',this)">All</button>
+  <button class="filter-tab" onclick="setFilter('dine-in',this)">Dine In</button>
+  <button class="filter-tab" onclick="setFilter('takeaway',this)">Takeaway</button>
+  <button class="filter-tab" onclick="setFilter('delivery',this)">Delivery</button>
+  <button class="filter-tab" onclick="setFilter('online',this)">Online</button>
+</div>
+
+<div class="orders-area">
+  <div class="orders-grid" id="orders-grid"></div>
+  <div class="empty-kds" id="empty-kds" style="display:none">
+    <div class="empty-kds-icon">🍳</div>
+    <div class="empty-kds-text">No active orders</div>
+  </div>
+</div>
+
+<script>
+const BASE = window.location.origin;
+let orders    = [];
+let filterType = 'all';
+let socket    = null;
+let reconnTimer = null;
+let YELLOW_MIN = 10; // minutes before yellow
+let RED_MIN    = 20; // minutes before red
+
+// ── CLOCK ─────────────────────────────────────────────────────────────────────
+function updateClock() {
+  const now = new Date();
+  document.getElementById('kds-clock').textContent =
+    now.toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
+}
+document.getElementById('kds-date').textContent =
+  new Date().toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric'});
+setInterval(updateClock, 1000); updateClock();
+setInterval(updateTimers, 10000); // refresh timers every 10s
+
+// ── FETCH ORDERS ──────────────────────────────────────────────────────────────
+async function fetchOrders() {
+  try {
+    const data = await fetch(BASE + '/kitchen/orders').then(r=>r.json());
+    orders = data.orders || [];
+    renderOrders();
+  } catch { /* will retry via socket reconnect */ }
+}
+
+// ── SOCKET.IO ─────────────────────────────────────────────────────────────────
+function connect() {
+  if (typeof io === 'undefined') {
+    setConnected(false);
+    setTimeout(connect, 5000);
+    return;
+  }
+  socket = io(BASE, { query:{ area:'kitchen' }, transports:['websocket'] });
+
+  socket.on('connect', () => {
+    setConnected(true);
+    clearTimeout(reconnTimer);
+    fetchOrders();
+  });
+
+  socket.on('disconnect', () => {
+    setConnected(false);
+    scheduleReconnect();
+  });
+
+  socket.on('connect_error', () => {
+    setConnected(false);
+    scheduleReconnect();
+  });
+
+  socket.on('order:created', data => {
+    if (!orders.find(o => o.id === data.orderId)) {
+      // Add new order with items from payload
+      orders.unshift({
+        id: data.orderId, order_number: data.orderNumber,
+        order_type: data.orderType, table_name: data.tableName||null,
+        customer_name: data.cashierName||null, status:'active',
+        created_at: data.createdAt,
+        items: (data.items||[]).map((i,idx) => ({
+          id: `${data.orderId}-${idx}`, item_name: i.item_name||i.name,
+          quantity: i.quantity||i.qty||1, notes: i.notes||null, done: false,
+        })),
+      });
+      renderOrders();
+      flashNewOrder();
+    }
+  });
+
+  socket.on('order:updated', data => {
+    const order = orders.find(o => o.id === data.orderId);
+    if (order && data.items) {
+      order.items = data.items.map((i,idx) => ({
+        id: `${data.orderId}-${idx}`, item_name: i.item_name||i.name,
+        quantity: i.quantity||i.qty||1, notes: i.notes||null, done: false,
+      }));
+      renderOrders();
+    }
+  });
+
+  socket.on('order:paid', data => {
+    orders = orders.filter(o => o.id !== data.orderId);
+    renderOrders();
+  });
+
+  socket.on('kitchen:item_done', data => {
+    const order = orders.find(o => o.id === data.orderId);
+    if (order) {
+      const item = order.items.find(i => i.id === data.itemId);
+      if (item) { item.done = data.done !== false; renderOrders(); }
+    }
+  });
+
+  socket.on('order:done', data => {
+    const order = orders.find(o => o.id === data.orderId);
+    if (order) { order.items.forEach(i => i.done = true); renderOrders(); }
+  });
+
+  socket.on('print:kot', data => {
+    // This KDS screen can act as print station — show alert for now
+    // In production, wire to a connected printer
+    console.log('KOT print request:', data);
+  });
+}
+
+function scheduleReconnect() {
+  clearTimeout(reconnTimer);
+  reconnTimer = setTimeout(() => { socket?.connect(); }, 3000);
+}
+
+function setConnected(ok) {
+  document.getElementById('conn-dot').className   = 'conn-dot' + (ok ? ' connected' : '');
+  document.getElementById('conn-label').textContent = ok ? 'Live' : 'Offline';
+  document.getElementById('reconn-bar').classList.toggle('show', !ok);
+}
+
+// ── FILTER ────────────────────────────────────────────────────────────────────
+function setFilter(type, btn) {
+  filterType = type;
+  document.querySelectorAll('.filter-tab').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  renderOrders();
+}
+
+// ── RENDER ────────────────────────────────────────────────────────────────────
+function renderOrders() {
+  const filtered = filterType === 'all'
+    ? orders : orders.filter(o => o.order_type === filterType);
+
+  document.getElementById('kds-count').textContent =
+    `${filtered.length} order${filtered.length!==1?'s':''}`;
+
+  const grid  = document.getElementById('orders-grid');
+  const empty = document.getElementById('empty-kds');
+
+  if (!filtered.length) {
+    grid.innerHTML = '';
+    empty.style.display = 'flex';
+    return;
+  }
+  empty.style.display = 'none';
+  grid.innerHTML = filtered.map(o => renderCard(o)).join('');
+}
+
+function renderCard(o) {
+  const ageMs    = Date.now() - parseInt(o.created_at);
+  const ageMin   = ageMs / 60000;
+  const allDone  = o.items.length > 0 && o.items.every(i => i.done);
+  const urgClass = allDone ? 'done-all' : ageMin >= RED_MIN ? 'urgent-red' : ageMin >= YELLOW_MIN ? 'urgent-yellow' : '';
+  const timerCls = ageMin >= RED_MIN ? 'red' : ageMin >= YELLOW_MIN ? 'yellow' : '';
+
+  const typeBadge = {
+    'dine-in':  'badge-dine',
+    'takeaway': 'badge-takeaway',
+    'delivery': 'badge-delivery',
+    'online':   'badge-online',
+  }[o.order_type] || 'badge-dine';
+
+  const items = (o.items||[]).map(item => `
+    <div class="order-item${item.done?' item-done':''}">
+      <div class="item-qty">${item.quantity}</div>
+      <div class="cart-item-info">
+        <div class="item-name">${esc(item.item_name)}</div>
+        ${item.notes ? `<div class="item-notes">${esc(item.notes)}</div>` : ''}
+      </div>
+      <button class="item-done-btn${item.done?' done':''}"
+        onclick="markItemDone('${o.id}','${item.id}',${!item.done})">
+        ${item.done ? '↩ Undo' : '✓ Done'}
+      </button>
+    </div>`).join('');
+
+  return `<div class="order-card ${urgClass}" id="card-${o.id}">
+    <div class="card-header">
+      <span class="card-order-num">#${o.order_number}</span>
+      <span class="card-type-badge ${typeBadge}">${o.order_type.replace('-',' ')}</span>
+      <span class="card-timer ${timerCls}" id="timer-${o.id}">${formatAge(ageMin)}</span>
+    </div>
+    ${o.table_name || o.customer_name ? `
+    <div class="card-info">
+      ${o.table_name ? `<span class="card-table">Table: ${esc(o.table_name)}</span>` : ''}
+      ${o.customer_name ? `<span class="card-customer">${esc(o.customer_name)}</span>` : ''}
+    </div>` : ''}
+    <div class="card-items">${items}</div>
+    <div class="card-footer">
+      <button class="btn-all-done" onclick="markOrderDone('${o.id}')"
+        ${allDone ? 'disabled' : ''}>
+        ${allDone ? '✓ All Done' : '✓ All Done'}
+      </button>
+    </div>
+  </div>`;
+}
+
+function formatAge(min) {
+  if (min < 1)  return '< 1m';
+  if (min < 60) return `${Math.floor(min)}m`;
+  return `${Math.floor(min/60)}h ${Math.floor(min%60)}m`;
+}
+
+function updateTimers() {
+  orders.forEach(o => {
+    const el = document.getElementById(`timer-${o.id}`);
+    if (!el) return;
+    const ageMin = (Date.now() - parseInt(o.created_at)) / 60000;
+    el.textContent = formatAge(ageMin);
+    el.className   = `card-timer ${ageMin >= RED_MIN ? 'red' : ageMin >= YELLOW_MIN ? 'yellow' : ''}`;
+    const card = document.getElementById(`card-${o.id}`);
+    if (card) {
+      const allDone = o.items.every(i=>i.done);
+      card.className = `order-card ${allDone?'done-all':ageMin>=RED_MIN?'urgent-red':ageMin>=YELLOW_MIN?'urgent-yellow':''}`;
+    }
+  });
+}
+
+// ── ACTIONS ───────────────────────────────────────────────────────────────────
+async function markItemDone(orderId, itemId, done) {
+  const order = orders.find(o => o.id === orderId);
+  const item  = order?.items.find(i => i.id === itemId);
+  if (!item) return;
+  item.done = done;
+  renderOrders();
+  try {
+    await fetch(`${BASE}/kitchen/items/${itemId}/done`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ done }),
+    });
+  } catch {
+    item.done = !done; // revert on failure
+    renderOrders();
+  }
+}
+
+async function markOrderDone(orderId) {
+  const order = orders.find(o => o.id === orderId);
+  if (!order) return;
+  order.items.forEach(i => i.done = true);
+  renderOrders();
+  try {
+    await fetch(`${BASE}/kitchen/orders/${orderId}/done`, { method:'PATCH' });
+  } catch {
+    order.items.forEach(i => i.done = false);
+    renderOrders();
+  }
+}
+
+// ── NEW ORDER FLASH ───────────────────────────────────────────────────────────
+function flashNewOrder() {
+  document.body.style.outline = '4px solid var(--warning)';
+  setTimeout(() => { document.body.style.outline = ''; }, 800);
+  try { new Audio('data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAA==').play().catch(()=>{}); } catch {}
+}
+
+// ── UTILS ─────────────────────────────────────────────────────────────────────
+function esc(s) { return String(s||'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+
+// ── BOOT ──────────────────────────────────────────────────────────────────────
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('/kds/sw.js').catch(()=>{});
+}
+connect();
+// Periodic fallback refresh in case a socket event was missed
+setInterval(fetchOrders, 30000);
+</script>
+
+<script src="/socket.io/socket.io.js" onerror="console.warn('Socket.io not loaded — running in poll mode')"></script>
+</body>
+</html>

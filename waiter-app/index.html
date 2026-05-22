@@ -1,0 +1,729 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Waiter">
+<link rel="manifest" href="/waiter-app/manifest.json">
+<title>Waiter App</title>
+<style>
+:root{
+  --primary:#f97316;--primary-d:#ea6c00;--bg:#0f172a;--card:#1e293b;
+  --card2:#293548;--border:#334155;--text:#f1f5f9;--muted:#94a3b8;
+  --success:#22c55e;--danger:#ef4444;--warning:#f59e0b;
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--text);
+  height:100dvh;overflow:hidden;display:flex;flex-direction:column}
+button{cursor:pointer;border:none;font-family:inherit;outline:none;color:inherit}
+input,select,textarea{font-family:inherit;outline:none;color:inherit}
+
+/* ── SCREENS ── */
+.screen{display:none;flex-direction:column;height:100dvh;overflow:hidden}
+.screen.active{display:flex}
+
+/* ── LOGIN ── */
+#s-login{align-items:center;justify-content:center;padding:24px;gap:16px;
+  background:linear-gradient(160deg,#0f172a,#1e293b)}
+.login-logo{text-align:center}
+.login-logo h1{font-size:24px;font-weight:800;color:var(--primary);margin-top:8px}
+.login-logo p{color:var(--muted);font-size:13px;margin-top:4px}
+.cashier-grid{display:flex;flex-wrap:wrap;gap:10px;justify-content:center;max-width:400px;width:100%}
+.cashier-chip{background:var(--card);border:2px solid var(--border);border-radius:12px;
+  padding:14px 20px;font-size:14px;font-weight:700;transition:.15s;min-width:120px;text-align:center}
+.cashier-chip.selected{border-color:var(--primary);background:rgba(249,115,22,.15);color:var(--primary)}
+.pin-box{background:var(--card);border-radius:16px;padding:24px;width:100%;max-width:300px}
+.pin-dots{display:flex;justify-content:center;gap:12px;margin-bottom:20px}
+.pin-dot{width:16px;height:16px;border-radius:50%;border:2px solid var(--border);transition:.1s}
+.pin-dot.filled{background:var(--primary);border-color:var(--primary)}
+.pin-dot.error{background:var(--danger);border-color:var(--danger)}
+.pinpad{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.pp-btn{padding:18px;border-radius:10px;background:var(--card2);font-size:22px;
+  font-weight:700;transition:.1s;border:1px solid var(--border)}
+.pp-btn:active{background:var(--primary);color:#fff}
+.pin-error{color:var(--danger);font-size:12px;text-align:center;margin-top:8px;min-height:16px}
+.login-cashier-name{font-size:13px;color:var(--muted);text-align:center;font-weight:600}
+
+/* ── TOP BAR ── */
+.topbar{background:var(--card);display:flex;align-items:center;padding:0 16px;
+  height:54px;gap:12px;border-bottom:1px solid var(--border);flex-shrink:0}
+.topbar-title{font-size:16px;font-weight:700;flex:1}
+.topbar-sub{font-size:12px;color:var(--muted)}
+.btn-icon{width:40px;height:40px;border-radius:10px;background:var(--card2);
+  display:flex;align-items:center;justify-content:center;border:1px solid var(--border)}
+.btn-icon svg{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:2;
+  stroke-linecap:round;stroke-linejoin:round}
+
+/* ── BOTTOM NAV ── */
+.bottom-nav{display:flex;background:var(--card);border-top:1px solid var(--border);flex-shrink:0}
+.bnav-item{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  padding:10px 4px;gap:4px;font-size:10px;font-weight:600;color:var(--muted);cursor:pointer;transition:.15s}
+.bnav-item.active{color:var(--primary)}
+.bnav-item svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:2;
+  stroke-linecap:round;stroke-linejoin:round}
+.bnav-badge{position:absolute;top:6px;right:calc(50% - 18px);background:var(--danger);
+  color:#fff;font-size:9px;font-weight:700;padding:1px 5px;border-radius:8px;min-width:16px;text-align:center}
+
+/* ── TABLE MAP ── */
+#s-main{flex:1;overflow:hidden}
+.tab-content{display:none;flex:1;overflow-y:auto;padding:16px;gap:12px}
+.tab-content.active{display:flex;flex-direction:column}
+.table-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(90px,1fr));gap:10px}
+.table-card{aspect-ratio:1;border-radius:12px;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;gap:4px;border:2px solid var(--border);
+  background:var(--card);cursor:pointer;transition:.15s;font-weight:700;font-size:15px}
+.table-card.available{border-color:var(--success)}
+.table-card.occupied{border-color:var(--danger);background:rgba(239,68,68,.1)}
+.table-card.locked{border-color:var(--warning);background:rgba(245,158,11,.08)}
+.table-card svg{width:28px;height:28px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.table-status{font-size:10px;font-weight:600}
+.table-card.available .table-status{color:var(--success)}
+.table-card.occupied .table-status{color:var(--danger)}
+.table-card.locked .table-status{color:var(--warning)}
+
+/* ── MENU ── */
+.cat-tabs{display:flex;gap:8px;overflow-x:auto;padding-bottom:12px;flex-shrink:0}
+.cat-tabs::-webkit-scrollbar{display:none}
+.cat-tab{padding:8px 16px;border-radius:20px;background:var(--card);border:1.5px solid var(--border);
+  font-size:13px;font-weight:700;white-space:nowrap;cursor:pointer;transition:.15s}
+.cat-tab.active{background:var(--primary);border-color:var(--primary);color:#fff}
+.menu-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px}
+.menu-item{background:var(--card);border-radius:12px;padding:14px;cursor:pointer;
+  transition:.15s;border:1.5px solid var(--border)}
+.menu-item:active{border-color:var(--primary);background:rgba(249,115,22,.1)}
+.menu-item-name{font-size:14px;font-weight:700;margin-bottom:6px;line-height:1.2}
+.menu-item-price{font-size:13px;color:var(--primary);font-weight:700}
+
+/* ── CART ── */
+.cart-empty{text-align:center;padding:40px 20px;color:var(--muted)}
+.cart-item{background:var(--card);border-radius:12px;padding:14px;display:flex;
+  align-items:center;gap:12px;border:1px solid var(--border)}
+.cart-item-info{flex:1;min-width:0}
+.cart-item-name{font-size:14px;font-weight:700}
+.cart-item-price{font-size:12px;color:var(--muted);margin-top:2px}
+.cart-item-notes{font-size:11px;color:var(--primary);margin-top:2px;font-style:italic}
+.qty-ctrl{display:flex;align-items:center;gap:8px}
+.qty-btn{width:32px;height:32px;border-radius:8px;background:var(--card2);font-size:18px;
+  font-weight:700;display:flex;align-items:center;justify-content:center;border:1px solid var(--border)}
+.qty-btn:active{background:var(--primary)}
+.qty-num{font-size:16px;font-weight:700;min-width:20px;text-align:center}
+.cart-totals{background:var(--card);border-radius:12px;padding:16px;margin-top:4px}
+.cart-total-row{display:flex;justify-content:space-between;font-size:14px;margin-bottom:8px}
+.cart-total-row.grand{font-size:18px;font-weight:800;color:var(--primary);margin-top:8px;
+  padding-top:8px;border-top:1px solid var(--border)}
+.btn-submit{width:100%;padding:16px;background:var(--primary);border-radius:12px;
+  font-size:16px;font-weight:800;color:#fff;margin-top:8px;transition:.15s}
+.btn-submit:active{background:var(--primary-d)}
+.btn-submit:disabled{background:var(--card2);color:var(--muted);cursor:not-allowed}
+
+/* ── MY ORDERS ── */
+.order-card{background:var(--card);border-radius:12px;padding:14px;border:1px solid var(--border);display:flex;gap:12px;align-items:flex-start}
+.order-badge{background:rgba(249,115,22,.15);color:var(--primary);border-radius:8px;
+  padding:6px 10px;font-size:12px;font-weight:800;white-space:nowrap}
+.order-card-info{flex:1;min-width:0}
+.order-card-title{font-size:14px;font-weight:700}
+.order-card-sub{font-size:12px;color:var(--muted);margin-top:4px}
+.order-card-items{font-size:12px;color:var(--text);margin-top:6px;line-height:1.6}
+
+/* ── ORDER TYPE SELECTOR ── */
+.type-selector{display:flex;gap:8px;margin-bottom:12px;overflow-x:auto}
+.type-btn{padding:8px 16px;border-radius:20px;background:var(--card);border:1.5px solid var(--border);
+  font-size:13px;font-weight:700;white-space:nowrap;cursor:pointer;transition:.15s}
+.type-btn.active{background:var(--primary);border-color:var(--primary);color:#fff}
+
+/* ── MODAL ── */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:500;
+  display:none;align-items:flex-end;justify-content:center}
+.modal-overlay.show{display:flex}
+.modal{background:var(--card);border-radius:20px 20px 0 0;padding:24px;width:100%;
+  max-height:80dvh;overflow-y:auto}
+.modal h3{font-size:17px;font-weight:700;margin-bottom:16px}
+.modal-footer{display:flex;gap:10px;margin-top:16px}
+.btn{padding:12px 20px;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer}
+.btn-outline{background:transparent;border:1.5px solid var(--border);color:var(--text)}
+.btn-primary{background:var(--primary);color:#fff;flex:1}
+
+/* ── NOTES INPUT ── */
+.notes-input{width:100%;padding:12px;background:var(--card2);border:1.5px solid var(--border);
+  border-radius:10px;color:var(--text);font-size:14px;resize:none}
+.notes-input:focus{border-color:var(--primary)}
+.form-label{font-size:12px;font-weight:700;color:var(--muted);margin-bottom:6px;display:block}
+
+/* ── TOAST ── */
+.toast{position:fixed;bottom:90px;left:50%;transform:translateX(-50%);
+  background:#1e293b;color:#fff;padding:12px 20px;border-radius:10px;
+  font-size:14px;z-index:999;pointer-events:none;transition:opacity .3s;
+  white-space:nowrap;border:1px solid var(--border)}
+
+/* ── CONN STATUS ── */
+.conn-bar{background:var(--danger);color:#fff;text-align:center;font-size:12px;
+  font-weight:700;padding:4px;display:none}
+.conn-bar.show{display:block}
+
+/* ── UTILITIES ── */
+.flex-col{display:flex;flex-direction:column;gap:8px}
+.text-center{text-align:center}
+.text-muted{color:var(--muted)}
+.fw-bold{font-weight:700}
+.mt-8{margin-top:8px}
+</style>
+</head>
+<body>
+
+<!-- LOGIN SCREEN -->
+<div class="screen active" id="s-login">
+  <div class="login-logo">
+    <svg viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="48" height="48"><path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 002-2V2"/><path d="M7 2v20"/><path d="M21 15V2a5 5 0 00-5 5v6c0 1.1.9 2 2 2h3zm0 0v7"/></svg>
+    <h1>Waiter App</h1>
+    <p>Select your name to begin</p>
+  </div>
+  <div class="cashier-grid" id="cashier-list"></div>
+  <p class="login-cashier-name" id="login-cashier-name" style="display:none"></p>
+  <div class="pin-box" id="pin-box" style="display:none">
+    <div class="pin-dots" id="pin-dots">
+      <div class="pin-dot" id="pd0"></div>
+      <div class="pin-dot" id="pd1"></div>
+      <div class="pin-dot" id="pd2"></div>
+      <div class="pin-dot" id="pd3"></div>
+    </div>
+    <div class="pinpad">
+      <button class="pp-btn" onclick="pinTap('1')">1</button>
+      <button class="pp-btn" onclick="pinTap('2')">2</button>
+      <button class="pp-btn" onclick="pinTap('3')">3</button>
+      <button class="pp-btn" onclick="pinTap('4')">4</button>
+      <button class="pp-btn" onclick="pinTap('5')">5</button>
+      <button class="pp-btn" onclick="pinTap('6')">6</button>
+      <button class="pp-btn" onclick="pinTap('7')">7</button>
+      <button class="pp-btn" onclick="pinTap('8')">8</button>
+      <button class="pp-btn" onclick="pinTap('9')">9</button>
+      <button class="pp-btn" onclick="pinClear()" style="font-size:14px">CLR</button>
+      <button class="pp-btn" onclick="pinTap('0')">0</button>
+      <button class="pp-btn" onclick="pinBackspace()">⌫</button>
+    </div>
+    <div class="pin-error" id="pin-error"></div>
+  </div>
+</div>
+
+<!-- MAIN SCREEN -->
+<div class="screen" id="s-main">
+  <div class="conn-bar" id="conn-bar">⚠ Reconnecting to server…</div>
+  <div class="topbar">
+    <div>
+      <div class="topbar-title" id="tb-title">Waiter App</div>
+      <div class="topbar-sub" id="tb-sub"></div>
+    </div>
+    <div style="display:flex;gap:8px;margin-left:auto">
+      <div class="btn-icon" id="cart-btn" onclick="showTab('cart')" style="position:relative">
+        <svg viewBox="0 0 24 24"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 001.99 1.61h9.72a2 2 0 001.99-1.61L23 6H6"/></svg>
+        <span class="bnav-badge" id="cart-count" style="display:none">0</span>
+      </div>
+      <div class="btn-icon" onclick="logout()" title="Logout">
+        <svg viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+      </div>
+    </div>
+  </div>
+
+  <!-- TAB: TABLES -->
+  <div class="tab-content active" id="tab-tables">
+    <div class="type-selector" id="order-type-row">
+      <button class="type-btn active" onclick="setOrderType('dine-in',this)">Dine In</button>
+      <button class="type-btn" onclick="setOrderType('takeaway',this)">Takeaway</button>
+      <button class="type-btn" onclick="setOrderType('delivery',this)">Delivery</button>
+    </div>
+    <div id="tables-container">
+      <div class="table-grid" id="table-grid"></div>
+    </div>
+    <div id="no-table-section" style="display:none">
+      <div style="margin-bottom:12px">
+        <label class="form-label">Customer Name</label>
+        <input id="cust-name" type="text" placeholder="Optional" style="width:100%;padding:12px;background:var(--card);border:1.5px solid var(--border);border-radius:10px;color:var(--text);font-size:14px">
+      </div>
+      <div id="delivery-fields" style="display:none;margin-bottom:12px">
+        <label class="form-label">Delivery Address</label>
+        <textarea id="cust-addr" rows="2" class="notes-input" placeholder="Delivery address"></textarea>
+      </div>
+      <button class="btn-submit" onclick="showTab('menu')">Select Items →</button>
+    </div>
+  </div>
+
+  <!-- TAB: MENU -->
+  <div class="tab-content" id="tab-menu">
+    <div class="cat-tabs" id="cat-tabs"></div>
+    <div class="menu-grid" id="menu-grid"></div>
+  </div>
+
+  <!-- TAB: CART -->
+  <div class="tab-content" id="tab-cart">
+    <div id="cart-items" class="flex-col"></div>
+    <div id="cart-totals-box" style="display:none" class="flex-col">
+      <div class="cart-totals">
+        <div class="cart-total-row"><span>Subtotal</span><span id="ct-sub">0.00</span></div>
+        <div class="cart-total-row" id="ct-tax-row" style="display:none"><span id="ct-tax-label">Tax</span><span id="ct-tax">0.00</span></div>
+        <div class="cart-total-row grand"><span>TOTAL</span><span id="ct-total">0.00</span></div>
+      </div>
+      <div>
+        <label class="form-label">Order Notes</label>
+        <textarea id="order-notes" rows="2" class="notes-input" placeholder="Special instructions…"></textarea>
+      </div>
+      <button class="btn-submit" id="btn-send-order" onclick="sendOrder()">Send to Kitchen</button>
+    </div>
+  </div>
+
+  <!-- TAB: MY ORDERS -->
+  <div class="tab-content" id="tab-orders">
+    <div class="flex-col" id="my-orders-list"></div>
+  </div>
+
+  <!-- Bottom Nav -->
+  <div class="bottom-nav">
+    <div class="bnav-item active" id="bn-tables" onclick="showTab('tables')">
+      <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+      Tables
+    </div>
+    <div class="bnav-item" id="bn-menu" onclick="showTab('menu')">
+      <svg viewBox="0 0 24 24"><path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 002-2V2"/><path d="M7 2v20"/><path d="M21 15V2a5 5 0 00-5 5v6c0 1.1.9 2 2 2h3zm0 0v7"/></svg>
+      Menu
+    </div>
+    <div class="bnav-item" id="bn-cart" onclick="showTab('cart')" style="position:relative">
+      <svg viewBox="0 0 24 24"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 001.99 1.61h9.72a2 2 0 001.99-1.61L23 6H6"/></svg>
+      Cart
+    </div>
+    <div class="bnav-item" id="bn-orders" onclick="showTab('orders')">
+      <svg viewBox="0 0 24 24"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/></svg>
+      My Orders
+    </div>
+  </div>
+</div>
+
+<!-- ITEM NOTES MODAL -->
+<div class="modal-overlay" id="modal-notes">
+  <div class="modal">
+    <h3 id="modal-item-name">Item Notes</h3>
+    <textarea id="item-notes-input" class="notes-input" rows="3" placeholder="Special instructions for this item…"></textarea>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('modal-notes')">Cancel</button>
+      <button class="btn btn-primary" onclick="confirmAddItem()">Add to Cart</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── CONFIG ───────────────────────────────────────────────────────────────────
+const BASE = window.location.origin;
+let token     = localStorage.getItem('waiter_token') || '';
+let cashier   = JSON.parse(localStorage.getItem('waiter_cashier') || 'null');
+let currency  = 'RM';
+let taxRate   = 0;
+
+// ── STATE ─────────────────────────────────────────────────────────────────────
+let tables    = [];
+let menu      = { categories: [], items: [], filtered: [] };
+let cart      = { type:'dine-in', tableId:null, tableName:'', custName:'', custAddr:'', items:[] };
+let pendingItem = null; // item awaiting notes confirm
+let loginCashiers = [];
+let selectedLoginCashier = null;
+let pinBuffer = '';
+let socket    = null;
+
+// ── API HELPERS ───────────────────────────────────────────────────────────────
+async function api(path, method='GET', body=null) {
+  const opts = { method, headers: { 'Authorization': `Bearer ${token}`, 'Content-Type':'application/json', 'x-api-key': '' } };
+  if (body) opts.body = JSON.stringify(body);
+  const r = await fetch(BASE + path, opts);
+  const data = await r.json();
+  if (!r.ok) throw new Error(data.error || r.statusText);
+  return data;
+}
+
+// ── PWA SERVICE WORKER ────────────────────────────────────────────────────────
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('/waiter-app/sw.js').catch(() => {});
+}
+
+// ── SOCKET.IO ─────────────────────────────────────────────────────────────────
+function connectSocket() {
+  if (typeof io === 'undefined') return;
+  socket = io(BASE, { query: { area: 'waiter' }, transports: ['websocket'] });
+  socket.on('connect', () => { document.getElementById('conn-bar').classList.remove('show'); });
+  socket.on('disconnect', () => { document.getElementById('conn-bar').classList.add('show'); });
+  socket.on('table:status', data => {
+    const t = tables.find(x => x.id === data.tableId);
+    if (t) { t.status = data.status; t.locked_by = data.locked_by; renderTables(); }
+  });
+  socket.on('order:paid', data => {
+    const t = tables.find(x => x.current_order_id === data.orderId);
+    if (t) { t.status = 'available'; t.current_order_id = null; renderTables(); }
+    if (cart.tableId === data.tableId) { showToast('Table was cleared by cashier'); }
+  });
+}
+
+// ── LOGIN ─────────────────────────────────────────────────────────────────────
+async function loadLoginCashiers() {
+  try {
+    const data = await fetch(BASE + '/sync/cashiers').then(r => r.json());
+    loginCashiers = (data.cashiers || []).filter(c => c.active == 1);
+    const list = document.getElementById('cashier-list');
+    list.innerHTML = loginCashiers.map(c =>
+      `<button class="cashier-chip" onclick="selectLoginCashier('${c.id}')">${c.name}</button>`
+    ).join('');
+  } catch { showToast('Cannot reach server'); }
+}
+
+function selectLoginCashier(id) {
+  selectedLoginCashier = loginCashiers.find(c => c.id === id);
+  if (!selectedLoginCashier) return;
+  document.querySelectorAll('.cashier-chip').forEach(el => el.classList.remove('selected'));
+  document.querySelector(`.cashier-chip[onclick*="${id}"]`).classList.add('selected');
+  document.getElementById('login-cashier-name').textContent = selectedLoginCashier.name;
+  document.getElementById('login-cashier-name').style.display = 'block';
+  if (!selectedLoginCashier.pin) { doLogin(''); return; }
+  pinBuffer = '';
+  updatePinDots();
+  document.getElementById('pin-error').textContent = '';
+  document.getElementById('pin-box').style.display = 'block';
+}
+
+function pinTap(d) {
+  if (pinBuffer.length >= 4) return;
+  pinBuffer += d;
+  updatePinDots();
+  if (pinBuffer.length === 4) setTimeout(() => doLogin(pinBuffer), 100);
+}
+function pinBackspace() { pinBuffer = pinBuffer.slice(0,-1); updatePinDots(); }
+function pinClear() { pinBuffer = ''; updatePinDots(); }
+function updatePinDots() {
+  for (let i=0;i<4;i++) document.getElementById(`pd${i}`).className = 'pin-dot' + (i < pinBuffer.length ? ' filled' : '');
+}
+
+async function doLogin(pin) {
+  if (!selectedLoginCashier) return;
+  try {
+    const data = await api('/waiter/auth', 'POST', { cashier_id: selectedLoginCashier.id, pin });
+    token   = data.token;
+    cashier = data.cashier;
+    localStorage.setItem('waiter_token', token);
+    localStorage.setItem('waiter_cashier', JSON.stringify(cashier));
+    await enterApp();
+  } catch (e) {
+    document.getElementById('pin-error').textContent = e.message;
+    document.querySelectorAll('.pin-dot').forEach(d => d.classList.add('error'));
+    setTimeout(() => {
+      pinBuffer = ''; updatePinDots();
+      document.querySelectorAll('.pin-dot').forEach(d => d.classList.remove('error'));
+    }, 600);
+  }
+}
+
+async function enterApp() {
+  document.getElementById('s-login').classList.remove('active');
+  document.getElementById('s-main').classList.add('active');
+  document.getElementById('tb-title').textContent = cashier.name;
+  document.getElementById('tb-sub').textContent   = cashier.role.toUpperCase();
+  try {
+    const [menuData, settingsData, tableData] = await Promise.all([
+      fetch(BASE + '/sync/menu').then(r=>r.json()),
+      fetch(BASE + '/settings').then(r=>r.json()),
+      api('/tables'),
+    ]);
+    menu.categories = menuData.categories || [];
+    menu.items      = menuData.items      || [];
+    tables          = tableData.tables    || [];
+    currency        = settingsData.restaurant_name ? 'RM' : 'RM';
+    // parse settings
+    if (settingsData.settings) {
+      const tr = settingsData.settings.find(s=>s.key==='tax_rate');
+      const cu = settingsData.settings.find(s=>s.key==='currency');
+      if (tr) taxRate  = parseFloat(tr.value) || 0;
+      if (cu) currency = cu.value || 'RM';
+    }
+  } catch { showToast('Some data failed to load'); }
+  renderTables();
+  renderCatTabs();
+  connectSocket();
+}
+
+function logout() {
+  if (!confirm('Log out?')) return;
+  token = ''; cashier = null;
+  localStorage.removeItem('waiter_token');
+  localStorage.removeItem('waiter_cashier');
+  document.getElementById('s-main').classList.remove('active');
+  document.getElementById('s-login').classList.add('active');
+  pinBuffer = ''; updatePinDots();
+  document.getElementById('pin-box').style.display = 'none';
+  document.getElementById('login-cashier-name').style.display = 'none';
+  selectedLoginCashier = null;
+  document.querySelectorAll('.cashier-chip').forEach(el => el.classList.remove('selected'));
+}
+
+// ── TABS ──────────────────────────────────────────────────────────────────────
+function showTab(name) {
+  document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.bnav-item').forEach(b => b.classList.remove('active'));
+  document.getElementById('tab-' + name).classList.add('active');
+  document.getElementById('bn-' + name).classList.add('active');
+  if (name === 'orders') loadMyOrders();
+  if (name === 'cart') renderCart();
+}
+
+// ── ORDER TYPE ────────────────────────────────────────────────────────────────
+function setOrderType(type, btn) {
+  cart.type = type;
+  document.querySelectorAll('.type-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  const tableSection = document.getElementById('tables-container');
+  const noTableSection = document.getElementById('no-table-section');
+  const delivFields = document.getElementById('delivery-fields');
+  if (type === 'dine-in') {
+    tableSection.style.display = '';
+    noTableSection.style.display = 'none';
+    cart.tableId = null; cart.tableName = '';
+  } else {
+    tableSection.style.display = 'none';
+    noTableSection.style.display = '';
+    delivFields.style.display = type === 'delivery' ? '' : 'none';
+    cart.tableId = null; cart.tableName = '';
+  }
+}
+
+// ── TABLES ────────────────────────────────────────────────────────────────────
+function renderTables() {
+  const grid = document.getElementById('table-grid');
+  if (!tables.length) {
+    grid.innerHTML = `<div class="cart-empty">No tables configured</div>`;
+    return;
+  }
+  grid.innerHTML = tables.map(t => {
+    let cls = 'available', label = 'Available';
+    if (t.status === 'occupied') { cls = 'occupied'; label = 'Occupied'; }
+    else if (t.locked_by) { cls = 'locked'; label = 'In Use'; }
+    return `<div class="table-card ${cls}" onclick="selectTable('${t.id}','${esc(t.name)}','${t.status}','${t.locked_by||''}')">
+      <svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 002-2V2"/><path d="M7 2v20"/><path d="M21 15V2a5 5 0 00-5 5v6c0 1.1.9 2 2 2h3zm0 0v7"/></svg>
+      ${esc(t.name)}
+      <span class="table-status">${label}</span>
+    </div>`;
+  }).join('');
+}
+
+async function selectTable(id, name, status, lockedBy) {
+  if (status === 'occupied') {
+    showToast(`Table ${name} is occupied`); return;
+  }
+  if (lockedBy) {
+    showToast(`Table ${name} is being set up by another terminal`); return;
+  }
+  // Lock the table
+  try {
+    await api(`/tables/${id}/lock`, 'POST', { terminal_id: `WAITER-${cashier.id}` });
+    cart.tableId = id; cart.tableName = name;
+    showTab('menu');
+    showToast(`Table ${name} selected`);
+  } catch (e) {
+    showToast(e.message || 'Cannot select table');
+    tables = (await api('/tables')).tables;
+    renderTables();
+  }
+}
+
+// ── MENU ──────────────────────────────────────────────────────────────────────
+let selectedCat = 'all';
+function renderCatTabs() {
+  const tabs = document.getElementById('cat-tabs');
+  tabs.innerHTML = `<button class="cat-tab active" onclick="filterCat('all',this)">All</button>` +
+    menu.categories.filter(c=>c.active!=0).map(c =>
+      `<button class="cat-tab" onclick="filterCat('${c.id}',this)">${esc(c.name)}</button>`
+    ).join('');
+  filterCat('all', tabs.firstChild);
+}
+
+function filterCat(catId, btn) {
+  selectedCat = catId;
+  document.querySelectorAll('.cat-tab').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  menu.filtered = catId === 'all'
+    ? menu.items.filter(i => i.active != 0)
+    : menu.items.filter(i => i.category_id === catId && i.active != 0);
+  renderMenuGrid();
+}
+
+function renderMenuGrid() {
+  const grid = document.getElementById('menu-grid');
+  grid.innerHTML = menu.filtered.map(item =>
+    `<div class="menu-item" onclick="addItemToCart('${item.id}')">
+      <div class="menu-item-name">${esc(item.name)}</div>
+      <div class="menu-item-price">${currency} ${parseFloat(item.price).toFixed(2)}</div>
+    </div>`
+  ).join('');
+}
+
+function addItemToCart(itemId) {
+  const item = menu.items.find(i => i.id === itemId);
+  if (!item) return;
+  pendingItem = item;
+  document.getElementById('modal-item-name').textContent = item.name;
+  document.getElementById('item-notes-input').value = '';
+  openModal('modal-notes');
+}
+
+function confirmAddItem() {
+  if (!pendingItem) return;
+  const notes = document.getElementById('item-notes-input').value.trim();
+  const existing = cart.items.find(i => i.item_id === pendingItem.id && i.notes === notes);
+  if (existing) { existing.quantity++; existing.total_price = existing.unit_price * existing.quantity; }
+  else cart.items.push({
+    item_id: pendingItem.id, item_name: pendingItem.name,
+    category_name: (menu.categories.find(c=>c.id===pendingItem.category_id)||{}).name||'',
+    unit_price: parseFloat(pendingItem.price), quantity: 1,
+    total_price: parseFloat(pendingItem.price), notes,
+  });
+  closeModal('modal-notes');
+  pendingItem = null;
+  updateCartBadge();
+  showToast(`${pendingItem?.name || 'Item'} added`);
+}
+
+// ── CART ──────────────────────────────────────────────────────────────────────
+function updateCartBadge() {
+  const count = cart.items.reduce((s,i)=>s+i.quantity,0);
+  const badge = document.getElementById('cart-count');
+  badge.textContent = count;
+  badge.style.display = count ? 'block' : 'none';
+}
+
+function renderCart() {
+  const container = document.getElementById('cart-items');
+  const totalsBox = document.getElementById('cart-totals-box');
+  if (!cart.items.length) {
+    container.innerHTML = `<div class="cart-empty">Cart is empty.<br>Go to Menu to add items.</div>`;
+    totalsBox.style.display = 'none';
+    return;
+  }
+  container.innerHTML = cart.items.map((item, idx) => `
+    <div class="cart-item">
+      <div class="cart-item-info">
+        <div class="cart-item-name">${esc(item.item_name)}</div>
+        <div class="cart-item-price">${currency} ${item.unit_price.toFixed(2)} each</div>
+        ${item.notes ? `<div class="cart-item-notes">${esc(item.notes)}</div>` : ''}
+      </div>
+      <div class="qty-ctrl">
+        <button class="qty-btn" onclick="changeQty(${idx},-1)">−</button>
+        <span class="qty-num">${item.quantity}</span>
+        <button class="qty-btn" onclick="changeQty(${idx},1)">+</button>
+      </div>
+    </div>`).join('');
+
+  const sub   = cart.items.reduce((s,i)=>s+i.total_price,0);
+  const tax   = Math.round(sub * taxRate / 100 * 100) / 100;
+  const total = sub + tax;
+  document.getElementById('ct-sub').textContent   = `${currency} ${sub.toFixed(2)}`;
+  document.getElementById('ct-tax').textContent   = `${currency} ${tax.toFixed(2)}`;
+  document.getElementById('ct-tax-label').textContent = `Tax (${taxRate}%)`;
+  document.getElementById('ct-total').textContent = `${currency} ${total.toFixed(2)}`;
+  document.getElementById('ct-tax-row').style.display = taxRate > 0 ? '' : 'none';
+  totalsBox.style.display = '';
+}
+
+function changeQty(idx, delta) {
+  cart.items[idx].quantity += delta;
+  if (cart.items[idx].quantity <= 0) cart.items.splice(idx, 1);
+  else cart.items[idx].total_price = cart.items[idx].unit_price * cart.items[idx].quantity;
+  updateCartBadge();
+  renderCart();
+}
+
+async function sendOrder() {
+  if (!cart.items.length) { showToast('Cart is empty'); return; }
+  if (cart.type === 'dine-in' && !cart.tableId) { showToast('Select a table first'); showTab('tables'); return; }
+
+  const btn = document.getElementById('btn-send-order');
+  btn.disabled = true; btn.textContent = 'Sending…';
+
+  const custName = document.getElementById('cust-name')?.value.trim() || '';
+  const custAddr = document.getElementById('cust-addr')?.value.trim() || '';
+  const notes    = document.getElementById('order-notes')?.value.trim() || '';
+
+  try {
+    await api('/waiter/orders', 'POST', {
+      order_type: cart.type,
+      table_id:   cart.tableId || null,
+      table_name: cart.tableName || null,
+      customer_name:    custName || null,
+      customer_address: custAddr || null,
+      notes: notes || null,
+      terminal_id: `WAITER-${cashier.id}`,
+      items: cart.items,
+    });
+    showToast('Order sent to kitchen!');
+    cart = { type: cart.type, tableId:null, tableName:'', custName:'', custAddr:'', items:[] };
+    updateCartBadge();
+    renderCart();
+    // Refresh tables
+    tables = (await api('/tables')).tables;
+    renderTables();
+    showTab('tables');
+  } catch (e) {
+    showToast(e.message || 'Failed to send order');
+  } finally {
+    btn.disabled = false; btn.textContent = 'Send to Kitchen';
+  }
+}
+
+// ── MY ORDERS ─────────────────────────────────────────────────────────────────
+async function loadMyOrders() {
+  const list = document.getElementById('my-orders-list');
+  list.innerHTML = '<div class="cart-empty">Loading…</div>';
+  try {
+    const data = await api('/waiter/orders');
+    const orders = data.orders || [];
+    if (!orders.length) { list.innerHTML = '<div class="cart-empty">No active orders</div>'; return; }
+    list.innerHTML = orders.map(o => `
+      <div class="order-card">
+        <div class="order-badge">#${o.order_number}</div>
+        <div class="order-card-info">
+          <div class="order-card-title">${o.table_name || o.customer_name || o.order_type.toUpperCase()}</div>
+          <div class="order-card-sub">${new Date(parseInt(o.created_at)).toLocaleTimeString()} • ${o.order_type}</div>
+          <div class="order-card-items">${(o.items||[]).map(i=>`${i.quantity}× ${i.item_name}`).join(', ')}</div>
+        </div>
+      </div>`).join('');
+  } catch { list.innerHTML = '<div class="cart-empty">Failed to load orders</div>'; }
+}
+
+// ── MODAL ─────────────────────────────────────────────────────────────────────
+function openModal(id)  { document.getElementById(id).classList.add('show'); }
+function closeModal(id) { document.getElementById(id).classList.remove('show'); }
+
+// ── TOAST ─────────────────────────────────────────────────────────────────────
+function showToast(msg) {
+  let t = document.querySelector('.toast');
+  if (t) t.remove();
+  t = document.createElement('div');
+  t.className = 'toast';
+  t.textContent = msg;
+  document.body.appendChild(t);
+  setTimeout(() => t.style.opacity = '0', 2000);
+  setTimeout(() => t.remove(), 2300);
+}
+
+// ── UTILS ─────────────────────────────────────────────────────────────────────
+function esc(s) { return String(s||'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+
+// ── BOOT ──────────────────────────────────────────────────────────────────────
+(async () => {
+  await loadLoginCashiers();
+  // Auto-login if valid token cached
+  if (token && cashier) {
+    try {
+      await api('/waiter/auth/me');
+      await enterApp();
+      return;
+    } catch { token=''; cashier=null; localStorage.removeItem('waiter_token'); localStorage.removeItem('waiter_cashier'); }
+  }
+})();
+</script>
+
+<!-- Socket.io from server -->
+<script src="/socket.io/socket.io.js" onerror="console.warn('Socket.io not loaded')"></script>
+</body>
+</html>

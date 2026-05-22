@@ -1,0 +1,3213 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Restaurant Back Office</title>
+<style>
+/* ─── GLOBAL ─────────────────────────────────── */
+:root{
+  --primary:#f97316;--primary-d:#ea6c00;--primary-bg:#fff7ed;
+  --sb-bg:#0f172a;--sb-text:#94a3b8;--sb-active:rgba(249,115,22,.15);--sb-active-text:#f97316;
+  --success:#15803d;--success-bg:#f0fdf4;--success-border:#bbf7d0;
+  --danger:#b91c1c;--danger-bg:#fef2f2;--danger-border:#fecaca;
+  --warning:#92400e;--warning-bg:#fffbeb;--warning-border:#fde68a;
+  --info:#1d4ed8;--info-bg:#eff6ff;--info-border:#bfdbfe;
+  --bg:#f1f5f9;--card:#fff;--border:#e2e8f0;--text:#0f172a;--muted:#64748b;
+  --sb-w:220px;--hdr-h:58px;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--text)}
+button{cursor:pointer;border:none;font-family:inherit}
+input,select,textarea{font-family:inherit}
+a{text-decoration:none;color:inherit}
+button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible,[tabindex]:focus-visible{outline:3px solid rgba(249,115,22,.5);outline-offset:2px}
+button,.nav-item,.filter-chip,.btn,[role="button"]{touch-action:manipulation}
+
+/* ─── AUTH ─────────────────────────────────────── */
+#auth-screen{min-height:100vh;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#1e293b,#0f172a)}
+.auth-box{background:#fff;border-radius:20px;padding:44px 40px;width:400px;box-shadow:0 24px 80px rgba(0,0,0,.5)}
+.auth-logo{text-align:center;margin-bottom:32px}
+.auth-icon{width:64px;height:64px;background:var(--primary);border-radius:16px;display:flex;align-items:center;justify-content:center;margin:0 auto 14px}
+.auth-logo h1{font-size:22px;font-weight:800}
+.auth-logo p{color:var(--muted);font-size:13px;margin-top:4px}
+.auth-form label{display:block;font-size:12px;font-weight:600;color:var(--muted);margin-bottom:5px;text-transform:uppercase;letter-spacing:.3px}
+.auth-form input{width:100%;padding:11px 14px;border:1.5px solid var(--border);border-radius:10px;font-size:14px;margin-bottom:14px;background:#f8fafc;transition:.15s}
+.auth-form input:focus{border-color:var(--primary);background:#fff}
+.btn-auth{width:100%;padding:13px;background:var(--primary);color:#fff;border-radius:10px;font-size:15px;font-weight:700;transition:.15s}
+.btn-auth:hover{background:var(--primary-d)}
+#auth-error{color:var(--danger);font-size:13px;margin-top:8px;text-align:center;min-height:18px}
+
+/* ─── SIDEBAR ───────────────────────────────────── */
+#sidebar{position:fixed;top:0;left:0;bottom:0;width:var(--sb-w);background:var(--sb-bg);display:flex;flex-direction:column;z-index:200;overflow:hidden}
+.sb-logo{padding:18px 16px;border-bottom:1px solid rgba(255,255,255,.06);display:flex;align-items:center;gap:10px;min-height:68px}
+.sb-logo-icon{width:36px;height:36px;background:var(--primary);border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.sb-logo-text{flex:1;min-width:0}
+.sb-logo-name{font-size:13px;font-weight:700;color:#f1f5f9;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sb-logo-sub{font-size:11px;color:#475569;margin-top:1px}
+.sb-nav{flex:1;padding:10px 10px;overflow-y:auto}
+.sb-section{font-size:10px;font-weight:700;color:#334155;text-transform:uppercase;letter-spacing:.8px;padding:12px 10px 5px}
+.nav-item{display:flex;align-items:center;gap:9px;padding:9px 10px;border-radius:8px;color:var(--sb-text);font-size:13px;font-weight:500;cursor:pointer;transition:.12s;margin-bottom:1px}
+.nav-item:hover{background:rgba(255,255,255,.06);color:#e2e8f0}
+.nav-item.active{background:var(--sb-active);color:var(--sb-active-text)}
+.ni-icon{width:17px;height:17px;flex-shrink:0;opacity:.65}
+.nav-item.active .ni-icon,.nav-item:hover .ni-icon{opacity:1}
+.sb-bottom{padding:12px 14px;border-top:1px solid rgba(255,255,255,.06)}
+.sb-user-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:#334155;margin-bottom:5px}
+.sb-user-name{font-size:13px;font-weight:600;color:#e2e8f0}
+.sb-user-role{font-size:11px;color:#64748b;margin-top:1px}
+
+/* ─── MAIN WRAP ──────────────────────────────────── */
+#app{display:none;min-height:100vh}
+#main-wrap{margin-left:var(--sb-w);display:flex;flex-direction:column;min-height:100vh}
+
+/* ─── TOP HEADER ─────────────────────────────────── */
+#top-header{position:sticky;top:0;z-index:100;height:var(--hdr-h);background:#fff;border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 20px;gap:14px}
+.hdr-left{flex:0 0 auto}
+.hdr-left h3{font-size:14px;font-weight:700;color:var(--text)}
+.hdr-left p{font-size:11px;color:var(--muted)}
+.hdr-search{display:flex;align-items:center;gap:8px;background:var(--bg);border:1.5px solid var(--border);border-radius:10px;padding:7px 12px;flex:0 0 240px;transition:.15s}
+.hdr-search:focus-within{border-color:var(--primary);background:#fff}
+.hdr-search input{border:none;background:none;font-size:13px;color:var(--text);width:100%}
+.hdr-spacer{flex:1}
+.hdr-actions{display:flex;align-items:center;gap:8px}
+.hdr-btn{width:34px;height:34px;border-radius:8px;border:1.5px solid var(--border);background:#fff;display:flex;align-items:center;justify-content:center;color:var(--muted);cursor:pointer;transition:.12s;position:relative}
+.hdr-btn:hover{background:var(--bg);color:var(--text)}
+.hdr-date{font-size:11px;color:var(--muted);font-weight:500;white-space:nowrap}
+.hdr-user{display:flex;align-items:center;gap:7px;padding:5px 10px;border-radius:10px;cursor:pointer;border:1.5px solid var(--border);background:#fff;transition:.12s}
+.hdr-user:hover{background:var(--bg)}
+.hdr-avatar{width:26px;height:26px;background:var(--primary);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff;flex-shrink:0}
+.hdr-user-name{font-size:12px;font-weight:600;color:var(--text)}
+#sync-status{font-size:11px;color:#64748b;white-space:nowrap}
+
+/* ─── VIEWS ──────────────────────────────────────── */
+#view-container{flex:1;background:var(--bg)}
+.view{display:none;padding:20px 22px;max-width:1600px;width:100%}
+.view.active{display:block}
+.page-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px}
+.page-header h2{font-size:19px;font-weight:800}
+
+/* ─── CARDS ──────────────────────────────────────── */
+.card{background:#fff;border-radius:12px;border:1px solid var(--border);overflow:hidden;margin-bottom:18px;box-shadow:0 1px 3px rgba(0,0,0,.05)}
+.card-header{display:flex;align-items:center;justify-content:space-between;padding:13px 16px;border-bottom:1px solid var(--border);background:#fafafa}
+.card-header h3{font-size:12px;font-weight:700;color:var(--text);text-transform:uppercase;letter-spacing:.3px}
+.card-body{padding:16px}
+
+/* ─── KPI ────────────────────────────────────────── */
+.kpi-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin-bottom:16px}
+.kpi-card{background:#fff;border-radius:12px;padding:16px;border:1px solid var(--border);box-shadow:0 1px 3px rgba(0,0,0,.05);display:flex;flex-direction:column;gap:8px;position:relative;overflow:hidden}
+.kpi-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;border-radius:12px 12px 0 0}
+.kpi-card-blue::before{background:var(--info)}.kpi-card-green::before{background:#22c55e}
+.kpi-card-red::before{background:var(--danger)}.kpi-card-orange::before{background:var(--primary)}
+.kpi-card-purple::before{background:#8b5cf6}
+.kpi-icon-wrap{width:36px;height:36px;border-radius:9px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.kpi-icon-blue{background:#eff6ff;color:var(--info)}.kpi-icon-green{background:#f0fdf4;color:#16a34a}
+.kpi-icon-red{background:var(--danger-bg);color:var(--danger)}.kpi-icon-orange{background:var(--primary-bg);color:var(--primary)}
+.kpi-icon-purple{background:#fdf4ff;color:#9333ea}
+.kpi-label{font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.4px}
+.kpi-value{font-size:20px;font-weight:800;line-height:1;color:var(--text)}
+.kpi-sub{font-size:11px;color:var(--muted)}
+
+/* ─── DASHBOARD GRID ─────────────────────────────── */
+.dash-row{display:grid;gap:14px;margin-bottom:14px}
+.dash-row-2{grid-template-columns:1.1fr 2fr 1fr}
+.dash-row-3{grid-template-columns:1fr 1fr 1fr}
+.dash-widget{background:#fff;border-radius:12px;border:1px solid var(--border);box-shadow:0 1px 3px rgba(0,0,0,.05);overflow:hidden}
+.dash-widget-hdr{display:flex;align-items:center;justify-content:space-between;padding:12px 14px;border-bottom:1px solid var(--border);background:#fafafa}
+.dash-widget-hdr h4{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.4px;color:var(--muted)}
+.dash-widget-hdr a{font-size:11px;color:var(--primary);font-weight:600;cursor:pointer}
+.dash-widget-body{padding:14px}
+.live-order-row{display:flex;align-items:center;justify-content:space-between;padding:9px 0;border-bottom:1px solid #f1f5f9}
+.live-order-row:last-child{border-bottom:none}
+.lo-num{font-size:12px;font-weight:700;color:var(--primary)}
+.lo-meta{font-size:11px;color:var(--muted);margin-top:1px}
+.lo-right{text-align:right}
+.lo-total{font-size:13px;font-weight:700}
+.lo-time{font-size:10px;color:var(--muted)}
+.sales-chart-total{font-size:26px;font-weight:800;color:var(--text)}
+.donut-wrap{display:flex;align-items:center;gap:14px}
+.donut-legend{flex:1;min-width:0}
+.donut-legend-row{display:flex;align-items:center;gap:6px;margin-bottom:7px}
+.donut-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.donut-legend-label{font-size:11px;color:var(--muted);flex:1}
+.donut-legend-val{font-size:12px;font-weight:700}
+.top-item-row{display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid #f1f5f9}
+.top-item-row:last-child{border-bottom:none}
+.top-item-rank{width:20px;height:20px;border-radius:5px;background:#f1f5f9;font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center;color:var(--muted);flex-shrink:0}
+.top-item-name{flex:1;font-size:12px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.top-item-count{font-size:11px;color:var(--muted);white-space:nowrap}
+.top-item-rev{font-size:12px;font-weight:700;color:var(--primary);white-space:nowrap}
+.alert-row{display:flex;gap:8px;padding:7px 0;border-bottom:1px solid #f1f5f9}
+.alert-row:last-child{border-bottom:none}
+.alert-dot{width:7px;height:7px;border-radius:50%;margin-top:4px;flex-shrink:0}
+.alert-text{font-size:11px;line-height:1.5;flex:1}
+.alert-time{font-size:10px;color:var(--muted);white-space:nowrap}
+.qa-btn{display:flex;align-items:center;gap:8px;padding:9px 14px;background:#fff;border:1.5px solid var(--border);border-radius:9px;font-size:12px;font-weight:600;color:var(--text);cursor:pointer;transition:.12s}
+.qa-btn:hover{border-color:var(--primary);color:var(--primary);background:var(--primary-bg)}
+.qa-icon{width:26px;height:26px;border-radius:7px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+
+/* ─── BUTTONS ────────────────────────────────────── */
+.btn{padding:8px 16px;border-radius:8px;font-size:13px;font-weight:600;transition:.15s;display:inline-flex;align-items:center;gap:6px;min-height:34px;cursor:pointer;border:none}
+.btn-primary{background:var(--primary);color:#fff}.btn-primary:hover{background:var(--primary-d)}
+.btn-success{background:#16a34a;color:#fff}.btn-success:hover{background:#14532d}
+.btn-danger{background:var(--danger);color:#fff}.btn-danger:hover{background:#991b1b}
+.btn-outline{background:#fff;border:1.5px solid var(--border);color:var(--text)}.btn-outline:hover{border-color:var(--primary);color:var(--primary)}
+.btn-sm{padding:5px 11px;font-size:12px;min-height:30px}
+.btn-icon{width:36px;height:36px;min-width:36px;border-radius:7px;display:inline-flex;align-items:center;justify-content:center}
+.btn-icon-sm{width:30px;height:30px;min-width:30px;border-radius:6px;display:inline-flex;align-items:center;justify-content:center}
+
+/* ─── TABLE ──────────────────────────────────────── */
+.data-table{width:100%;border-collapse:collapse;font-size:13px}
+.data-table th{text-align:left;padding:9px 13px;background:#f8fafc;font-size:11px;font-weight:700;color:var(--muted);border-bottom:1px solid var(--border);text-transform:uppercase;letter-spacing:.3px}
+.data-table td{padding:9px 13px;border-bottom:1px solid #f1f5f9;vertical-align:middle}
+.data-table tr:last-child td{border-bottom:none}
+.data-table tbody tr{transition:background .12s ease}
+.data-table tbody tr:hover{background:#fff7ed}
+.table-wrap{overflow-x:auto}
+
+/* ─── FORMS ──────────────────────────────────────── */
+.form-group{margin-bottom:13px}
+.form-group label{display:block;font-size:11px;font-weight:700;color:var(--muted);margin-bottom:4px;text-transform:uppercase;letter-spacing:.3px}
+.form-group input,.form-group select,.form-group textarea{width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-size:13px;background:#f8fafc;transition:.15s}
+.form-group input:focus,.form-group select:focus,.form-group textarea:focus{border-color:var(--primary);background:#fff}
+.form-row{display:flex;gap:12px}
+.form-row .form-group{flex:1}
+.form-hint{font-size:11px;color:var(--muted);margin-top:3px}
+.form-error{font-size:11px;color:var(--danger);margin-top:3px}
+
+/* ─── MODAL ──────────────────────────────────────── */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:500;display:none;align-items:center;justify-content:center}
+.modal-overlay.show{display:flex}
+.modal{background:#fff;border-radius:16px;padding:26px;min-width:440px;max-width:94vw;max-height:92vh;overflow-y:auto;box-shadow:0 24px 80px rgba(0,0,0,.3)}
+.modal h3{font-size:16px;font-weight:700;margin-bottom:18px}
+.modal-footer{display:flex;gap:10px;justify-content:flex-end;margin-top:18px}
+
+/* ─── BADGES ─────────────────────────────────────── */
+.badge{display:inline-block;padding:3px 9px;border-radius:12px;font-size:11px;font-weight:700;border:1px solid transparent}
+.badge-green{background:var(--success-bg);color:var(--success);border-color:var(--success-border)}
+.badge-red{background:var(--danger-bg);color:var(--danger);border-color:var(--danger-border)}
+.badge-amber{background:var(--warning-bg);color:var(--warning);border-color:var(--warning-border)}
+.badge-orange{background:#fff7ed;color:var(--primary);border-color:#fed7aa}
+.badge-blue{background:var(--info-bg);color:var(--info);border-color:var(--info-border)}
+.badge-purple{background:#fdf4ff;color:#9333ea;border-color:#e9d5ff}
+
+/* ─── TOGGLE ─────────────────────────────────────── */
+.toggle-switch{position:relative;display:inline-block;width:38px;height:21px}
+.toggle-switch input{opacity:0;width:0;height:0}
+.toggle-slider{position:absolute;inset:0;background:#cbd5e1;border-radius:21px;cursor:pointer;transition:.2s}
+.toggle-slider:before{content:'';position:absolute;width:15px;height:15px;left:3px;bottom:3px;background:#fff;border-radius:50%;transition:.2s}
+input:checked+.toggle-slider{background:#16a34a}
+input:checked+.toggle-slider:before{transform:translateX(17px)}
+
+/* ─── MISC ───────────────────────────────────────── */
+.color-dot{width:10px;height:10px;border-radius:50%;display:inline-block;margin-right:5px}
+.date-filter{display:flex;gap:8px;align-items:center}
+.date-filter input{padding:7px 11px;border:1.5px solid var(--border);border-radius:8px;font-size:13px}
+.filter-bar{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:14px}
+.filter-chip{padding:5px 13px;border-radius:18px;border:1.5px solid var(--border);background:#fff;font-size:12px;font-weight:600;color:var(--muted);cursor:pointer;min-height:30px;transition:.12s}
+.filter-chip.active,.filter-chip:hover{background:var(--primary);color:#fff;border-color:var(--primary)}
+.settings-section-divider{display:flex;align-items:center;gap:10px;margin:18px 0 10px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:var(--muted)}
+.settings-section-divider::after{content:'';flex:1;height:1px;background:var(--border)}
+.settings-danger-group{border:1.5px solid var(--danger-border);border-radius:10px;padding:14px;background:var(--danger-bg);margin-bottom:12px}
+.empty-state{text-align:center;padding:40px 20px;color:var(--muted)}
+.empty-state .es-icon{width:48px;height:48px;margin:0 auto 10px;background:#f1f5f9;border-radius:12px;display:flex;align-items:center;justify-content:center;opacity:.7}
+.empty-state h4{font-size:14px;font-weight:700;color:var(--text);margin-bottom:3px}
+.empty-state p{font-size:13px}
+.skeleton{background:linear-gradient(90deg,#f1f5f9 25%,#e2e8f0 50%,#f1f5f9 75%);background-size:200% 100%;animation:skeleton-shimmer 1.4s ease infinite;border-radius:6px}
+@keyframes skeleton-shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
+
+/* ─── TOAST ──────────────────────────────────────── */
+#toast-region{position:fixed;bottom:22px;right:22px;z-index:9999;display:flex;flex-direction:column;gap:7px;pointer-events:none}
+.toast{background:#1e293b;color:#fff;padding:11px 16px;border-radius:10px;font-size:13px;font-weight:600;box-shadow:0 4px 20px rgba(0,0,0,.25);pointer-events:auto;animation:toast-in .2s ease;max-width:300px;display:flex;align-items:center;gap:8px}
+.toast-success{border-left:4px solid #22c55e}.toast-error{border-left:4px solid var(--danger)}.toast-info{border-left:4px solid var(--info)}
+@keyframes toast-in{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+
+/* ─── RESPONSIVE ─────────────────────────────────── */
+@media(max-width:1100px){
+  :root{--sb-w:58px}
+  .sb-logo-text,.nav-item span,.sb-section,.sb-user-name,.sb-user-role,.sb-user-label{display:none}
+  .nav-item{justify-content:center;padding:10px}
+  .sb-logo{justify-content:center;padding:16px 8px}
+  .kpi-grid{grid-template-columns:repeat(3,1fr)}
+  .dash-row-2,.dash-row-3{grid-template-columns:1fr 1fr}
+}
+@media(max-width:768px){
+  :root{--sb-w:0px}
+  #sidebar{display:none}
+  .kpi-grid{grid-template-columns:repeat(2,1fr)}
+  .dash-row-2,.dash-row-3{grid-template-columns:1fr}
+  .form-row{flex-direction:column;gap:0}
+  .modal{min-width:unset;width:96vw;padding:18px}
+  #main-wrap{margin-left:0}
+}
+/* ─── REPORT TABS ───────────────────────────────────────── */
+.rpt-tabs{display:flex;gap:3px;border-bottom:2px solid var(--border);margin-bottom:18px;padding-bottom:0}
+.rpt-tab{padding:8px 18px;background:none;border:none;font-size:12px;font-weight:600;color:var(--muted);cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-2px;transition:.12s;border-radius:6px 6px 0 0}
+.rpt-tab:hover{background:var(--bg);color:var(--text)}
+.rpt-tab.active{color:var(--primary);border-bottom-color:var(--primary)}
+.rpt-soon-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:10px;margin-bottom:8px}
+.rpt-soon-card{background:#fff;border:1.5px dashed #e2e8f0;border-radius:12px;padding:16px;opacity:.7;transition:.12s}
+.rpt-soon-card:hover{opacity:.9;border-color:#cbd5e1}
+.rpt-soon-icon{width:34px;height:34px;border-radius:9px;background:#f8fafc;display:flex;align-items:center;justify-content:center;margin-bottom:10px;color:var(--muted)}
+.rpt-soon-name{font-size:13px;font-weight:700;color:var(--text);margin-bottom:3px}
+.rpt-soon-desc{font-size:11px;color:var(--muted);line-height:1.5;margin-bottom:6px}
+.rpt-soon-tag{display:inline-block;padding:2px 8px;background:#f1f5f9;color:#94a3b8;border-radius:5px;font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.4px}
+
+/* ─── LIVE ORDERS VIEW ──────────────────────────────────── */
+#v-live{padding:0;background:#0f172a;min-height:calc(100vh - var(--hdr-h));max-width:none!important}
+#v-live.active{display:block}
+.live-wrap{display:flex;flex-direction:column;height:calc(100vh - var(--hdr-h));overflow:hidden}
+.live-topbar{display:flex;align-items:center;gap:10px;padding:10px 16px;background:#1e293b;border-bottom:1px solid rgba(255,255,255,.07);flex-shrink:0;overflow-x:auto}
+.ls-chip{display:flex;align-items:center;gap:9px;padding:7px 13px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:10px;flex-shrink:0}
+.ls-chip-icon{width:30px;height:30px;border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.ls-chip-val{font-size:18px;font-weight:800;color:#f1f5f9;line-height:1}
+.ls-chip-lbl{font-size:9px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:.5px;margin-top:1px}
+.ls-spacer{flex:1}
+.ls-refresh-chip{display:flex;align-items:center;gap:7px;padding:6px 12px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:10px;font-size:11px;color:#64748b;flex-shrink:0}
+.ls-pulse{width:7px;height:7px;border-radius:50%;background:#22c55e;animation:ls-pulse 2s infinite}
+@keyframes ls-pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.4;transform:scale(.8)}}
+.live-board-area{flex:1;overflow:hidden;display:flex;min-height:0}
+.live-cols{flex:1;display:flex;gap:10px;padding:12px 14px;overflow-x:auto;min-width:0}
+.live-col{flex:0 0 260px;display:flex;flex-direction:column;background:#111827;border-radius:12px;overflow:hidden}
+.live-col-hdr{display:flex;align-items:center;justify-content:space-between;padding:10px 13px;border-bottom:1px solid rgba(255,255,255,.07)}
+.live-col-hdr h4{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:#94a3b8}
+.lc-count{font-size:11px;font-weight:700;padding:2px 8px;border-radius:10px}
+.live-col-body{flex:1;overflow-y:auto;padding:8px;display:flex;flex-direction:column;gap:7px}
+.live-col-body::-webkit-scrollbar{width:4px}.live-col-body::-webkit-scrollbar-track{background:transparent}.live-col-body::-webkit-scrollbar-thumb{background:rgba(255,255,255,.1);border-radius:4px}
+.lo-card{background:#1e293b;border:1px solid rgba(255,255,255,.07);border-left:3px solid transparent;border-radius:10px;padding:10px 12px;cursor:default;transition:.12s}
+.lo-card:hover{background:#243047;border-color:rgba(255,255,255,.12)}
+.lo-card-new{border-left-color:#3b82f6}.lo-card-preparing{border-left-color:#f97316}.lo-card-ready{border-left-color:#22c55e}.lo-card-waiting{border-left-color:#a855f7}
+.lo-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px}
+.lo-num{font-size:12px;font-weight:700;color:#f97316}
+.lo-timer{font-size:10px;font-weight:700;padding:2px 7px;border-radius:6px;background:rgba(255,255,255,.06);color:#94a3b8}
+.lo-timer.warn{background:rgba(251,191,36,.12);color:#fbbf24}.lo-timer.hot{background:rgba(239,68,68,.12);color:#f87171}
+.lo-meta{display:flex;align-items:center;gap:6px;margin-bottom:7px;flex-wrap:wrap}
+.lo-type{font-size:9px;font-weight:700;padding:2px 7px;border-radius:5px;text-transform:uppercase;letter-spacing:.3px}
+.lo-type-dine{background:rgba(59,130,246,.15);color:#60a5fa}.lo-type-take{background:rgba(168,85,247,.15);color:#c084fc}
+.lo-type-del{background:rgba(34,197,94,.15);color:#4ade80}.lo-type-online{background:rgba(249,115,22,.15);color:#fb923c}
+.lo-table{font-size:11px;color:#64748b}
+.lo-items{border-top:1px solid rgba(255,255,255,.05);padding-top:6px;margin-bottom:6px}
+.lo-item{display:flex;align-items:center;gap:6px;padding:2px 0;font-size:11px}
+.lo-item-qty{font-weight:700;color:#e2e8f0;min-width:16px}
+.lo-item-name{flex:1;color:#94a3b8}
+.lo-item-done .lo-item-name{text-decoration:line-through;opacity:.45}
+.lo-progress{height:3px;background:rgba(255,255,255,.06);border-radius:3px;margin-bottom:6px;overflow:hidden}
+.lo-progress-fill{height:100%;border-radius:3px;transition:width .4s ease}
+.lo-foot{display:flex;align-items:center;justify-content:space-between}
+.lo-total{font-size:12px;font-weight:800;color:#f1f5f9}
+.lo-age{font-size:10px;color:#475569}
+/* Right panel */
+.live-right{flex:0 0 220px;background:#0d1424;border-left:1px solid rgba(255,255,255,.06);display:flex;flex-direction:column;overflow:hidden}
+.live-right-inner{flex:1;overflow-y:auto}
+.lr-section{padding:12px 14px;border-bottom:1px solid rgba(255,255,255,.06)}
+.lr-section h5{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:#334155;margin-bottom:8px}
+.lr-row{display:flex;align-items:center;justify-content:space-between;padding:3px 0}
+.lr-row-lbl{font-size:11px;color:#64748b;display:flex;align-items:center;gap:6px}
+.lr-row-val{font-size:12px;font-weight:700;color:#e2e8f0}
+.lr-bar{height:3px;background:rgba(255,255,255,.06);border-radius:3px;margin:3px 0 6px;overflow:hidden}
+.lr-bar-fill{height:100%;border-radius:3px}
+.lr-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
+.recent-row{display:flex;align-items:center;justify-content:space-between;padding:5px 0;border-bottom:1px solid rgba(255,255,255,.04)}
+.recent-row:last-child{border-bottom:none}
+.recent-num{font-size:11px;font-weight:600;color:#94a3b8}
+.recent-amt{font-size:11px;font-weight:700;color:#4ade80}
+.live-footer{padding:7px 14px;background:#0a1020;display:flex;align-items:center;gap:8px;font-size:10px;color:#334155;flex-shrink:0;border-top:1px solid rgba(255,255,255,.05)}
+
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms !important;transition-duration:.01ms !important}}
+@media print{#sidebar,#top-header,.page-header button,.filter-bar,.btn{display:none !important}#main-wrap{margin-left:0 !important}.card{border:1px solid #ccc;box-shadow:none}}
+</style>
+</head>
+<body>
+
+<!-- ═══ TOAST REGION — aria-live for screen readers ═══ -->
+<div id="toast-region" role="region" aria-live="polite" aria-label="Notifications"></div>
+
+<!-- ═══ AUTH ═══ -->
+<div id="auth-screen" style="display:none">
+  <div class="auth-box">
+    <div class="auth-logo">
+      <div style="display:flex;align-items:center;justify-content:center;width:56px;height:56px;border-radius:14px;background:var(--primary);margin:0 auto"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 002-2V2"/><path d="M7 2v20"/><path d="M21 15V2a5 5 0 00-5 5v6c0 1.1.9 2 2 2h3zm0 0v7"/></svg></div>
+      <h1>Back Office</h1>
+      <p>Restaurant Management System</p>
+    </div>
+    <div class="auth-form">
+      <label for="auth-username">Username</label>
+      <input id="auth-username" type="text" placeholder="admin" autocomplete="username">
+      <label for="auth-password">Password</label>
+      <input id="auth-password" type="password" placeholder="••••••••" autocomplete="current-password"
+        onkeydown="if(event.key==='Enter')login()">
+      <button class="btn-auth" onclick="login()">Sign In</button>
+      <div id="auth-error"></div>
+      <p style="font-size:11px;color:var(--muted);margin-top:12px;text-align:center">
+        First time? Create an account below.
+      </p>
+      <button onclick="register()" style="width:100%;padding:10px;background:none;
+        border:1.5px solid var(--border);border-radius:8px;font-size:13px;font-weight:600;
+        color:var(--muted);margin-top:8px">Create Account</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ APP ═══ -->
+<div id="app">
+
+  <!-- ── SIDEBAR ── -->
+  <nav id="sidebar">
+    <div class="sb-logo">
+      <div class="sb-logo-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 002-2V2"/><path d="M7 2v20"/><path d="M21 15V2a5 5 0 00-5 5v6c0 1.1.9 2 2 2h3zm0 0v7"/></svg></div>
+      <div class="sb-logo-text">
+        <div class="sb-logo-name" id="hdr-name">Back Office</div>
+        <div class="sb-logo-sub" id="sb-branch">Restaurant POS</div>
+      </div>
+    </div>
+    <div class="sb-nav">
+      <div class="sb-section">Main</div>
+      <div class="nav-item active" id="nav-dashboard" onclick="showView('dashboard')" role="button" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' ')showView('dashboard')">
+        <svg class="ni-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+        <span>Dashboard</span>
+      </div>
+      <div class="nav-item" id="nav-live" onclick="showView('live')" role="button" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' ')showView('live')">
+        <svg class="ni-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="9" rx="1"/><rect x="14" y="3" width="7" height="5" rx="1"/><rect x="14" y="12" width="7" height="9" rx="1"/><rect x="3" y="16" width="7" height="5" rx="1"/></svg>
+        <span>Live Orders</span>
+      </div>
+      <div class="nav-item" id="nav-orders" onclick="showView('orders')" role="button" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' ')showView('orders')">
+        <svg class="ni-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+        <span>Orders</span>
+      </div>
+      <div class="nav-item" id="nav-menu" onclick="showView('menu')" role="button" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' ')showView('menu')">
+        <svg class="ni-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 002-2V2"/><path d="M7 2v20"/><path d="M21 15V2a5 5 0 00-5 5v6c0 1.1.9 2 2 2h3zm0 0v7"/></svg>
+        <span>Menu</span>
+      </div>
+      <div class="nav-item" id="nav-reports" onclick="showView('reports')" role="button" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' ')showView('reports')">
+        <svg class="ni-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+        <span>Reports</span>
+      </div>
+      <div class="sb-section">Manage</div>
+      <div class="nav-item" id="nav-staff" onclick="showView('staff')" role="button" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' ')showView('staff')">
+        <svg class="ni-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
+        <span>Staff</span>
+      </div>
+      <div class="nav-item" id="nav-audit" onclick="showView('audit')" role="button" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' ')showView('audit')">
+        <svg class="ni-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+        <span>Audit Log</span>
+      </div>
+      <div class="nav-item" id="nav-printers" onclick="showView('printers')" role="button" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' ')showView('printers')">
+        <svg class="ni-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+        <span>Printers</span>
+      </div>
+      <div class="nav-item" id="nav-downloads" onclick="showView('downloads')" role="button" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' ')showView('downloads')">
+        <svg class="ni-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        <span>Downloads</span>
+      </div>
+      <div class="nav-item" id="nav-bo-settings" onclick="showView('bo-settings')" role="button" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' ')showView('bo-settings')">
+        <svg class="ni-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
+        <span>Settings</span>
+      </div>
+    </div>
+    <div class="sb-bottom">
+      <div class="sb-user-label">Logged in as</div>
+      <div class="sb-user-name" id="sb-user-name">—</div>
+      <div class="sb-user-role" id="sb-user-role">—</div>
+    </div>
+  </nav>
+
+  <!-- ── MAIN ── -->
+  <div id="main-wrap">
+    <header id="top-header">
+      <div class="hdr-left">
+        <h3 id="hdr-greeting-text">Back Office</h3>
+        <p id="hdr-date-text"></p>
+      </div>
+      <div class="hdr-search">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="color:#94a3b8;flex-shrink:0"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <input type="text" placeholder="Search orders, menu, staff…" id="global-search">
+      </div>
+      <div class="hdr-spacer"></div>
+      <div class="hdr-actions">
+        <span id="sync-status"></span>
+        <button class="hdr-btn" title="Audit Log" onclick="showView('audit')">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>
+        </button>
+        <button class="hdr-btn" title="Printers" onclick="showView('printers')">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+        </button>
+        <div class="hdr-date" id="hdr-time"></div>
+        <button class="hdr-user" onclick="logout()">
+          <div class="hdr-avatar" id="hdr-avatar-text">A</div>
+          <span class="hdr-user-name" id="hdr-user-display">Admin</span>
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 9l6 6 6-6"/></svg>
+        </button>
+      </div>
+    </header>
+    <div id="view-container">
+
+  <!-- ── DASHBOARD ── -->
+  <div class="view active" id="v-dashboard">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
+      <div>
+        <h2 style="font-size:18px;font-weight:800">Dashboard</h2>
+        <p style="font-size:12px;color:var(--muted)" id="dash-subtitle">Here's what's happening today</p>
+      </div>
+      <div class="date-filter">
+        <input type="date" id="dash-date" onchange="loadDashboard()">
+        <button class="btn btn-outline btn-sm" onclick="setDashDate('today');loadDashboard()">Today</button>
+        <button class="btn btn-outline btn-sm" onclick="setDashDate('yesterday');loadDashboard()">Yesterday</button>
+      </div>
+    </div>
+
+    <!-- KPI ROW -->
+    <div class="kpi-grid">
+      <div class="kpi-card kpi-card-orange">
+        <div class="kpi-icon-wrap kpi-icon-orange"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg></div>
+        <div class="kpi-label">Gross Sales</div>
+        <div class="kpi-value" id="kpi-sales">—</div>
+        <div class="kpi-sub" id="kpi-sales-sub">Loading…</div>
+      </div>
+      <div class="kpi-card kpi-card-blue">
+        <div class="kpi-icon-wrap kpi-icon-blue"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></div>
+        <div class="kpi-label">Total Orders</div>
+        <div class="kpi-value" id="kpi-orders">—</div>
+        <div class="kpi-sub" id="kpi-orders-sub">All types</div>
+      </div>
+      <div class="kpi-card kpi-card-green">
+        <div class="kpi-icon-wrap kpi-icon-green"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 12 20 22 4 22 4 12"/><rect x="2" y="7" width="20" height="5"/></svg></div>
+        <div class="kpi-label">Net Revenue</div>
+        <div class="kpi-value" id="kpi-net">—</div>
+        <div class="kpi-sub" id="kpi-net-sub">After expenses</div>
+      </div>
+      <div class="kpi-card kpi-card-red">
+        <div class="kpi-icon-wrap kpi-icon-red"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 7H4a2 2 0 00-2 2v6a2 2 0 002 2h16a2 2 0 002-2V9a2 2 0 00-2-2z"/><circle cx="12" cy="12" r="2"/></svg></div>
+        <div class="kpi-label">Total Expenses</div>
+        <div class="kpi-value" id="kpi-expenses">—</div>
+        <div class="kpi-sub">Cost outflows</div>
+      </div>
+      <div class="kpi-card kpi-card-purple">
+        <div class="kpi-icon-wrap kpi-icon-purple"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div>
+        <div class="kpi-label">Avg Order</div>
+        <div class="kpi-value" id="kpi-avg">—</div>
+        <div class="kpi-sub">Per transaction</div>
+      </div>
+    </div>
+
+    <!-- ROW 2: Live Orders | Sales/Types | Payment Donut -->
+    <div class="dash-row dash-row-2">
+      <div class="dash-widget">
+        <div class="dash-widget-hdr"><h4>Live Orders</h4><a onclick="showView('orders')">View All →</a></div>
+        <div id="live-orders-widget" style="padding:0 14px">
+          <div style="text-align:center;padding:28px;color:var(--muted);font-size:13px">Loading…</div>
+        </div>
+      </div>
+      <div class="dash-widget">
+        <div class="dash-widget-hdr">
+          <h4>Sales Overview</h4>
+          <div style="font-size:11px;color:var(--muted)" id="sales-chart-period"></div>
+        </div>
+        <div class="dash-widget-body">
+          <div style="margin-bottom:14px">
+            <div class="sales-chart-total" id="sales-chart-total">—</div>
+            <div style="font-size:11px;color:var(--muted)">Total for selected date</div>
+          </div>
+          <div id="dash-by-type"></div>
+        </div>
+      </div>
+      <div class="dash-widget">
+        <div class="dash-widget-hdr"><h4>Payment Breakdown</h4></div>
+        <div class="dash-widget-body">
+          <div class="donut-wrap">
+            <svg width="76" height="76" viewBox="0 0 76 76" style="flex-shrink:0">
+              <circle cx="38" cy="38" r="28" fill="none" stroke="#f1f5f9" stroke-width="11"/>
+              <circle id="donut-cash" cx="38" cy="38" r="28" fill="none" stroke="#f97316" stroke-width="11" stroke-dasharray="0 176" stroke-linecap="butt" transform="rotate(-90 38 38)" style="transition:stroke-dasharray .5s ease"/>
+              <circle id="donut-card" cx="38" cy="38" r="28" fill="none" stroke="#3b82f6" stroke-width="11" stroke-dasharray="0 176" stroke-linecap="butt" transform="rotate(-90 38 38)" style="transition:stroke-dasharray .5s ease"/>
+              <circle id="donut-online" cx="38" cy="38" r="28" fill="none" stroke="#8b5cf6" stroke-width="11" stroke-dasharray="0 176" stroke-linecap="butt" transform="rotate(-90 38 38)" style="transition:stroke-dasharray .5s ease"/>
+            </svg>
+            <div class="donut-legend" id="donut-legend">
+              <div style="font-size:12px;color:var(--muted)">Loading…</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ROW 3: Top Items | Orders by Type bar | Alerts -->
+    <div class="dash-row dash-row-3">
+      <div class="dash-widget">
+        <div class="dash-widget-hdr"><h4>Top Items Today</h4><a onclick="showView('menu')">Menu →</a></div>
+        <div id="top-items-widget" style="padding:0 14px">
+          <div style="text-align:center;padding:24px;color:var(--muted);font-size:13px">No data</div>
+        </div>
+      </div>
+      <div class="dash-widget">
+        <div class="dash-widget-hdr"><h4>Orders by Type</h4></div>
+        <div class="dash-widget-body" id="dash-by-payment"></div>
+      </div>
+      <div class="dash-widget">
+        <div class="dash-widget-hdr"><h4>Alerts &amp; Activity</h4><a onclick="showView('audit')">Log →</a></div>
+        <div id="dash-alerts" style="padding:0 14px">
+          <div style="text-align:center;padding:24px;color:var(--muted);font-size:13px">No alerts</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- QUICK ACTIONS -->
+    <div class="dash-widget">
+      <div class="dash-widget-hdr"><h4>Quick Actions</h4></div>
+      <div style="padding:12px 14px;display:flex;flex-wrap:wrap;gap:8px">
+        <button class="qa-btn" onclick="showItemModal()"><div class="qa-icon" style="background:#fff7ed;color:var(--primary)"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></div>Add Menu Item</button>
+        <button class="qa-btn" onclick="showCatModal()"><div class="qa-icon" style="background:#fff7ed;color:var(--primary)"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 002-2V2"/><path d="M7 2v20"/></svg></div>Add Category</button>
+        <button class="qa-btn" onclick="showStaffModal()"><div class="qa-icon" style="background:#eff6ff;color:#3b82f6"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></div>Add Staff</button>
+        <button class="qa-btn" onclick="showView('reports');loadReport()"><div class="qa-icon" style="background:#f0fdf4;color:#16a34a"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg></div>View Reports</button>
+        <button class="qa-btn" onclick="exportCSV()"><div class="qa-icon" style="background:#fdf4ff;color:#9333ea"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg></div>Export CSV</button>
+        <button class="qa-btn" onclick="downloadBackup()"><div class="qa-icon" style="background:var(--danger-bg);color:var(--danger)"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg></div>Backup</button>
+        <button class="qa-btn" onclick="showView('audit')"><div class="qa-icon" style="background:#fffbeb;color:#b45309"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div>Audit Log</button>
+        <button class="qa-btn" onclick="showView('printers')"><div class="qa-icon" style="background:#f1f5f9;color:var(--muted)"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg></div>Printers</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── MENU ── -->
+  <div class="view" id="v-menu">
+    <div class="page-header">
+      <h2>Menu Management</h2>
+      <div style="display:flex;gap:10px">
+        <button class="btn btn-outline" onclick="showCatModal()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 002-2V2"/><path d="M7 2v20"/><path d="M21 15V2a5 5 0 00-5 5v6c0 1.1.9 2 2 2h3zm0 0v7"/></svg> Add Category</button>
+        <button class="btn btn-primary" onclick="showItemModal()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg> Add Item</button>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-header"><h3>Categories</h3><span id="cat-count" style="font-size:13px;color:var(--muted)"></span></div>
+      <div class="table-wrap">
+        <table class="data-table">
+          <thead><tr><th>Name</th><th>Color</th><th>Sort Order</th><th>Status</th><th>Actions</th></tr></thead>
+          <tbody id="cat-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-header">
+        <h3>Menu Items</h3>
+        <div class="filter-bar" id="menu-cat-filter" style="margin:0"></div>
+      </div>
+      <div class="table-wrap">
+        <table class="data-table">
+          <thead><tr><th>Name</th><th>Category</th><th>Price</th><th>Description</th><th>Available</th><th>Actions</th></tr></thead>
+          <tbody id="items-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── ORDERS ── -->
+  <div class="view" id="v-orders">
+    <div class="page-header">
+      <h2>Orders</h2>
+      <div class="date-filter">
+        <input type="date" id="orders-date" onchange="loadOrders()">
+        <button class="btn btn-outline btn-sm" onclick="setOrdersDate('today');loadOrders()">Today</button>
+      </div>
+    </div>
+    <div class="filter-bar">
+      <button class="filter-chip active" onclick="filterOrdersView('all',this)">All</button>
+      <button class="filter-chip" onclick="filterOrdersView('dine-in',this)">🍽 Dine-in</button>
+      <button class="filter-chip" onclick="filterOrdersView('takeaway',this)">🥡 Takeaway</button>
+      <button class="filter-chip" onclick="filterOrdersView('delivery',this)">🛵 Delivery</button>
+      <button class="filter-chip" onclick="filterOrdersView('online',this)">📱 Online</button>
+    </div>
+    <div class="card">
+      <div class="table-wrap">
+        <table class="data-table">
+          <thead><tr><th>Order #</th><th>Type</th><th>Customer/Table</th><th>Subtotal</th><th>Tax</th><th>Discount</th><th>Total</th><th>Payment</th><th>Cashier</th><th>Status</th><th>Time</th></tr></thead>
+          <tbody id="orders-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── REPORTS ── -->
+  <div class="view" id="v-reports">
+    <div class="page-header"><h2>Reports</h2></div>
+    <div class="rpt-tabs">
+      <button class="rpt-tab active" onclick="switchRptTab('sales',this)">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="display:inline;vertical-align:middle;margin-right:5px"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>Sales
+      </button>
+      <button class="rpt-tab" onclick="switchRptTab('ops',this)">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="display:inline;vertical-align:middle;margin-right:5px"><path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 002-2V2"/><path d="M7 2v20"/><path d="M21 15V2a5 5 0 00-5 5v6c0 1.1.9 2 2 2h3zm0 0v7"/></svg>Operations
+      </button>
+      <button class="rpt-tab" onclick="switchRptTab('inventory',this)">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="display:inline;vertical-align:middle;margin-right:5px"><path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z"/></svg>Inventory
+      </button>
+      <button class="rpt-tab" onclick="switchRptTab('security',this)">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="display:inline;vertical-align:middle;margin-right:5px"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>Audit &amp; Security
+      </button>
+    </div>
+
+    <!-- ─── SALES TAB ─── -->
+    <div id="rpt-pane-sales">
+    <div class="card">
+      <div class="card-header"><h3>Sales Report</h3></div>
+      <div class="card-body">
+        <div class="form-row" style="align-items:flex-end;margin-bottom:16px">
+          <div class="form-group" style="margin:0"><label>From</label><input type="date" id="rep-from"></div>
+          <div class="form-group" style="margin:0"><label>To</label><input type="date" id="rep-to"></div>
+          <button class="btn btn-primary" onclick="loadReport()"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="5 3 19 12 5 21 5 3"/></svg> Generate</button>
+          <button class="btn btn-outline" onclick="exportCSV()"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> Export CSV</button>
+        </div>
+        <div id="report-summary" style="display:none">
+          <div class="kpi-grid" id="rep-kpis" style="margin-bottom:16px"></div>
+          <div class="table-wrap">
+            <table class="data-table" id="rep-table">
+              <thead><tr><th>Date</th><th>Orders</th><th>Gross Sales</th><th>Expenses</th><th>Net</th><th>Cash</th><th>Card</th><th>Online Pay</th></tr></thead>
+              <tbody id="rep-tbody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-header"><h3>Expenses Report</h3></div>
+      <div class="card-body">
+        <div class="form-row" style="align-items:flex-end;margin-bottom:16px">
+          <div class="form-group" style="margin:0"><label>From</label><input type="date" id="exp-rep-from"></div>
+          <div class="form-group" style="margin:0"><label>To</label><input type="date" id="exp-rep-to"></div>
+          <button class="btn btn-primary" onclick="loadExpReport()"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="5 3 19 12 5 21 5 3"/></svg> Generate</button>
+        </div>
+        <div id="exp-report-content">
+          <div class="table-wrap">
+            <table class="data-table">
+              <thead><tr><th>Date</th><th>Category</th><th>Description</th><th>Cashier</th><th>Amount</th></tr></thead>
+              <tbody id="exp-rep-tbody"></tbody>
+            </table>
+          </div>
+          <div style="text-align:right;padding:12px 0;font-size:15px;font-weight:700">Total: <span id="exp-rep-total"></span></div>
+        </div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-header">
+        <h3>Cashier Performance</h3>
+        <div style="display:flex;gap:8px">
+          <input type="date" id="perf-from"><input type="date" id="perf-to">
+          <button class="btn btn-primary btn-sm" onclick="loadCashierPerformance()"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="5 3 19 12 5 21 5 3"/></svg> Generate</button>
+          <button class="btn btn-outline btn-sm" onclick="exportCashierPerformanceCSV()"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> CSV</button>
+        </div>
+      </div>
+      <div class="card-body">
+        <div class="table-wrap">
+          <table class="data-table" id="perf-table">
+            <thead><tr><th>Cashier</th><th>Orders</th><th>Total Sales</th><th>Avg Order</th><th>Discounts Given</th><th>Voids</th></tr></thead>
+            <tbody id="perf-tbody"><tr><td colspan="6" style="text-align:center;color:var(--muted);padding:20px">Select date range and click Generate</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-header">
+        <h3>Void / Discount Report</h3>
+        <div style="display:flex;gap:8px">
+          <input type="date" id="void-rep-from"><input type="date" id="void-rep-to">
+          <button class="btn btn-primary btn-sm" onclick="loadVoidReport()"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="5 3 19 12 5 21 5 3"/></svg> Generate</button>
+          <button class="btn btn-outline btn-sm" onclick="exportVoidCSV()"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> CSV</button>
+        </div>
+      </div>
+      <div class="card-body">
+        <div class="table-wrap">
+          <table class="data-table">
+            <thead><tr><th>Time</th><th>Action</th><th>Entity</th><th>Cashier</th><th>Approved By</th><th>Details</th></tr></thead>
+            <tbody id="void-rep-tbody"><tr><td colspan="6" style="text-align:center;color:var(--muted);padding:20px">Select date range and click Generate</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+    </div><!-- /rpt-pane-sales -->
+
+    <!-- ─── OPERATIONS TAB ─── -->
+    <div id="rpt-pane-ops" style="display:none">
+      <!-- Item Consumption -->
+      <div class="card">
+        <div class="card-header">
+          <h3>Item Consumption Report</h3>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+            <input type="date" id="ic-from"><input type="date" id="ic-to">
+            <button class="btn btn-primary btn-sm" onclick="loadItemConsumption()"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="5 3 19 12 5 21 5 3"/></svg> Generate</button>
+            <button class="btn btn-outline btn-sm" onclick="exportItemConsumptionCSV()"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> CSV</button>
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="table-wrap">
+            <table class="data-table">
+              <thead><tr><th>#</th><th>Item Name</th><th>Category</th><th>Qty Sold</th><th>Orders</th><th>Revenue</th></tr></thead>
+              <tbody id="ic-tbody"><tr><td colspan="6" style="text-align:center;color:var(--muted);padding:20px">Select date range and Generate</td></tr></tbody>
+            </table>
+          </div>
+          <div id="ic-total" style="text-align:right;padding:10px 0;font-size:14px;font-weight:700;display:none"></div>
+        </div>
+      </div>
+      <!-- Wastage Report -->
+      <div class="card">
+        <div class="card-header">
+          <h3>Wastage Report <span style="font-size:10px;font-weight:400;color:var(--muted)">(Voided &amp; Cancelled Orders)</span></h3>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+            <input type="date" id="wast-from"><input type="date" id="wast-to">
+            <button class="btn btn-primary btn-sm" onclick="loadWastageReport()"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="5 3 19 12 5 21 5 3"/></svg> Generate</button>
+            <button class="btn btn-outline btn-sm" onclick="exportWastageCSV()"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> CSV</button>
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="table-wrap">
+            <table class="data-table">
+              <thead><tr><th>Order #</th><th>Type</th><th>Status</th><th>Cashier</th><th>Items</th><th>Value</th><th>Reason</th><th>Time</th></tr></thead>
+              <tbody id="wast-tbody"><tr><td colspan="8" style="text-align:center;color:var(--muted);padding:20px">Select date range and Generate</td></tr></tbody>
+            </table>
+          </div>
+          <div id="wast-total" style="text-align:right;padding:10px 0;font-size:14px;font-weight:700;display:none"></div>
+        </div>
+      </div>
+    </div><!-- /rpt-pane-ops -->
+
+    <!-- ─── INVENTORY TAB ─── -->
+    <div id="rpt-pane-inventory" style="display:none">
+      <div class="card" style="border:1.5px solid var(--info-border);background:var(--info-bg)">
+        <div class="card-body" style="display:flex;align-items:center;gap:14px;padding:16px">
+          <div style="width:40px;height:40px;border-radius:10px;background:var(--info);display:flex;align-items:center;justify-content:center;flex-shrink:0"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5"><path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z"/></svg></div>
+          <div>
+            <div style="font-size:14px;font-weight:700;color:var(--info)">Inventory Module Not Configured</div>
+            <div style="font-size:12px;color:var(--info);opacity:.8;margin-top:2px">These reports require the Inventory Module. Stock items, recipes, suppliers and purchase orders must be set up first.</div>
+          </div>
+        </div>
+      </div>
+      <div class="rpt-soon-grid">
+        <div class="rpt-soon-card">
+          <div class="rpt-soon-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z"/></svg></div>
+          <div class="rpt-soon-name">Stock Summary</div>
+          <div class="rpt-soon-desc">Current stock levels, value on hand, reorder status per ingredient.</div>
+          <span class="rpt-soon-tag">Inventory Module</span>
+        </div>
+        <div class="rpt-soon-card">
+          <div class="rpt-soon-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></div>
+          <div class="rpt-soon-name">Low Stock Report</div>
+          <div class="rpt-soon-desc">Items below minimum threshold. Prioritised reorder list.</div>
+          <span class="rpt-soon-tag">Inventory Module</span>
+        </div>
+        <div class="rpt-soon-card">
+          <div class="rpt-soon-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 002-2V2"/><path d="M7 2v20"/><path d="M21 15V2a5 5 0 00-5 5v6c0 1.1.9 2 2 2h3zm0 0v7"/></svg></div>
+          <div class="rpt-soon-name">Recipe Consumption</div>
+          <div class="rpt-soon-desc">Ingredient usage per dish sold. Theoretical vs actual.</div>
+          <span class="rpt-soon-tag">Inventory Module</span>
+        </div>
+        <div class="rpt-soon-card">
+          <div class="rpt-soon-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></div>
+          <div class="rpt-soon-name">Stock Adjustment</div>
+          <div class="rpt-soon-desc">Manual stock in/out log with reason codes and approvals.</div>
+          <span class="rpt-soon-tag">Inventory Module</span>
+        </div>
+        <div class="rpt-soon-card">
+          <div class="rpt-soon-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="3" width="15" height="13"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg></div>
+          <div class="rpt-soon-name">Purchase Report</div>
+          <div class="rpt-soon-desc">Purchase orders by supplier, date, item. Variance to invoice.</div>
+          <span class="rpt-soon-tag">Inventory Module</span>
+        </div>
+        <div class="rpt-soon-card">
+          <div class="rpt-soon-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg></div>
+          <div class="rpt-soon-name">Vendor Report</div>
+          <div class="rpt-soon-desc">Supplier performance, spend by vendor, delivery timelines.</div>
+          <span class="rpt-soon-tag">Inventory Module</span>
+        </div>
+        <div class="rpt-soon-card">
+          <div class="rpt-soon-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></div>
+          <div class="rpt-soon-name">Expiry Report</div>
+          <div class="rpt-soon-desc">Ingredients expiring within 7/30 days. Reduce waste alerts.</div>
+          <span class="rpt-soon-tag">Inventory Module</span>
+        </div>
+      </div>
+    </div><!-- /rpt-pane-inventory -->
+
+    <!-- ─── SECURITY TAB ─── -->
+    <div id="rpt-pane-security" style="display:none">
+      <!-- Passcode Usage -->
+      <div class="card">
+        <div class="card-header">
+          <h3>Passcode Usage Report</h3>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+            <input type="date" id="pass-from"><input type="date" id="pass-to">
+            <button class="btn btn-primary btn-sm" onclick="loadPasscodeUsage()"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="5 3 19 12 5 21 5 3"/></svg> Generate</button>
+            <button class="btn btn-outline btn-sm" onclick="exportPasscodeCSV()"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> CSV</button>
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="table-wrap">
+            <table class="data-table">
+              <thead><tr><th>Time</th><th>Action</th><th>Requested By</th><th>Approved By</th><th>Details</th><th>Terminal</th></tr></thead>
+              <tbody id="pass-tbody"><tr><td colspan="6" style="text-align:center;color:var(--muted);padding:20px">Select date range and Generate</td></tr></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+      <!-- Deleted Data -->
+      <div class="card">
+        <div class="card-header">
+          <h3>Deleted Data Report</h3>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+            <input type="date" id="del-from"><input type="date" id="del-to">
+            <button class="btn btn-primary btn-sm" onclick="loadDeletedData()"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="5 3 19 12 5 21 5 3"/></svg> Generate</button>
+            <button class="btn btn-outline btn-sm" onclick="exportDeletedDataCSV()"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> CSV</button>
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="table-wrap">
+            <table class="data-table">
+              <thead><tr><th>Time</th><th>Action</th><th>Entity</th><th>Cashier</th><th>Approved By</th><th>Details</th><th>Terminal</th></tr></thead>
+              <tbody id="del-tbody"><tr><td colspan="7" style="text-align:center;color:var(--muted);padding:20px">Select date range and Generate</td></tr></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+      <!-- User Permissions -->
+      <div class="card">
+        <div class="card-header">
+          <h3>User Permission Report</h3>
+          <button class="btn btn-primary btn-sm" onclick="loadUserPermissions()"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="5 3 19 12 5 21 5 3"/></svg> Load</button>
+        </div>
+        <div class="card-body">
+          <div class="table-wrap">
+            <table class="data-table">
+              <thead><tr><th>Name</th><th>Role</th><th>PIN Set</th><th>Status</th><th>Created</th></tr></thead>
+              <tbody id="perm-tbody"><tr><td colspan="5" style="text-align:center;color:var(--muted);padding:20px">Click Load</td></tr></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+      <!-- Device Activity -->
+      <div class="card">
+        <div class="card-header">
+          <h3>Device Activity Report</h3>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+            <input type="date" id="dev-from"><input type="date" id="dev-to">
+            <button class="btn btn-primary btn-sm" onclick="loadDeviceActivity()"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="5 3 19 12 5 21 5 3"/></svg> Generate</button>
+            <button class="btn btn-outline btn-sm" onclick="exportDeviceActivityCSV()"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> CSV</button>
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="table-wrap">
+            <table class="data-table">
+              <thead><tr><th>Terminal ID</th><th>Events</th><th>Cashiers</th><th>Voids</th><th>Cancels</th><th>Discounts</th><th>Approvals</th><th>First Seen</th><th>Last Active</th></tr></thead>
+              <tbody id="dev-tbody"><tr><td colspan="9" style="text-align:center;color:var(--muted);padding:20px">Select date range and Generate</td></tr></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+      <!-- Failed Login — coming soon -->
+      <div class="rpt-soon-grid">
+        <div class="rpt-soon-card">
+          <div class="rpt-soon-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg></div>
+          <div class="rpt-soon-name">Failed Login Report</div>
+          <div class="rpt-soon-desc">Track failed PIN attempts per cashier and terminal.</div>
+          <span class="rpt-soon-tag">Requires failed_login_log table</span>
+        </div>
+      </div>
+    </div><!-- /rpt-pane-security -->
+
+  </div>
+
+  <!-- ── AUDIT LOG ── -->
+  <div class="view" id="v-audit">
+    <div class="page-header">
+      <h2>Audit Log</h2>
+      <button class="btn btn-outline" onclick="exportAuditCSV()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> Export CSV</button>
+    </div>
+    <div class="card">
+      <div class="card-header">
+        <h3>Activity Log</h3>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:flex-end">
+          <div style="display:flex;flex-direction:column;gap:2px"><label style="font-size:11px;color:var(--muted)">From</label><input type="date" id="audit-from"></div>
+          <div style="display:flex;flex-direction:column;gap:2px"><label style="font-size:11px;color:var(--muted)">To</label><input type="date" id="audit-to"></div>
+          <select id="audit-action-filter" style="padding:8px 12px;border:1.5px solid var(--border);border-radius:8px;font-size:13px;background:#fff">
+            <option value="">All Actions</option>
+            <option value="ORDER_CANCELLED">Order Cancelled</option>
+            <option value="ITEM_VOIDED">Item Voided</option>
+            <option value="DISCOUNT_MGR_APPROVED">Discount Approved</option>
+            <option value="MGR_APPROVAL">Manager Approval</option>
+            <option value="NO_SALE">No Sale</option>
+            <option value="TABLE_TRANSFER">Table Transfer</option>
+          </select>
+          <button class="btn btn-primary btn-sm" onclick="loadAuditLog()"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg> Filter</button>
+        </div>
+      </div>
+      <div class="card-body" style="padding:0">
+        <div class="table-wrap">
+          <table class="data-table">
+            <thead><tr><th>Time</th><th>Action</th><th>Type</th><th>Cashier</th><th>Approved By</th><th>Terminal</th><th>Details</th></tr></thead>
+            <tbody id="audit-tbody"><tr><td colspan="7" style="text-align:center;color:var(--muted);padding:20px">Loading…</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-header"><h3>No-Sale Log</h3></div>
+      <div class="card-body" style="padding:0">
+        <div class="table-wrap">
+          <table class="data-table">
+            <thead><tr><th>Time</th><th>Cashier</th><th>Terminal</th><th>Reason</th></tr></thead>
+            <tbody id="nosale-audit-tbody"><tr><td colspan="4" style="text-align:center;color:var(--muted);padding:20px">Loading…</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── STAFF ── -->
+  <div class="view" id="v-staff">
+    <div class="page-header">
+      <h2>Staff / Cashiers</h2>
+      <button class="btn btn-primary" onclick="showStaffModal()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/><line x1="19" y1="11" x2="19" y2="17"/><line x1="16" y1="14" x2="22" y2="14"/></svg> Add Staff</button>
+    </div>
+    <div class="card">
+      <div class="table-wrap">
+        <table class="data-table">
+          <thead><tr><th>Name</th><th>Role</th><th>PIN</th><th>Status</th><th>Created</th><th>Actions</th></tr></thead>
+          <tbody id="staff-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── DOWNLOADS ── -->
+  <div class="view" id="v-downloads">
+    <div class="page-header"><h2>Downloads &amp; System</h2></div>
+
+    <!-- Server Info -->
+    <div class="card" style="max-width:760px;margin-bottom:20px">
+      <div class="card-header"><h3>Server Information</h3><button class="btn btn-outline" onclick="loadServerInfo()"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 11-2.12-9.36L23 10"/></svg> Refresh</button></div>
+      <div id="server-info-body" style="padding:16px;display:grid;grid-template-columns:1fr 1fr;gap:12px">
+        <div style="color:#64748b;font-size:13px">Loading…</div>
+      </div>
+    </div>
+
+    <!-- POS Installer -->
+    <div class="card" style="max-width:760px;margin-bottom:20px">
+      <div class="card-header"><h3>POS Terminal Installer</h3><button class="btn btn-outline" onclick="loadInstallerFiles()"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 11-2.12-9.36L23 10"/></svg> Refresh</button></div>
+      <div style="padding:16px">
+        <p style="font-size:13px;color:#64748b;margin-bottom:12px">Install on each cashier / waiter Windows PC. Run the installer, enter this server's IP + machine ID when prompted.</p>
+        <div id="installer-file-list"><div style="color:#64748b;font-size:13px">Loading…</div></div>
+        <div style="margin-top:16px;padding:14px;background:#f8fafc;border-radius:8px;font-size:12px;color:#475569">
+          <b>Quick Install Steps:</b><br>
+          1. Copy .exe to client PC &nbsp;→&nbsp; 2. Run installer &nbsp;→&nbsp; 3. Enter Server IP below + Machine ID (POS-01, WAITER-01…)<br>
+          4. Expand Advanced &nbsp;→&nbsp; enter DB password &nbsp;→&nbsp; Connect &amp; Save
+        </div>
+      </div>
+    </div>
+
+    <!-- Web Apps -->
+    <div class="card" style="max-width:760px;margin-bottom:20px">
+      <div class="card-header"><h3>Web Apps (Browser-based)</h3></div>
+      <div style="padding:16px;display:flex;flex-wrap:wrap;gap:12px" id="web-app-links">
+        <a id="link-waiter" href="#" target="_blank" style="display:inline-block;padding:10px 18px;background:#0ea5e9;color:#fff;border-radius:8px;font-weight:600;text-decoration:none;font-size:13px">🧑‍🍳 Waiter App</a>
+        <a id="link-kds"    href="#" target="_blank" style="display:inline-block;padding:10px 18px;background:#8b5cf6;color:#fff;border-radius:8px;font-weight:600;text-decoration:none;font-size:13px">📺 Kitchen Display (KDS)</a>
+        <a id="link-bo"     href="#" target="_blank" style="display:inline-block;padding:10px 18px;background:#f97316;color:#fff;border-radius:8px;font-weight:600;text-decoration:none;font-size:13px">🏢 Back Office</a>
+      </div>
+      <div style="padding:0 16px 16px;font-size:12px;color:#64748b">Open these links on any device on the same network. Bookmark them for quick access.</div>
+    </div>
+
+    <!-- Backup & Recovery -->
+    <div class="card" style="max-width:760px;margin-bottom:20px">
+      <div class="card-header"><h3>Data Backup &amp; Recovery</h3></div>
+      <div style="padding:16px">
+        <p style="font-size:13px;color:#64748b;margin-bottom:16px">
+          All data lives in PostgreSQL on this server PC. POS terminals are just clients — if a terminal breaks, install on a new PC and connect.<br><br>
+          <b>If the server PC is damaged:</b> restore PostgreSQL on a new PC, then restore from backup below. All data recovered instantly.
+        </p>
+        <div style="display:flex;gap:12px;flex-wrap:wrap">
+          <button class="btn btn-primary" onclick="downloadBackup()"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> Download Full Backup (.json)</button>
+          <button class="btn btn-outline" id="btn-schedule-backup" onclick="toggleScheduledBackup()"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> Auto Backup: <span id="auto-backup-status">OFF</span></button>
+        </div>
+        <div style="margin-top:12px;font-size:12px;color:#94a3b8" id="last-backup-info"></div>
+        <div style="margin-top:16px;padding:14px;background:#fef3c7;border-radius:8px;font-size:12px;color:#92400e">
+          <b>Recovery instructions:</b><br>
+          1. Install PostgreSQL on new server PC &nbsp;→&nbsp; 2. Create DB + user (see Admin Guide)<br>
+          3. Start API server (npm start in server/) &nbsp;→&nbsp; 4. Go to Settings → Restore &amp; upload backup file<br>
+          5. Reinstall POS on terminals → connect to new server IP → all data immediately available
+        </div>
+      </div>
+    </div>
+
+    <!-- Auto Update -->
+    <div class="card" style="max-width:760px">
+      <div class="card-header"><h3>Auto Update</h3></div>
+      <div style="padding:16px;font-size:13px;color:#475569">
+        <p>POS terminals check for updates automatically on startup and every 4 hours. When a new .exe is built:</p>
+        <ol style="margin:10px 0 0 16px;line-height:1.9">
+          <li>Run <code>npm run build</code> in <code>pos/</code></li>
+          <li>Copy <code>dist/Restaurant POS Setup X.X.X.exe</code> + <code>latest.yml</code> to <code>server/updates/</code></li>
+          <li>Terminals detect update automatically and prompt user to restart</li>
+        </ol>
+        <div style="margin-top:12px;display:flex;gap:10px;flex-wrap:wrap" id="update-files-list"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── SETTINGS ── -->
+  <div class="view" id="v-bo-settings">
+    <div class="page-header"><h2>Settings</h2></div>
+    <div class="card" style="max-width:680px">
+      <div class="card-header"><h3>Restaurant Info</h3></div>
+      <div class="card-body">
+        <div class="form-group">
+          <label for="bos-name">Restaurant Name</label>
+          <input id="bos-name" type="text">
+        </div>
+        <div class="form-group">
+          <label for="bos-branch">Branch Name</label>
+          <input id="bos-branch" type="text" placeholder="e.g. Main Branch, Outlet 2">
+          <div class="form-hint">Optional — appears on receipts and reports</div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label for="bos-currency">Currency Symbol</label>
+            <input id="bos-currency" type="text">
+          </div>
+          <div class="form-group">
+            <label for="bos-tax">Tax Rate (%)</label>
+            <input id="bos-tax" type="number" min="0" step="0.1">
+          </div>
+        </div>
+        <div class="settings-section-divider">Charges &amp; Approvals</div>
+        <div class="form-row">
+          <div class="form-group">
+            <label for="bos-sc-rate">Service Charge (%)</label>
+            <input id="bos-sc-rate" type="number" min="0" step="0.1" placeholder="0">
+          </div>
+          <div class="form-group">
+            <label for="bos-sc-label">Service Charge Label</label>
+            <input id="bos-sc-label" type="text" placeholder="Service Charge">
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label for="bos-mgr-threshold">Manager Approval Threshold (%)</label>
+            <input id="bos-mgr-threshold" type="number" min="0" max="100" placeholder="10">
+            <div class="form-hint">Discounts above this % require manager PIN</div>
+          </div>
+          <div class="form-group">
+            <label for="bos-void-reason">Require Void Reason</label>
+            <select id="bos-void-reason" style="width:100%;padding:9px 12px;border:1.5px solid var(--border);border-radius:8px;font-size:14px;background:#f8fafc">
+              <option value="1">Yes (recommended)</option>
+              <option value="0">No</option>
+            </select>
+          </div>
+        </div>
+        <div class="settings-section-divider">Receipt</div>
+        <div class="form-group">
+          <label for="bos-footer">Receipt Footer Message</label>
+          <input id="bos-footer" type="text" placeholder="e.g. Thank you for dining with us!">
+        </div>
+        <div style="margin-top:20px">
+          <button class="btn btn-primary" onclick="saveBOSettings()"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg> Save Settings</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="card" style="max-width:680px">
+      <div class="card-header" style="background:var(--warning-bg)"><h3 style="color:var(--warning)">Demo &amp; Data Management</h3></div>
+      <div class="card-body">
+        <div class="settings-section-divider">Demo Data</div>
+        <p style="font-size:13px;color:var(--muted);margin-bottom:16px">
+          Generate a complete demo environment: restaurant config, full menu (40+ items), staff, customers, and historical orders.
+        </p>
+        <div style="background:#f8fafc;border-radius:10px;padding:16px;margin-bottom:16px;border:1px solid var(--border)">
+          <div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap;margin-bottom:12px">
+            <div>
+              <label for="seed-days" style="font-size:12px;font-weight:600;color:var(--muted);display:block;margin-bottom:4px">History (days)</label>
+              <input id="seed-days" type="number" value="30" min="1" max="90" style="width:80px;padding:8px;border:1.5px solid var(--border);border-radius:6px;font-size:14px;font-weight:700">
+            </div>
+            <div style="display:flex;align-items:center;gap:6px;margin-top:18px">
+              <input type="checkbox" id="seed-clear" style="width:16px;height:16px;cursor:pointer">
+              <label for="seed-clear" style="font-size:13px;cursor:pointer;color:var(--danger);font-weight:600">Clear existing data first</label>
+            </div>
+          </div>
+          <div style="font-size:12px;color:var(--muted);margin-bottom:12px">
+            Generates: <b>restaurant config</b> · <b>16 tables</b> · <b>7 staff</b> · <b>9 categories</b> · <b>41 menu items</b> · <b>5 customers</b> · <b>realistic orders &amp; shifts</b> · <b>day closings</b> · <b>audit samples</b>
+          </div>
+          <button class="btn btn-primary" onclick="runFullSeed()" id="btn-seed"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10z"/></svg> Generate Demo Environment</button>
+        </div>
+        <div id="seed-progress" style="display:none">
+          <div style="background:#e2e8f0;border-radius:6px;height:6px;margin-bottom:10px">
+            <div id="seed-bar" style="background:var(--primary);height:6px;border-radius:6px;width:0%;transition:width .4s"></div>
+          </div>
+          <div id="seed-log" style="font-size:12px;color:var(--muted);line-height:1.8;max-height:160px;overflow-y:auto;font-family:monospace;background:#f8fafc;padding:10px;border-radius:6px;border:1px solid var(--border)"></div>
+        </div>
+        <p id="seed-status" style="font-size:13px;margin-top:10px;font-weight:600"></p>
+
+        <div class="settings-section-divider" style="color:var(--danger)">Danger Zone</div>
+        <div class="settings-danger-group">
+          <p style="font-size:13px;color:var(--danger);font-weight:600;margin-bottom:8px">Permanently delete transaction data</p>
+          <p style="font-size:12px;color:var(--muted);margin-bottom:12px">Deletes ALL orders, shifts, expenses, day closings, and audit log. Menu and staff are kept. This cannot be undone.</p>
+          <button class="btn btn-danger btn-sm" onclick="clearTransactionData()"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6M14 11v6"/></svg> Clear Transaction Data</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── PRINTERS VIEW ── -->
+  <div class="view" id="v-printers">
+    <div class="page-header" style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px">
+      <h2>Network Printers</h2>
+      <button class="btn btn-primary" onclick="openPrinterModal()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/><rect x="6" y="14" width="12" height="8"/><line x1="12" y1="17" x2="12" y2="17" stroke-linecap="round" stroke-width="3"/></svg> Add Printer</button>
+    </div>
+    <p style="font-size:13px;color:var(--muted);margin-bottom:20px">
+      Configure IP-addressable thermal printers. KOT tickets from waiter apps print directly to these printers.
+      Leave empty to use USB printers on POS terminals instead.
+    </p>
+    <div class="card">
+      <div class="table-wrap">
+        <table class="data-table">
+          <thead><tr><th>Name</th><th>Type</th><th>IP Address</th><th>Port</th><th>Area</th><th>Status</th><th>Actions</th></tr></thead>
+          <tbody id="printers-tbody"><tr><td colspan="7" style="text-align:center;color:var(--muted);padding:24px">Loading…</td></tr></tbody>
+        </table>
+      </div>
+  <!-- ── LIVE ORDERS VIEW ── -->
+  <div class="view" id="v-live" style="padding:0;max-width:none">
+    <div class="live-wrap">
+      <!-- Top stats bar -->
+      <div class="live-topbar">
+        <div class="ls-chip">
+          <div class="ls-chip-icon" style="background:rgba(59,130,246,.2)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#60a5fa" stroke-width="2.5"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></div>
+          <div><div class="ls-chip-val" id="ls-active">0</div><div class="ls-chip-lbl">Active Orders</div></div>
+        </div>
+        <div class="ls-chip">
+          <div class="ls-chip-icon" style="background:rgba(249,115,22,.2)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fb923c" stroke-width="2.5"><path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 002-2V2"/><path d="M7 2v20"/><path d="M21 15V2a5 5 0 00-5 5v6c0 1.1.9 2 2 2h3zm0 0v7"/></svg></div>
+          <div><div class="ls-chip-val" id="ls-items">0</div><div class="ls-chip-lbl">Total Items</div></div>
+        </div>
+        <div class="ls-chip">
+          <div class="ls-chip-icon" style="background:rgba(239,68,68,.2)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#f87171" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div>
+          <div><div class="ls-chip-val" id="ls-waiting">0</div><div class="ls-chip-lbl">Waiting &gt;15m</div></div>
+        </div>
+        <div class="ls-chip" id="ls-chip-old" style="display:none">
+          <div class="ls-chip-icon" style="background:rgba(239,68,68,.15)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#f87171" stroke-width="2.5"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></div>
+          <div><div class="ls-chip-val" id="ls-old-count" style="color:#f87171">0</div><div class="ls-chip-lbl" style="color:#f87171">Old Orders</div></div>
+        </div>
+        <div class="ls-chip">
+          <div class="ls-chip-icon" style="background:rgba(34,197,94,.2)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#4ade80" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg></div>
+          <div><div class="ls-chip-val" id="ls-done">0</div><div class="ls-chip-lbl">Ready</div></div>
+        </div>
+        <div class="ls-spacer"></div>
+        <div class="ls-refresh-chip">
+          <div class="ls-pulse" id="ls-pulse-dot"></div>
+          <span id="ls-last-update">—</span>
+        </div>
+        <button class="btn btn-outline btn-sm" style="background:rgba(255,255,255,.06);border-color:rgba(255,255,255,.1);color:#94a3b8" onclick="loadLiveOrders()">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 11-2.12-9.36L23 10"/></svg> Refresh
+        </button>
+      </div>
+      <!-- Kanban + right panel -->
+      <div class="live-board-area">
+        <div class="live-cols">
+          <!-- New Orders -->
+          <div class="live-col">
+            <div class="live-col-hdr" style="border-top:3px solid #3b82f6">
+              <h4 style="color:#60a5fa">New Orders</h4>
+              <span class="lc-count" style="background:rgba(59,130,246,.15);color:#60a5fa" id="lc-cnt-new">0</span>
+            </div>
+            <div class="live-col-body" id="lc-new"></div>
+          </div>
+          <!-- Preparing -->
+          <div class="live-col">
+            <div class="live-col-hdr" style="border-top:3px solid #f97316">
+              <h4 style="color:#fb923c">Preparing</h4>
+              <span class="lc-count" style="background:rgba(249,115,22,.15);color:#fb923c" id="lc-cnt-preparing">0</span>
+            </div>
+            <div class="live-col-body" id="lc-preparing"></div>
+          </div>
+          <!-- Ready -->
+          <div class="live-col">
+            <div class="live-col-hdr" style="border-top:3px solid #22c55e">
+              <h4 style="color:#4ade80">Ready</h4>
+              <span class="lc-count" style="background:rgba(34,197,94,.15);color:#4ade80" id="lc-cnt-ready">0</span>
+            </div>
+            <div class="live-col-body" id="lc-ready"></div>
+          </div>
+          <!-- Waiting Payment -->
+          <div class="live-col">
+            <div class="live-col-hdr" style="border-top:3px solid #a855f7">
+              <h4 style="color:#c084fc">Waiting Payment</h4>
+              <span class="lc-count" style="background:rgba(168,85,247,.15);color:#c084fc" id="lc-cnt-waiting">0</span>
+            </div>
+            <div class="live-col-body" id="lc-waiting"></div>
+          </div>
+        </div>
+        <!-- Right summary panel -->
+        <div class="live-right">
+          <div class="live-right-inner">
+            <div class="lr-section">
+              <h5>Order Types</h5>
+              <div class="lr-row"><span class="lr-row-lbl"><span class="lr-dot" style="background:#60a5fa"></span>Dine-in</span><span class="lr-row-val" id="lr-dine">0</span></div>
+              <div class="lr-bar"><div class="lr-bar-fill" id="lr-dine-bar" style="background:#3b82f6;width:0%"></div></div>
+              <div class="lr-row"><span class="lr-row-lbl"><span class="lr-dot" style="background:#c084fc"></span>Takeaway</span><span class="lr-row-val" id="lr-take">0</span></div>
+              <div class="lr-bar"><div class="lr-bar-fill" id="lr-take-bar" style="background:#a855f7;width:0%"></div></div>
+              <div class="lr-row"><span class="lr-row-lbl"><span class="lr-dot" style="background:#4ade80"></span>Delivery</span><span class="lr-row-val" id="lr-del">0</span></div>
+              <div class="lr-bar"><div class="lr-bar-fill" id="lr-del-bar" style="background:#22c55e;width:0%"></div></div>
+              <div class="lr-row"><span class="lr-row-lbl"><span class="lr-dot" style="background:#fb923c"></span>Online</span><span class="lr-row-val" id="lr-online">0</span></div>
+              <div class="lr-bar"><div class="lr-bar-fill" id="lr-online-bar" style="background:#f97316;width:0%"></div></div>
+            </div>
+            <div class="lr-section">
+              <h5>Recent Completed</h5>
+              <div id="lr-recent"><div style="font-size:11px;color:#334155;padding:4px 0">No completed orders yet</div></div>
+            </div>
+          </div>
+          <div class="live-footer">
+            <div class="ls-pulse" style="width:6px;height:6px;border-radius:50%;background:#22c55e;animation:ls-pulse 2s infinite"></div>
+            <span>Auto-refresh every 30s</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+    </div><!-- end view-container -->
+  </div><!-- end main-wrap -->
+
+</div><!-- end app -->
+
+<!-- ═══ MODALS ═══ -->
+
+<!-- Category Modal -->
+<div class="modal-overlay" id="modal-cat">
+  <div class="modal" style="min-width:380px">
+    <h3 id="cat-modal-title">Add Category</h3>
+    <input type="hidden" id="cat-id">
+    <div class="form-group"><label>Category Name *</label><input id="cat-name" type="text" placeholder="e.g. Main Course"></div>
+    <div class="form-row">
+      <div class="form-group"><label>Color</label><input id="cat-color" type="color" value="#f97316" style="height:40px;padding:2px 6px"></div>
+      <div class="form-group"><label>Sort Order</label><input id="cat-sort" type="number" value="0" min="0"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('modal-cat')">Cancel</button>
+      <button class="btn btn-primary" onclick="saveCategory()"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg> Save Category</button>
+    </div>
+  </div>
+</div>
+
+<!-- Item Modal -->
+<div class="modal-overlay" id="modal-item">
+  <div class="modal">
+    <h3 id="item-modal-title">Add Menu Item</h3>
+    <input type="hidden" id="item-id">
+    <div class="form-row">
+      <div class="form-group" style="flex:2"><label>Item Name *</label><input id="item-name" type="text" placeholder="e.g. Grilled Chicken" oninput="autoFillItemCode()"></div>
+      <div class="form-group"><label>Price *</label><input id="item-price" type="number" placeholder="0.00" min="0" step="0.01"></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group" style="flex:1"><label>Item Code <span style="color:var(--muted);font-weight:400">(for quick search)</span></label><input id="item-code" type="text" placeholder="e.g. MJ or MJ001" style="text-transform:uppercase"></div>
+      <div class="form-group" style="flex:1"><label>Category *</label>
+        <select id="item-cat"><option value="">Select category...</option></select>
+      </div>
+    </div>
+    <div class="form-group"><label>Description</label>
+      <textarea id="item-desc" placeholder="Optional description..." rows="2" style="resize:none"></textarea>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('modal-item')">Cancel</button>
+      <button class="btn btn-primary" onclick="saveItem()"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg> Save Item</button>
+    </div>
+  </div>
+</div>
+
+<!-- Staff Modal -->
+<div class="modal-overlay" id="modal-staff">
+  <div class="modal modal-sm" style="min-width:360px">
+    <h3 id="staff-modal-title">Add Staff</h3>
+    <input type="hidden" id="staff-id">
+    <div class="form-group"><label>Name *</label><input id="staff-name" type="text"></div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>Role</label>
+        <select id="staff-role">
+          <option value="cashier">Cashier</option>
+          <option value="waiter">Waiter (no payment)</option>
+          <option value="manager">Manager</option>
+          <option value="admin">Admin</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>4-Digit PIN *</label>
+        <input id="staff-pin" type="password" maxlength="4" placeholder="e.g. 1234"
+          pattern="[0-9]{4}" inputmode="numeric"
+          style="letter-spacing:6px;font-size:18px;font-weight:700">
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('modal-staff')">Cancel</button>
+      <button class="btn btn-primary" onclick="saveStaff()"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg> Save</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════════════════════
+//  CONFIG — API base URL (same origin when served via /backoffice)
+// ═══════════════════════════════════════════════════════════════════
+const API_BASE = (function () {
+  // When served from Express at /backoffice/index.html, origin is the server.
+  // When opened as a local file, fall back to localhost:3001.
+  if (location.protocol === 'file:') return 'http://localhost:3001'
+  return location.origin
+})()
+
+let token       = localStorage.getItem('bo_token') || ''
+let currentUser = null
+let boSettings  = {
+  restaurant_name: 'My Restaurant', currency: 'RM', tax_rate: 10, receipt_footer: '',
+  branch_name: '', service_charge_rate: 0, service_charge_label: 'Service Charge',
+  mgr_discount_threshold: 10, require_void_reason: 1
+}
+let allCategories = []
+let allItems      = []
+let allOrders     = []
+let ordersViewFilter = 'all'
+let reportData    = []
+
+// ─── API HELPER ───────────────────────────────────────────────────
+async function apiFetch (method, endpoint, body) {
+  const opts = {
+    method,
+    headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+  }
+  if (body !== undefined) opts.body = JSON.stringify(body)
+  const res = await fetch(API_BASE + endpoint, opts)
+  const data = await res.json().catch(() => ({}))
+  if (!res.ok) throw new Error(data.error || res.statusText)
+  return data
+}
+
+// ─── TOAST ───────────────────────────────────────────────────────
+function showToast (msg, type = 'info', ms = 3500) {
+  const region = document.getElementById('toast-region')
+  const t = document.createElement('div')
+  const icons = { success: '✓', error: '✗', info: 'ℹ' }
+  t.className = `toast toast-${type}`
+  t.innerHTML = `<span style="font-size:15px">${icons[type]||'ℹ'}</span> ${msg}`
+  region.appendChild(t)
+  setTimeout(() => { t.style.opacity = '0'; t.style.transform = 'translateY(8px)'; t.style.transition = '.2s'; setTimeout(() => t.remove(), 220) }, ms)
+}
+
+// ─── AUTH ────────────────────────────────────────────────────────
+async function login () {
+  const username = document.getElementById('auth-username').value.trim().toLowerCase()
+  const pass     = document.getElementById('auth-password').value
+  const errEl    = document.getElementById('auth-error')
+  errEl.textContent = ''
+  if (!username || !pass) { errEl.textContent = 'Enter username and password.'; return }
+  try {
+    const data = await apiFetch('POST', '/auth/login', { username, password: pass })
+    token = data.token
+    localStorage.setItem('bo_token', token)
+    currentUser = data.user
+    showApp()
+  } catch (e) {
+    errEl.textContent = e.message || 'Login failed'
+  }
+}
+
+async function register () {
+  const username = document.getElementById('auth-username').value.trim().toLowerCase()
+  const pass     = document.getElementById('auth-password').value
+  if (!username || !pass) { showToast('Enter username and password.','error'); return }
+  if (pass.length < 6)    { showToast('Password must be at least 6 characters.','error'); return }
+  try {
+    const data = await apiFetch('POST', '/auth/register', { username, password: pass })
+    token = data.token
+    localStorage.setItem('bo_token', token)
+    currentUser = data.user
+    showApp()
+  } catch (e) {
+    document.getElementById('auth-error').textContent = e.message
+  }
+}
+
+function logout () {
+  localStorage.removeItem('bo_token')
+  token = ''
+  currentUser = null
+  document.getElementById('auth-screen').style.display = 'flex'
+  document.getElementById('app').style.display         = 'none'
+  document.getElementById('auth-username').value = ''
+  document.getElementById('auth-password').value = ''
+}
+
+function showApp () {
+  document.getElementById('auth-screen').style.display = 'none'
+  document.getElementById('app').style.display         = 'block'
+  initApp()
+  startClock()
+}
+
+function startClock () {
+  function tick () {
+    const now = new Date()
+    const timeEl = document.getElementById('hdr-time')
+    const dateEl = document.getElementById('hdr-date-text')
+    const greetEl = document.getElementById('hdr-greeting-text')
+    if (timeEl) timeEl.textContent = now.toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'})
+    if (dateEl) dateEl.textContent = now.toLocaleDateString([], {weekday:'long',month:'short',day:'numeric'})
+    const hr = now.getHours()
+    const greet = hr < 12 ? 'Good morning' : hr < 17 ? 'Good afternoon' : 'Good evening'
+    if (greetEl) greetEl.textContent = greet + (currentUser ? ', ' + currentUser.username : '') + '!'
+  }
+  tick(); setInterval(tick, 30000)
+}
+
+function updateSidebarUser () {
+  if (!currentUser) return
+  const nameEl = document.getElementById('sb-user-name')
+  const roleEl = document.getElementById('sb-user-role')
+  const avatarEl = document.getElementById('hdr-avatar-text')
+  const displayEl = document.getElementById('hdr-user-display')
+  if (nameEl) nameEl.textContent = currentUser.username || '—'
+  if (roleEl) roleEl.textContent = currentUser.role || 'staff'
+  if (avatarEl) avatarEl.textContent = (currentUser.username || 'A')[0].toUpperCase()
+  if (displayEl) displayEl.textContent = currentUser.username || 'User'
+}
+
+// Check saved token on load
+;(async function checkSession () {
+  if (!token) { document.getElementById('auth-screen').style.display = 'flex'; return }
+  try {
+    const data = await apiFetch('GET', '/auth/me')
+    currentUser = data.user
+    showApp()
+  } catch (e) {
+    localStorage.removeItem('bo_token')
+    token = ''
+    document.getElementById('auth-screen').style.display = 'flex'
+  }
+})()
+
+// ─── INIT ────────────────────────────────────────────────────────
+async function initApp () {
+  updateSidebarUser()
+  await loadBOSettings()
+  setTodayDates()
+  await loadMenu()
+  await loadDashboard()
+  await loadStaff()
+}
+
+function setTodayDates () {
+  const today = todayStr()
+  const weekAgo = new Date(Date.now() - 7*86400000).toISOString().split('T')[0]
+  document.getElementById('dash-date').value    = today
+  document.getElementById('orders-date').value  = today
+  document.getElementById('rep-from').value     = today
+  document.getElementById('rep-to').value       = today
+  document.getElementById('exp-rep-from').value = today
+  document.getElementById('exp-rep-to').value   = today
+  document.getElementById('perf-from').value    = weekAgo
+  document.getElementById('perf-to').value      = today
+  document.getElementById('void-rep-from').value = today
+  document.getElementById('void-rep-to').value   = today
+  document.getElementById('audit-from').value    = today
+  document.getElementById('audit-to').value      = today
+}
+
+// ─── SETTINGS ────────────────────────────────────────────────────
+async function loadBOSettings () {
+  try {
+    const data = await apiFetch('GET', '/settings')
+    const s = data.settings || {}
+    boSettings.restaurant_name       = s.restaurant_name       || boSettings.restaurant_name
+    boSettings.currency              = s.currency              || boSettings.currency
+    boSettings.tax_rate              = parseFloat(s.tax_rate)  || boSettings.tax_rate
+    boSettings.receipt_footer        = s.receipt_footer        || ''
+    boSettings.branch_name           = s.branch_name           || ''
+    boSettings.service_charge_rate   = parseFloat(s.service_charge_rate) || 0
+    boSettings.service_charge_label  = s.service_charge_label  || 'Service Charge'
+    boSettings.mgr_discount_threshold= parseFloat(s.mgr_discount_threshold) || 10
+    boSettings.require_void_reason   = parseInt(s.require_void_reason) ?? 1
+  } catch (e) { /* use defaults */ }
+  document.getElementById('hdr-name').textContent    = boSettings.restaurant_name
+  const sbBranch = document.getElementById('sb-branch'); if (sbBranch) sbBranch.textContent = boSettings.branch_name || 'Back Office'
+  document.getElementById('bos-name').value          = boSettings.restaurant_name
+  document.getElementById('bos-currency').value      = boSettings.currency
+  document.getElementById('bos-tax').value           = boSettings.tax_rate
+  document.getElementById('bos-footer').value        = boSettings.receipt_footer
+  const brEl = document.getElementById('bos-branch'); if (brEl) brEl.value = boSettings.branch_name
+  const scREl = document.getElementById('bos-sc-rate'); if (scREl) scREl.value = boSettings.service_charge_rate
+  const scLEl = document.getElementById('bos-sc-label'); if (scLEl) scLEl.value = boSettings.service_charge_label
+  const mgrEl = document.getElementById('bos-mgr-threshold'); if (mgrEl) mgrEl.value = boSettings.mgr_discount_threshold
+  const vrEl  = document.getElementById('bos-void-reason'); if (vrEl) vrEl.value = boSettings.require_void_reason
+}
+
+async function saveBOSettings () {
+  boSettings.restaurant_name       = document.getElementById('bos-name').value.trim() || 'My Restaurant'
+  boSettings.currency              = document.getElementById('bos-currency').value.trim() || 'RM'
+  boSettings.tax_rate              = parseFloat(document.getElementById('bos-tax').value) || 0
+  boSettings.receipt_footer        = document.getElementById('bos-footer').value.trim()
+  const brEl = document.getElementById('bos-branch'); if (brEl) boSettings.branch_name = brEl.value.trim()
+  const scREl = document.getElementById('bos-sc-rate'); if (scREl) boSettings.service_charge_rate = parseFloat(scREl.value) || 0
+  const scLEl = document.getElementById('bos-sc-label'); if (scLEl) boSettings.service_charge_label = scLEl.value.trim() || 'Service Charge'
+  const mgrEl = document.getElementById('bos-mgr-threshold'); if (mgrEl) boSettings.mgr_discount_threshold = parseFloat(mgrEl.value) || 10
+  const vrEl  = document.getElementById('bos-void-reason'); if (vrEl) boSettings.require_void_reason = parseInt(vrEl.value)
+  try {
+    await apiFetch('PUT', '/settings', boSettings)
+    document.getElementById('hdr-name').textContent = boSettings.restaurant_name
+    const sbBr = document.getElementById('sb-branch'); if (sbBr) sbBr.textContent = boSettings.branch_name || 'Back Office'
+    showToast('Settings saved!','success')
+  } catch (e) { showToast('Error: ' + e.message,'error') }
+}
+
+// ─── NAVIGATION ──────────────────────────────────────────────────
+function showView (id) {
+  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'))
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'))
+  document.getElementById('v-' + id).classList.add('active')
+  document.getElementById('nav-' + id).classList.add('active')
+  if (id === 'menu')      loadMenu()
+  if (id === 'orders')    { setOrdersDate('today'); loadOrders() }
+  if (id === 'staff')     loadStaff()
+  if (id === 'dashboard') loadDashboard()
+  if (id === 'printers')  loadPrinters()
+  if (id === 'reports')   { loadReport(); loadExpReport(); }
+  if (id === 'audit')     loadAuditLog()
+  if (id === 'downloads') loadDownloadsPage()
+  if (id === 'live')      { loadLiveOrders(); startLiveRefresh() }
+  else                      stopLiveRefresh()
+}
+
+// ─── DASHBOARD ───────────────────────────────────────────────────
+function setDashDate (which) {
+  document.getElementById('dash-date').value = which === 'today' ? todayStr() : yesterdayStr()
+}
+
+async function loadDashboard () {
+  const date = document.getElementById('dash-date').value || todayStr()
+  const cur  = boSettings.currency
+  try {
+    const { orders, expenses: exps } = await apiFetch('GET', '/reports/dashboard?date=' + date)
+
+    const sales    = orders.reduce((s, o) => s + (parseFloat(o.total) || 0), 0)
+    const expTotal = exps.reduce((s, e) => s + (parseFloat(e.amount) || 0), 0)
+    const net      = sales - expTotal
+    const cash     = orders.filter(o => o.payment_method === 'cash').reduce((s, o) => s + (parseFloat(o.total) || 0), 0)
+    const card     = orders.filter(o => o.payment_method === 'card').reduce((s, o) => s + (parseFloat(o.total) || 0), 0)
+    const onlinePay= orders.filter(o => o.payment_method === 'online').reduce((s, o) => s + (parseFloat(o.total) || 0), 0)
+    const dineIn   = orders.filter(o => o.order_type === 'dine-in')
+    const takeaway = orders.filter(o => o.order_type === 'takeaway')
+    const delivery = orders.filter(o => o.order_type === 'delivery')
+    const online   = orders.filter(o => o.order_type === 'online')
+
+    const avg = orders.length ? sales / orders.length : 0
+    document.getElementById('kpi-orders').textContent   = orders.length
+    document.getElementById('kpi-sales').textContent    = `${cur} ${sales.toFixed(2)}`
+    document.getElementById('kpi-expenses').textContent = `${cur} ${expTotal.toFixed(2)}`
+    document.getElementById('kpi-net').textContent      = `${cur} ${net.toFixed(2)}`
+    document.getElementById('kpi-avg').textContent      = `${cur} ${avg.toFixed(2)}`
+    const salesTotalEl = document.getElementById('sales-chart-total')
+    if (salesTotalEl) salesTotalEl.textContent = `${cur} ${sales.toFixed(2)}`
+    const periodEl = document.getElementById('sales-chart-period')
+    if (periodEl) periodEl.textContent = document.getElementById('dash-date').value || todayStr()
+
+    // Orders by type bars (Sales Overview widget)
+    document.getElementById('dash-by-type').innerHTML = barChart([
+      { label: 'Dine-in',  count: dineIn.length,   sales: dineIn.reduce((s,o)=>s+parseFloat(o.total||0),0),   color: '#3b82f6' },
+      { label: 'Takeaway', count: takeaway.length,  sales: takeaway.reduce((s,o)=>s+parseFloat(o.total||0),0), color: '#22c55e' },
+      { label: 'Delivery', count: delivery.length,  sales: delivery.reduce((s,o)=>s+parseFloat(o.total||0),0), color: '#f97316' },
+      { label: 'Online',   count: online.length,    sales: online.reduce((s,o)=>s+parseFloat(o.total||0),0),   color: '#9333ea' },
+    ], cur)
+
+    // Payment breakdown widget (row 3 middle - by payment method bars)
+    document.getElementById('dash-by-payment').innerHTML = barChart([
+      { label: 'Cash',   count: orders.filter(o=>o.payment_method==='cash').length,   sales: cash,      color: '#f97316' },
+      { label: 'Card',   count: orders.filter(o=>o.payment_method==='card').length,   sales: card,      color: '#3b82f6' },
+      { label: 'Online', count: orders.filter(o=>o.payment_method==='online').length, sales: onlinePay, color: '#8b5cf6' },
+    ], cur)
+
+    // Donut chart
+    const total = cash + card + onlinePay || 1
+    const circ = 176
+    const cashDash  = (cash/total)*circ
+    const cardDash  = (card/total)*circ
+    const onlineDash= (onlinePay/total)*circ
+    let offset = 0
+    function setDonut(id, dash, off) {
+      const el = document.getElementById(id)
+      if (!el) return
+      el.style.strokeDasharray = `${dash} ${circ - dash}`
+      el.style.strokeDashoffset = -off
+      el.setAttribute('transform', `rotate(-90 38 38)`)
+    }
+    // Stack segments by adjusting transform rotation
+    const cashEl = document.getElementById('donut-cash')
+    const cardEl = document.getElementById('donut-card')
+    const onlineEl = document.getElementById('donut-online')
+    if (cashEl)  { cashEl.style.strokeDasharray  = `${cashDash} ${circ-cashDash}`;   cashEl.setAttribute('transform','rotate(-90 38 38)') }
+    if (cardEl)  { cardEl.style.strokeDasharray  = `${cardDash} ${circ-cardDash}`;   cardEl.setAttribute('transform',`rotate(${-90 + (cashDash/circ)*360} 38 38)`) }
+    if (onlineEl){ onlineEl.style.strokeDasharray= `${onlineDash} ${circ-onlineDash}`;onlineEl.setAttribute('transform',`rotate(${-90 + ((cashDash+cardDash)/circ)*360} 38 38)`) }
+
+    document.getElementById('donut-legend').innerHTML = [
+      { label:'Cash',   val: cash,      color:'#f97316' },
+      { label:'Card',   val: card,      color:'#3b82f6' },
+      { label:'Online', val: onlinePay, color:'#8b5cf6' },
+    ].map(r=>`<div class="donut-legend-row">
+      <span class="donut-dot" style="background:${r.color}"></span>
+      <span class="donut-legend-label">${r.label}</span>
+      <span class="donut-legend-val">${cur} ${r.val.toFixed(2)}</span>
+    </div>`).join('')
+
+    // Live Orders widget (recent 6)
+    const liveEl = document.getElementById('live-orders-widget')
+    if (liveEl) {
+      if (!orders.length) { liveEl.innerHTML = '<div style="text-align:center;padding:28px;color:var(--muted);font-size:13px">No orders today</div>'; }
+      else liveEl.innerHTML = orders.slice(0,6).map(o=>`
+        <div class="live-order-row">
+          <div><div class="lo-num">#${o.order_number}</div><div class="lo-meta">${o.order_type} · ${o.table_name||o.customer_name||'—'}</div></div>
+          <div class="lo-right"><div class="lo-total">${cur} ${parseFloat(o.total||0).toFixed(2)}</div><div class="lo-time">${new Date(parseInt(o.created_at)).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})}</div></div>
+        </div>`).join('')
+    }
+
+    // Top Items widget — aggregate from order items
+    const itemMap = {}
+    orders.forEach(o => { (Array.isArray(o.items)?o.items:[]).filter(Boolean).forEach(it => { if(!itemMap[it]) itemMap[it]={name:it,count:0}; itemMap[it].count++ }) })
+    const topItems = Object.values(itemMap).sort((a,b)=>b.count-a.count).slice(0,5)
+    const topEl = document.getElementById('top-items-widget')
+    if (topEl) {
+      topEl.innerHTML = topItems.length ? topItems.map((it,i)=>`
+        <div class="top-item-row">
+          <div class="top-item-rank">${i+1}</div>
+          <div class="top-item-name">${esc(it.name)}</div>
+          <div class="top-item-count">${it.count}x</div>
+        </div>`).join('')
+        : '<div style="text-align:center;padding:24px;color:var(--muted);font-size:12px">No order data</div>'
+    }
+
+    // Alerts widget — recent audit if available, else show summary
+    const alertsEl = document.getElementById('dash-alerts')
+    if (alertsEl) {
+      const cancelled = orders.filter(o=>o.status==='cancelled').length
+      const discounted = orders.filter(o=>parseFloat(o.discount||0)>0).length
+      const alerts = []
+      if (cancelled > 0) alerts.push({color:'#ef4444',text:`${cancelled} order(s) cancelled today`})
+      if (discounted > 0) alerts.push({color:'#f59e0b',text:`${discounted} order(s) with discounts`})
+      if (expTotal > 0) alerts.push({color:'#3b82f6',text:`${cur} ${expTotal.toFixed(2)} in expenses today`})
+      if (net < 0) alerts.push({color:'#dc2626',text:`Net revenue is negative today`})
+      alerts.push({color:'#22c55e',text:`${orders.length} total orders processed`})
+      alertsEl.innerHTML = alerts.slice(0,5).map(a=>`
+        <div class="alert-row">
+          <span class="alert-dot" style="background:${a.color}"></span>
+          <span class="alert-text">${a.text}</span>
+        </div>`).join('')
+    }
+  } catch (e) {
+    console.error('Dashboard load error:', e)
+  }
+}
+
+function barChart (items, cur) {
+  const maxSales = Math.max(...items.map(i => i.sales), 1)
+  return items.map(item => `
+    <div style="margin-bottom:14px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
+        <span style="font-size:13px;font-weight:600">${item.label}</span>
+        <span style="font-size:13px;color:var(--muted)">${item.count} orders · ${cur} ${item.sales.toFixed(2)}</span>
+      </div>
+      <div style="height:10px;background:#f1f5f9;border-radius:5px;overflow:hidden">
+        <div style="height:100%;width:${item.sales/maxSales*100}%;background:${item.color};border-radius:5px;transition:.3s"></div>
+      </div>
+    </div>`).join('')
+}
+
+// ─── MENU MANAGEMENT ─────────────────────────────────────────────
+async function loadMenu () {
+  try {
+    const { categories, items } = await apiFetch('GET', '/menu')
+    allCategories = categories
+    allItems      = items
+    renderCategories()
+    renderItems()
+    buildMenuCatFilter()
+    populateCatSelect()
+  } catch (e) { console.error(e) }
+}
+
+function renderCategories () {
+  document.getElementById('cat-count').textContent = `${allCategories.length} categories`
+  document.getElementById('cat-tbody').innerHTML = allCategories.length
+    ? allCategories.map(c => `
+      <tr>
+        <td><b>${esc(c.name)}</b></td>
+        <td><span class="color-dot" style="background:${c.color||'#f97316'}"></span>${c.color||'—'}</td>
+        <td>${c.sort_order||0}</td>
+        <td><span class="badge ${c.active?'badge-green':'badge-red'}">${c.active?'Active':'Inactive'}</span></td>
+        <td>
+          <button class="btn btn-outline btn-sm btn-icon" onclick='editCategory(${JSON.stringify(c).replace(/'/g,"&#39;")})' title="Edit"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>
+          <label class="toggle-switch" title="Toggle active" style="margin:0 8px">
+            <input type="checkbox" ${c.active?'checked':''} onchange="toggleCatActive('${c.id}',this.checked)">
+            <span class="toggle-slider"></span>
+          </label>
+          <button class="btn btn-danger btn-sm btn-icon" onclick="deleteCategory('${c.id}')" title="Delete"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 011-1h4a1 1 0 011 1v2"/></svg></button>
+        </td>
+      </tr>`).join('')
+    : `<tr><td colspan="5" class="empty-state">No categories yet</td></tr>`
+}
+
+function renderItems (filterId) {
+  const items = filterId && filterId !== 'all' ? allItems.filter(i => i.category_id === filterId) : allItems
+  document.getElementById('items-tbody').innerHTML = items.length
+    ? items.map(i => {
+        const cat = allCategories.find(c => c.id === i.category_id)
+        return `<tr>
+          <td><b>${esc(i.name)}</b></td>
+          <td>${cat ? `<span class="color-dot" style="background:${cat.color||'#ccc'}"></span>${esc(cat.name)}` : '—'}</td>
+          <td>${boSettings.currency} ${parseFloat(i.price).toFixed(2)}</td>
+          <td style="color:var(--muted)">${esc(i.description||'—')}</td>
+          <td>
+            <label class="toggle-switch">
+              <input type="checkbox" ${i.active?'checked':''} onchange="toggleItemActive('${i.id}',this.checked)">
+              <span class="toggle-slider"></span>
+            </label>
+          </td>
+          <td>
+            <button class="btn btn-outline btn-sm btn-icon" onclick='editItem(${JSON.stringify(i).replace(/'/g,"&#39;")})' title="Edit"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>
+            <button class="btn btn-danger btn-sm btn-icon" onclick="deleteItem('${i.id}')" title="Delete" style="margin-left:6px"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 011-1h4a1 1 0 011 1v2"/></svg></button>
+          </td>
+        </tr>`
+      }).join('')
+    : `<tr><td colspan="6" class="empty-state">No items yet</td></tr>`
+}
+
+function buildMenuCatFilter () {
+  const bar = document.getElementById('menu-cat-filter')
+  bar.innerHTML = `<button class="filter-chip active" onclick="renderItems('all');setActiveFilter(this)">All</button>` +
+    allCategories.map(c => `<button class="filter-chip" onclick="renderItems('${c.id}');setActiveFilter(this)">${esc(c.name)}</button>`).join('')
+}
+
+function setActiveFilter (btn) {
+  document.querySelectorAll('#menu-cat-filter .filter-chip').forEach(b => b.classList.remove('active'))
+  btn.classList.add('active')
+}
+
+function populateCatSelect () {
+  document.getElementById('item-cat').innerHTML = `<option value="">Select category...</option>` +
+    allCategories.map(c => `<option value="${c.id}">${esc(c.name)}</option>`).join('')
+}
+
+function showCatModal (cat) {
+  document.getElementById('cat-modal-title').textContent = cat ? 'Edit Category' : 'Add Category'
+  document.getElementById('cat-id').value    = cat ? cat.id : ''
+  document.getElementById('cat-name').value  = cat ? cat.name : ''
+  document.getElementById('cat-color').value = cat ? (cat.color || '#f97316') : '#f97316'
+  document.getElementById('cat-sort').value  = cat ? (cat.sort_order || 0) : 0
+  showModal('modal-cat')
+}
+
+function editCategory (cat) { showCatModal(cat) }
+
+async function saveCategory () {
+  const id   = document.getElementById('cat-id').value
+  const name = document.getElementById('cat-name').value.trim()
+  if (!name) { showToast('Category name is required.','error'); return }
+  const payload = {
+    name,
+    color:      document.getElementById('cat-color').value,
+    sort_order: parseInt(document.getElementById('cat-sort').value) || 0,
+  }
+  try {
+    if (id) await apiFetch('PUT', `/menu/categories/${id}`, payload)
+    else     await apiFetch('POST', '/menu/categories', payload)
+    closeModal('modal-cat')
+    loadMenu()
+    showToast('Category saved.','success')
+  } catch (e) { showToast('Error: ' + e.message,'error') }
+}
+
+async function toggleCatActive (id, active) {
+  try {
+    await apiFetch('PUT', `/menu/categories/${id}`, { active: active ? 1 : 0 })
+    const cat = allCategories.find(c => c.id === id)
+    if (cat) cat.active = active ? 1 : 0
+  } catch (e) { console.error(e) }
+}
+
+async function deleteCategory (id) {
+  const items = allItems.filter(i => i.category_id === id)
+  if (items.length > 0 && !confirm(`This category has ${items.length} item(s). Delete anyway?`)) return
+  if (!confirm('Delete this category?')) return
+  try {
+    await apiFetch('DELETE', `/menu/categories/${id}`)
+    loadMenu()
+    showToast('Category deleted.','success')
+  } catch (e) { showToast('Error: ' + e.message,'error') }
+}
+
+function autoFillItemCode () {
+  const codeEl = document.getElementById('item-code')
+  if (codeEl && !codeEl.dataset.manuallyEdited) {
+    const name = document.getElementById('item-name').value.trim()
+    codeEl.value = name.split(/\s+/).map(w => w[0] || '').join('').toUpperCase()
+  }
+}
+
+function showItemModal (item) {
+  document.getElementById('item-modal-title').textContent = item ? 'Edit Item' : 'Add Menu Item'
+  document.getElementById('item-id').value    = item ? item.id : ''
+  document.getElementById('item-name').value  = item ? item.name : ''
+  document.getElementById('item-price').value = item ? item.price : ''
+  document.getElementById('item-code').value  = item ? (item.item_code || '') : ''
+  document.getElementById('item-cat').value   = item ? (item.category_id || '') : ''
+  document.getElementById('item-desc').value  = item ? (item.description || '') : ''
+  showModal('modal-item')
+}
+
+function editItem (item) { showItemModal(item) }
+
+async function saveItem () {
+  const id    = document.getElementById('item-id').value
+  const name  = document.getElementById('item-name').value.trim()
+  const price = parseFloat(document.getElementById('item-price').value)
+  const catId = document.getElementById('item-cat').value
+  if (!name)          { showToast('Item name is required.','error'); return }
+  if (!price || price <= 0) { showToast('Enter a valid price.','error'); return }
+  if (!catId)         { showToast('Select a category.','error'); return }
+  const itemCode = document.getElementById('item-code').value.trim().toUpperCase()
+  const payload = { name, price, category_id: catId, description: document.getElementById('item-desc').value.trim(), item_code: itemCode || null }
+  try {
+    if (id) await apiFetch('PUT', `/menu/items/${id}`, payload)
+    else     await apiFetch('POST', '/menu/items', payload)
+    closeModal('modal-item')
+    loadMenu()
+    showToast('Menu item saved.','success')
+  } catch (e) { showToast('Error: ' + e.message,'error') }
+}
+
+async function toggleItemActive (id, active) {
+  try {
+    await apiFetch('PUT', `/menu/items/${id}`, { active: active ? 1 : 0 })
+    const item = allItems.find(i => i.id === id)
+    if (item) item.active = active ? 1 : 0
+  } catch (e) { console.error(e) }
+}
+
+async function deleteItem (id) {
+  if (!confirm('Delete this menu item?')) return
+  try {
+    await apiFetch('DELETE', `/menu/items/${id}`)
+    loadMenu()
+    showToast('Item deleted.','success')
+  } catch (e) { showToast('Error: ' + e.message,'error') }
+}
+
+// ─── ORDERS ──────────────────────────────────────────────────────
+function setOrdersDate (which) {
+  document.getElementById('orders-date').value = which === 'today' ? todayStr() : yesterdayStr()
+}
+
+async function loadOrders () {
+  const date = document.getElementById('orders-date').value || todayStr()
+  try {
+    const { orders } = await apiFetch('GET', '/orders?date=' + date)
+    allOrders = orders
+    renderOrdersView()
+  } catch (e) { console.error(e) }
+}
+
+function filterOrdersView (type, btn) {
+  ordersViewFilter = type
+  document.querySelectorAll('.filter-bar .filter-chip').forEach(b => b.classList.remove('active'))
+  if (btn) btn.classList.add('active')
+  renderOrdersView()
+}
+
+function renderOrdersView () {
+  const cur   = boSettings.currency
+  const items = ordersViewFilter === 'all' ? allOrders : allOrders.filter(o => o.order_type === ordersViewFilter)
+  document.getElementById('orders-tbody').innerHTML = items.length
+    ? items.map(o => `
+      <tr>
+        <td><b>#${o.order_number}</b></td>
+        <td><span class="badge badge-${typeBadge(o.order_type)}">${o.order_type}</span></td>
+        <td>${o.table_name || o.customer_name || '—'}</td>
+        <td>${cur} ${parseFloat(o.subtotal||0).toFixed(2)}</td>
+        <td>${cur} ${parseFloat(o.tax_amount||0).toFixed(2)}</td>
+        <td>${parseFloat(o.discount_amount||0)>0?`-${cur} ${parseFloat(o.discount_amount||0).toFixed(2)}`:'—'}</td>
+        <td><b>${cur} ${parseFloat(o.total||0).toFixed(2)}</b></td>
+        <td>${o.payment_method || '—'}</td>
+        <td>${o.cashier_name || '—'}</td>
+        <td><span class="badge ${o.status==='paid'?'badge-green':o.status==='cancelled'?'badge-red':'badge-orange'}">${o.status}</span></td>
+        <td>${new Date(parseInt(o.created_at)).toLocaleString()}</td>
+      </tr>`).join('')
+    : `<tr><td colspan="11" class="empty-state">No orders found</td></tr>`
+}
+
+// ─── REPORTS ─────────────────────────────────────────────────────
+async function loadReport () {
+  const from = document.getElementById('rep-from').value
+  const to   = document.getElementById('rep-to').value
+  if (!from || !to) { showToast('Select date range.','error'); return }
+  const cur = boSettings.currency
+  try {
+    const { orders, expenses: exps } = await apiFetch('GET', `/reports?from=${from}&to=${to}`)
+
+    const totalSales = orders.reduce((s, o) => s + (parseFloat(o.total) || 0), 0)
+    const totalExps  = exps.reduce((s, e) => s + (parseFloat(e.amount) || 0), 0)
+
+    document.getElementById('rep-kpis').innerHTML = `
+      <div class="kpi-card"><div class="kpi-label">Total Orders</div><div class="kpi-value kpi-blue">${orders.length}</div></div>
+      <div class="kpi-card"><div class="kpi-label">Gross Sales</div><div class="kpi-value kpi-orange">${cur} ${totalSales.toFixed(2)}</div></div>
+      <div class="kpi-card"><div class="kpi-label">Expenses</div><div class="kpi-value kpi-red">${cur} ${totalExps.toFixed(2)}</div></div>
+      <div class="kpi-card"><div class="kpi-label">Net</div><div class="kpi-value kpi-green">${cur} ${(totalSales-totalExps).toFixed(2)}</div></div>`
+
+    const byDate = {}
+    for (const o of orders) {
+      const d = new Date(parseInt(o.created_at)).toISOString().split('T')[0]
+      if (!byDate[d]) byDate[d] = { orders: [], exps: [] }
+      byDate[d].orders.push(o)
+    }
+    for (const e of exps) {
+      const d = new Date(parseInt(e.created_at)).toISOString().split('T')[0]
+      if (!byDate[d]) byDate[d] = { orders: [], exps: [] }
+      byDate[d].exps.push(e)
+    }
+
+    reportData = Object.entries(byDate).sort(([a],[b]) => a.localeCompare(b)).map(([date, {orders: o, exps: e}]) => ({
+      date, orders: o.length,
+      sales: o.reduce((s,x) => s + (parseFloat(x.total)||0), 0),
+      exps:  e.reduce((s,x) => s + (parseFloat(x.amount)||0), 0),
+      cash:  o.filter(x => x.payment_method==='cash').reduce((s,x) => s + (parseFloat(x.total)||0), 0),
+      card:  o.filter(x => x.payment_method==='card').reduce((s,x) => s + (parseFloat(x.total)||0), 0),
+      online:o.filter(x => x.payment_method==='online').reduce((s,x) => s + (parseFloat(x.total)||0), 0),
+    }))
+
+    document.getElementById('rep-tbody').innerHTML = reportData.map(r => `
+      <tr>
+        <td>${r.date}</td>
+        <td>${r.orders}</td>
+        <td>${cur} ${r.sales.toFixed(2)}</td>
+        <td style="color:var(--danger)">${cur} ${r.exps.toFixed(2)}</td>
+        <td style="color:var(--success);font-weight:700">${cur} ${(r.sales-r.exps).toFixed(2)}</td>
+        <td>${cur} ${r.cash.toFixed(2)}</td>
+        <td>${cur} ${r.card.toFixed(2)}</td>
+        <td>${cur} ${r.online.toFixed(2)}</td>
+      </tr>`).join('') || `<tr><td colspan="8" class="empty-state">No data</td></tr>`
+
+    document.getElementById('report-summary').style.display = 'block'
+  } catch (e) { console.error(e); showToast('Error loading report: ' + e.message,'error') }
+}
+
+async function loadExpReport () {
+  const from = document.getElementById('exp-rep-from').value
+  const to   = document.getElementById('exp-rep-to').value
+  const cur  = boSettings.currency
+  try {
+    const { expenses: rows } = await apiFetch('GET', `/reports/expenses?from=${from}&to=${to}`)
+    const total = rows.reduce((s, e) => s + (parseFloat(e.amount) || 0), 0)
+    document.getElementById('exp-rep-total').textContent = `${cur} ${total.toFixed(2)}`
+    document.getElementById('exp-rep-tbody').innerHTML = rows.length
+      ? rows.map(e => `<tr>
+          <td>${new Date(parseInt(e.created_at)).toLocaleString()}</td>
+          <td>${esc(e.category)}</td>
+          <td>${esc(e.description||'—')}</td>
+          <td>${esc(e.cashier_name||'—')}</td>
+          <td style="font-weight:700;color:var(--danger)">${cur} ${parseFloat(e.amount||0).toFixed(2)}</td>
+        </tr>`).join('')
+      : `<tr><td colspan="5" class="empty-state">No expenses</td></tr>`
+  } catch (e) { console.error(e) }
+}
+
+function exportCSV () {
+  if (!reportData.length) { showToast('Generate report first.','error'); return }
+  const rows = [['Date','Orders','Sales','Expenses','Net','Cash','Card','Online Pay']]
+  reportData.forEach(r => rows.push([r.date,r.orders,r.sales.toFixed(2),r.exps.toFixed(2),(r.sales-r.exps).toFixed(2),r.cash.toFixed(2),r.card.toFixed(2),r.online.toFixed(2)]))
+  const csv  = rows.map(r => r.join(',')).join('\n')
+  const blob = new Blob([csv], { type: 'text/csv' })
+  const url  = URL.createObjectURL(blob)
+  const a    = document.createElement('a')
+  a.href = url; a.download = `report-${todayStr()}.csv`; a.click()
+  URL.revokeObjectURL(url)
+}
+
+// ─── STAFF ───────────────────────────────────────────────────────
+async function loadStaff () {
+  try {
+    const { cashiers } = await apiFetch('GET', '/staff/cashiers')
+    document.getElementById('staff-tbody').innerHTML = cashiers.length
+      ? cashiers.map(s => `<tr>
+          <td><b>${esc(s.name)}</b></td>
+          <td><span class="badge badge-blue">${s.role||'cashier'}</span></td>
+          <td style="letter-spacing:4px;font-weight:700">${s.pin ? '●●●●' : '<span style="color:var(--danger)">Not set</span>'}</td>
+          <td><span class="badge ${s.active?'badge-green':'badge-red'}">${s.active?'Active':'Inactive'}</span></td>
+          <td>${new Date(parseInt(s.created_at)||0).toLocaleDateString()}</td>
+          <td>
+            <button class="btn btn-outline btn-sm" onclick='editStaff(${JSON.stringify(s).replace(/'/g,"&#39;")})'><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg> Edit</button>
+            <label class="toggle-switch" style="margin:0 8px" title="Toggle active">
+              <input type="checkbox" ${s.active?'checked':''} onchange="toggleStaffActive('${s.id}',this.checked)">
+              <span class="toggle-slider"></span>
+            </label>
+          </td>
+        </tr>`).join('')
+      : `<tr><td colspan="6" class="empty-state">No staff yet</td></tr>`
+  } catch (e) { console.error(e) }
+}
+
+function showStaffModal (staff) {
+  document.getElementById('staff-modal-title').textContent = staff ? 'Edit Staff' : 'Add Staff'
+  document.getElementById('staff-id').value   = staff ? staff.id : ''
+  document.getElementById('staff-name').value = staff ? staff.name : ''
+  document.getElementById('staff-role').value = staff ? (staff.role || 'cashier') : 'cashier'
+  document.getElementById('staff-pin').value  = staff ? (staff.pin || '') : ''
+  showModal('modal-staff')
+}
+
+function editStaff (staff) { showStaffModal(staff) }
+
+async function saveStaff () {
+  const id   = document.getElementById('staff-id').value
+  const name = document.getElementById('staff-name').value.trim()
+  const pin  = document.getElementById('staff-pin').value.trim()
+  if (!name) { showToast('Name is required.','error'); return }
+  if (!pin || !/^\d{4}$/.test(pin)) { showToast('PIN must be exactly 4 digits.','error'); return }
+  const payload = { name, pin, role: document.getElementById('staff-role').value, active: 1 }
+  try {
+    if (id) await apiFetch('PUT', `/staff/cashiers/${id}`, payload)
+    else     await apiFetch('POST', '/staff/cashiers', payload)
+    closeModal('modal-staff')
+    loadStaff()
+    showToast('Staff saved.','success')
+  } catch (e) { showToast('Error: ' + e.message,'error') }
+}
+
+async function toggleStaffActive (id, active) {
+  try {
+    await apiFetch('PUT', `/staff/cashiers/${id}`, { active: active ? 1 : 0 })
+    loadStaff()
+  } catch (e) { console.error(e) }
+}
+
+// ─── HELPERS ─────────────────────────────────────────────────────
+function todayStr ()     { return new Date().toISOString().split('T')[0] }
+function yesterdayStr () { const d=new Date();d.setDate(d.getDate()-1);return d.toISOString().split('T')[0] }
+function esc (s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;') }
+function typeBadge (t) { const m={'dine-in':'blue',takeaway:'green',delivery:'orange',online:'purple'};return m[t]||'orange' }
+function showModal (id)  { document.getElementById(id).classList.add('show') }
+function closeModal (id) { document.getElementById(id).classList.remove('show') }
+
+document.querySelectorAll('.modal-overlay').forEach(el =>
+  el.addEventListener('click', e => { if (e.target === el) el.classList.remove('show') }))
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') document.querySelectorAll('.modal-overlay.show').forEach(el => el.classList.remove('show'))
+})
+
+// ─── PRINTERS ────────────────────────────────────────────────────
+let editingPrinterId = null
+
+async function loadPrinters () {
+  const tbody = document.getElementById('printers-tbody')
+  try {
+    const data = await apiFetch('GET', '/printers')
+    const printers = data.printers || []
+    if (!printers.length) {
+      tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:var(--muted);padding:24px">No printers configured. Add a network thermal printer to enable server-side KOT printing.</td></tr>'
+      return
+    }
+    tbody.innerHTML = printers.map(p => `
+      <tr>
+        <td><strong>${esc(p.name)}</strong></td>
+        <td>${esc(p.type)}</td>
+        <td><code>${esc(p.ip || '—')}</code></td>
+        <td>${p.port || 9100}</td>
+        <td><span class="badge badge-${p.area==='kitchen'?'orange':'blue'}">${esc(p.area)}</span></td>
+        <td><span class="badge ${p.active?'badge-green':'badge-red'}">${p.active?'Active':'Disabled'}</span></td>
+        <td>
+          <button class="btn btn-outline btn-sm" onclick="editPrinter('${p.id}')"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg> Edit</button>
+          <button class="btn btn-danger btn-sm" onclick="deletePrinter('${p.id}')"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6M14 11v6"/></svg> Delete</button>
+        </td>
+      </tr>`).join('')
+  } catch (e) {
+    tbody.innerHTML = `<tr><td colspan="7" style="color:var(--danger);padding:12px">Error: ${esc(e.message)}</td></tr>`
+  }
+}
+
+function openPrinterModal (printer) {
+  editingPrinterId = printer?.id || null
+  document.getElementById('pm-name').value  = printer?.name  || ''
+  document.getElementById('pm-type').value  = printer?.type  || 'epson'
+  document.getElementById('pm-ip').value    = printer?.ip    || ''
+  document.getElementById('pm-port').value  = printer?.port  || 9100
+  document.getElementById('pm-area').value  = printer?.area  || 'kitchen'
+  document.getElementById('pm-active').checked = printer?.active !== 0
+  document.getElementById('pm-modal-title').textContent = printer ? 'Edit Printer' : 'Add Printer'
+  showModal('modal-printer')
+}
+
+async function editPrinter (id) {
+  const data = await apiFetch('GET', '/printers')
+  const p    = (data.printers||[]).find(x => x.id === id)
+  if (p) openPrinterModal(p)
+}
+
+async function savePrinter () {
+  const body = {
+    name:   document.getElementById('pm-name').value.trim(),
+    type:   document.getElementById('pm-type').value,
+    ip:     document.getElementById('pm-ip').value.trim(),
+    port:   parseInt(document.getElementById('pm-port').value) || 9100,
+    area:   document.getElementById('pm-area').value,
+    active: document.getElementById('pm-active').checked ? 1 : 0,
+  }
+  if (!body.name) { showToast('Printer name required','error'); return }
+  try {
+    if (editingPrinterId) await apiFetch('PUT',  `/printers/${editingPrinterId}`, body)
+    else                  await apiFetch('POST', '/printers', body)
+    closeModal('modal-printer')
+    loadPrinters()
+    showToast('Printer saved.','success')
+  } catch (e) { showToast('Error: ' + e.message,'error') }
+}
+
+async function deletePrinter (id) {
+  if (!confirm('Delete this printer?')) return
+  try { await apiFetch('DELETE', `/printers/${id}`); loadPrinters(); showToast('Printer deleted.','success') }
+  catch (e) { showToast('Error: ' + e.message,'error') }
+}
+
+// ─── AUDIT LOG ───────────────────────────────────────────────────
+async function loadAuditLog () {
+  const from   = document.getElementById('audit-from').value
+  const to     = document.getElementById('audit-to').value
+  const action = document.getElementById('audit-action-filter').value
+  const fromTs = from ? new Date(from).getTime() : 0
+  const toTs   = to   ? new Date(to).getTime() + 86399999 : Date.now()
+  try {
+    const params = `from=${fromTs}&to=${toTs}${action ? '&action='+action : ''}&limit=500`
+    const rows = await apiFetch('GET', `/audit?${params}`)
+    document.getElementById('audit-tbody').innerHTML = rows.length
+      ? rows.map(r => `<tr>
+          <td>${new Date(r.created_at).toLocaleString()}</td>
+          <td><span style="padding:2px 8px;border-radius:10px;background:#fef3c7;color:#92400e;font-size:11px;font-weight:700">${r.action}</span></td>
+          <td>${r.entity_type||'—'}</td>
+          <td>${r.cashier_name||'—'}</td>
+          <td>${r.approved_by||'—'}</td>
+          <td style="font-size:11px;color:var(--muted)">${r.terminal_id||'—'}</td>
+          <td style="font-size:12px">${r.details||'—'}</td>
+        </tr>`).join('')
+      : '<tr><td colspan="7" style="text-align:center;color:var(--muted);padding:20px">No records found</td></tr>'
+    // No-sale log
+    const nsRows = await apiFetch('GET', `/audit/no-sale?from=${fromTs}&to=${toTs}`)
+    document.getElementById('nosale-audit-tbody').innerHTML = nsRows.length
+      ? nsRows.map(r => `<tr>
+          <td>${new Date(r.created_at).toLocaleString()}</td>
+          <td>${r.cashier_name||'—'}</td>
+          <td>${r.terminal_id||'—'}</td>
+          <td>${r.reason}</td>
+        </tr>`).join('')
+      : '<tr><td colspan="4" style="text-align:center;color:var(--muted);padding:20px">No no-sale records</td></tr>'
+  } catch (e) {
+    document.getElementById('audit-tbody').innerHTML = `<tr><td colspan="7" style="color:var(--danger);padding:16px">Error: ${e.message}</td></tr>`
+  }
+}
+
+function exportAuditCSV () {
+  const tbody = document.getElementById('audit-tbody')
+  const rows  = Array.from(tbody.querySelectorAll('tr')).map(tr =>
+    Array.from(tr.querySelectorAll('td')).map(td => `"${td.innerText.replace(/"/g,'""')}"`).join(','))
+  const csv = ['Time,Action,Type,Cashier,Approved By,Terminal,Details', ...rows].join('\n')
+  downloadCSV(csv, `audit_log_${todayStr()}.csv`)
+}
+
+// ─── CASHIER PERFORMANCE ─────────────────────────────────────────
+async function loadCashierPerformance () {
+  const from  = document.getElementById('perf-from').value
+  const to    = document.getElementById('perf-to').value
+  try {
+    const { orders } = await apiFetch('GET', `/reports?from=${from}&to=${to}`) || { orders: [] }
+    const perf = {}
+    for (const o of (orders||[])) {
+      const k = o.cashier_name || 'Unknown'
+      if (!perf[k]) perf[k] = { name:k, count:0, sales:0, discounts:0, voids:0 }
+      perf[k].count++
+      perf[k].sales += parseFloat(o.total||0)
+      if ((parseFloat(o.discount_amount)||0) > 0) perf[k].discounts++
+    }
+    const cur = boSettings.currency
+    const rows = Object.values(perf).sort((a,b)=>b.sales-a.sales)
+    document.getElementById('perf-tbody').innerHTML = rows.length
+      ? rows.map(r => `<tr>
+          <td><b>${r.name}</b></td>
+          <td>${r.count}</td>
+          <td>${cur} ${r.sales.toFixed(2)}</td>
+          <td>${r.count ? cur+' '+(r.sales/r.count).toFixed(2) : '—'}</td>
+          <td>${r.discounts}</td>
+          <td>${r.voids}</td>
+        </tr>`).join('')
+      : '<tr><td colspan="6" style="text-align:center;color:var(--muted);padding:20px">No data</td></tr>'
+    window._perfData = rows
+  } catch (e) {
+    document.getElementById('perf-tbody').innerHTML = `<tr><td colspan="6" style="color:var(--danger);padding:16px">Error: ${e.message}</td></tr>`
+  }
+}
+
+function exportCashierPerformanceCSV () {
+  if (!window._perfData) return
+  const cur = boSettings.currency
+  const rows = window._perfData.map(r =>
+    `"${r.name}",${r.count},"${cur} ${r.sales.toFixed(2)}","${r.count?(cur+' '+(r.sales/r.count).toFixed(2)):''}",${r.discounts},${r.voids}`)
+  downloadCSV(['Cashier,Orders,Total Sales,Avg Order,Discounts,Voids',...rows].join('\n'), `cashier_perf_${todayStr()}.csv`)
+}
+
+// ─── VOID REPORT ─────────────────────────────────────────────────
+async function loadVoidReport () {
+  const from  = document.getElementById('void-rep-from').value
+  const to    = document.getElementById('void-rep-to').value
+  const fromTs = from ? new Date(from).getTime() : 0
+  const toTs   = to   ? new Date(to).getTime() + 86399999 : Date.now()
+  try {
+    const params = `from=${fromTs}&to=${toTs}&action=ORDER_CANCELLED,ITEM_VOIDED,DISCOUNT_MGR_APPROVED&limit=500`
+    const rows = await apiFetch('GET', `/audit?from=${fromTs}&to=${toTs}&limit=500`)
+    const filtered = rows.filter(r => ['ORDER_CANCELLED','ITEM_VOIDED','DISCOUNT_MGR_APPROVED','MGR_APPROVAL'].includes(r.action))
+    document.getElementById('void-rep-tbody').innerHTML = filtered.length
+      ? filtered.map(r => `<tr>
+          <td>${new Date(r.created_at).toLocaleString()}</td>
+          <td><span style="padding:2px 8px;border-radius:10px;background:#fef2f2;color:var(--danger);font-size:11px;font-weight:700">${r.action}</span></td>
+          <td>${r.entity_type||'—'}</td>
+          <td>${r.cashier_name||'—'}</td>
+          <td>${r.approved_by||'—'}</td>
+          <td style="font-size:12px">${r.details||'—'}</td>
+        </tr>`).join('')
+      : '<tr><td colspan="6" style="text-align:center;color:var(--muted);padding:20px">No voids/discounts in this period</td></tr>'
+  } catch (e) { console.error(e) }
+}
+
+function exportVoidCSV () {
+  const tbody = document.getElementById('void-rep-tbody')
+  const rows  = Array.from(tbody.querySelectorAll('tr')).map(tr =>
+    Array.from(tr.querySelectorAll('td')).map(td => `"${td.innerText.replace(/"/g,'""')}"`).join(','))
+  downloadCSV(['Time,Action,Entity,Cashier,Approved By,Details',...rows].join('\n'), `void_report_${todayStr()}.csv`)
+}
+
+function downloadCSV (csv, filename) {
+  const blob = new Blob([csv], { type:'text/csv' })
+  const url  = URL.createObjectURL(blob)
+  const a    = document.createElement('a')
+  a.href = url; a.download = filename; a.click()
+  URL.revokeObjectURL(url)
+}
+
+// ─── REPORT TABS ──────────────────────────────────────────────────
+function switchRptTab (tab, btn) {
+  ;['sales','ops','inventory','security'].forEach(t => {
+    const el = document.getElementById('rpt-pane-' + t)
+    if (el) el.style.display = t === tab ? 'block' : 'none'
+  })
+  document.querySelectorAll('.rpt-tab').forEach(b => b.classList.remove('active'))
+  if (btn) btn.classList.add('active')
+}
+
+function rptDateRange (fromId, toId) {
+  return {
+    from: document.getElementById(fromId).value || todayStr(),
+    to:   document.getElementById(toId).value   || todayStr()
+  }
+}
+
+function initRptDates (...ids) {
+  const today = todayStr()
+  const first = new Date(today); first.setDate(1)
+  const mon   = first.toISOString().split('T')[0]
+  for (let i = 0; i < ids.length; i += 2) {
+    const f = document.getElementById(ids[i])
+    const t = document.getElementById(ids[i+1])
+    if (f && !f.value) f.value = mon
+    if (t && !t.value) t.value = today
+  }
+}
+
+// ─── ITEM CONSUMPTION ─────────────────────────────────────────────
+let _icRows = []
+
+async function loadItemConsumption () {
+  initRptDates('ic-from','ic-to')
+  const { from, to } = rptDateRange('ic-from','ic-to')
+  const cur = boSettings.currency
+  const tbody = document.getElementById('ic-tbody')
+  tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:20px;color:var(--muted)">Loading…</td></tr>'
+  try {
+    const { rows } = await apiFetch('GET', `/reports/item-consumption?from=${from}&to=${to}`)
+    _icRows = rows || []
+    if (!_icRows.length) {
+      tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:20px;color:var(--muted)">No paid orders in range</td></tr>'
+      document.getElementById('ic-total').style.display = 'none'
+      return
+    }
+    let totalRev = 0, totalQty = 0
+    tbody.innerHTML = _icRows.map((r, i) => {
+      totalRev += parseFloat(r.total_revenue || 0)
+      totalQty += parseInt(r.total_qty || 0)
+      return `<tr>
+        <td style="color:var(--muted)">${i + 1}</td>
+        <td style="font-weight:600">${r.item_name}</td>
+        <td><span class="badge badge-blue">${r.category_name}</span></td>
+        <td style="font-weight:700;color:var(--primary)">${r.total_qty}</td>
+        <td>${r.order_count}</td>
+        <td style="font-weight:700">${cur} ${parseFloat(r.total_revenue || 0).toFixed(2)}</td>
+      </tr>`
+    }).join('')
+    const totEl = document.getElementById('ic-total')
+    totEl.style.display = 'block'
+    totEl.innerHTML = `Total Qty: <span style="color:var(--primary)">${totalQty}</span> &nbsp;|&nbsp; Total Revenue: <span>${cur} ${totalRev.toFixed(2)}</span>`
+  } catch (e) { tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;padding:20px;color:var(--danger)">${e.message}</td></tr>` }
+}
+
+function exportItemConsumptionCSV () {
+  const cur = boSettings.currency
+  const header = 'Rank,Item Name,Category,Qty Sold,Orders,Revenue'
+  const rows   = _icRows.map((r, i) =>
+    `${i+1},"${r.item_name}","${r.category_name}",${r.total_qty},${r.order_count},${parseFloat(r.total_revenue||0).toFixed(2)}`)
+  downloadCSV([header, ...rows].join('\n'), `item_consumption_${todayStr()}.csv`)
+}
+
+// ─── WASTAGE REPORT ────────────────────────────────────────────────
+let _wastRows = []
+
+async function loadWastageReport () {
+  initRptDates('wast-from','wast-to')
+  const { from, to } = rptDateRange('wast-from','wast-to')
+  const cur = boSettings.currency
+  const tbody = document.getElementById('wast-tbody')
+  tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:20px;color:var(--muted)">Loading…</td></tr>'
+  try {
+    const { rows } = await apiFetch('GET', `/reports/wastage?from=${from}&to=${to}`)
+    _wastRows = rows || []
+    if (!_wastRows.length) {
+      tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:20px;color:var(--muted)">No voided / cancelled orders in range</td></tr>'
+      document.getElementById('wast-total').style.display = 'none'
+      return
+    }
+    let total = 0
+    tbody.innerHTML = _wastRows.map(r => {
+      total += parseFloat(r.total || 0)
+      const items = (r.items || []).filter(i => i.item_name)
+      const itemList = items.length
+        ? items.map(i => `${i.quantity}× ${i.item_name}`).join(', ')
+        : '—'
+      const statusBadge = r.status === 'void'
+        ? `<span class="badge badge-red">Void</span>`
+        : `<span class="badge badge-amber">Cancelled</span>`
+      return `<tr>
+        <td style="font-weight:700;color:var(--primary)">#${r.order_number}</td>
+        <td>${(r.order_type||'').replace(/-/g,' ')}</td>
+        <td>${statusBadge}</td>
+        <td>${r.cashier_name || '—'}</td>
+        <td style="max-width:200px;white-space:normal;font-size:11px;color:var(--muted)">${itemList}</td>
+        <td style="font-weight:700;color:var(--danger)">${cur} ${parseFloat(r.total||0).toFixed(2)}</td>
+        <td style="font-size:11px;color:var(--muted)">${r.void_reason || '—'}</td>
+        <td style="font-size:11px;color:var(--muted)">${r.created_at ? new Date(+r.created_at).toLocaleString() : '—'}</td>
+      </tr>`
+    }).join('')
+    const totEl = document.getElementById('wast-total')
+    totEl.style.display = 'block'
+    totEl.innerHTML = `Total Wastage Value: <span style="color:var(--danger)">${cur} ${total.toFixed(2)}</span>`
+  } catch (e) { tbody.innerHTML = `<tr><td colspan="8" style="text-align:center;padding:20px;color:var(--danger)">${e.message}</td></tr>` }
+}
+
+function exportWastageCSV () {
+  const cur = boSettings.currency
+  const header = 'Order#,Type,Status,Cashier,Items,Value,Reason,Time'
+  const rows   = _wastRows.map(r => {
+    const items = (r.items||[]).filter(i=>i.item_name).map(i=>`${i.quantity}x ${i.item_name}`).join('; ')
+    return `"${r.order_number}","${r.order_type||''}","${r.status}","${r.cashier_name||''}","${items}",${parseFloat(r.total||0).toFixed(2)},"${r.void_reason||''}","${r.created_at?new Date(+r.created_at).toLocaleString():''}"`
+  })
+  downloadCSV([header,...rows].join('\n'), `wastage_${todayStr()}.csv`)
+}
+
+// ─── PASSCODE USAGE ────────────────────────────────────────────────
+let _passRows = []
+
+async function loadPasscodeUsage () {
+  initRptDates('pass-from','pass-to')
+  const { from, to } = rptDateRange('pass-from','pass-to')
+  const start = new Date(from).getTime()
+  const end   = new Date(to).getTime() + 86400000
+  const tbody = document.getElementById('pass-tbody')
+  tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:20px;color:var(--muted)">Loading…</td></tr>'
+  try {
+    _passRows = await apiFetch('GET', `/audit?from=${start}&to=${end}&action=manager_approval`)
+    if (!Array.isArray(_passRows)) _passRows = []
+    if (!_passRows.length) {
+      tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:20px;color:var(--muted)">No manager approvals in range</td></tr>'
+      return
+    }
+    tbody.innerHTML = _passRows.map(r => `<tr>
+      <td style="font-size:11px;color:var(--muted)">${r.created_at ? new Date(+r.created_at).toLocaleString() : '—'}</td>
+      <td><span class="badge badge-amber">${r.action || '—'}</span></td>
+      <td>${r.cashier_name || '—'}</td>
+      <td style="font-weight:600;color:var(--primary)">${r.approved_by || '—'}</td>
+      <td style="font-size:11px;color:var(--muted)">${r.details || '—'}</td>
+      <td style="font-size:11px;color:var(--muted)">${r.terminal_id || '—'}</td>
+    </tr>`).join('')
+  } catch (e) { tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;padding:20px;color:var(--danger)">${e.message}</td></tr>` }
+}
+
+function exportPasscodeCSV () {
+  const header = 'Time,Action,Requested By,Approved By,Details,Terminal'
+  const rows   = _passRows.map(r =>
+    `"${r.created_at?new Date(+r.created_at).toLocaleString():''}","${r.action||''}","${r.cashier_name||''}","${r.approved_by||''}","${(r.details||'').replace(/"/g,'""')}","${r.terminal_id||''}"`)
+  downloadCSV([header,...rows].join('\n'), `passcode_usage_${todayStr()}.csv`)
+}
+
+// ─── DELETED DATA REPORT ───────────────────────────────────────────
+let _delRows = []
+
+async function loadDeletedData () {
+  initRptDates('del-from','del-to')
+  const { from, to } = rptDateRange('del-from','del-to')
+  const start = new Date(from).getTime()
+  const end   = new Date(to).getTime() + 86400000
+  const tbody = document.getElementById('del-tbody')
+  tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:20px;color:var(--muted)">Loading…</td></tr>'
+  try {
+    const voidOrders  = await apiFetch('GET', `/audit?from=${start}&to=${end}&action=void_order`)
+    const cancelOrders= await apiFetch('GET', `/audit?from=${start}&to=${end}&action=cancel_order`)
+    const voidItems   = await apiFetch('GET', `/audit?from=${start}&to=${end}&action=void_item`)
+    _delRows = [...(Array.isArray(voidOrders)?voidOrders:[]),
+                ...(Array.isArray(cancelOrders)?cancelOrders:[]),
+                ...(Array.isArray(voidItems)?voidItems:[])]
+    _delRows.sort((a,b) => (+b.created_at||0) - (+a.created_at||0))
+    if (!_delRows.length) {
+      tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:20px;color:var(--muted)">No deletions / voids in range</td></tr>'
+      return
+    }
+    const actionBadge = a => {
+      if (a === 'void_order')   return `<span class="badge badge-red">Void Order</span>`
+      if (a === 'cancel_order') return `<span class="badge badge-amber">Cancel Order</span>`
+      if (a === 'void_item')    return `<span class="badge badge-orange">Void Item</span>`
+      return `<span class="badge badge-blue">${a}</span>`
+    }
+    tbody.innerHTML = _delRows.map(r => `<tr>
+      <td style="font-size:11px;color:var(--muted)">${r.created_at ? new Date(+r.created_at).toLocaleString() : '—'}</td>
+      <td>${actionBadge(r.action)}</td>
+      <td style="font-size:11px">${r.entity_type || '—'} ${r.entity_id ? '<span style="color:var(--muted)">#' + r.entity_id + '</span>' : ''}</td>
+      <td>${r.cashier_name || '—'}</td>
+      <td style="color:var(--muted)">${r.approved_by || '—'}</td>
+      <td style="font-size:11px;color:var(--muted)">${r.details || '—'}</td>
+      <td style="font-size:11px;color:var(--muted)">${r.terminal_id || '—'}</td>
+    </tr>`).join('')
+  } catch (e) { tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;padding:20px;color:var(--danger)">${e.message}</td></tr>` }
+}
+
+function exportDeletedDataCSV () {
+  const header = 'Time,Action,Entity,Cashier,Approved By,Details,Terminal'
+  const rows   = _delRows.map(r =>
+    `"${r.created_at?new Date(+r.created_at).toLocaleString():''}","${r.action||''}","${r.entity_type||''} ${r.entity_id||''}","${r.cashier_name||''}","${r.approved_by||''}","${(r.details||'').replace(/"/g,'""')}","${r.terminal_id||''}"`)
+  downloadCSV([header,...rows].join('\n'), `deleted_data_${todayStr()}.csv`)
+}
+
+// ─── USER PERMISSION REPORT ────────────────────────────────────────
+async function loadUserPermissions () {
+  const tbody = document.getElementById('perm-tbody')
+  tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:20px;color:var(--muted)">Loading…</td></tr>'
+  try {
+    const { cashiers } = await apiFetch('GET', '/staff/cashiers')
+    if (!cashiers || !cashiers.length) {
+      tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:20px;color:var(--muted)">No staff found</td></tr>'
+      return
+    }
+    const roleBadge = r => {
+      if (r === 'admin')   return `<span class="badge badge-red">Admin</span>`
+      if (r === 'manager') return `<span class="badge badge-purple">Manager</span>`
+      if (r === 'waiter')  return `<span class="badge badge-blue">Waiter</span>`
+      return `<span class="badge badge-amber">Cashier</span>`
+    }
+    tbody.innerHTML = cashiers.map(c => `<tr>
+      <td style="font-weight:600">${c.name}</td>
+      <td>${roleBadge(c.role)}</td>
+      <td>${c.pin ? '<span class="badge badge-green">Yes</span>' : '<span class="badge badge-red">No</span>'}</td>
+      <td>${c.active ? '<span class="badge badge-green">Active</span>' : '<span class="badge badge-red">Inactive</span>'}</td>
+      <td style="font-size:11px;color:var(--muted)">${c.created_at ? new Date(+c.created_at).toLocaleDateString() : '—'}</td>
+    </tr>`).join('')
+  } catch (e) { tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;padding:20px;color:var(--danger)">${e.message}</td></tr>` }
+}
+
+// ─── DEVICE ACTIVITY REPORT ────────────────────────────────────────
+let _devRows = []
+
+async function loadDeviceActivity () {
+  initRptDates('dev-from','dev-to')
+  const { from, to } = rptDateRange('dev-from','dev-to')
+  const start = new Date(from).getTime()
+  const end   = new Date(to).getTime() + 86400000
+  const tbody = document.getElementById('dev-tbody')
+  tbody.innerHTML = '<tr><td colspan="9" style="text-align:center;padding:20px;color:var(--muted)">Loading…</td></tr>'
+  try {
+    const { rows } = await apiFetch('GET', `/reports/device-activity?from=${start}&to=${end}`)
+    _devRows = rows || []
+    if (!_devRows.length) {
+      tbody.innerHTML = '<tr><td colspan="9" style="text-align:center;padding:20px;color:var(--muted)">No device activity in range</td></tr>'
+      return
+    }
+    tbody.innerHTML = _devRows.map(r => `<tr>
+      <td style="font-weight:700;color:var(--primary)">${r.terminal_id}</td>
+      <td style="font-weight:700">${r.event_count}</td>
+      <td>${r.cashier_count}</td>
+      <td style="color:${r.voids>0?'var(--danger)':'var(--muted)'};font-weight:${r.voids>0?700:400}">${r.voids}</td>
+      <td style="color:${r.cancels>0?'var(--warning)':'var(--muted)'}">${r.cancels}</td>
+      <td>${r.discounts}</td>
+      <td style="color:${r.approvals>0?'#9333ea':'var(--muted)'}">${r.approvals}</td>
+      <td style="font-size:11px;color:var(--muted)">${r.first_event ? new Date(+r.first_event).toLocaleString() : '—'}</td>
+      <td style="font-size:11px;color:var(--muted)">${r.last_event  ? new Date(+r.last_event ).toLocaleString() : '—'}</td>
+    </tr>`).join('')
+  } catch (e) { tbody.innerHTML = `<tr><td colspan="9" style="text-align:center;padding:20px;color:var(--danger)">${e.message}</td></tr>` }
+}
+
+function exportDeviceActivityCSV () {
+  const header = 'Terminal ID,Events,Cashiers,Voids,Cancels,Discounts,Approvals,First Seen,Last Active'
+  const rows   = _devRows.map(r =>
+    `"${r.terminal_id}",${r.event_count},${r.cashier_count},${r.voids},${r.cancels},${r.discounts},${r.approvals},"${r.first_event?new Date(+r.first_event).toLocaleString():''}","${r.last_event?new Date(+r.last_event).toLocaleString():''}"`)
+  downloadCSV([header,...rows].join('\n'), `device_activity_${todayStr()}.csv`)
+}
+
+// ─── DEMO ENVIRONMENT ─────────────────────────────────────────────
+async function runFullSeed () {
+  const days        = parseInt(document.getElementById('seed-days').value) || 30
+  const clearFirst  = document.getElementById('seed-clear').checked
+  if (clearFirst && !confirm(`This will DELETE all existing orders, shifts, expenses and day closings (menu and staff kept). Generate ${days} days of fresh data?`)) return
+  if (!clearFirst && !confirm(`Generate ${days} days of demo data? Existing records will not be removed.`)) return
+
+  const btn      = document.getElementById('btn-seed')
+  const status   = document.getElementById('seed-status')
+  const progress = document.getElementById('seed-progress')
+  const bar      = document.getElementById('seed-bar')
+  const logEl    = document.getElementById('seed-log')
+
+  btn.disabled       = true
+  btn.textContent    = '⏳ Generating…'
+  progress.style.display = 'block'
+  status.textContent = ''
+  logEl.textContent  = ''
+  bar.style.width    = '10%'
+
+  try {
+    bar.style.width = '30%'
+    const result = await apiFetch('POST', '/seed/demo', { days, clearExisting: clearFirst })
+    bar.style.width = '100%'
+
+    if (result.log) logEl.innerHTML = result.log.map(l => `✓ ${l}`).join('<br>')
+    const s = result.summary || {}
+    status.style.color   = 'var(--success)'
+    status.textContent   = `✓ Done! ${s.orders||0} orders · ${s.shifts||0} shifts · ${s.days||days} days of history`
+
+    // Reload all views
+    await loadBOSettings()
+    loadDashboard()
+    loadMenu()
+    loadStaff()
+  } catch (e) {
+    bar.style.width = '100%'
+    bar.style.background = 'var(--danger)'
+    status.style.color   = 'var(--danger)'
+    status.textContent   = 'Error: ' + e.message
+  } finally {
+    btn.disabled     = false
+    btn.textContent  = 'Generate Demo Environment'
+  }
+}
+
+async function clearTransactionData () {
+  if (!confirm('Delete ALL orders, shifts, expenses, day closings, audit log? Menu and staff kept. Cannot undo.')) return
+  try {
+    const r = await apiFetch('POST', '/seed/clear', {})
+    showToast(r.message || 'Transaction data cleared.','success')
+    loadDashboard()
+  } catch (e) { showToast('Error: ' + e.message,'error') }
+}
+
+// ─── DOWNLOADS PAGE ──────────────────────────────────────────────────────────
+
+async function loadDownloadsPage () {
+  loadServerInfo()
+  loadInstallerFiles()
+  // Set web app links using current origin
+  const base = window.location.origin
+  document.getElementById('link-waiter').href = base + '/waiter-app/'
+  document.getElementById('link-kds').href    = base + '/kds/'
+  document.getElementById('link-bo').href     = base + '/backoffice/'
+  // Check last backup from localStorage
+  const last = localStorage.getItem('pos_last_backup')
+  if (last) document.getElementById('last-backup-info').textContent = 'Last backup: ' + new Date(last).toLocaleString()
+}
+
+async function loadServerInfo () {
+  const body = document.getElementById('server-info-body')
+  try {
+    const d = await apiFetch('GET', '/downloads/info')
+    const s = d.server
+    body.innerHTML = `
+      <div><div style="font-size:11px;font-weight:700;color:#94a3b8;text-transform:uppercase;margin-bottom:4px">Server IP (for POS setup)</div>
+           <div style="font-size:18px;font-weight:700;color:#f97316">${window.location.hostname}</div></div>
+      <div><div style="font-size:11px;font-weight:700;color:#94a3b8;text-transform:uppercase;margin-bottom:4px">API Port</div>
+           <div style="font-size:18px;font-weight:700">${s.port}</div></div>
+      <div><div style="font-size:11px;font-weight:700;color:#94a3b8;text-transform:uppercase;margin-bottom:4px">Database Name</div>
+           <div style="font-size:14px;font-weight:600;font-family:monospace">${s.db_name}</div></div>
+      <div><div style="font-size:11px;font-weight:700;color:#94a3b8;text-transform:uppercase;margin-bottom:4px">DB User</div>
+           <div style="font-size:14px;font-weight:600;font-family:monospace">${s.db_user}</div></div>
+      <div><div style="font-size:11px;font-weight:700;color:#94a3b8;text-transform:uppercase;margin-bottom:4px">PostgreSQL</div>
+           <div style="font-size:13px;color:#475569">${d.database.pg_version}</div></div>
+      <div><div style="font-size:11px;font-weight:700;color:#94a3b8;text-transform:uppercase;margin-bottom:4px">Data Summary</div>
+           <div style="font-size:13px;color:#475569">Staff: ${d.counts.cashiers} &nbsp;|&nbsp; Menu: ${d.counts.menu_items} items &nbsp;|&nbsp; Orders: ${d.counts.orders}</div></div>
+    `
+  } catch (e) {
+    body.innerHTML = `<div style="color:#ef4444;font-size:13px">Error loading: ${e.message}</div>`
+  }
+}
+
+async function loadInstallerFiles () {
+  const list = document.getElementById('installer-file-list')
+  const upd  = document.getElementById('update-files-list')
+  try {
+    const { files } = await apiFetch('GET', '/downloads/files')
+    const exes = files.filter(f => f.name.endsWith('.exe'))
+    if (exes.length === 0) {
+      list.innerHTML = '<div style="color:#94a3b8;font-size:13px">No installer found. Build POS: <code>npm run build</code> in pos/ then copy dist/*.exe to server/updates/</div>'
+    } else {
+      list.innerHTML = exes.map(f => `
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 12px;background:#f8fafc;border-radius:8px;margin-bottom:8px">
+          <div>
+            <div style="font-weight:600;font-size:14px">${f.name}</div>
+            <div style="font-size:12px;color:#64748b">${(f.size/1024/1024).toFixed(1)} MB &nbsp;·&nbsp; ${new Date(f.modified).toLocaleString()}</div>
+          </div>
+          <a href="/updates/${encodeURIComponent(f.name)}" download style="padding:8px 16px;background:#f97316;color:#fff;border-radius:6px;font-weight:600;font-size:13px;text-decoration:none">Download</a>
+        </div>`).join('')
+    }
+    // Update auto-update files list
+    if (upd) {
+      const ymls = files.filter(f => f.name.endsWith('.yml'))
+      upd.innerHTML = ymls.length ? ymls.map(f => `<span style="font-size:12px;background:#f1f5f9;padding:4px 8px;border-radius:4px;font-family:monospace">${f.name}</span>`).join(' ') : ''
+    }
+  } catch (e) {
+    list.innerHTML = `<div style="color:#ef4444;font-size:13px">Error: ${e.message}</div>`
+  }
+}
+
+async function downloadBackup () {
+  try {
+    const token = localStorage.getItem('bo_token')
+    const resp  = await fetch('/downloads/backup', { headers: { Authorization: 'Bearer ' + token } })
+    if (!resp.ok) { const e = await resp.json(); throw new Error(e.error || resp.statusText) }
+    const blob     = await resp.blob()
+    const filename = resp.headers.get('content-disposition')?.match(/filename="(.+)"/)?.[1] || 'pos-backup.json'
+    const url      = URL.createObjectURL(blob)
+    const a        = document.createElement('a')
+    a.href = url; a.download = filename; a.click()
+    URL.revokeObjectURL(url)
+    const now = new Date().toISOString()
+    localStorage.setItem('pos_last_backup', now)
+    document.getElementById('last-backup-info').textContent = 'Last backup: ' + new Date(now).toLocaleString()
+  } catch (e) { showToast('Backup failed: ' + e.message,'error') }
+}
+
+let _autoBackupTimer = null
+function toggleScheduledBackup () {
+  const statusEl = document.getElementById('auto-backup-status')
+  if (_autoBackupTimer) {
+    clearInterval(_autoBackupTimer)
+    _autoBackupTimer = null
+    statusEl.textContent = 'OFF'
+  } else {
+    _autoBackupTimer = setInterval(downloadBackup, 60 * 60 * 1000) // every hour
+    statusEl.textContent = 'ON (hourly)'
+    showToast('Auto backup enabled — hourly while this tab is open.','info')
+  }
+}
+
+// ─── LICENSING ───────────────────────────────────────────────────────────────
+
+// ── Licensing helpers ─────────────────────────────────────────────────────────
+
+let _licensingData = []   // cached for filter/render without re-fetch
+let _extendTargetId = ''
+
+function showRegisterModal () {
+  document.getElementById('modal-register-restaurant').style.display = 'flex'
+  document.getElementById('reg-result').style.display = 'none'
+  document.getElementById('reg-error').textContent = ''
+  document.getElementById('reg-name').value = ''
+  document.getElementById('reg-notes').value = ''
+  document.getElementById('btn-reg-submit').disabled = false
+  setTimeout(() => document.getElementById('reg-name').focus(), 100)
+}
+
+function closeRegisterModal () {
+  document.getElementById('modal-register-restaurant').style.display = 'none'
+  loadLicensing()
+}
+
+async function submitRegistration () {
+  const name  = document.getElementById('reg-name').value.trim()
+  const errEl = document.getElementById('reg-error')
+  errEl.textContent = ''
+  if (!name) { errEl.textContent = 'Restaurant name is required.'; return }
+
+  const btn = document.getElementById('btn-reg-submit')
+  btn.disabled = true; btn.textContent = 'Registering…'
+
+  try {
+    const r = await apiFetch('POST', '/setup/register', {
+      name,
+      max_terminals: parseInt(document.getElementById('reg-terminals').value) || 10,
+      expires_days:  document.getElementById('reg-days').value || null,
+      notes:         document.getElementById('reg-notes').value,
+    })
+    document.getElementById('res-id').textContent  = r.restaurant.id
+    document.getElementById('res-key').textContent = r.restaurant.license_key
+    document.getElementById('res-expires').textContent = r.restaurant.expires_at
+      ? new Date(r.restaurant.expires_at).toLocaleDateString() : 'Never'
+    document.getElementById('reg-result').style.display = 'block'
+    btn.textContent = 'Register Another'
+    btn.disabled = false
+    document.getElementById('reg-name').value = ''
+  } catch (e) {
+    errEl.textContent = 'Error: ' + e.message
+    btn.disabled = false; btn.textContent = 'Register'
+  }
+}
+
+function copyText (elementId) {
+  const text = document.getElementById(elementId).textContent
+  navigator.clipboard.writeText(text).then(() => {
+    const el = document.getElementById(elementId)
+    const orig = el.textContent
+    el.textContent = '✅ Copied!'
+    setTimeout(() => { el.textContent = orig }, 1200)
+  })
+}
+
+function licTrialDaysLeft (r) {
+  const t = r.trial_ends_at || r.expires_at
+  if (!t) return null
+  return Math.ceil((new Date(t) - Date.now()) / 86400000)
+}
+
+function licStatusBadge (r) {
+  const status = r.status || (r.active ? 'active' : 'inactive')
+  const colors = {
+    trial:     ['#fef3c7','#92400e'],
+    active:    ['#dcfce7','#166534'],
+    expired:   ['#fee2e2','#991b1b'],
+    suspended: ['#f1f5f9','#475569'],
+    inactive:  ['#f1f5f9','#475569'],
+  }
+  const [bg, fg] = colors[status] || ['#f1f5f9','#475569']
+  let label = status.toUpperCase()
+  const days = licTrialDaysLeft(r)
+  if (status === 'trial' && days !== null) label += ` (${days}d)`
+  return `<span style="padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700;background:${bg};color:${fg}">${label}</span>`
+}
+
+function licRowStyle (r) {
+  const days = licTrialDaysLeft(r)
+  if (r.status === 'expired') return 'background:#fff5f5'
+  if (days !== null && days <= 3 && (r.status === 'trial')) return 'background:#fffbeb'
+  return ''
+}
+
+async function loadLicensing () {
+  const list = document.getElementById('licensing-list')
+  list.innerHTML = '<div style="color:#94a3b8;font-size:13px;padding:8px 0">Loading…</div>'
+  try {
+    const { restaurants } = await apiFetch('GET', '/setup/restaurants')
+    _licensingData = restaurants
+    renderLicensingTable()
+    renderLicensingSummary(restaurants)
+    renderLicensingAlerts(restaurants)
+  } catch (e) {
+    list.innerHTML = `<div style="color:#ef4444;font-size:13px">Error: ${e.message}</div>`
+  }
+}
+
+function renderLicensingSummary (restaurants) {
+  const counts = { total: restaurants.length, trial: 0, active: 0, expiring: 0, expired: 0, suspended: 0 }
+  for (const r of restaurants) {
+    const s = r.status || 'active'
+    if (s === 'trial') {
+      counts.trial++
+      const d = licTrialDaysLeft(r)
+      if (d !== null && d <= 3) counts.expiring++
+    } else if (s === 'active') counts.active++
+    else if (s === 'expired') counts.expired++
+    else if (s === 'suspended') counts.suspended++
+  }
+  const cards = [
+    { label: 'Total', value: counts.total,    bg: '#f8fafc', fg: '#0f172a', border: '#e2e8f0' },
+    { label: 'Trial', value: counts.trial,    bg: '#fffbeb', fg: '#92400e', border: '#fcd34d' },
+    { label: 'Active', value: counts.active,  bg: '#f0fdf4', fg: '#166534', border: '#86efac' },
+    { label: 'Expiring Soon', value: counts.expiring, bg: '#fff7ed', fg: '#c2410c', border: '#fdba74' },
+    { label: 'Expired', value: counts.expired, bg: '#fff1f2', fg: '#9f1239', border: '#fda4af' },
+    { label: 'Suspended', value: counts.suspended, bg: '#f8fafc', fg: '#475569', border: '#cbd5e1' },
+  ]
+  document.getElementById('licensing-summary').innerHTML = cards.map(c => `
+    <div style="background:${c.bg};border:1.5px solid ${c.border};border-radius:12px;padding:14px 16px;text-align:center">
+      <div style="font-size:28px;font-weight:800;color:${c.fg}">${c.value}</div>
+      <div style="font-size:12px;color:${c.fg};opacity:.8;font-weight:600;margin-top:2px">${c.label}</div>
+    </div>`).join('')
+}
+
+function renderLicensingAlerts (restaurants) {
+  const expiringSoon = restaurants.filter(r => {
+    if (r.status !== 'trial') return false
+    const d = licTrialDaysLeft(r)
+    return d !== null && d <= 3 && d >= 0
+  })
+  const expired = restaurants.filter(r => r.status === 'expired')
+  let html = ''
+  if (expiringSoon.length) {
+    html += `<div style="background:#fff7ed;border:1.5px solid #fdba74;border-radius:10px;padding:12px 16px;margin-bottom:8px;font-size:13px;color:#92400e">
+      ⚠️ <b>${expiringSoon.length} trial(s) expiring within 3 days:</b> ${expiringSoon.map(r => `${esc(r.name)} (${licTrialDaysLeft(r)}d left)`).join(', ')}
+      — <button onclick="showExtendTrialModal('${expiringSoon[0].id}','${esc(expiringSoon[0].name)}')" style="border:none;background:none;color:#c2410c;cursor:pointer;font-weight:700;text-decoration:underline">Extend Trial</button>
+    </div>`
+  }
+  if (expired.length) {
+    html += `<div style="background:#fff1f2;border:1.5px solid #fda4af;border-radius:10px;padding:12px 16px;font-size:13px;color:#9f1239">
+      🔴 <b>${expired.length} restaurant(s) with expired license:</b> ${expired.map(r => esc(r.name)).join(', ')}
+    </div>`
+  }
+  document.getElementById('licensing-alerts').innerHTML = html
+}
+
+function renderLicensingTable () {
+  const list = document.getElementById('licensing-list')
+  const statusFilter = (document.getElementById('lic-filter-status') || {}).value || ''
+  const searchFilter = ((document.getElementById('lic-filter-search') || {}).value || '').toLowerCase()
+
+  let filtered = _licensingData
+  if (statusFilter) filtered = filtered.filter(r => (r.status || '') === statusFilter)
+  if (searchFilter) filtered = filtered.filter(r =>
+    (r.name || '').toLowerCase().includes(searchFilter) ||
+    (r.email || '').toLowerCase().includes(searchFilter) ||
+    (r.id || '').toLowerCase().includes(searchFilter)
+  )
+
+  if (!filtered.length) {
+    list.innerHTML = '<div style="color:#94a3b8;font-size:13px;padding:12px 0">No restaurants match the current filter.</div>'
+    return
+  }
+  list.innerHTML = `
+    <table style="width:100%;border-collapse:collapse;font-size:13px;min-width:900px">
+      <thead>
+        <tr style="background:#f8fafc;text-align:left">
+          <th style="padding:10px;border-bottom:2px solid #e2e8f0">Restaurant ID</th>
+          <th style="padding:10px;border-bottom:2px solid #e2e8f0">Name / Owner</th>
+          <th style="padding:10px;border-bottom:2px solid #e2e8f0">Contact</th>
+          <th style="padding:10px;border-bottom:2px solid #e2e8f0">Terminals</th>
+          <th style="padding:10px;border-bottom:2px solid #e2e8f0">Status / Expiry</th>
+          <th style="padding:10px;border-bottom:2px solid #e2e8f0">Onboarding</th>
+          <th style="padding:10px;border-bottom:2px solid #e2e8f0">Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${filtered.map(r => {
+          const days = licTrialDaysLeft(r)
+          const expiryTxt = r.trial_ends_at
+            ? `Trial ends ${new Date(r.trial_ends_at).toLocaleDateString()}`
+            : r.expires_at ? `Expires ${new Date(r.expires_at).toLocaleDateString()}` : 'No expiry'
+          const onboardSteps = ['Signed Up','Server Installed','POS Installed','Menu Added','Live']
+          const step = Math.min(r.onboarding_step || 0, 4)
+          return `
+          <tr style="border-bottom:1px solid #f1f5f9;${licRowStyle(r)}">
+            <td style="padding:10px;font-family:monospace;font-weight:700;color:#f97316">${r.id}</td>
+            <td style="padding:10px">
+              <div style="font-weight:600">${esc(r.name)}</div>
+              <div style="font-size:12px;color:#64748b">${esc(r.owner_name || '')}${r.city ? ' · ' + esc(r.city) : ''}</div>
+            </td>
+            <td style="padding:10px;font-size:12px;color:#475569">
+              <div>${esc(r.email || '')}</div>
+              <div>${esc(r.phone || '')}</div>
+            </td>
+            <td style="padding:10px">${r.terminal_count} / ${r.max_terminals}</td>
+            <td style="padding:10px">
+              ${licStatusBadge(r)}
+              <div style="font-size:11px;color:#64748b;margin-top:4px">${expiryTxt}</div>
+            </td>
+            <td style="padding:10px">
+              <div style="font-size:12px;color:#475569">${onboardSteps[step]}</div>
+              <div style="height:4px;background:#e2e8f0;border-radius:4px;margin-top:4px;width:80px">
+                <div style="height:100%;background:#f97316;border-radius:4px;width:${(step/4)*100}%"></div>
+              </div>
+            </td>
+            <td style="padding:10px;white-space:nowrap">
+              <button class="btn btn-outline btn-sm" onclick="showExtendTrialModal('${r.id}','${esc(r.name)}')" title="Extend Trial">Extend</button>
+              <button class="btn btn-outline btn-sm" onclick="regenKey('${r.id}')" title="Regenerate License Key" style="margin:0 3px">Regen Key</button>
+              <button class="btn btn-outline btn-sm" onclick="viewTerminals('${r.id}','${esc(r.name)}')" title="View Terminals">Terminals</button>
+              <button class="btn btn-sm ${r.active ? 'btn-danger' : 'btn-success'}" onclick="toggleRestaurant('${r.id}',${r.active})" title="${r.active ? 'Deactivate' : 'Activate'}" style="margin-left:3px">${r.active ? 'Deactivate' : 'Activate'}</button>
+            </td>
+          </tr>`
+        }).join('')}
+      </tbody>
+    </table>`
+}
+
+function showExtendTrialModal (id, name) {
+  _extendTargetId = id
+  document.getElementById('extend-trial-name').textContent = name
+  document.getElementById('extend-trial-days').value = 7
+  document.getElementById('modal-extend-trial').style.display = 'flex'
+}
+
+async function confirmExtendTrial () {
+  const days = parseInt(document.getElementById('extend-trial-days').value) || 7
+  const btn = document.getElementById('btn-extend-confirm')
+  btn.disabled = true; btn.textContent = 'Extending…'
+  try {
+    await apiFetch('PATCH', `/setup/restaurants/${_extendTargetId}`, { extend_trial_days: days })
+    document.getElementById('modal-extend-trial').style.display = 'none'
+    loadLicensing()
+    showToast('Trial extended.','success')
+  } catch (e) {
+    showToast('Error: ' + e.message,'error')
+  } finally {
+    btn.disabled = false; btn.textContent = 'Extend Trial'
+  }
+}
+
+async function regenKey (id) {
+  if (!confirm('Regenerate license key? The old key will stop working immediately. Make sure to give the client the new key.')) return
+  try {
+    const r = await apiFetch('POST', `/setup/restaurants/${id}/regenerate`)
+    prompt(`New License Key for restaurant ${id} — copy it now (cannot be retrieved later):`, r.new_license_key)
+    showToast('New license key generated.','success')
+  } catch (e) { showToast('Error: ' + e.message,'error') }
+}
+
+async function toggleRestaurant (id, currentActive) {
+  const action = currentActive ? 'deactivate' : 'activate'
+  if (!confirm(`Are you sure you want to ${action} this restaurant? ${currentActive ? 'All terminals will lose access.' : ''}`)) return
+  try {
+    await apiFetch('PATCH', `/setup/restaurants/${id}`, { active: !currentActive })
+    loadLicensing()
+    showToast(`Restaurant ${currentActive ? 'deactivated' : 'activated'}.`, currentActive ? 'info' : 'success')
+  } catch (e) { showToast('Error: ' + e.message,'error') }
+}
+
+async function viewTerminals (restaurantId, name) {
+  try {
+    const { terminals } = await apiFetch('GET', `/setup/restaurants/${restaurantId}/terminals`)
+    const list = terminals.map(t =>
+      `  ${t.machine_id} — ${t.active ? '🟢 Active' : '🔴 Inactive'} — Last seen: ${t.last_seen ? new Date(t.last_seen).toLocaleString() : 'Never'}`
+    ).join('\n')
+    const msg = terminals.length ? `${terminals.length} terminal(s): ` + terminals.map(t => t.machine_id).join(', ') : 'No terminals registered yet.'
+    showToast(`${name}: ${msg}`, 'info', 6000)
+  } catch (e) { showToast('Error: ' + e.message,'error') }
+}
+
+async function runHealthCheck () {
+  const el = document.getElementById('health-check-result')
+  el.textContent = '⏳ Checking…'
+  try {
+    const r = await fetch('/health')
+    const d = await r.json()
+    if (d.ok) {
+      el.textContent = `✅ Server OK — v${d.version}, DB: ${d.db}`
+      el.style.color = 'green'
+      document.getElementById('chk-health').textContent = '✅'
+    } else {
+      el.textContent = '❌ Server returned error'; el.style.color = 'red'
+    }
+  } catch (e) {
+    el.textContent = '❌ ' + e.message; el.style.color = 'red'
+  }
+}
+
+// ─── LIVE ORDERS ─────────────────────────────────────────────────
+let _liveTimer = null
+let _liveOrders = []
+let _liveCompleted = []
+
+function elapsedStr (createdAt) {
+  const mins = Math.floor((Date.now() - new Date(+createdAt).getTime()) / 60000)
+  if (mins < 1)   return { text: '< 1m', cls: '' }
+  if (mins < 10)  return { text: mins + 'm', cls: '' }
+  if (mins < 20)  return { text: mins + 'm', cls: 'warn' }
+  if (mins < 60)  return { text: mins + 'm', cls: 'hot' }
+  const h = Math.floor(mins / 60), m = mins % 60
+  return { text: m > 0 ? `${h}h ${m}m` : `${h}h`, cls: 'hot' }
+}
+
+function getKanbanStatus (order) {
+  const items = order.items || []
+  const total = items.length
+  if (!total) return 'new'
+  const done  = items.filter(i => i.done).length
+  const pct   = done / total
+  const age   = Math.floor((Date.now() - new Date(+order.created_at).getTime()) / 60000)
+  if (pct === 1 && age >= 15) return 'waiting'
+  if (pct === 1)              return 'ready'
+  if (pct > 0 || age >= 8)   return 'preparing'
+  return 'new'
+}
+
+function orderTypeCls (type) {
+  if (!type) return 'lo-type-dine'
+  const t = type.toLowerCase()
+  if (t.includes('dine'))     return 'lo-type-dine'
+  if (t.includes('take'))     return 'lo-type-take'
+  if (t.includes('del'))      return 'lo-type-del'
+  if (t.includes('online'))   return 'lo-type-online'
+  return 'lo-type-dine'
+}
+
+function renderOrderCard (order, status) {
+  const cur   = boSettings.currency
+  const items = order.items || []
+  const done  = items.filter(i => i.done).length
+  const pct   = items.length ? Math.round((done / items.length) * 100) : 0
+  const elapsed = elapsedStr(order.created_at)
+  const typeLbl = (order.order_type || 'Dine-in').replace(/-/g,' ').replace(/\b\w/g,c=>c.toUpperCase())
+  const tableInfo = order.table_name ? `<span class="lo-table">${order.table_name}</span>` : ''
+  const progressColor = pct === 100 ? '#22c55e' : pct > 0 ? '#f97316' : '#3b82f6'
+
+  // Old order badge (not from today)
+  const orderDate = new Date(+order.created_at)
+  const todayMidnight = new Date(); todayMidnight.setHours(0,0,0,0)
+  const isOld = orderDate < todayMidnight
+  const oldBadge = isOld
+    ? `<div style="display:flex;align-items:center;gap:4px;margin-bottom:5px;padding:3px 7px;background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.2);border-radius:5px;width:fit-content">
+        <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="#f87171" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+        <span style="font-size:9px;font-weight:700;color:#f87171;letter-spacing:.3px">FROM ${orderDate.toLocaleDateString([],{month:'short',day:'numeric'})}</span>
+      </div>`
+    : ''
+
+  return `<div class="lo-card lo-card-${status}">
+    ${oldBadge}
+    <div class="lo-top">
+      <span class="lo-num">#${order.order_number || order.id}</span>
+      <span class="lo-timer ${elapsed.cls}">${elapsed.text}</span>
+    </div>
+    <div class="lo-meta">
+      <span class="lo-type ${orderTypeCls(order.order_type)}">${typeLbl}</span>
+      ${tableInfo}
+      ${order.customer_name ? `<span class="lo-table">${order.customer_name}</span>` : ''}
+    </div>
+    <div class="lo-items">
+      ${items.slice(0,4).map(it => `
+        <div class="lo-item ${it.done ? 'lo-item-done' : ''}">
+          <span class="lo-item-qty">${it.quantity}×</span>
+          <span class="lo-item-name">${it.item_name}</span>
+          ${it.done ? '<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#4ade80" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>' : ''}
+        </div>`).join('')}
+      ${items.length > 4 ? `<div class="lo-item"><span class="lo-item-name" style="color:#475569">+${items.length-4} more…</span></div>` : ''}
+    </div>
+    <div class="lo-progress"><div class="lo-progress-fill" style="width:${pct}%;background:${progressColor}"></div></div>
+    <div class="lo-foot">
+      <span class="lo-total">${cur} ${parseFloat(order.total||0).toFixed(2)}</span>
+      <span class="lo-age">${done}/${items.length} done</span>
+    </div>
+  </div>`
+}
+
+async function loadLiveOrders () {
+  try {
+    const { orders } = await apiFetch('GET', '/kitchen/orders')
+    _liveOrders = orders || []
+    renderLiveBoard()
+    document.getElementById('ls-last-update').textContent = new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit',second:'2-digit'})
+  } catch (e) {
+    console.warn('Live orders fetch failed', e.message)
+  }
+}
+
+function renderLiveBoard () {
+  const cols = { new: [], preparing: [], ready: [], waiting: [] }
+  let totalItems = 0, waitingLong = 0, oldCount = 0
+  const todayMidnight = new Date(); todayMidnight.setHours(0,0,0,0)
+
+  _liveOrders.forEach(o => {
+    const status = getKanbanStatus(o)
+    cols[status].push(o)
+    totalItems += (o.items||[]).length
+    const age = Math.floor((Date.now() - new Date(+o.created_at).getTime()) / 60000)
+    if (age >= 15) waitingLong++
+    if (new Date(+o.created_at) < todayMidnight) oldCount++
+  })
+
+  // Populate columns
+  Object.keys(cols).forEach(st => {
+    const el = document.getElementById('lc-' + st)
+    const cnt = document.getElementById('lc-cnt-' + st)
+    if (!el) return
+    el.innerHTML = cols[st].length
+      ? cols[st].map(o => renderOrderCard(o, st)).join('')
+      : `<div style="text-align:center;padding:20px 10px;color:#334155;font-size:12px">No orders</div>`
+    if (cnt) cnt.textContent = cols[st].length
+  })
+
+  // Stats chips
+  const el = id => document.getElementById(id)
+  el('ls-active').textContent  = _liveOrders.length
+  el('ls-items').textContent   = totalItems
+  el('ls-waiting').textContent = waitingLong
+  el('ls-done').textContent    = cols.ready.length + cols.waiting.length
+  const oldChip = document.getElementById('ls-chip-old')
+  if (oldChip) { oldChip.style.display = oldCount > 0 ? 'flex' : 'none' }
+  el('ls-old-count').textContent = oldCount
+
+  // Right panel — type breakdown
+  const total = _liveOrders.length || 1
+  const countType = t => _liveOrders.filter(o => (o.order_type||'').toLowerCase().includes(t)).length
+  const dine = countType('dine'), take = countType('take'), del = countType('del'), onl = countType('online')
+  el('lr-dine').textContent   = dine
+  el('lr-take').textContent   = take
+  el('lr-del').textContent    = del
+  el('lr-online').textContent = onl
+  el('lr-dine-bar').style.width   = (dine/total*100) + '%'
+  el('lr-take-bar').style.width   = (take/total*100) + '%'
+  el('lr-del-bar').style.width    = (del/total*100) + '%'
+  el('lr-online-bar').style.width = (onl/total*100) + '%'
+}
+
+function startLiveRefresh () {
+  stopLiveRefresh()
+  _liveTimer = setInterval(loadLiveOrders, 30000)
+}
+
+function stopLiveRefresh () {
+  if (_liveTimer) { clearInterval(_liveTimer); _liveTimer = null }
+}
+
+// Wire showView for licensing
+const _origShowView = showView
+</script>
+
+<!-- Printer Modal -->
+<div class="modal-overlay" id="modal-printer">
+  <div class="modal" style="min-width:400px">
+    <h3 id="pm-modal-title">Add Printer</h3>
+    <div class="form-row">
+      <div class="form-group"><label>Name *</label><input id="pm-name" type="text" placeholder="Kitchen Printer 1"></div>
+      <div class="form-group">
+        <label>Type</label>
+        <select id="pm-type">
+          <option value="epson">Epson</option>
+          <option value="star">Star</option>
+          <option value="escpos">Generic ESC/POS</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>IP Address</label><input id="pm-ip" type="text" placeholder="192.168.1.200"></div>
+      <div class="form-group"><label>Port</label><input id="pm-port" type="number" value="9100" min="1" max="65535"></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>Area</label>
+        <select id="pm-area">
+          <option value="kitchen">Kitchen</option>
+          <option value="counter">Counter</option>
+          <option value="bar">Bar</option>
+        </select>
+      </div>
+      <div class="form-group" style="display:flex;align-items:center;gap:10px;padding-top:22px">
+        <input id="pm-active" type="checkbox" checked style="width:18px;height:18px">
+        <label for="pm-active" style="margin:0">Active</label>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('modal-printer')">Cancel</button>
+      <button class="btn btn-primary" onclick="savePrinter()"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg> Save Printer</button>
+    </div>
+  </div>
+</div>
+</body>
+</html>

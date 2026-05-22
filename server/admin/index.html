@@ -1,0 +1,1146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>RestaurantPOS — Provider Admin</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#0f172a;color:#e2e8f0;min-height:100vh}
+/* ── Login ── */
+#login-screen{display:flex;align-items:center;justify-content:center;min-height:100vh;padding:24px}
+.login-card{background:#1e293b;border:1px solid #334155;border-radius:20px;padding:40px;width:100%;max-width:380px}
+.login-logo{text-align:center;margin-bottom:28px}
+.login-logo .ico{width:54px;height:54px;background:linear-gradient(135deg,#6366f1,#4338ca);border-radius:14px;display:inline-flex;align-items:center;justify-content:center;font-size:26px;margin-bottom:12px}
+.login-logo h1{font-size:20px;font-weight:800;color:#f1f5f9}
+.login-logo p{font-size:13px;color:#64748b;margin-top:3px}
+.lf label{display:block;font-size:11px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px}
+.lf input{width:100%;padding:11px 14px;background:#0f172a;border:1.5px solid #334155;border-radius:10px;font-size:14px;color:#f1f5f9;outline:none;margin-bottom:14px;transition:.15s}
+.lf input:focus{border-color:#6366f1;box-shadow:0 0 0 3px rgba(99,102,241,.15)}
+.lf input::placeholder{color:#475569}
+.lbtn{width:100%;padding:13px;background:linear-gradient(135deg,#6366f1,#4338ca);color:#fff;border:none;border-radius:10px;font-size:15px;font-weight:700;cursor:pointer;transition:.15s;margin-top:4px}
+.lbtn:hover{transform:translateY(-1px);box-shadow:0 8px 24px rgba(99,102,241,.4)}
+.lbtn:disabled{opacity:.6;transform:none;cursor:not-allowed}
+.lerr{background:#450a0a;border:1px solid #7f1d1d;border-radius:8px;padding:10px 14px;font-size:13px;color:#fca5a5;margin-bottom:14px;display:none}
+/* ── App ── */
+#app{display:none;flex-direction:column;min-height:100vh}
+.topbar{background:#1e293b;border-bottom:1px solid #334155;padding:0 24px;height:56px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;flex-shrink:0}
+.topbar-left{display:flex;align-items:center;gap:12px}
+.topbar-ico{width:32px;height:32px;background:linear-gradient(135deg,#6366f1,#4338ca);border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:15px}
+.topbar-left h1{font-size:14px;font-weight:700;color:#f1f5f9}
+.topbar-left span{font-size:11px;color:#64748b;background:#0f172a;padding:2px 8px;border-radius:20px;border:1px solid #334155}
+.topbar-right{display:flex;align-items:center;gap:10px}
+.topbar-user{font-size:13px;color:#94a3b8}strong{color:#e2e8f0}
+.tbtn{background:#334155;border:none;color:#94a3b8;padding:7px 14px;border-radius:8px;font-size:13px;cursor:pointer}
+.tbtn:hover{background:#475569;color:#f1f5f9}
+.layout{display:flex;flex:1;overflow:hidden}
+.sidebar{width:210px;background:#1e293b;border-right:1px solid #334155;padding:16px 0;flex-shrink:0;overflow-y:auto}
+.sec{padding:5px 16px 3px;font-size:10px;font-weight:700;color:#475569;text-transform:uppercase;letter-spacing:.6px;margin-top:10px}
+.ni{display:flex;align-items:center;gap:10px;padding:9px 18px;font-size:13px;color:#94a3b8;cursor:pointer;border-left:3px solid transparent;transition:.1s}
+.ni:hover{background:#0f172a;color:#e2e8f0}
+.ni.active{background:#0f172a;color:#818cf8;border-left-color:#6366f1;font-weight:600}
+.ni .ic{font-size:15px;width:20px;text-align:center}
+.main{flex:1;padding:24px;overflow-y:auto;background:#0f172a}
+.view{display:none}
+.view.active{display:block}
+.ph{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:12px}
+.ph h2{font-size:20px;font-weight:800;color:#f1f5f9}
+.ph p{font-size:13px;color:#64748b;margin-top:3px}
+/* ── Cards ── */
+.card{background:#1e293b;border:1px solid #334155;border-radius:12px;margin-bottom:18px;overflow:hidden}
+.ch{display:flex;align-items:center;justify-content:space-between;padding:14px 18px;border-bottom:1px solid #334155;flex-wrap:wrap;gap:8px}
+.ch h3{font-size:14px;font-weight:700;color:#f1f5f9}
+.cb{padding:18px}
+/* ── Stat cards ── */
+.sg{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:12px;margin-bottom:20px}
+.sc{background:#1e293b;border:1px solid #334155;border-radius:10px;padding:16px}
+.sc .v{font-size:30px;font-weight:800;color:#f1f5f9;line-height:1}
+.sc .l{font-size:11px;color:#64748b;margin-top:5px;font-weight:600}
+.sc.ind{border-color:#4f46e5;background:#12122a}.sc.ind .v{color:#818cf8}
+.sc.warn{border-color:#d97706;background:#1c1806}.sc.warn .v{color:#fbbf24}
+.sc.ok{border-color:#16a34a;background:#071810}.sc.ok .v{color:#4ade80}
+.sc.err{border-color:#dc2626;background:#1c0a0a}.sc.err .v{color:#f87171}
+/* ── Alerts ── */
+.al{padding:11px 15px;border-radius:9px;font-size:13px;margin-bottom:10px;display:flex;align-items:flex-start;gap:8px;line-height:1.5}
+.al-warn{background:#1c180a;border:1px solid #92400e;color:#fcd34d}
+.al-err{background:#1c0a0a;border:1px solid #7f1d1d;color:#fca5a5}
+/* ── Table ── */
+.dt{width:100%;border-collapse:collapse;font-size:12px;min-width:900px}
+.dt th{padding:9px 10px;text-align:left;font-size:10px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:.4px;border-bottom:1px solid #334155;background:#1e293b;white-space:nowrap;position:sticky;top:0}
+.dt td{padding:10px;border-bottom:1px solid #1a2535;color:#cbd5e1;vertical-align:middle}
+.dt tr:hover td{background:#1e293b}
+.dt .mono{font-family:monospace;font-weight:700;color:#818cf8;font-size:12px}
+.dt .strong{font-weight:600;color:#f1f5f9}
+.dt .muted{color:#64748b;font-size:11px;margin-top:2px}
+/* ── Badges ── */
+.badge{display:inline-flex;align-items:center;padding:2px 8px;border-radius:20px;font-size:10px;font-weight:700;white-space:nowrap}
+.b-trial{background:#1c1806;color:#fbbf24;border:1px solid #854d0e}
+.b-active{background:#052e16;color:#4ade80;border:1px solid #166534}
+.b-expired{background:#1c0a0a;color:#f87171;border:1px solid #7f1d1d}
+.b-suspended{background:#1a2535;color:#64748b;border:1px solid #334155}
+/* ── Buttons ── */
+.btn{padding:8px 16px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;border:none;transition:.1s}
+.btn-p{background:#6366f1;color:#fff}.btn-p:hover{background:#4f46e5}
+.btn-o{background:transparent;color:#94a3b8;border:1px solid #334155}.btn-o:hover{background:#1e293b;color:#e2e8f0}
+.btn-g{background:#166534;color:#4ade80;border:1px solid #166534}.btn-g:hover{background:#14532d}
+.btn-r{background:#7f1d1d;color:#fca5a5;border:1px solid #7f1d1d}.btn-r:hover{background:#991b1b}
+.btn-y{background:#92400e;color:#fcd34d;border:1px solid #92400e}.btn-y:hover{background:#78350f}
+.bsm{padding:4px 8px;font-size:11px;border-radius:5px;border:1px solid #334155;background:transparent;color:#94a3b8;cursor:pointer;white-space:nowrap}
+.bsm:hover{background:#334155;color:#f1f5f9}
+.bsm.g{color:#4ade80;border-color:#166534}.bsm.r{color:#f87171;border-color:#7f1d1d}.bsm.y{color:#fbbf24;border-color:#854d0e}.bsm.b{color:#818cf8;border-color:#4f46e5}
+/* ── Modal ── */
+.mo{display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:1000;align-items:center;justify-content:center;padding:20px}
+.mb{background:#1e293b;border:1px solid #334155;border-radius:16px;padding:26px;max-width:680px;width:100%;max-height:90vh;overflow-y:auto;box-shadow:0 25px 80px rgba(0,0,0,.8)}
+.mb h3{font-size:17px;font-weight:700;color:#f1f5f9;margin-bottom:4px}
+.mb .sub{font-size:13px;color:#64748b;margin-bottom:18px}
+.mf label{display:block;font-size:10px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:.4px;margin-bottom:5px}
+.mf input,.mf select,.mf textarea{width:100%;padding:9px 12px;background:#0f172a;border:1.5px solid #334155;border-radius:8px;font-size:13px;color:#f1f5f9;outline:none;margin-bottom:12px}
+.mf input:focus,.mf select:focus{border-color:#6366f1}
+.mf input::placeholder{color:#475569}
+.mg{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.ma{display:flex;gap:10px;justify-content:flex-end;margin-top:6px;border-top:1px solid #334155;padding-top:16px}
+.qb{display:flex;gap:8px;margin-bottom:12px}
+.qb button{flex:1;padding:8px;background:#0f172a;border:1px solid #334155;border-radius:7px;color:#94a3b8;cursor:pointer;font-size:12px}
+.qb button:hover{border-color:#6366f1;color:#818cf8}
+/* ── Info rows ── */
+.ir{display:flex;align-items:flex-start;padding:9px 0;border-bottom:1px solid #334155}
+.ir:last-child{border-bottom:none}
+.ir .il{font-size:11px;font-weight:700;color:#475569;text-transform:uppercase;letter-spacing:.4px;width:160px;flex-shrink:0;padding-top:2px}
+.ir .iv{font-size:13px;color:#e2e8f0;flex:1;word-break:break-all}
+.ir .iv .mono{font-family:monospace;color:#818cf8}
+/* ── Progress ── */
+.prog{height:4px;background:#334155;border-radius:4px;overflow:hidden}
+.prog-f{height:100%;background:#6366f1;border-radius:4px;transition:width .3s}
+/* ── Cred box ── */
+.cred-box{background:#0f172a;border:1px solid #334155;border-radius:10px;padding:14px;margin-bottom:12px}
+.cred-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
+.cred-row:last-child{margin-bottom:0}
+.cred-label{font-size:10px;font-weight:700;color:#64748b;text-transform:uppercase}
+.cred-value{font-family:monospace;font-size:14px;font-weight:700;color:#818cf8;word-break:break-all}
+.cred-copy{background:#1e293b;border:1px solid #334155;border-radius:6px;padding:3px 9px;font-size:11px;cursor:pointer;color:#94a3b8}
+.cred-copy:hover{background:#334155;color:#f1f5f9}
+/* ── Install guide ── */
+.step-box{background:#0f172a;border:1px solid #334155;border-radius:10px;padding:16px;margin-bottom:12px}
+.step-box h4{font-size:13px;font-weight:700;color:#f1f5f9;margin-bottom:8px}
+.step-box ol{margin-left:18px;font-size:13px;color:#94a3b8;line-height:2}
+.step-box ol strong{color:#e2e8f0}
+.step-box code{background:#1e293b;padding:2px 7px;border-radius:5px;font-family:monospace;font-size:12px;color:#818cf8;border:1px solid #334155}
+.dl-btn{display:inline-flex;align-items:center;gap:8px;padding:9px 16px;background:#0f172a;border:1.5px solid #334155;border-radius:9px;font-size:13px;color:#94a3b8;cursor:pointer;text-decoration:none;transition:.1s;margin:4px}
+.dl-btn:hover{border-color:#6366f1;color:#818cf8}
+/* ── Filters ── */
+.fr{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:14px}
+.fr select,.fr input{background:#0f172a;border:1.5px solid #334155;border-radius:8px;color:#e2e8f0;padding:7px 10px;font-size:12px;outline:none}
+.fr select:focus,.fr input:focus{border-color:#6366f1}
+.fr input::placeholder{color:#475569}
+/* ── Perf table ── */
+.pt{width:100%;border-collapse:collapse;font-size:13px}
+.pt td,.pt th{padding:9px 12px;border-bottom:1px solid #334155;text-align:left;color:#94a3b8}
+.pt th{font-size:11px;font-weight:700;text-transform:uppercase;color:#64748b}
+.pt td:first-child{font-weight:600;color:#e2e8f0}
+.bar{height:8px;background:#0f172a;border-radius:4px;overflow:hidden;display:inline-block;vertical-align:middle;margin-left:8px}
+.bar-f{height:100%;background:#6366f1;border-radius:4px}
+@media(max-width:768px){.sidebar{display:none}.sg{grid-template-columns:1fr 1fr}.mg{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+
+<!-- ── LOGIN ── -->
+<div id="login-screen">
+  <div class="login-card">
+    <div class="login-logo">
+      <div class="ico">🏢</div>
+      <h1>Provider Admin</h1>
+      <p>Restaurant POS Management Platform</p>
+    </div>
+    <div class="lerr" id="lerr"></div>
+    <div class="lf">
+      <label>Username</label>
+      <input id="lu" type="text" placeholder="arifpadup" autocomplete="username">
+      <label>Password</label>
+      <input id="lp" type="password" placeholder="••••••••" autocomplete="current-password">
+    </div>
+    <button class="lbtn" id="lbtn" onclick="doLogin()">Sign In →</button>
+  </div>
+</div>
+
+<!-- ── APP ── -->
+<div id="app">
+  <div class="topbar">
+    <div class="topbar-left">
+      <div class="topbar-ico">🏢</div>
+      <h1>Restaurant POS</h1>
+      <span>Provider Admin</span>
+    </div>
+    <div class="topbar-right">
+      <div class="topbar-user">Signed in as <strong id="udisp"></strong></div>
+      <button class="tbtn" onclick="logout()">Logout</button>
+    </div>
+  </div>
+
+  <div class="layout">
+    <aside class="sidebar">
+      <div class="sec">Overview</div>
+      <div class="ni active" onclick="nav('dashboard')" id="nav-dashboard"><span class="ic">📊</span>Dashboard</div>
+      <div class="ni" onclick="nav('restaurants')" id="nav-restaurants"><span class="ic">🏪</span>Restaurants</div>
+      <div class="sec">Tools</div>
+      <div class="ni" onclick="nav('performance')" id="nav-performance"><span class="ic">📈</span>Performance</div>
+      <div class="ni" onclick="nav('install')" id="nav-install"><span class="ic">📋</span>Install Guide</div>
+      <div class="ni" onclick="nav('system')" id="nav-system"><span class="ic">⚙️</span>System</div>
+    </aside>
+
+    <main class="main">
+
+      <!-- DASHBOARD -->
+      <div class="view active" id="v-dashboard">
+        <div class="ph"><div><h2>Dashboard</h2><p id="dash-sub">Loading…</p></div></div>
+        <div class="sg" id="dash-cards"></div>
+        <div id="dash-alerts"></div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:18px">
+          <div class="card">
+            <div class="ch"><h3>Recent Signups</h3><span style="font-size:11px;color:#64748b">Last 7 days</span></div>
+            <div style="padding:0 16px" id="dash-recent"></div>
+          </div>
+          <div class="card">
+            <div class="ch"><h3>Expiring Soon</h3><span style="font-size:11px;color:#fbbf24">≤ 7 days</span></div>
+            <div style="padding:0 16px" id="dash-expiring"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- RESTAURANTS -->
+      <div class="view" id="v-restaurants">
+        <div class="ph">
+          <div><h2>Restaurants</h2><p>All licensed restaurants — click row for full details</p></div>
+          <button class="btn btn-p" onclick="showReg()">+ Register New</button>
+        </div>
+        <div class="fr">
+          <select id="rf-status" onchange="renderTable()">
+            <option value="">All Status</option>
+            <option value="trial">Trial</option>
+            <option value="active">Active</option>
+            <option value="expired">Expired</option>
+            <option value="suspended">Suspended</option>
+          </select>
+          <select id="rf-country" onchange="renderTable()"><option value="">All Countries</option></select>
+          <select id="rf-reseller" onchange="renderTable()"><option value="">All Resellers</option></select>
+          <input id="rf-search" oninput="renderTable()" placeholder="Search name, email, ID…" style="width:200px">
+          <button class="btn btn-o" onclick="loadRestaurants()">↻ Refresh</button>
+        </div>
+        <div class="card" style="overflow:hidden">
+          <div style="overflow-x:auto">
+            <table class="dt">
+              <thead>
+                <tr>
+                  <th>ID</th><th>Restaurant · Owner</th><th>Country · Reseller</th>
+                  <th>License Key</th><th>Given Days</th><th>Days Left</th>
+                  <th>Last Billed</th><th>Status</th><th>BO Login</th><th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="r-tbody"><tr><td colspan="10" style="text-align:center;padding:20px;color:#475569">Loading…</td></tr></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- PERFORMANCE -->
+      <div class="view" id="v-performance">
+        <div class="ph"><div><h2>Performance Reports</h2><p>System metrics and restaurant statistics</p></div>
+          <button class="btn btn-o" onclick="loadPerformance()">↻ Refresh</button>
+        </div>
+        <div id="perf-body" style="display:grid;grid-template-columns:1fr 1fr;gap:18px">
+          <div style="color:#64748b;font-size:13px">Loading…</div>
+        </div>
+      </div>
+
+      <!-- INSTALL GUIDE -->
+      <div class="view" id="v-install">
+        <div class="ph"><div><h2>Installation Guide</h2><p>Complete setup instructions and file downloads for clients</p></div></div>
+
+        <!-- Download files -->
+        <div class="card">
+          <div class="ch"><h3>📥 Download Files</h3><button class="btn btn-o" onclick="loadInstallFiles()">↻ Refresh</button></div>
+          <div class="cb">
+            <div id="install-files" style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px">Loading…</div>
+            <div style="font-size:12px;color:#64748b">These files are served from <code style="background:#0f172a;padding:2px 6px;border-radius:4px;font-family:monospace">/updates/</code> on this server.</div>
+          </div>
+        </div>
+
+        <!-- Step-by-step -->
+        <div class="card">
+          <div class="ch"><h3>📋 Step-by-Step Installation</h3></div>
+          <div class="cb">
+            <div class="step-box">
+              <h4>Step 1 — Server PC Setup (Run once, on the main restaurant computer)</h4>
+              <ol>
+                <li>Copy the <strong>server folder</strong> to the restaurant's server PC</li>
+                <li>Right-click <code>INSTALL-SERVER.bat</code> → <strong>Run as Administrator</strong></li>
+                <li>When prompted, enter the <strong>Restaurant ID</strong> and <strong>License Key</strong> from the credentials below</li>
+                <li>Script auto-installs Node.js, PostgreSQL, configures everything and starts the server as a Windows service</li>
+                <li>It saves a <code>SETUP-SUMMARY.txt</code> file with all credentials and the server IP address</li>
+              </ol>
+            </div>
+            <div class="step-box">
+              <h4>Step 2 — POS Terminal (on each cashier/waiter Windows PC)</h4>
+              <ol>
+                <li>Download and run <code>Restaurant POS Setup X.X.X.exe</code></li>
+                <li>On first launch, a setup screen appears — enter <strong>Server IP</strong>, <strong>Restaurant ID</strong>, <strong>License Key</strong></li>
+                <li>Click <strong>Connect &amp; Save</strong> — POS downloads its database credentials from the server and connects</li>
+                <li>Enter staff PIN to login and start using the POS</li>
+              </ol>
+            </div>
+            <div class="step-box">
+              <h4>Step 3 — Web Apps (Waiter App, Kitchen Display, Back Office)</h4>
+              <ol>
+                <li>On any device connected to the restaurant's LAN, open a browser</li>
+                <li>Back Office: <code>http://&lt;server-ip&gt;:3001/backoffice/</code> — login with Back Office credentials</li>
+                <li>Waiter App: <code>http://&lt;server-ip&gt;:3001/waiter-app/</code> — tap the screen bookmark/install as PWA</li>
+                <li>Kitchen Display: <code>http://&lt;server-ip&gt;:3001/kds/</code> — open on kitchen screen, set to kiosk mode</li>
+              </ol>
+            </div>
+            <div class="step-box">
+              <h4>Step 4 — Back Office First-Time Setup</h4>
+              <ol>
+                <li>Login to Back Office with the provided username and password</li>
+                <li>Go to <strong>Settings</strong> → enter Restaurant Name, currency, tax rate</li>
+                <li>Go to <strong>Menu</strong> → add categories and menu items</li>
+                <li>Go to <strong>Staff</strong> → add cashiers and waiters with PINs</li>
+                <li>Go to <strong>Tables</strong> (if dine-in) → configure table layout</li>
+                <li>Open the POS, login with a cashier PIN — ready to go!</li>
+              </ol>
+            </div>
+            <div class="step-box" style="border-color:#854d0e">
+              <h4>⚠️ Important Notes</h4>
+              <ol>
+                <li>The server PC must always be on when the restaurant is operating — all terminals depend on it</li>
+                <li>Server PC should be connected via LAN cable (not WiFi) for reliability</li>
+                <li>Firewall ports that must be open: <strong>3001</strong> (API) and <strong>5432</strong> (PostgreSQL) — the install script opens these automatically</li>
+                <li>Auto-backups run every 6 hours and are kept for 14 days — downloadable from Back Office → Downloads</li>
+                <li>If server PC is replaced: restore from backup via Back Office → Downloads → Restore</li>
+              </ol>
+            </div>
+          </div>
+        </div>
+
+        <!-- Per-restaurant credential card -->
+        <div class="card">
+          <div class="ch"><h3>🔑 Restaurant Credentials Lookup</h3></div>
+          <div class="cb">
+            <div class="mf">
+              <label>Select Restaurant</label>
+              <select id="cred-select" onchange="showRestCreds()">
+                <option value="">— Select a restaurant —</option>
+              </select>
+            </div>
+            <div id="cred-display" style="display:none">
+              <div class="cred-box">
+                <div class="cred-row"><div><div class="cred-label">Restaurant ID</div><div class="cred-value" id="ci-id"></div></div><button class="cred-copy" onclick="cp('ci-id')">Copy</button></div>
+                <div class="cred-row"><div><div class="cred-label">License Key</div><div class="cred-value" id="ci-key"></div></div><button class="cred-copy" onclick="cp('ci-key')">Copy</button></div>
+                <div class="cred-row"><div><div class="cred-label">Trial / Expiry</div><div class="cred-value" id="ci-exp" style="font-size:13px;color:#fbbf24"></div></div></div>
+              </div>
+              <div class="cred-box">
+                <div class="cred-row"><div><div class="cred-label">Back Office Username</div><div class="cred-value" id="ci-bou"></div></div><button class="cred-copy" onclick="cp('ci-bou')">Copy</button></div>
+                <div class="cred-row"><div><div class="cred-label">Back Office Password</div><div class="cred-value" id="ci-bop"></div></div><button class="cred-copy" onclick="cp('ci-bop')">Copy</button></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- SYSTEM -->
+      <div class="view" id="v-system">
+        <div class="ph"><div><h2>System</h2><p>Server health, backups and quick links</p></div></div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:18px">
+          <div class="card">
+            <div class="ch"><h3>API Health</h3><button class="btn btn-o" onclick="loadHealth()">↻ Check</button></div>
+            <div class="cb" id="health-body"><div style="color:#64748b;font-size:13px">Click Check to run</div></div>
+          </div>
+          <div class="card">
+            <div class="ch"><h3>Database Backup</h3></div>
+            <div class="cb">
+              <p style="font-size:13px;color:#94a3b8;margin-bottom:14px">Download a full export of all restaurant data as JSON.</p>
+              <button class="btn btn-p" onclick="downloadBackup()">⬇ Download Full Backup</button>
+              <div id="backup-status" style="font-size:12px;color:#64748b;margin-top:10px"></div>
+            </div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="ch"><h3>Quick Links</h3></div>
+          <div class="cb" style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+            ${[
+              ['/backoffice/','Back Office (Restaurant)'],
+              ['/signup','Public Signup Page'],
+              ['/health','API Health JSON'],
+              ['/waiter-app/','Waiter App'],
+              ['/kds/','Kitchen Display'],
+              ['/admin/','Provider Admin (this page)'],
+            ].map(([url,label])=>`
+              <div style="display:flex;align-items:center;justify-content:space-between;padding:10px;background:#0f172a;border-radius:8px;border:1px solid #334155">
+                <span style="font-size:13px;color:#94a3b8">${label}</span>
+                <a href="${url}" target="_blank" style="color:#818cf8;font-size:12px;text-decoration:none;font-family:monospace">${url} →</a>
+              </div>`).join('')}
+          </div>
+        </div>
+      </div>
+
+    </main>
+  </div>
+</div>
+
+<!-- ── RESTAURANT DETAIL MODAL ── -->
+<div class="mo" id="mo-detail">
+  <div class="mb" style="max-width:720px">
+    <h3 id="md-title">Restaurant Details</h3>
+    <div class="sub" id="md-sub"></div>
+    <!-- Tabs -->
+    <div style="display:flex;gap:4px;margin-bottom:18px;border-bottom:1px solid #334155;padding-bottom:0">
+      <button class="dtab active" onclick="dtab('info')" id="dtab-info" style="padding:8px 14px;background:none;border:none;color:#818cf8;font-size:13px;font-weight:600;cursor:pointer;border-bottom:2px solid #6366f1;margin-bottom:-1px">Info</button>
+      <button class="dtab" onclick="dtab('creds')" id="dtab-creds" style="padding:8px 14px;background:none;border:none;color:#64748b;font-size:13px;cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-1px">Credentials</button>
+      <button class="dtab" onclick="dtab('edit')" id="dtab-edit" style="padding:8px 14px;background:none;border:none;color:#64748b;font-size:13px;cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-1px">Edit</button>
+    </div>
+    <div id="dtab-info-body">
+      <div class="ir"><div class="il">Restaurant ID</div><div class="iv"><span class="mono" id="di-id"></span></div></div>
+      <div class="ir"><div class="il">Name</div><div class="iv strong" id="di-name"></div></div>
+      <div class="ir"><div class="il">Owner</div><div class="iv" id="di-owner"></div></div>
+      <div class="ir"><div class="il">Email</div><div class="iv" id="di-email"></div></div>
+      <div class="ir"><div class="il">Phone</div><div class="iv" id="di-phone"></div></div>
+      <div class="ir"><div class="il">City / Country</div><div class="iv" id="di-location"></div></div>
+      <div class="ir"><div class="il">Reseller</div><div class="iv" id="di-reseller"></div></div>
+      <div class="ir"><div class="il">Signup Source</div><div class="iv" id="di-source"></div></div>
+      <div class="ir"><div class="il">Signed Up</div><div class="iv" id="di-created"></div></div>
+      <div class="ir"><div class="il">Status</div><div class="iv" id="di-status"></div></div>
+      <div class="ir"><div class="il">License Given</div><div class="iv" id="di-given"></div></div>
+      <div class="ir"><div class="il">License Start</div><div class="iv" id="di-lstart"></div></div>
+      <div class="ir"><div class="il">Expiry Date</div><div class="iv" id="di-expires"></div></div>
+      <div class="ir"><div class="il">Days Remaining</div><div class="iv" id="di-days"></div></div>
+      <div class="ir"><div class="il">Last Billed</div><div class="iv" id="di-billed"></div></div>
+      <div class="ir"><div class="il">Max Terminals</div><div class="iv" id="di-terminals"></div></div>
+      <div class="ir"><div class="il">Onboarding</div><div class="iv" id="di-onboard"></div></div>
+    </div>
+    <div id="dtab-creds-body" style="display:none">
+      <div class="cred-box">
+        <div style="font-size:11px;font-weight:700;color:#64748b;text-transform:uppercase;margin-bottom:12px">License Information</div>
+        <div class="cred-row"><div><div class="cred-label">Restaurant ID</div><div class="cred-value" id="dc-rid"></div></div><button class="cred-copy" onclick="cp('dc-rid')">Copy</button></div>
+        <div class="cred-row"><div><div class="cred-label">License Key</div><div class="cred-value" id="dc-key"></div></div><button class="cred-copy" onclick="cp('dc-key')">Copy</button></div>
+      </div>
+      <div class="cred-box">
+        <div style="font-size:11px;font-weight:700;color:#64748b;text-transform:uppercase;margin-bottom:12px">Back Office Login</div>
+        <div class="cred-row"><div><div class="cred-label">Username</div><div class="cred-value" id="dc-bou"></div></div><button class="cred-copy" onclick="cp('dc-bou')">Copy</button></div>
+        <div class="cred-row"><div><div class="cred-label">Password</div><div class="cred-value" id="dc-bop"></div></div><button class="cred-copy" onclick="cp('dc-bop')">Copy</button></div>
+        <div style="font-size:11px;color:#64748b;margin-top:8px">Login URL: <span style="font-family:monospace;color:#818cf8">http://&lt;server-ip&gt;:3001/backoffice/</span></div>
+      </div>
+      <div style="background:#1c1806;border:1px solid #854d0e;border-radius:8px;padding:10px 12px;font-size:12px;color:#fcd34d">
+        ⚠️ Keep these credentials confidential. Share only with the restaurant owner.
+      </div>
+    </div>
+    <div id="dtab-edit-body" style="display:none">
+      <div class="mf">
+        <div class="mg">
+          <div><label>Reseller Name</label><input id="de-reseller" type="text" placeholder="Agent / Reseller name"></div>
+          <div><label>Last Billed Date</label><input id="de-billed" type="date"></div>
+        </div>
+        <div class="mg">
+          <div><label>Max Terminals</label><input id="de-maxterm" type="number" min="1" max="50"></div>
+          <div><label>Notes</label><input id="de-notes" type="text" placeholder="Internal notes"></div>
+        </div>
+        <label>Extend Trial By (Days) — leave 0 to skip</label>
+        <div class="qb">
+          <button onclick="document.getElementById('de-extend').value=7">+7d</button>
+          <button onclick="document.getElementById('de-extend').value=14">+14d</button>
+          <button onclick="document.getElementById('de-extend').value=30">+30d</button>
+          <button onclick="document.getElementById('de-extend').value=0">Clear</button>
+        </div>
+        <input id="de-extend" type="number" value="0" min="0">
+        <label>Status Override</label>
+        <select id="de-status">
+          <option value="">— No change —</option>
+          <option value="trial">Trial</option>
+          <option value="active">Active</option>
+          <option value="suspended">Suspended</option>
+          <option value="expired">Expired</option>
+        </select>
+      </div>
+      <div id="de-error" style="color:#f87171;font-size:13px;margin-bottom:8px"></div>
+    </div>
+    <div class="ma">
+      <button class="btn btn-o" onclick="closeModal('mo-detail')">Close</button>
+      <button class="btn btn-y" onclick="regenKey(_detailId)" id="md-regen">🔑 Regen Key</button>
+      <button class="btn btn-r" onclick="toggleActive(_detailId, _detailActive)" id="md-toggle">⛔ Deactivate</button>
+      <button class="btn btn-p" onclick="saveDetail()" id="md-save">Save Changes</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── REGISTER MODAL ── -->
+<div class="mo" id="mo-reg">
+  <div class="mb" style="max-width:480px">
+    <h3>Register New Restaurant</h3>
+    <div class="sub">Creates a direct client license (not from public signup)</div>
+    <div class="mf">
+      <label>Restaurant Name *</label><input id="rg-name" type="text" placeholder="Warung Makan Selera">
+      <div class="mg">
+        <div><label>Max Terminals</label><input id="rg-terms" type="number" value="5" min="1" max="50"></div>
+        <div><label>License Days (blank = unlimited)</label><input id="rg-days" type="number" placeholder="365" min="1"></div>
+      </div>
+      <div class="mg">
+        <div><label>Reseller Name</label><input id="rg-reseller" type="text" placeholder="Agent / Reseller"></div>
+        <div><label>Notes</label><input id="rg-notes" type="text" placeholder="Contact, location…"></div>
+      </div>
+    </div>
+    <div id="rg-result" style="display:none;background:#052e16;border:1px solid #166534;border-radius:10px;padding:14px;margin-bottom:12px">
+      <div style="font-weight:700;color:#4ade80;margin-bottom:10px">✅ Registered!</div>
+      <div class="cred-box" style="background:#0a1f14;border-color:#166534">
+        <div class="cred-row"><div><div class="cred-label">Restaurant ID</div><div class="cred-value" id="rg-rid"></div></div><button class="cred-copy" onclick="cp('rg-rid')">Copy</button></div>
+        <div class="cred-row"><div><div class="cred-label">License Key</div><div class="cred-value" id="rg-key"></div></div><button class="cred-copy" onclick="cp('rg-key')">Copy</button></div>
+        <div class="cred-row"><div><div class="cred-label">Expires</div><div class="cred-value" id="rg-exp" style="color:#fbbf24;font-size:13px"></div></div></div>
+      </div>
+      <div style="font-size:11px;color:#86efac;background:#071810;padding:8px;border-radius:6px">⚠️ Copy the License Key now — cannot be retrieved later if encryption key changes.</div>
+    </div>
+    <div id="rg-err" style="color:#f87171;font-size:13px;margin-bottom:8px;min-height:16px"></div>
+    <div class="ma">
+      <button class="btn btn-o" onclick="closeModal('mo-reg');loadRestaurants()">Close</button>
+      <button id="rg-btn" class="btn btn-p" onclick="submitReg()">Register</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── TERMINALS MODAL ── -->
+<div class="mo" id="mo-terms">
+  <div class="mb" style="max-width:520px">
+    <h3 id="tm-title">Terminals</h3>
+    <div class="sub" id="tm-sub"></div>
+    <div id="tm-list" style="max-height:300px;overflow-y:auto"></div>
+    <div class="ma"><button class="btn btn-o" onclick="closeModal('mo-terms')">Close</button></div>
+  </div>
+</div>
+
+<script>
+'use strict'
+// ── State ──────────────────────────────────────────────────────────────────
+let _tok  = localStorage.getItem('admin_tok') || ''
+let _data = []        // restaurants cache
+let _detailId     = ''
+let _detailActive = true
+
+// ── Auth ───────────────────────────────────────────────────────────────────
+async function doLogin () {
+  const u = document.getElementById('lu').value.trim()
+  const p = document.getElementById('lp').value
+  const err = document.getElementById('lerr')
+  err.style.display = 'none'
+  if (!u || !p) { showErr(err, 'Username and password required.'); return }
+  const btn = document.getElementById('lbtn')
+  btn.disabled = true; btn.textContent = 'Signing in…'
+  try {
+    const r = await fetch('/admin-auth/login', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ username:u, password:p }),
+    })
+    const d = await r.json()
+    if (!r.ok || !d.ok) { showErr(err, d.error||'Login failed.'); btn.disabled=false; btn.textContent='Sign In →'; return }
+    _tok = d.token
+    localStorage.setItem('admin_tok', _tok)
+    enterApp(d.user)
+  } catch(e) { showErr(err, 'Network error: '+e.message); btn.disabled=false; btn.textContent='Sign In →' }
+}
+
+function showErr (el, msg) { el.textContent = msg; el.style.display = 'block' }
+
+function logout () {
+  localStorage.removeItem('admin_tok'); _tok = ''
+  document.getElementById('app').style.display  = 'none'
+  document.getElementById('login-screen').style.display = 'flex'
+  document.getElementById('lp').value = ''
+  document.getElementById('lbtn').disabled = false
+  document.getElementById('lbtn').textContent = 'Sign In →'
+}
+
+function enterApp (user) {
+  document.getElementById('login-screen').style.display = 'none'
+  document.getElementById('app').style.display = 'flex'
+  document.getElementById('udisp').textContent = user.name || user.username
+  loadDashboard()
+}
+
+async function api (method, path, body) {
+  const r = await fetch(path, {
+    method, headers: { 'Content-Type':'application/json', 'Authorization':'Bearer '+_tok },
+    body: body ? JSON.stringify(body) : undefined,
+  })
+  const d = await r.json()
+  if (r.status === 401) { logout(); throw new Error('Session expired') }
+  if (!r.ok) throw new Error(d.error || 'Request failed')
+  return d
+}
+
+// ── Navigation ─────────────────────────────────────────────────────────────
+function nav (id) {
+  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'))
+  document.querySelectorAll('.ni').forEach(n => n.classList.remove('active'))
+  document.getElementById('v-'+id).classList.add('active')
+  document.getElementById('nav-'+id).classList.add('active')
+  if (id==='dashboard')   loadDashboard()
+  if (id==='restaurants') loadRestaurants()
+  if (id==='performance') loadPerformance()
+  if (id==='install')     { loadInstallFiles(); populateCredSelect() }
+  if (id==='system')      loadHealth()
+}
+
+// ── Dashboard ──────────────────────────────────────────────────────────────
+async function loadDashboard () {
+  try {
+    const { restaurants } = await api('GET', '/setup/restaurants')
+    _data = restaurants
+    const now = Date.now(), d7 = now - 7*86400000
+    const C = { total:0, trial:0, active:0, expired:0, suspended:0, exp3:0, exp7:0, new7:0 }
+    for (const r of restaurants) {
+      C.total++
+      const s = r.status || 'active'
+      if (s==='trial')     { C.trial++;     const d=daysLeft(r); if(d!==null&&d<=3)C.exp3++; if(d!==null&&d<=7)C.exp7++ }
+      else if(s==='active')    C.active++
+      else if(s==='expired')   C.expired++
+      else if(s==='suspended') C.suspended++
+      if(new Date(r.created_at).getTime()>d7) C.new7++
+    }
+    document.getElementById('dash-sub').textContent = `${C.total} restaurants · ${C.new7} new this week · ${C.exp3} expiring ≤3 days`
+    document.getElementById('dash-cards').innerHTML = [
+      {cls:'ind', v:C.total,    l:'Total'},
+      {cls:'warn',v:C.trial,    l:'Trial'},
+      {cls:'ok',  v:C.active,   l:'Active'},
+      {cls:C.exp3>0?'err':'',   v:C.exp3,    l:'Expiring ≤3 Days'},
+      {cls:C.expired>0?'err':'',v:C.expired,  l:'Expired'},
+      {cls:'',    v:C.suspended, l:'Suspended'},
+    ].map(c=>`<div class="sc ${c.cls}"><div class="v">${c.v}</div><div class="l">${c.l}</div></div>`).join('')
+
+    let al = ''
+    const ex3 = restaurants.filter(r=>r.status==='trial'&&daysLeft(r)!==null&&daysLeft(r)<=3&&daysLeft(r)>=0)
+    const exd  = restaurants.filter(r=>r.status==='expired')
+    if(ex3.length) al+=`<div class="al al-warn">⚠️ <div><b>${ex3.length} trial(s) expiring ≤3 days:</b> ${ex3.map(r=>esc(r.name)+' ('+daysLeft(r)+'d)').join(', ')}</div></div>`
+    if(exd.length) al+=`<div class="al al-err">🔴 <b>${exd.length} expired:</b> ${exd.map(r=>esc(r.name)).join(', ')}</div>`
+    document.getElementById('dash-alerts').innerHTML = al
+
+    const recent = restaurants.filter(r=>new Date(r.created_at).getTime()>d7).sort((a,b)=>new Date(b.created_at)-new Date(a.created_at))
+    document.getElementById('dash-recent').innerHTML = recent.length
+      ? recent.map(r=>`<div style="display:flex;align-items:center;justify-content:space-between;padding:9px 0;border-bottom:1px solid #334155">
+          <div><div style="font-weight:600;color:#f1f5f9;font-size:13px">${esc(r.name)}</div>
+          <div style="font-size:11px;color:#64748b">${esc(r.email||'')} · ${r.country||''}</div></div>
+          <div style="text-align:right"><div style="font-size:11px;color:#64748b">${fmtDate(r.created_at)}</div>${badge(r)}</div>
+        </div>`).join('')
+      : '<div style="padding:14px 0;color:#475569;font-size:13px">No new signups in 7 days</div>'
+
+    const exp7 = restaurants.filter(r=>r.status==='trial'&&daysLeft(r)!==null&&daysLeft(r)>=0).sort((a,b)=>daysLeft(a)-daysLeft(b)).slice(0,10)
+    document.getElementById('dash-expiring').innerHTML = exp7.length
+      ? exp7.map(r=>{const d=daysLeft(r);const c=d<=1?'#f87171':d<=3?'#fbbf24':'#94a3b8';return`
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:9px 0;border-bottom:1px solid #334155">
+          <div><div style="font-weight:600;color:#f1f5f9;font-size:13px">${esc(r.name)}</div>
+          <div style="font-size:11px;color:#64748b">${esc(r.owner_name||'')}</div></div>
+          <div style="text-align:right"><div style="font-size:14px;font-weight:700;color:${c}">${d}d</div>
+          <button onclick="showExtend('${r.id}','${esc(r.name)}')" style="font-size:11px;background:none;border:1px solid #334155;color:#818cf8;border-radius:5px;padding:2px 7px;cursor:pointer">Extend</button></div>
+        </div>`}).join('')
+      : '<div style="padding:14px 0;color:#475569;font-size:13px">No trials expiring soon</div>'
+  } catch(e) {
+    document.getElementById('dash-cards').innerHTML = `<div style="color:#f87171">${e.message}</div>`
+  }
+}
+
+// ── Restaurants table ──────────────────────────────────────────────────────
+async function loadRestaurants () {
+  try {
+    const { restaurants } = await api('GET', '/setup/restaurants')
+    _data = restaurants
+    populateFilters(restaurants)
+    renderTable()
+  } catch(e) {
+    document.getElementById('r-tbody').innerHTML = `<tr><td colspan="10" style="text-align:center;padding:20px;color:#f87171">${e.message}</td></tr>`
+  }
+}
+
+function populateFilters (data) {
+  const countries  = [...new Set(data.map(r=>r.country).filter(Boolean))].sort()
+  const resellers  = [...new Set(data.map(r=>r.reseller_name||'Direct').filter(Boolean))].sort()
+  const cSel = document.getElementById('rf-country')
+  const rSel = document.getElementById('rf-reseller')
+  const prev_c = cSel.value, prev_r = rSel.value
+  cSel.innerHTML = '<option value="">All Countries</option>' + countries.map(c=>`<option ${c===prev_c?'selected':''}>${esc(c)}</option>`).join('')
+  rSel.innerHTML = '<option value="">All Resellers</option>' + resellers.map(r=>`<option ${r===prev_r?'selected':''}>${esc(r)}</option>`).join('')
+}
+
+function renderTable () {
+  const sf = (document.getElementById('rf-status')||{}).value||''
+  const cf = (document.getElementById('rf-country')||{}).value||''
+  const rf = (document.getElementById('rf-reseller')||{}).value||''
+  const qf = ((document.getElementById('rf-search')||{}).value||'').toLowerCase()
+
+  let rows = _data
+  if(sf) rows = rows.filter(r=>(r.status||'')===sf)
+  if(cf) rows = rows.filter(r=>(r.country||'')===cf)
+  if(rf) rows = rows.filter(r=>(r.reseller_name||'Direct')===rf)
+  if(qf) rows = rows.filter(r=>[r.name,r.email,r.id,r.owner_name,r.phone].some(v=>(v||'').toLowerCase().includes(qf)))
+
+  if(!rows.length) {
+    document.getElementById('r-tbody').innerHTML = `<tr><td colspan="10" style="text-align:center;padding:20px;color:#475569">No records match filter</td></tr>`
+    return
+  }
+  const olabels = ['Signed Up','Server OK','POS OK','Menu OK','Live']
+  document.getElementById('r-tbody').innerHTML = rows.map(r=>{
+    const d    = daysLeft(r)
+    const expD = r.trial_ends_at || r.expires_at
+    const rowBg = r.status==='expired'?'background:#1c0a0a':d!==null&&d<=3&&r.status==='trial'?'background:#1c1806':''
+    const keyDisplay = r.license_key ? r.license_key.split('-')[0]+'…' : (r.license_prefix ? r.license_prefix+'…' : '—')
+    const dDisplay = d !== null ? (d < 0 ? `<span style="color:#f87171">${d}d</span>` : d <= 3 ? `<span style="color:#fbbf24">${d}d</span>` : `${d}d`) : '—'
+    const step = Math.min(r.onboarding_step||0,4)
+    return `<tr style="${rowBg};cursor:pointer" onclick="openDetail('${r.id}')">
+      <td><span class="mono">${r.id}</span></td>
+      <td><div class="strong">${esc(r.name)}</div><div class="muted">${esc(r.owner_name||'')} · ${r.country||''}</div></td>
+      <td><div style="font-size:12px;color:#94a3b8">${esc(r.country||'—')}</div><div class="muted">${esc(r.reseller_name||'Direct')}</div></td>
+      <td><span style="font-family:monospace;color:#818cf8;font-size:12px" title="${r.license_key||'N/A (pre-encryption)'}">${keyDisplay}</span></td>
+      <td style="color:#94a3b8;text-align:center">${r.license_given_days||'—'}</td>
+      <td style="text-align:center">${dDisplay}</td>
+      <td style="font-size:12px;color:#64748b">${r.last_billed_at ? fmtDate(r.last_billed_at) : '—'}</td>
+      <td>${badge(r)}</td>
+      <td style="font-size:11px;font-family:monospace;color:#64748b">${esc(r.bo_username||'—')}</td>
+      <td onclick="event.stopPropagation()">
+        <div style="display:flex;gap:3px;flex-wrap:wrap">
+          <button class="bsm b" onclick="openDetail('${r.id}')" title="Details">🔍</button>
+          <button class="bsm y" onclick="showExtend('${r.id}','${esc(r.name)}')" title="Extend Trial">📅</button>
+          <button class="bsm" onclick="regenKey('${r.id}')" title="Regen Key">🔑</button>
+          <button class="bsm" onclick="viewTerminals('${r.id}','${esc(r.name)}')" title="Terminals">🖥</button>
+          <button class="bsm ${r.active?'r':'g'}" onclick="toggleActive('${r.id}',${r.active})" title="${r.active?'Deactivate':'Activate'}">${r.active?'⛔':'✅'}</button>
+        </div>
+      </td>
+    </tr>`
+  }).join('')
+}
+
+// ── Restaurant Detail ──────────────────────────────────────────────────────
+function openDetail (id) {
+  const r = _data.find(x=>x.id===id)
+  if(!r) return
+  _detailId = id
+  _detailActive = r.active
+
+  document.getElementById('md-title').textContent = r.name
+  document.getElementById('md-sub').textContent   = `${r.id} · ${r.email||''}`
+
+  // Info tab
+  const d   = daysLeft(r)
+  const expD = r.trial_ends_at || r.expires_at
+  const olabels = ['Signed Up','Server Installed','POS Installed','Menu Added','Live']
+  document.getElementById('di-id').textContent       = r.id
+  document.getElementById('di-name').textContent     = r.name
+  document.getElementById('di-owner').textContent    = r.owner_name || '—'
+  document.getElementById('di-email').textContent    = r.email || '—'
+  document.getElementById('di-phone').textContent    = r.phone || '—'
+  document.getElementById('di-location').textContent = [r.city,r.country].filter(Boolean).join(', ') || '—'
+  document.getElementById('di-reseller').textContent = r.reseller_name || 'Direct / No reseller'
+  document.getElementById('di-source').textContent   = r.signup_source || '—'
+  document.getElementById('di-created').textContent  = fmtDateFull(r.created_at)
+  document.getElementById('di-status').innerHTML     = badge(r)
+  document.getElementById('di-given').textContent    = r.license_given_days ? r.license_given_days + ' days' : '—'
+  document.getElementById('di-lstart').textContent   = r.license_start_at ? fmtDateFull(r.license_start_at) : '—'
+  document.getElementById('di-expires').textContent  = expD ? fmtDateFull(expD) : 'No expiry'
+  document.getElementById('di-days').innerHTML       = d !== null
+    ? `<span style="font-weight:700;color:${d<0?'#f87171':d<=3?'#fbbf24':'#4ade80'}">${d} days${d<0?' (EXPIRED)':''}</span>` : '—'
+  document.getElementById('di-billed').textContent   = r.last_billed_at ? fmtDateFull(r.last_billed_at) : 'Not yet billed'
+  document.getElementById('di-terminals').textContent= `${r.terminal_count||0} active / ${r.max_terminals} max`
+  document.getElementById('di-onboard').textContent  = olabels[Math.min(r.onboarding_step||0,4)]
+
+  // Credentials tab
+  document.getElementById('dc-rid').textContent = r.id
+  document.getElementById('dc-key').textContent = r.license_key || '(not available — regen to get encrypted key)'
+  document.getElementById('dc-bou').textContent = r.bo_username || '—'
+  document.getElementById('dc-bop').textContent = r.bo_password || '(not available — set via Edit tab)'
+
+  // Edit tab prefill
+  document.getElementById('de-reseller').value = r.reseller_name || ''
+  document.getElementById('de-billed').value   = r.last_billed_at ? r.last_billed_at.split('T')[0] : ''
+  document.getElementById('de-maxterm').value  = r.max_terminals || 5
+  document.getElementById('de-notes').value    = r.notes || ''
+  document.getElementById('de-extend').value   = 0
+  document.getElementById('de-status').value   = ''
+  document.getElementById('de-error').textContent = ''
+
+  // Toggle button label
+  document.getElementById('md-toggle').textContent = r.active ? '⛔ Deactivate' : '✅ Activate'
+  document.getElementById('md-toggle').className   = 'btn ' + (r.active ? 'btn-r' : 'btn-g')
+
+  dtab('info')
+  openModal('mo-detail')
+}
+
+function dtab (id) {
+  ['info','creds','edit'].forEach(t => {
+    document.getElementById('dtab-'+t+'-body').style.display = t===id?'block':'none'
+    const btn = document.getElementById('dtab-'+t)
+    btn.style.color       = t===id?'#818cf8':'#64748b'
+    btn.style.borderBottomColor = t===id?'#6366f1':'transparent'
+    btn.style.fontWeight  = t===id?'600':'400'
+  })
+}
+
+async function saveDetail () {
+  const id = _detailId
+  const errEl = document.getElementById('de-error')
+  errEl.textContent = ''
+  const extDays = parseInt(document.getElementById('de-extend').value)||0
+  const body = {
+    reseller_name: document.getElementById('de-reseller').value.trim() || null,
+    last_billed_at: document.getElementById('de-billed').value || null,
+    max_terminals:  parseInt(document.getElementById('de-maxterm').value)||5,
+    notes:          document.getElementById('de-notes').value.trim()||null,
+  }
+  if(extDays>0) body.extend_trial_days = extDays
+  const newStatus = document.getElementById('de-status').value
+  if(newStatus) body.status = newStatus
+
+  const btn = document.getElementById('md-save')
+  btn.disabled=true; btn.textContent='Saving…'
+  try {
+    await api('PATCH', `/setup/restaurants/${id}`, body)
+    closeModal('mo-detail')
+    loadRestaurants()
+    loadDashboard()
+  } catch(e) { errEl.textContent = 'Error: '+e.message }
+  finally { btn.disabled=false; btn.textContent='Save Changes' }
+}
+
+// ── Extend Trial modal ─────────────────────────────────────────────────────
+let _extId = ''
+function showExtend (id, name) {
+  _extId = id
+  openModal('mo-ext')
+  document.getElementById('mo-ext').innerHTML = `
+    <div class="mb" style="max-width:400px">
+      <h3>Extend Trial</h3>
+      <div class="sub">${esc(name)}</div>
+      <div class="mf"><label>Extend By (Days)</label><input id="ext-days" type="number" value="7" min="1" max="365"></div>
+      <div class="qb">
+        <button onclick="document.getElementById('ext-days').value=7">+7 days</button>
+        <button onclick="document.getElementById('ext-days').value=14">+14 days</button>
+        <button onclick="document.getElementById('ext-days').value=30">+30 days</button>
+      </div>
+      <div class="ma">
+        <button class="btn btn-o" onclick="closeModal('mo-ext')">Cancel</button>
+        <button class="btn btn-p" onclick="confirmExtend()">Extend</button>
+      </div>
+    </div>`
+}
+
+// We need a dedicated extend modal element
+document.addEventListener('DOMContentLoaded', () => {
+  const el = document.createElement('div')
+  el.className = 'mo'; el.id = 'mo-ext'
+  el.addEventListener('click', e => { if(e.target===el) el.style.display='none' })
+  document.body.appendChild(el)
+})
+
+async function confirmExtend () {
+  const days = parseInt(document.getElementById('ext-days').value)||7
+  try {
+    await api('PATCH', `/setup/restaurants/${_extId}`, { extend_trial_days: days })
+    closeModal('mo-ext')
+    loadDashboard()
+    if(document.getElementById('v-restaurants').classList.contains('active')) loadRestaurants()
+  } catch(e) { alert('Error: '+e.message) }
+}
+
+// ── Actions ────────────────────────────────────────────────────────────────
+async function regenKey (id) {
+  if(!confirm('Regenerate license key? Old key stops working immediately.')) return
+  try {
+    const r = await api('POST', `/setup/restaurants/${id}/regenerate`)
+    alert(`New License Key:\n\n${r.new_license_key}\n\n⚠️ Save now — visible once!`)
+    // Refresh data
+    const idx = _data.findIndex(x=>x.id===id)
+    if(idx>=0) { const res = await api('GET',`/setup/restaurants/${id}`); _data[idx] = res.restaurant }
+  } catch(e) { alert('Error: '+e.message) }
+}
+
+async function toggleActive (id, current) {
+  const action = current ? 'deactivate' : 'activate'
+  if(!confirm(`${action.charAt(0).toUpperCase()+action.slice(1)} this restaurant?`)) return
+  try {
+    await api('PATCH', `/setup/restaurants/${id}`, { active: !current })
+    closeModal('mo-detail')
+    loadRestaurants(); loadDashboard()
+  } catch(e) { alert('Error: '+e.message) }
+}
+
+async function viewTerminals (id, name) {
+  document.getElementById('tm-title').textContent = `Terminals — ${name}`
+  document.getElementById('tm-sub').textContent   = id
+  document.getElementById('tm-list').innerHTML    = '<div style="color:#64748b;font-size:13px;padding:10px 0">Loading…</div>'
+  openModal('mo-terms')
+  try {
+    const { terminals } = await api('GET', `/setup/restaurants/${id}/terminals`)
+    document.getElementById('tm-list').innerHTML = terminals.length
+      ? `<table style="width:100%;border-collapse:collapse;font-size:12px">
+          <tr><th style="padding:7px 0;color:#64748b;text-align:left">Machine ID</th><th>Status</th><th>Last Seen</th><th></th></tr>
+          ${terminals.map(t=>`<tr style="border-top:1px solid #334155">
+            <td style="padding:7px 0;font-family:monospace;color:#818cf8">${t.machine_id}</td>
+            <td style="padding:7px">${t.active?'<span style="color:#4ade80">● Active</span>':'<span style="color:#f87171">● Inactive</span>'}</td>
+            <td style="padding:7px;color:#64748b;font-size:11px">${t.last_seen?new Date(t.last_seen).toLocaleString():'Never'}</td>
+            <td style="padding:7px"><button class="bsm r" onclick="deactivateTerm('${t.id}','${id}','${esc(name)}')">Remove</button></td>
+          </tr>`).join('')}
+        </table>`
+      : '<div style="color:#64748b;font-size:13px;padding:10px 0">No terminals registered.</div>'
+  } catch(e) {
+    document.getElementById('tm-list').innerHTML = `<div style="color:#f87171;font-size:13px">${e.message}</div>`
+  }
+}
+
+async function deactivateTerm (tid, rid, name) {
+  if(!confirm('Remove this terminal?')) return
+  try { await api('DELETE', `/setup/terminals/${tid}`); viewTerminals(rid, name) }
+  catch(e) { alert('Error: '+e.message) }
+}
+
+// ── Register ───────────────────────────────────────────────────────────────
+function showReg () {
+  document.getElementById('rg-name').value = ''
+  document.getElementById('rg-reseller').value = ''
+  document.getElementById('rg-notes').value = ''
+  document.getElementById('rg-result').style.display = 'none'
+  document.getElementById('rg-err').textContent = ''
+  document.getElementById('rg-btn').disabled = false
+  document.getElementById('rg-btn').textContent = 'Register'
+  openModal('mo-reg')
+}
+
+async function submitReg () {
+  const name = document.getElementById('rg-name').value.trim()
+  const err  = document.getElementById('rg-err')
+  err.textContent = ''
+  if(!name) { err.textContent='Restaurant name required.'; return }
+  const btn = document.getElementById('rg-btn')
+  btn.disabled=true; btn.textContent='Registering…'
+  try {
+    const r = await api('POST', '/setup/register', {
+      name,
+      max_terminals: parseInt(document.getElementById('rg-terms').value)||5,
+      expires_days:  document.getElementById('rg-days').value||null,
+      reseller_name: document.getElementById('rg-reseller').value.trim()||null,
+      notes:         document.getElementById('rg-notes').value.trim()||null,
+    })
+    document.getElementById('rg-rid').textContent = r.restaurant.id
+    document.getElementById('rg-key').textContent = r.restaurant.license_key
+    document.getElementById('rg-exp').textContent = r.restaurant.expires_at ? fmtDate(r.restaurant.expires_at) : 'Unlimited'
+    document.getElementById('rg-result').style.display = 'block'
+    btn.textContent='Register Another'; btn.disabled=false
+    document.getElementById('rg-name').value = ''
+    loadRestaurants()
+  } catch(e) { err.textContent='Error: '+e.message; btn.disabled=false; btn.textContent='Register' }
+}
+
+// ── Performance ────────────────────────────────────────────────────────────
+async function loadPerformance () {
+  const body = document.getElementById('perf-body')
+  body.innerHTML = '<div style="color:#64748b;font-size:13px">Loading…</div>'
+  try {
+    const { totals, byCountry, byOnboarding, byReseller, monthly } = await api('GET', '/setup/stats')
+    const olabels = ['Signed Up','Server Installed','POS Installed','Menu Added','Live']
+    const maxC = byCountry.length ? Math.max(...byCountry.map(r=>r.cnt)) : 1
+    const maxR = byReseller.length ? Math.max(...byReseller.map(r=>r.cnt)) : 1
+
+    body.style.gridTemplateColumns = '1fr 1fr'
+    body.innerHTML = `
+      <div class="card">
+        <div class="ch"><h3>By Country</h3></div>
+        <div class="cb" style="padding:0">
+          <table class="pt">
+            <tr><th>Country</th><th>Count</th><th style="width:120px">Share</th></tr>
+            ${byCountry.map(r=>`<tr><td>${esc(r.country)}</td><td>${r.cnt}</td>
+              <td><div style="display:flex;align-items:center;gap:6px"><div class="bar" style="width:100px"><div class="bar-f" style="width:${(r.cnt/maxC*100).toFixed(0)}%"></div></div>${(r.cnt/totals.total*100).toFixed(0)}%</div></td>
+            </tr>`).join('')}
+          </table>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="ch"><h3>By Reseller</h3></div>
+        <div class="cb" style="padding:0">
+          <table class="pt">
+            <tr><th>Reseller</th><th>Count</th><th style="width:120px">Share</th></tr>
+            ${byReseller.map(r=>`<tr><td>${esc(r.reseller)}</td><td>${r.cnt}</td>
+              <td><div style="display:flex;align-items:center;gap:6px"><div class="bar" style="width:100px"><div class="bar-f" style="width:${(r.cnt/maxR*100).toFixed(0)}%"></div></div>${(r.cnt/totals.total*100).toFixed(0)}%</div></td>
+            </tr>`).join('')}
+          </table>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="ch"><h3>Onboarding Progress</h3></div>
+        <div class="cb" style="padding:0">
+          <table class="pt">
+            <tr><th>Step</th><th>Count</th></tr>
+            ${byOnboarding.map(r=>`<tr><td>${olabels[Math.min(r.onboarding_step,4)]}</td><td>${r.cnt}</td></tr>`).join('')}
+          </table>
+          <div style="padding:12px;font-size:12px;color:#64748b">
+            Fully live (Step 4): <strong style="color:#4ade80">${byOnboarding.find(r=>r.onboarding_step===4)?.cnt||0}</strong> restaurants
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="ch"><h3>Monthly Signups (6 months)</h3></div>
+        <div class="cb" style="padding:0">
+          <table class="pt">
+            <tr><th>Month</th><th>Signups</th></tr>
+            ${monthly.map(r=>`<tr><td>${r.month}</td><td>${r.cnt}</td></tr>`).join('')}
+          </table>
+          <div style="padding:12px;font-size:12px;color:#64748b">
+            Trial→Active conversion: <strong style="color:#4ade80">${totals.total>0?(totals.active/totals.total*100).toFixed(0):0}%</strong>
+            · New last 30d: <strong style="color:#818cf8">${totals.new_30d}</strong>
+          </div>
+        </div>
+      </div>`
+  } catch(e) {
+    body.innerHTML = `<div style="color:#f87171">${e.message}</div>`
+  }
+}
+
+// ── Install Guide ──────────────────────────────────────────────────────────
+async function loadInstallFiles () {
+  const el = document.getElementById('install-files')
+  el.innerHTML = 'Loading…'
+  try {
+    const { files } = await api('GET', '/downloads/files')
+    el.innerHTML = files.length
+      ? files.map(f=>`<a class="dl-btn" href="/updates/${encodeURIComponent(f.name)}" download>
+          ⬇ ${esc(f.name)} <span style="font-size:11px;color:#475569">(${(f.size/1024/1024).toFixed(1)} MB)</span>
+        </a>`).join('')
+      : '<span style="color:#64748b;font-size:13px">No installer files found in /updates/ folder.</span>'
+  } catch(e) { el.innerHTML = `<span style="color:#f87171;font-size:13px">Error: ${e.message}</span>` }
+}
+
+function populateCredSelect () {
+  const sel = document.getElementById('cred-select')
+  sel.innerHTML = '<option value="">— Select a restaurant —</option>' +
+    _data.map(r=>`<option value="${r.id}">${esc(r.name)} (${r.id})</option>`).join('')
+}
+
+function showRestCreds () {
+  const id = document.getElementById('cred-select').value
+  const r  = _data.find(x=>x.id===id)
+  const el = document.getElementById('cred-display')
+  if(!r) { el.style.display='none'; return }
+  document.getElementById('ci-id').textContent  = r.id
+  document.getElementById('ci-key').textContent = r.license_key || '(regen to get key)'
+  const d = daysLeft(r)
+  const expD = r.trial_ends_at || r.expires_at
+  document.getElementById('ci-exp').textContent = expD ? `Expires ${fmtDate(expD)} · ${d!==null?d+'d left':''}` : 'No expiry'
+  document.getElementById('ci-bou').textContent = r.bo_username || '—'
+  document.getElementById('ci-bop').textContent = r.bo_password || '(not stored)'
+  el.style.display = 'block'
+}
+
+// ── System ─────────────────────────────────────────────────────────────────
+async function loadHealth () {
+  const el = document.getElementById('health-body')
+  el.innerHTML = '<div style="color:#64748b;font-size:13px">Checking…</div>'
+  try {
+    const r = await fetch('/health')
+    const d = await r.json()
+    el.innerHTML = `
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+        ${[
+          ['API Status',     d.ok?'✓ Online':'✗ Error',      d.ok],
+          ['Database',       (d.db||'unknown'),              d.db==='connected'],
+          ['Version',        d.version||'—',                 true],
+          ['Last Check',     new Date(d.ts).toLocaleTimeString(), !!d.ts],
+        ].map(([l,v,ok])=>`
+          <div style="background:#0f172a;border:1px solid ${ok?'#166534':'#7f1d1d'};border-radius:9px;padding:13px">
+            <div style="font-size:10px;font-weight:700;color:#475569;text-transform:uppercase;margin-bottom:5px">${l}</div>
+            <div style="font-size:14px;font-weight:700;color:${ok?'#4ade80':'#f87171'}">${v}</div>
+          </div>`).join('')}
+      </div>`
+  } catch(e) {
+    el.innerHTML = `<div style="color:#f87171">✗ Unreachable: ${e.message}</div>`
+  }
+}
+
+async function downloadBackup () {
+  const btn = event.target
+  const status = document.getElementById('backup-status')
+  btn.disabled = true; btn.textContent = '⏳ Generating…'
+  status.textContent = 'Preparing backup…'
+  try {
+    const r = await fetch('/downloads/backup', { headers: { Authorization: 'Bearer '+_tok } })
+    if(!r.ok) throw new Error('Backup failed')
+    const blob = await r.blob()
+    const url  = URL.createObjectURL(blob)
+    const a    = document.createElement('a')
+    a.href = url
+    a.download = `backup-${new Date().toISOString().split('T')[0]}.json`
+    a.click()
+    URL.revokeObjectURL(url)
+    status.textContent = '✓ Backup downloaded successfully'
+    status.style.color = '#4ade80'
+  } catch(e) {
+    status.textContent = '✗ Error: ' + e.message
+    status.style.color = '#f87171'
+  }
+  btn.disabled = false; btn.textContent = '⬇ Download Full Backup'
+}
+
+// ── Helpers ────────────────────────────────────────────────────────────────
+function daysLeft (r) {
+  const t = r.trial_ends_at || r.expires_at
+  if(!t) return null
+  return Math.ceil((new Date(t) - Date.now()) / 86400000)
+}
+
+function badge (r) {
+  const s = r.status || 'active'
+  const cls = {trial:'b-trial',active:'b-active',expired:'b-expired',suspended:'b-suspended'}[s]||'b-suspended'
+  const d   = daysLeft(r)
+  return `<span class="badge ${cls}">${s.toUpperCase()}${s==='trial'&&d!==null?` (${d}d)`:''}</span>`
+}
+
+function fmtDate (iso) {
+  if(!iso) return '—'
+  return new Date(iso).toLocaleDateString('en-MY', { day:'numeric', month:'short', year:'numeric' })
+}
+
+function fmtDateFull (iso) {
+  if(!iso) return '—'
+  return new Date(iso).toLocaleString('en-MY', { day:'numeric', month:'short', year:'numeric', hour:'2-digit', minute:'2-digit' })
+}
+
+function esc (s) {
+  return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')
+}
+
+function cp (id) {
+  const t = document.getElementById(id).textContent
+  navigator.clipboard.writeText(t).then(()=>{
+    const el = document.getElementById(id)
+    const orig = el.textContent; el.textContent='✓ Copied!'
+    setTimeout(()=>{ el.textContent=orig }, 1200)
+  })
+}
+
+function openModal  (id) { document.getElementById(id).style.display = 'flex' }
+function closeModal (id) { document.getElementById(id).style.display = 'none' }
+
+// Close on backdrop click
+document.querySelectorAll('.mo').forEach(el =>
+  el.addEventListener('click', e => { if(e.target===el) el.style.display='none' })
+)
+
+// ── Init ───────────────────────────────────────────────────────────────────
+document.addEventListener('keydown', e => {
+  if(e.key==='Enter' && document.getElementById('login-screen').style.display!=='none') doLogin()
+})
+
+;(async () => {
+  if(!_tok) return
+  try {
+    const r = await fetch('/admin-auth/me', { headers:{ Authorization:'Bearer '+_tok } })
+    if(!r.ok) { localStorage.removeItem('admin_tok'); _tok=''; return }
+    const d = await r.json()
+    enterApp(d.user)
+  } catch { /* stay on login */ }
+})()
+</script>
+</body>
+</html>

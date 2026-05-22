@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>KDS Setup</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Segoe UI',sans-serif;background:linear-gradient(135deg,#1e293b 0%,#0f172a 100%);
+  height:100vh;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:20px}
+.header{text-align:center;color:#fff}
+.header svg{color:#f97316}
+.header h1{font-size:26px;font-weight:700;margin-top:10px}
+.header p{color:#94a3b8;font-size:14px;margin-top:4px}
+.box{background:#fff;border-radius:16px;padding:28px;width:340px;box-shadow:0 20px 60px rgba(0,0,0,.5)}
+.field{margin-bottom:16px}
+.field label{display:block;font-size:11px;font-weight:700;color:#64748b;margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px}
+.field input{width:100%;padding:11px 14px;border:1.5px solid #e2e8f0;border-radius:8px;font-size:15px;color:#1e293b;background:#fff;font-family:inherit;outline:none}
+.field input:focus{border-color:#f97316}
+.hint{font-size:11px;color:#94a3b8;margin-top:4px;display:block;line-height:1.4}
+.error{color:#ef4444;font-size:12px;text-align:center;margin-bottom:12px;min-height:16px;line-height:1.4}
+.btn{width:100%;padding:13px;background:#f97316;color:#fff;border:none;border-radius:8px;
+  font-size:16px;font-weight:700;cursor:pointer;font-family:inherit;transition:.2s}
+.btn:hover{background:#ea6c00}
+.btn:disabled{background:#94a3b8;cursor:not-allowed}
+.note{font-size:11px;color:#64748b;text-align:center;margin-top:10px}
+</style>
+</head>
+<body>
+<div class="header">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="56" height="56"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/><path d="M7 8h2M7 12h10M13 8h4"/></svg>
+  <h1>Kitchen Display Setup</h1>
+  <p>Configure this KDS screen before first use</p>
+</div>
+<div class="box">
+  <div class="field">
+    <label>Server LAN IP Address</label>
+    <input id="ip" type="text" placeholder="192.168.1.100" autocomplete="off"
+      onkeydown="if(event.key==='Enter')document.getElementById('mid').focus()">
+    <span class="hint">IP of the server PC running the API (port 3001)</span>
+  </div>
+  <div class="field">
+    <label>Machine ID (Screen Name)</label>
+    <input id="mid" type="text" placeholder="KDS-01" autocomplete="off"
+      onkeydown="if(event.key==='Enter')connect()">
+    <span class="hint">Unique name for this screen — e.g. KDS-01, KDS-GRILL</span>
+  </div>
+  <div class="error" id="err"></div>
+  <button class="btn" id="btn" onclick="connect()">▶ Connect (goes fullscreen)</button>
+  <p class="note">Press F11 or Esc to exit fullscreen</p>
+</div>
+<script>
+const params = new URLSearchParams(location.search);
+if (params.get('error')) document.getElementById('err').textContent = params.get('error');
+
+(async () => {
+  const cfg = await window.electronAPI.getConfig();
+  if (cfg && cfg.serverIp)  document.getElementById('ip').value  = cfg.serverIp;
+  if (cfg && cfg.machineId) document.getElementById('mid').value = cfg.machineId;
+  else document.getElementById('mid').value = 'KDS-01';
+  document.getElementById('ip').focus();
+})();
+
+async function connect() {
+  const ip  = document.getElementById('ip').value.trim();
+  const mid = document.getElementById('mid').value.trim();
+  const err = document.getElementById('err');
+  err.textContent = '';
+  if (!ip)  { err.textContent = 'Server IP is required.'; return; }
+  if (!mid) { err.textContent = 'Machine ID is required.'; return; }
+  const btn = document.getElementById('btn');
+  btn.disabled = true;
+  btn.textContent = 'Connecting…';
+  await window.electronAPI.saveAndConnect({ serverIp: ip, machineId: mid });
+}
+</script>
+</body>
+</html>

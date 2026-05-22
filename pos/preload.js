@@ -1,0 +1,24 @@
+const { contextBridge, ipcRenderer } = require('electron');
+
+contextBridge.exposeInMainWorld('posAPI', {
+  db: {
+    all:  (sql, params) => ipcRenderer.invoke('db-all', sql, params),
+    get:  (sql, params) => ipcRenderer.invoke('db-get', sql, params),
+    run:  (sql, params) => ipcRenderer.invoke('db-run', sql, params),
+    tx:   (ops)         => ipcRenderer.invoke('db-tx',  ops),
+  },
+  getPrinters:      () => ipcRenderer.invoke('get-printers'),
+  toggleFullscreen: () => ipcRenderer.invoke('toggle-fullscreen'),
+  getMachineId:     () => ipcRenderer.invoke('get-machine-id'),
+  getConfig:        () => ipcRenderer.invoke('get-config'),
+  saveConfig:       (cfg) => ipcRenderer.invoke('save-config', cfg),
+  testConnection:   (cfg) => ipcRenderer.invoke('test-connection', cfg),
+  notifyServer:     (event, payload) => ipcRenderer.invoke('notify-server', event, payload),
+  onUpdateReady:    (cb) => ipcRenderer.on('update-ready', cb),
+  reloadApp:        () => ipcRenderer.invoke('reload-app'),
+  openExternal:     (url) => ipcRenderer.invoke('open-external', url),
+  print: {
+    receipt: (data) => ipcRenderer.invoke('print-receipt', data),
+    kot:     (data) => ipcRenderer.invoke('print-kot',     data),
+  },
+});

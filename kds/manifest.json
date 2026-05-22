@@ -1,0 +1,14 @@
+{
+  "name": "Kitchen Display",
+  "short_name": "Kitchen",
+  "description": "Restaurant kitchen order display system",
+  "start_url": "/kds/",
+  "display": "standalone",
+  "orientation": "landscape",
+  "background_color": "#0f172a",
+  "theme_color": "#f97316",
+  "icons": [
+    { "src": "/kds/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "/kds/icon-512.png", "sizes": "512x512", "type": "image/png" }
+  ]
+}

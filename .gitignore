@@ -1,0 +1,15 @@
+**/node_modules/
+.env
+**/.env
+server/backups/
+server/updates/*.exe
+server/updates/*.blockmap
+pos/dist/
+pos/out/
+kds-electron/dist/
+waiter-electron/dist/
+*.log
+.DS_Store
+Thumbs.db
+.claude/
+backoffice/.firebase/
