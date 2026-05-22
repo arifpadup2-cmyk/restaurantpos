@@ -150,7 +150,7 @@ module.exports = function authRouter (sql) {
         )`
 
       const uid      = Date.now().toString(36) + Math.random().toString(36).slice(2, 8)
-      const username = placeholder.replace(/[^a-z0-9_]/g, '_').slice(0, 16) + '_' + id.slice(-4)
+      const username = (placeholder.replace(/[^a-z0-9_]/g, '_').slice(0, 16) + '_' + id.slice(-4)).toLowerCase()
       const hash     = await bcrypt.hash(password, 10)
 
       await sql`
@@ -214,7 +214,7 @@ module.exports = function authRouter (sql) {
         )`
 
       const uid      = Date.now().toString(36) + Math.random().toString(36).slice(2, 8)
-      const username = placeholder.replace(/[^a-z0-9_]/g, '_').slice(0, 16) + '_' + id.slice(-4)
+      const username = (placeholder.replace(/[^a-z0-9_]/g, '_').slice(0, 16) + '_' + id.slice(-4)).toLowerCase()
 
       await sql`
         INSERT INTO bo_users (id, restaurant_id, username, password, email, google_id, role)
