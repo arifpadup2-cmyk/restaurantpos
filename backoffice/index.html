@@ -1573,7 +1573,7 @@ input:checked+.toggle-slider:before{transform:translateX(17px)}
   </div>
 
 <!-- ═══ CONFIGURATION VIEW ═══════════════════════════════════════════════════ -->
-<div id="view-config" class="view" style="display:none">
+<div id="v-config" class="view">
   <div class="cfg-layout">
 
     <!-- Sub-nav -->
@@ -2426,6 +2426,7 @@ function showView (id) {
   if (id === 'reports')   { loadReport(); loadExpReport(); }
   if (id === 'audit')     loadAuditLog()
   if (id === 'downloads') loadDownloadsPage()
+  if (id === 'config')    cfgLoadBrand()
   if (id === 'live')      { loadLiveOrders(); startLiveRefresh() }
   else                      stopLiveRefresh()
 }
@@ -4074,6 +4075,7 @@ async function cfgSaveBrand () {
   try {
     await apiFetch('PUT', '/config/brand', {
       name,
+      owner_name:    document.getElementById('cfg-brand-owner').value.trim(),
       business_type: document.getElementById('cfg-brand-type').value,
       country:       document.getElementById('cfg-brand-country').value,
     })

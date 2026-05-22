@@ -70,7 +70,7 @@ module.exports = function configRouter (sql) {
   })
 
   router.put('/brand', async (req, res) => {
-    const { name, business_type, country, logo_url } = req.body || {}
+    const { name, owner_name, business_type, country, logo_url } = req.body || {}
     const rid = req.user.restaurant_id
     if (!rid) return res.status(400).json({ error: 'No restaurant' })
     try {
@@ -78,6 +78,7 @@ module.exports = function configRouter (sql) {
         UPDATE restaurants SET
           name          = COALESCE(NULLIF(${(name || '').trim()}, ''), name),
           brand_name    = COALESCE(NULLIF(${(name || '').trim()}, ''), brand_name),
+          owner_name    = COALESCE(NULLIF(${(owner_name || '').trim()}, ''), owner_name),
           business_type = COALESCE(NULLIF(${business_type || ''}, ''), business_type),
           country       = COALESCE(NULLIF(${country || ''}, ''), country),
           logo_url      = COALESCE(NULLIF(${logo_url || ''}, ''), logo_url)
