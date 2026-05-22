@@ -24,9 +24,10 @@ module.exports = function staffRouter (sql) {
     if (!/^\d{4}$/.test(pin)) return res.status(400).json({ error: 'pin must be 4 digits' })
     try {
       const id  = uid()
+      const rid = req.user?.restaurant_id || null
       const row = await sql`
-        INSERT INTO cashiers (id, name, pin, role, active, created_at)
-        VALUES (${id}, ${name}, ${pin}, ${role || 'cashier'}, 1, ${Date.now()})
+        INSERT INTO cashiers (id, name, pin, role, active, created_at, restaurant_id)
+        VALUES (${id}, ${name}, ${pin}, ${role || 'cashier'}, 1, ${Date.now()}, ${rid})
         RETURNING *`
       res.json({ ok: true, cashier: row[0] })
     } catch (e) { res.status(500).json({ error: e.message }) }

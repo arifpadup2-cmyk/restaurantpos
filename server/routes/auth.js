@@ -49,8 +49,8 @@ module.exports = function authRouter (sql) {
       if (!ok)
         return res.status(401).json({ error: 'Invalid username or password' })
 
-      const token = sign({ id: user.id, username: user.username, role: user.role })
-      res.json({ ok: true, token, user: { id: user.id, username: user.username, role: user.role } })
+      const token = sign({ id: user.id, username: user.username, role: user.role, restaurant_id: user.restaurant_id || null })
+      res.json({ ok: true, token, user: { id: user.id, username: user.username, role: user.role, restaurant_id: user.restaurant_id || null } })
     } catch (e) {
       res.status(500).json({ error: e.message })
     }
@@ -106,8 +106,8 @@ module.exports = function authRouter (sql) {
       }
 
       const user  = rows[0]
-      const token = sign({ id: user.id, username: user.username, role: user.role })
-      res.json({ ok: true, token, user: { id: user.id, username: user.username, role: user.role } })
+      const token = sign({ id: user.id, username: user.username, role: user.role, restaurant_id: user.restaurant_id || null })
+      res.json({ ok: true, token, user: { id: user.id, username: user.username, role: user.role, restaurant_id: user.restaurant_id || null } })
     } catch (e) {
       res.status(500).json({ error: e.message })
     }

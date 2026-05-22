@@ -201,19 +201,26 @@ module.exports = function setupRouter (sql) {
       const tids = terminals.map(t => t.id)
 
       if (tids.length > 0) {
-        // order_items → orders (must delete items first due to FK)
-        await sql`DELETE FROM order_items WHERE order_id IN (
-          SELECT id FROM orders WHERE terminal_id = ANY(${sql.array(tids)})
-        )`
-        await sql`DELETE FROM orders     WHERE terminal_id = ANY(${sql.array(tids)})`
-        await sql`DELETE FROM shifts     WHERE terminal_id = ANY(${sql.array(tids)})`
-        await sql`DELETE FROM expenses   WHERE terminal_id = ANY(${sql.array(tids)})`
+        // Transactional data linked via terminal_id
+        await sql`DELETE FROM order_items  WHERE order_id IN (SELECT id FROM orders WHERE terminal_id = ANY(${sql.array(tids)}))`
+        await sql`DELETE FROM orders       WHERE terminal_id = ANY(${sql.array(tids)})`
+        await sql`DELETE FROM shifts       WHERE terminal_id = ANY(${sql.array(tids)})`
+        await sql`DELETE FROM expenses     WHERE terminal_id = ANY(${sql.array(tids)})`
         await sql`DELETE FROM day_closings WHERE terminal_id = ANY(${sql.array(tids)})`
+        await sql`DELETE FROM audit_log    WHERE terminal_id = ANY(${sql.array(tids)})`
+        await sql`DELETE FROM no_sale_log  WHERE terminal_id = ANY(${sql.array(tids)})`
       }
 
-      await sql`DELETE FROM bo_users             WHERE restaurant_id = ${id}`
+      // POS config data linked via restaurant_id (populated after migration 013)
+      await sql`DELETE FROM menu_items    WHERE restaurant_id = ${id}`
+      await sql`DELETE FROM categories    WHERE restaurant_id = ${id}`
+      await sql`DELETE FROM cashiers      WHERE restaurant_id = ${id}`
+      await sql`DELETE FROM tables_layout WHERE restaurant_id = ${id}`
+      await sql`DELETE FROM customers     WHERE restaurant_id = ${id}`
+
+      await sql`DELETE FROM bo_users               WHERE restaurant_id = ${id}`
       await sql`DELETE FROM terminal_registrations WHERE restaurant_id = ${id}`
-      await sql`DELETE FROM restaurants          WHERE id = ${id}`
+      await sql`DELETE FROM restaurants            WHERE id = ${id}`
 
       res.json({ ok: true, deleted: r.name })
     } catch (e) {

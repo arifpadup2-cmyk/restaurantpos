@@ -38,9 +38,10 @@ module.exports = function customersRouter (sql) {
     try {
       const now = Date.now()
       const newId = id || require('crypto').randomUUID()
+      const rid = req.user?.restaurant_id || null
       const [row] = await sql`
-        INSERT INTO customers (id, name, phone, email, notes, created_at, updated_at)
-        VALUES (${newId}, ${name}, ${phone || null}, ${email || null}, ${notes || null}, ${now}, ${now})
+        INSERT INTO customers (id, name, phone, email, notes, created_at, updated_at, restaurant_id)
+        VALUES (${newId}, ${name}, ${phone || null}, ${email || null}, ${notes || null}, ${now}, ${now}, ${rid})
         ON CONFLICT (id) DO UPDATE SET
           name       = EXCLUDED.name,
           phone      = EXCLUDED.phone,

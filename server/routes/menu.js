@@ -25,10 +25,11 @@ module.exports = function menuRouter (sql) {
     const { name, color, sort_order } = req.body || {}
     if (!name) return res.status(400).json({ error: 'name required' })
     try {
-      const id = uid()
+      const id  = uid()
+      const rid = req.user?.restaurant_id || null
       const row = await sql`
-        INSERT INTO categories (id, name, color, sort_order, active, synced_at)
-        VALUES (${id}, ${name}, ${color || '#f97316'}, ${sort_order || 0}, 1, ${Date.now()})
+        INSERT INTO categories (id, name, color, sort_order, active, synced_at, restaurant_id)
+        VALUES (${id}, ${name}, ${color || '#f97316'}, ${sort_order || 0}, 1, ${Date.now()}, ${rid})
         RETURNING *`
       res.json({ ok: true, category: row[0] })
     } catch (e) { res.status(500).json({ error: e.message }) }
@@ -66,9 +67,10 @@ module.exports = function menuRouter (sql) {
     if (!name || !price || !category_id) return res.status(400).json({ error: 'name, price, category_id required' })
     try {
       const id  = uid()
+      const rid = req.user?.restaurant_id || null
       const row = await sql`
-        INSERT INTO menu_items (id, category_id, name, price, description, item_code, active, synced_at)
-        VALUES (${id}, ${category_id}, ${name}, ${price}, ${description || ''}, ${item_code || null}, 1, ${Date.now()})
+        INSERT INTO menu_items (id, category_id, name, price, description, item_code, active, synced_at, restaurant_id)
+        VALUES (${id}, ${category_id}, ${name}, ${price}, ${description || ''}, ${item_code || null}, 1, ${Date.now()}, ${rid})
         RETURNING *`
       res.json({ ok: true, item: row[0] })
     } catch (e) { res.status(500).json({ error: e.message }) }
