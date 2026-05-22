@@ -189,6 +189,38 @@ module.exports = function setupRouter (sql) {
     } catch (e) { res.status(500).json({ error: e.message }) }
   })
 
+  // ── Provider: delete restaurant + all associated data ────────────────────
+  router.delete('/restaurants/:id', jwtAuth, async (req, res) => {
+    const { id } = req.params
+    try {
+      const [r] = await sql`SELECT id, name FROM restaurants WHERE id = ${id}`
+      if (!r) return res.status(404).json({ error: 'Restaurant not found' })
+
+      // Get all terminal IDs so we can clean up synced POS data
+      const terminals = await sql`SELECT id FROM terminal_registrations WHERE restaurant_id = ${id}`
+      const tids = terminals.map(t => t.id)
+
+      if (tids.length > 0) {
+        // order_items → orders (must delete items first due to FK)
+        await sql`DELETE FROM order_items WHERE order_id IN (
+          SELECT id FROM orders WHERE terminal_id = ANY(${sql.array(tids)})
+        )`
+        await sql`DELETE FROM orders     WHERE terminal_id = ANY(${sql.array(tids)})`
+        await sql`DELETE FROM shifts     WHERE terminal_id = ANY(${sql.array(tids)})`
+        await sql`DELETE FROM expenses   WHERE terminal_id = ANY(${sql.array(tids)})`
+        await sql`DELETE FROM day_closings WHERE terminal_id = ANY(${sql.array(tids)})`
+      }
+
+      await sql`DELETE FROM bo_users             WHERE restaurant_id = ${id}`
+      await sql`DELETE FROM terminal_registrations WHERE restaurant_id = ${id}`
+      await sql`DELETE FROM restaurants          WHERE id = ${id}`
+
+      res.json({ ok: true, deleted: r.name })
+    } catch (e) {
+      res.status(500).json({ error: e.message })
+    }
+  })
+
   // ── Provider: mark restaurant as billed today ─────────────────────────────
   router.post('/restaurants/:id/bill', jwtAuth, async (req, res) => {
     const { id } = req.params
