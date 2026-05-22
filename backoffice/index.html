@@ -275,6 +275,32 @@ input:checked+.toggle-slider:before{transform:translateX(17px)}
 .settings-danger-group{border:1.5px solid var(--danger-border);border-radius:10px;padding:14px;background:var(--danger-bg);margin-bottom:12px}
 .empty-state{text-align:center;padding:40px 20px;color:var(--muted)}
 .empty-state .es-icon{width:48px;height:48px;margin:0 auto 10px;background:#f1f5f9;border-radius:12px;display:flex;align-items:center;justify-content:center;opacity:.7}
+/* Onboarding wizard */
+#onboard-overlay{position:fixed;inset:0;background:rgba(15,23,42,.55);z-index:9000;display:none;align-items:center;justify-content:center;padding:16px}
+#onboard-overlay.open{display:flex}
+.ob-modal{background:#fff;border-radius:20px;width:100%;max-width:480px;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,.25)}
+.ob-header{background:linear-gradient(135deg,#1e1b4b,#4338ca);padding:28px 28px 24px;color:#fff;text-align:center}
+.ob-step-dots{display:flex;justify-content:center;gap:8px;margin-bottom:16px}
+.ob-dot{width:8px;height:8px;border-radius:50%;background:rgba(255,255,255,.3);transition:.2s}
+.ob-dot.active{background:#fff;width:24px;border-radius:4px}
+.ob-header h2{font-size:22px;font-weight:700;margin:0 0 6px}
+.ob-header p{font-size:14px;opacity:.8;margin:0}
+.ob-body{padding:24px 28px}
+.ob-field{margin-bottom:16px}
+.ob-field label{display:block;font-size:12px;font-weight:600;color:#374151;margin-bottom:6px}
+.ob-field input,.ob-field select{width:100%;padding:10px 12px;border:1.5px solid #e5e7eb;border-radius:10px;font-size:14px;color:#1e1b4b;outline:none;transition:.15s;box-sizing:border-box}
+.ob-field input:focus,.ob-field select:focus{border-color:#6366f1;box-shadow:0 0 0 3px rgba(99,102,241,.1)}
+.ob-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.ob-footer{display:flex;gap:10px;padding:0 28px 24px}
+.ob-btn-back{flex:0 0 auto;padding:10px 18px;border:1.5px solid #e5e7eb;border-radius:10px;background:#fff;font-size:14px;font-weight:600;color:#374151;cursor:pointer;transition:.15s}
+.ob-btn-back:hover{border-color:#6366f1;color:#4338ca}
+.ob-btn-next{flex:1;padding:10px 18px;border:none;border-radius:10px;background:linear-gradient(135deg,#4338ca,#6366f1);color:#fff;font-size:14px;font-weight:700;cursor:pointer;transition:.15s;display:flex;align-items:center;justify-content:center;gap:8px}
+.ob-btn-next:hover{opacity:.9}
+.ob-success-icon{width:64px;height:64px;background:#f0fdf4;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 16px;font-size:28px}
+.ob-checklist{list-style:none;padding:0;margin:16px 0}
+.ob-checklist li{padding:8px 0;border-bottom:1px solid #f1f5f9;font-size:13px;color:#374151;display:flex;align-items:center;gap:8px}
+.ob-checklist li:last-child{border:none}
+.ob-checklist li::before{content:'✓';width:20px;height:20px;background:#dcfce7;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:#16a34a;flex-shrink:0}
 .empty-state h4{font-size:14px;font-weight:700;color:var(--text);margin-bottom:3px}
 .empty-state p{font-size:13px}
 .skeleton{background:linear-gradient(90deg,#f1f5f9 25%,#e2e8f0 50%,#f1f5f9 75%);background-size:200% 100%;animation:skeleton-shimmer 1.4s ease infinite;border-radius:6px}
@@ -1711,6 +1737,7 @@ async function _googleSignup (credential) {
     localStorage.setItem('bo_token', token)
     currentUser = data.user
     if (data.trialEndsAt) localStorage.setItem('bo_trial_ends', data.trialEndsAt)
+    localStorage.setItem('bo_needs_onboarding', '1')
     showApp()
   } catch (e) {
     if (errEl) { errEl.textContent = e.message || 'Sign up failed'; errEl.style.display = 'block' }
@@ -1747,6 +1774,7 @@ async function signup () {
     localStorage.setItem('bo_token', token)
     currentUser = data.user
     if (data.trialEndsAt) localStorage.setItem('bo_trial_ends', data.trialEndsAt)
+    localStorage.setItem('bo_needs_onboarding', '1')
     showApp()
   } catch (e) {
     if (errEl) { errEl.textContent = e.message || 'Sign up failed'; errEl.style.display = 'block' }
@@ -1772,6 +1800,65 @@ function updateTrialBanner () {
   const days = Math.ceil(msLeft / 86400000)
   banner.style.display = 'flex'
   daysEl.textContent = days === 1 ? '1 day remaining' : days + ' days remaining'
+}
+
+// ─── ONBOARDING WIZARD ───────────────────────────────────────────
+function showOnboarding () {
+  // Pre-fill restaurant name from settings
+  const nameEl = document.getElementById('ob-name')
+  if (nameEl && boSettings.restaurant_name && boSettings.restaurant_name !== 'My Restaurant')
+    nameEl.value = boSettings.restaurant_name
+  const overlay = document.getElementById('onboard-overlay')
+  if (overlay) overlay.classList.add('open')
+  obNext(1)
+}
+
+function obNext (step) {
+  for (let i = 1; i <= 3; i++) {
+    const el = document.getElementById('ob-step-' + i)
+    if (el) el.style.display = i === step ? '' : 'none'
+  }
+}
+
+async function obSave () {
+  const name     = (document.getElementById('ob-name').value || '').trim()
+  const branch   = (document.getElementById('ob-branch').value || '').trim()
+  const currency = document.getElementById('ob-currency').value
+  const tax      = parseFloat(document.getElementById('ob-tax').value) || 0
+  const sc       = parseFloat(document.getElementById('ob-sc').value) || 0
+  const footer   = (document.getElementById('ob-footer').value || '').trim()
+
+  try {
+    const saveData = {
+      restaurant_name:      name || boSettings.restaurant_name,
+      branch_name:          branch,
+      currency:             currency,
+      tax_rate:             tax,
+      service_charge_rate:  sc,
+      receipt_footer:       footer,
+    }
+    await apiFetch('PUT', '/settings', saveData)
+    // Update local state
+    boSettings.restaurant_name     = saveData.restaurant_name
+    boSettings.branch_name         = saveData.branch_name
+    boSettings.currency            = saveData.currency
+    boSettings.tax_rate            = saveData.tax_rate
+    boSettings.service_charge_rate = saveData.service_charge_rate
+    boSettings.receipt_footer      = saveData.receipt_footer
+    // Update header
+    document.getElementById('hdr-name').textContent = saveData.restaurant_name
+    const sbBranch = document.getElementById('sb-branch')
+    if (sbBranch) sbBranch.textContent = saveData.branch_name || 'Back Office'
+  } catch (_e) { /* settings save failure is non-fatal */ }
+
+  obNext(3)
+}
+
+function obClose () {
+  localStorage.removeItem('bo_needs_onboarding')
+  const overlay = document.getElementById('onboard-overlay')
+  if (overlay) overlay.classList.remove('open')
+  showView('dashboard')
 }
 
 // ─── AUTH ────────────────────────────────────────────────────────
@@ -1894,6 +1981,7 @@ async function initApp () {
   await loadMenu()
   await loadDashboard()
   await loadStaff()
+  if (localStorage.getItem('bo_needs_onboarding')) showOnboarding()
 }
 
 function setTodayDates () {
@@ -3616,5 +3704,133 @@ const _origShowView = showView
     </div>
   </div>
 </div>
+
+<!-- ═══ ONBOARDING WIZARD ═══ -->
+<div id="onboard-overlay">
+  <div class="ob-modal">
+
+    <!-- Step 1: Welcome -->
+    <div id="ob-step-1">
+      <div class="ob-header">
+        <div class="ob-step-dots">
+          <div class="ob-dot active"></div><div class="ob-dot"></div><div class="ob-dot"></div>
+        </div>
+        <h2>Welcome aboard! 🎉</h2>
+        <p>Let's set up your restaurant in 2 minutes</p>
+      </div>
+      <div class="ob-body">
+        <div class="ob-field">
+          <label>Restaurant / Brand Name</label>
+          <input id="ob-name" type="text" placeholder="Your restaurant name">
+        </div>
+        <div class="ob-field">
+          <label>Outlet / Branch Name <span style="font-weight:400;color:#9ca3af">(optional)</span></label>
+          <input id="ob-branch" type="text" placeholder="e.g. Main Branch, Outlet 1">
+        </div>
+        <div class="ob-field">
+          <label>Business Type</label>
+          <select id="ob-type">
+            <option value="">-- Select --</option>
+            <option>Restaurant</option>
+            <option>Cafe</option>
+            <option>Fast Food</option>
+            <option>Food Court</option>
+            <option>Bakery</option>
+            <option>Bar & Grill</option>
+            <option>Cloud Kitchen</option>
+            <option>Other</option>
+          </select>
+        </div>
+      </div>
+      <div class="ob-footer">
+        <button class="ob-btn-next" onclick="obNext(2)">
+          Continue
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- Step 2: Settings -->
+    <div id="ob-step-2" style="display:none">
+      <div class="ob-header">
+        <div class="ob-step-dots">
+          <div class="ob-dot"></div><div class="ob-dot active"></div><div class="ob-dot"></div>
+        </div>
+        <h2>Configure your POS</h2>
+        <p>These can be changed anytime in Settings</p>
+      </div>
+      <div class="ob-body">
+        <div class="ob-row">
+          <div class="ob-field">
+            <label>Currency</label>
+            <select id="ob-currency">
+              <option value="MYR">MYR — Malaysian Ringgit</option>
+              <option value="USD">USD — US Dollar</option>
+              <option value="SGD">SGD — Singapore Dollar</option>
+              <option value="INR">INR — Indian Rupee</option>
+              <option value="AED">AED — UAE Dirham</option>
+              <option value="SAR">SAR — Saudi Riyal</option>
+              <option value="GBP">GBP — British Pound</option>
+              <option value="EUR">EUR — Euro</option>
+              <option value="IDR">IDR — Indonesian Rupiah</option>
+              <option value="THB">THB — Thai Baht</option>
+              <option value="PHP">PHP — Philippine Peso</option>
+              <option value="PKR">PKR — Pakistani Rupee</option>
+            </select>
+          </div>
+          <div class="ob-field">
+            <label>Tax Rate (%)</label>
+            <input id="ob-tax" type="number" min="0" max="30" step="0.5" placeholder="0" value="0">
+          </div>
+        </div>
+        <div class="ob-field">
+          <label>Service Charge (%) <span style="font-weight:400;color:#9ca3af">optional</span></label>
+          <input id="ob-sc" type="number" min="0" max="20" step="0.5" placeholder="0" value="0">
+        </div>
+        <div class="ob-field">
+          <label>Receipt Footer <span style="font-weight:400;color:#9ca3af">optional</span></label>
+          <input id="ob-footer" type="text" placeholder="e.g. Thank you for dining with us!">
+        </div>
+      </div>
+      <div class="ob-footer">
+        <button class="ob-btn-back" onclick="obNext(1)">← Back</button>
+        <button class="ob-btn-next" onclick="obSave()">
+          Finish Setup
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- Step 3: Done -->
+    <div id="ob-step-3" style="display:none">
+      <div class="ob-header">
+        <div class="ob-step-dots">
+          <div class="ob-dot"></div><div class="ob-dot"></div><div class="ob-dot active"></div>
+        </div>
+        <h2>You're all set! 🚀</h2>
+        <p>Your back office is ready to use</p>
+      </div>
+      <div class="ob-body">
+        <div class="ob-success-icon">🎊</div>
+        <ul class="ob-checklist">
+          <li>Restaurant profile configured</li>
+          <li>Currency &amp; tax rate set</li>
+          <li id="ob-check-trial">7-day free trial started</li>
+        </ul>
+        <div style="background:#f0f9ff;border-radius:10px;padding:12px 14px;font-size:13px;color:#0369a1;margin-top:4px">
+          <strong>Next steps:</strong> Add your menu items, configure tables, then install the POS app on your terminal.
+        </div>
+      </div>
+      <div class="ob-footer">
+        <button class="ob-btn-next" onclick="obClose()">
+          Go to Dashboard
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+        </button>
+      </div>
+    </div>
+
+  </div>
+</div>
+
 </body>
 </html>
