@@ -347,6 +347,52 @@ input:checked+.toggle-slider:before{transform:translateX(17px)}
 .skeleton{background:linear-gradient(90deg,#f1f5f9 25%,#e2e8f0 50%,#f1f5f9 75%);background-size:200% 100%;animation:skeleton-shimmer 1.4s ease infinite;border-radius:6px}
 @keyframes skeleton-shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
 
+/* ─── CONFIGURATION ──────────────────────────────── */
+.cfg-layout{display:flex;min-height:calc(100vh - 56px);gap:0}
+.cfg-nav{width:190px;flex-shrink:0;border-right:1px solid var(--border);padding:10px 8px;background:var(--bg)}
+.cfg-nav-section{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.7px;color:var(--muted);padding:10px 10px 4px}
+.cfg-tab{display:flex;align-items:center;gap:9px;padding:8px 10px;border-radius:7px;font-size:13px;font-weight:500;color:var(--muted);cursor:pointer;transition:.12s;margin-bottom:1px;border:none;background:none;width:100%;text-align:left}
+.cfg-tab:hover{background:var(--hover);color:var(--text)}
+.cfg-tab.active{background:var(--primary-light,#eff6ff);color:var(--primary)}
+.cfg-tab svg{flex-shrink:0;opacity:.7}
+.cfg-tab.active svg{opacity:1}
+.cfg-content{flex:1;padding:24px;overflow-y:auto;max-width:860px}
+.cfg-section{display:none}.cfg-section.active{display:block}
+.cfg-card{background:#fff;border:1px solid var(--border);border-radius:12px;margin-bottom:20px;overflow:hidden}
+.cfg-card-hdr{padding:14px 18px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
+.cfg-card-title{font-size:14px;font-weight:700;color:var(--text)}
+.cfg-card-sub{font-size:12px;color:var(--muted);margin-top:2px}
+.cfg-card-body{padding:18px}
+.cfg-form-row{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px}
+.cfg-form-row:last-child{margin-bottom:0}
+.cfg-field{display:flex;flex-direction:column;gap:5px}
+.cfg-field label{font-size:12px;font-weight:600;color:var(--muted)}
+.cfg-field input,.cfg-field select,.cfg-field textarea{padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-size:13px;color:var(--text);background:#fff;outline:none;transition:.15s;box-sizing:border-box;width:100%}
+.cfg-field input:focus,.cfg-field select:focus,.cfg-field textarea:focus{border-color:var(--primary);box-shadow:0 0 0 3px rgba(99,102,241,.08)}
+.cfg-field textarea{resize:vertical;min-height:60px;font-family:inherit}
+/* List items (payment methods, kitchens, etc.) */
+.cfg-list{display:flex;flex-direction:column;gap:2px}
+.cfg-list-item{display:flex;align-items:center;gap:10px;padding:10px 14px;border-radius:8px;background:#fff;border:1px solid var(--border);margin-bottom:6px;transition:.12s}
+.cfg-list-item:hover{border-color:var(--primary);background:#fafbff}
+.cfg-list-item-name{flex:1;font-size:13px;font-weight:600;color:var(--text)}
+.cfg-list-item-sub{font-size:11px;color:var(--muted)}
+.cfg-badge{padding:2px 8px;border-radius:10px;font-size:11px;font-weight:600}
+.cfg-badge-green{background:#dcfce7;color:#16a34a}
+.cfg-badge-gray{background:#f1f5f9;color:#94a3b8}
+/* Toggle switch */
+.cfg-toggle{position:relative;width:38px;height:22px;flex-shrink:0}
+.cfg-toggle input{opacity:0;width:0;height:0;position:absolute}
+.cfg-toggle-slider{position:absolute;inset:0;background:#d1d5db;border-radius:11px;cursor:pointer;transition:.2s}
+.cfg-toggle-slider::before{content:'';position:absolute;width:16px;height:16px;left:3px;top:3px;background:#fff;border-radius:50%;transition:.2s;box-shadow:0 1px 3px rgba(0,0,0,.2)}
+.cfg-toggle input:checked+.cfg-toggle-slider{background:var(--primary)}
+.cfg-toggle input:checked+.cfg-toggle-slider::before{transform:translateX(16px)}
+/* Permission grid */
+.perm-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}
+.perm-item{display:flex;align-items:center;gap:8px;padding:8px 10px;border:1px solid var(--border);border-radius:8px;font-size:12px;font-weight:500;color:var(--text);cursor:pointer;transition:.12s}
+.perm-item:hover{border-color:var(--primary);background:#fafbff}
+.perm-item input{accent-color:var(--primary);width:15px;height:15px;cursor:pointer;flex-shrink:0}
+/* Color dot */
+.cfg-color-dot{width:16px;height:16px;border-radius:50%;flex-shrink:0;border:2px solid rgba(0,0,0,.1)}
 /* ─── TOAST ──────────────────────────────────────── */
 #toast-region{position:fixed;bottom:22px;right:22px;z-index:9999;display:flex;flex-direction:column;gap:7px;pointer-events:none}
 .toast{background:#1e293b;color:#fff;padding:11px 16px;border-radius:10px;font-size:13px;font-weight:600;box-shadow:0 4px 20px rgba(0,0,0,.25);pointer-events:auto;animation:toast-in .2s ease;max-width:300px;display:flex;align-items:center;gap:8px}
@@ -660,6 +706,10 @@ input:checked+.toggle-slider:before{transform:translateX(17px)}
       <div class="nav-item" id="nav-downloads" onclick="showView('downloads')" role="button" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' ')showView('downloads')">
         <svg class="ni-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
         <span>Downloads</span>
+      </div>
+      <div class="nav-item" id="nav-config" onclick="showView('config')" role="button" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' ')showView('config')">
+        <svg class="ni-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+        <span>Configuration</span>
       </div>
       <div class="nav-item" id="nav-bo-settings" onclick="showView('bo-settings')" role="button" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' ')showView('bo-settings')">
         <svg class="ni-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
@@ -1521,6 +1571,160 @@ input:checked+.toggle-slider:before{transform:translateX(17px)}
       </div>
     </div>
   </div>
+
+<!-- ═══ CONFIGURATION VIEW ═══════════════════════════════════════════════════ -->
+<div id="view-config" class="view" style="display:none">
+  <div class="cfg-layout">
+
+    <!-- Sub-nav -->
+    <div class="cfg-nav">
+      <div class="cfg-nav-section">Restaurant</div>
+      <button class="cfg-tab active" id="cfgtab-brand"         onclick="showCfgTab('brand')">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="6"/><path d="M15.477 12.89L17 22l-5-3-5 3 1.523-9.11"/></svg> Brand
+      </button>
+      <button class="cfg-tab" id="cfgtab-outlet"        onclick="showCfgTab('outlet')">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg> Outlet
+      </button>
+      <button class="cfg-tab" id="cfgtab-tables"        onclick="showCfgTab('tables')">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg> Tables
+      </button>
+      <div class="cfg-nav-section">Operations</div>
+      <button class="cfg-tab" id="cfgtab-order-types"   onclick="showCfgTab('order-types')">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg> Order Types
+      </button>
+      <button class="cfg-tab" id="cfgtab-payment"       onclick="showCfgTab('payment')">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg> Payment Methods
+      </button>
+      <button class="cfg-tab" id="cfgtab-delivery"      onclick="showCfgTab('delivery')">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="3" width="15" height="13"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg> Delivery Partners
+      </button>
+      <button class="cfg-tab" id="cfgtab-kitchens"      onclick="showCfgTab('kitchens')">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2v20M18 2v20M3 12h18M3 6h18M3 18h18"/></svg> Kitchens
+      </button>
+      <div class="cfg-nav-section">Staff</div>
+      <button class="cfg-tab" id="cfgtab-designations"  onclick="showCfgTab('designations')">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg> Designations
+      </button>
+      <div class="cfg-nav-section">Tax</div>
+      <button class="cfg-tab" id="cfgtab-tax"           onclick="showCfgTab('tax')">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="19" y1="5" x2="5" y2="19"/><circle cx="6.5" cy="6.5" r="2.5"/><circle cx="17.5" cy="17.5" r="2.5"/></svg> Tax Groups
+      </button>
+    </div>
+
+    <!-- Content -->
+    <div class="cfg-content">
+
+      <!-- BRAND -->
+      <div id="cfg-brand" class="cfg-section active">
+        <div class="page-header"><h2>Brand Details</h2></div>
+        <div class="cfg-card">
+          <div class="cfg-card-hdr"><div><div class="cfg-card-title">Brand Information</div><div class="cfg-card-sub">Your restaurant's identity and business details</div></div></div>
+          <div class="cfg-card-body">
+            <div class="cfg-form-row">
+              <div class="cfg-field"><label>Brand Name *</label><input id="cfg-brand-name" type="text" placeholder="e.g. Mama's Kitchen"></div>
+              <div class="cfg-field"><label>Business Type</label>
+                <select id="cfg-brand-type">
+                  <option value="">-- Select --</option><option>Restaurant</option><option>Cafe</option><option>Fast Food</option>
+                  <option>Food Court</option><option>Bakery</option><option>Bar &amp; Grill</option><option>Cloud Kitchen</option><option>Other</option>
+                </select>
+              </div>
+            </div>
+            <div class="cfg-form-row">
+              <div class="cfg-field"><label>Country</label>
+                <select id="cfg-brand-country">
+                  <option value="MY">🇲🇾 Malaysia</option><option value="SG">🇸🇬 Singapore</option><option value="ID">🇮🇩 Indonesia</option>
+                  <option value="TH">🇹🇭 Thailand</option><option value="PH">🇵🇭 Philippines</option><option value="AE">🇦🇪 UAE</option>
+                  <option value="SA">🇸🇦 Saudi Arabia</option><option value="PK">🇵🇰 Pakistan</option><option value="IN">🇮🇳 India</option>
+                  <option value="GB">🇬🇧 United Kingdom</option><option value="US">🇺🇸 United States</option><option value="OTHER">🌍 Other</option>
+                </select>
+              </div>
+              <div class="cfg-field"><label>Owner Name</label><input id="cfg-brand-owner" type="text" placeholder="Owner's full name"></div>
+            </div>
+            <div style="display:flex;justify-content:flex-end;margin-top:4px">
+              <button class="btn" onclick="cfgSaveBrand()">Save Brand</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- OUTLET -->
+      <div id="cfg-outlet" class="cfg-section">
+        <div class="page-header"><h2>Outlet Details</h2></div>
+        <div class="cfg-card">
+          <div class="cfg-card-hdr"><div><div class="cfg-card-title">Outlet Information</div><div class="cfg-card-sub">Location, contact and operating hours</div></div></div>
+          <div class="cfg-card-body">
+            <div class="cfg-form-row">
+              <div class="cfg-field"><label>Outlet Name *</label><input id="cfg-outlet-name" type="text" placeholder="e.g. Main Branch"></div>
+              <div class="cfg-field"><label>Outlet Phone</label><input id="cfg-outlet-phone" type="tel" placeholder="+60 3 1234 5678"></div>
+            </div>
+            <div class="cfg-form-row">
+              <div class="cfg-field"><label>Outlet Email</label><input id="cfg-outlet-email" type="email" placeholder="outlet@restaurant.com"></div>
+              <div class="cfg-field"><label>Currency</label>
+                <select id="cfg-outlet-currency">
+                  <option value="MYR">MYR</option><option value="SGD">SGD</option><option value="IDR">IDR</option>
+                  <option value="THB">THB</option><option value="PHP">PHP</option><option value="AED">AED</option>
+                  <option value="SAR">SAR</option><option value="PKR">PKR</option><option value="INR">INR</option>
+                  <option value="GBP">GBP</option><option value="USD">USD</option><option value="EUR">EUR</option>
+                </select>
+              </div>
+            </div>
+            <div class="cfg-field" style="margin-bottom:14px"><label>Address</label><textarea id="cfg-outlet-address" rows="2" placeholder="Street address, city, postcode"></textarea></div>
+            <div class="cfg-form-row">
+              <div class="cfg-field"><label>Opening Time</label><input id="cfg-outlet-open" type="time" value="09:00"></div>
+              <div class="cfg-field"><label>Closing Time</label><input id="cfg-outlet-close" type="time" value="22:00"></div>
+            </div>
+            <div style="display:flex;justify-content:flex-end;margin-top:4px">
+              <button class="btn" onclick="cfgSaveOutlet()">Save Outlet</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- TABLES -->
+      <div id="cfg-tables" class="cfg-section">
+        <div class="page-header"><h2>Tables</h2><button class="btn" onclick="cfgAddTable()">+ Add Table</button></div>
+        <div id="cfg-tables-list" class="cfg-list"></div>
+      </div>
+
+      <!-- ORDER TYPES -->
+      <div id="cfg-order-types" class="cfg-section">
+        <div class="page-header"><h2>Order Types</h2><button class="btn" onclick="cfgAddOrderType()">+ Add Type</button></div>
+        <div class="cfg-card"><div class="cfg-card-body"><div id="cfg-ot-list"></div></div></div>
+      </div>
+
+      <!-- PAYMENT METHODS -->
+      <div id="cfg-payment" class="cfg-section">
+        <div class="page-header"><h2>Payment Methods</h2><button class="btn" onclick="cfgAddPayment()">+ Add Method</button></div>
+        <div class="cfg-card"><div class="cfg-card-body"><div id="cfg-pm-list"></div></div></div>
+      </div>
+
+      <!-- DELIVERY PARTNERS -->
+      <div id="cfg-delivery" class="cfg-section">
+        <div class="page-header"><h2>Delivery Partners</h2><button class="btn" onclick="cfgAddDelivery()">+ Add Partner</button></div>
+        <div class="cfg-card"><div class="cfg-card-body"><div id="cfg-dp-list"></div></div></div>
+      </div>
+
+      <!-- KITCHENS -->
+      <div id="cfg-kitchens" class="cfg-section">
+        <div class="page-header"><h2>Kitchens</h2><button class="btn" onclick="cfgAddKitchen()">+ Add Kitchen</button></div>
+        <div class="cfg-card"><div class="cfg-card-body"><div id="cfg-kitch-list"></div></div></div>
+      </div>
+
+      <!-- DESIGNATIONS -->
+      <div id="cfg-designations" class="cfg-section">
+        <div class="page-header"><h2>Designations &amp; Access</h2><button class="btn" onclick="cfgAddDesignation()">+ Add Designation</button></div>
+        <div id="cfg-des-list"></div>
+      </div>
+
+      <!-- TAX GROUPS -->
+      <div id="cfg-tax" class="cfg-section">
+        <div class="page-header"><h2>Tax Groups</h2><button class="btn" onclick="cfgAddTax()">+ Add Tax Group</button></div>
+        <div class="cfg-card"><div class="cfg-card-body"><div id="cfg-tax-list"></div></div></div>
+      </div>
+
+    </div><!-- cfg-content -->
+  </div><!-- cfg-layout -->
+</div><!-- view-config -->
 
     </div><!-- end view-container -->
   </div><!-- end main-wrap -->
@@ -3821,6 +4025,352 @@ function startLiveRefresh () {
 function stopLiveRefresh () {
   if (_liveTimer) { clearInterval(_liveTimer); _liveTimer = null }
 }
+
+// ─── CONFIGURATION ───────────────────────────────────────────────────────────
+const PERM_LABELS = {
+  can_void_order:          'Void Order',
+  can_apply_discount:      'Apply Discount',
+  can_close_shift:         'Close Shift',
+  can_view_reports:        'View Reports',
+  can_manage_tables:       'Manage Tables',
+  can_process_refund:      'Process Refund',
+  can_override_price:      'Override Price',
+  can_delete_order_item:   'Delete Order Item',
+  can_access_cashier_report:'Cashier Report',
+  can_open_cash_drawer:    'Open Cash Drawer',
+}
+
+function showCfgTab (tab) {
+  document.querySelectorAll('.cfg-tab').forEach(t => t.classList.remove('active'))
+  document.querySelectorAll('.cfg-section').forEach(s => s.classList.remove('active'))
+  const btn = document.getElementById('cfgtab-' + tab)
+  const sec = document.getElementById('cfg-' + tab)
+  if (btn) btn.classList.add('active')
+  if (sec) sec.classList.add('active')
+  // Load data for the tab
+  const loaders = {
+    brand: cfgLoadBrand, outlet: cfgLoadOutlet,
+    tables: cfgLoadTables, 'order-types': cfgLoadOrderTypes,
+    payment: cfgLoadPayment, delivery: cfgLoadDelivery,
+    kitchens: cfgLoadKitchens, designations: cfgLoadDesignations, tax: cfgLoadTax,
+  }
+  if (loaders[tab]) loaders[tab]()
+}
+
+// ─── BRAND ───────────────────────────────────────────────────────────────────
+async function cfgLoadBrand () {
+  try {
+    const { brand } = await apiFetch('GET', '/config/brand')
+    document.getElementById('cfg-brand-name').value    = brand.name || ''
+    document.getElementById('cfg-brand-type').value    = brand.business_type || ''
+    document.getElementById('cfg-brand-country').value = brand.country || 'MY'
+    document.getElementById('cfg-brand-owner').value   = brand.owner_name || ''
+  } catch (e) { showToast(e.message, 'error') }
+}
+
+async function cfgSaveBrand () {
+  const name = document.getElementById('cfg-brand-name').value.trim()
+  if (!name) { showToast('Brand name required', 'error'); return }
+  try {
+    await apiFetch('PUT', '/config/brand', {
+      name,
+      business_type: document.getElementById('cfg-brand-type').value,
+      country:       document.getElementById('cfg-brand-country').value,
+    })
+    boSettings.restaurant_name = name
+    document.getElementById('hdr-name').textContent = name
+    showToast('Brand saved', 'success')
+  } catch (e) { showToast(e.message, 'error') }
+}
+
+// ─── OUTLET ──────────────────────────────────────────────────────────────────
+async function cfgLoadOutlet () {
+  try {
+    const { outlet } = await apiFetch('GET', '/config/outlet')
+    document.getElementById('cfg-outlet-name').value     = outlet.branch_name || ''
+    document.getElementById('cfg-outlet-phone').value    = outlet.outlet_phone || ''
+    document.getElementById('cfg-outlet-email').value    = outlet.outlet_email || ''
+    document.getElementById('cfg-outlet-currency').value = outlet.currency || 'MYR'
+    document.getElementById('cfg-outlet-address').value  = outlet.address || ''
+    document.getElementById('cfg-outlet-open').value     = outlet.opening_time || '09:00'
+    document.getElementById('cfg-outlet-close').value    = outlet.closing_time || '22:00'
+  } catch (e) { showToast(e.message, 'error') }
+}
+
+async function cfgSaveOutlet () {
+  const name = document.getElementById('cfg-outlet-name').value.trim()
+  if (!name) { showToast('Outlet name required', 'error'); return }
+  try {
+    await apiFetch('PUT', '/config/outlet', {
+      branch_name:   name,
+      outlet_phone:  document.getElementById('cfg-outlet-phone').value.trim(),
+      outlet_email:  document.getElementById('cfg-outlet-email').value.trim(),
+      currency:      document.getElementById('cfg-outlet-currency').value,
+      address:       document.getElementById('cfg-outlet-address').value.trim(),
+      opening_time:  document.getElementById('cfg-outlet-open').value,
+      closing_time:  document.getElementById('cfg-outlet-close').value,
+    })
+    boSettings.branch_name = name
+    const sbBranch = document.getElementById('sb-branch')
+    if (sbBranch) sbBranch.textContent = name
+    showToast('Outlet saved', 'success')
+  } catch (e) { showToast(e.message, 'error') }
+}
+
+// ─── TABLES ──────────────────────────────────────────────────────────────────
+async function cfgLoadTables () {
+  try {
+    const data = await apiFetch('GET', '/tables')
+    const list = document.getElementById('cfg-tables-list')
+    const tables = data.tables || data || []
+    list.innerHTML = tables.length ? tables.map(t => `
+      <div class="cfg-list-item">
+        <div class="cfg-list-item-name">Table ${t.table_number}${t.label ? ' — ' + t.label : ''}</div>
+        <div class="cfg-list-item-sub">${t.seats ? t.seats + ' seats' : ''} ${t.section || ''}</div>
+        <button class="btn btn-sm btn-danger" onclick="cfgDeleteTable('${t.id}')">Delete</button>
+      </div>`).join('') : '<div class="empty-state"><p>No tables yet. Click + Add Table.</p></div>'
+  } catch (e) { showToast(e.message, 'error') }
+}
+
+function cfgAddTable () {
+  const num = prompt('Table number:')
+  if (!num) return
+  const label = prompt('Label (optional, e.g. "Window Seat"):') || ''
+  const seats = prompt('Seats (optional):') || ''
+  apiFetch('POST', '/tables', { table_number: parseInt(num), label, seats: parseInt(seats) || null })
+    .then(() => { showToast('Table added', 'success'); cfgLoadTables() })
+    .catch(e => showToast(e.message, 'error'))
+}
+
+function cfgDeleteTable (id) {
+  if (!confirm('Delete this table?')) return
+  apiFetch('DELETE', '/tables/' + id)
+    .then(() => { showToast('Table deleted', 'success'); cfgLoadTables() })
+    .catch(e => showToast(e.message, 'error'))
+}
+
+// ─── GENERIC LIST RENDERER ───────────────────────────────────────────────────
+function cfgToggleItem (endpoint, id, enabled) {
+  apiFetch('PATCH', endpoint + '/' + id, { enabled })
+    .catch(e => showToast(e.message, 'error'))
+}
+
+function cfgDeleteItem (endpoint, id, reload) {
+  if (!confirm('Delete this item?')) return
+  apiFetch('DELETE', endpoint + '/' + id)
+    .then(() => { showToast('Deleted', 'success'); reload() })
+    .catch(e => showToast(e.message, 'error'))
+}
+
+// ─── ORDER TYPES ─────────────────────────────────────────────────────────────
+async function cfgLoadOrderTypes () {
+  try {
+    const { rows } = await apiFetch('GET', '/config/order-types')
+    document.getElementById('cfg-ot-list').innerHTML = rows.map(r => `
+      <div class="cfg-list-item">
+        <div style="flex:1">
+          <div class="cfg-list-item-name">${r.name}</div>
+        </div>
+        <label class="cfg-toggle"><input type="checkbox" ${r.enabled ? 'checked' : ''} onchange="cfgToggleItem('/config/order-types','${r.id}',this.checked)"><span class="cfg-toggle-slider"></span></label>
+        <button class="btn btn-sm btn-danger" style="margin-left:8px" onclick="cfgDeleteItem('/config/order-types','${r.id}',cfgLoadOrderTypes)">✕</button>
+      </div>`).join('') || '<p style="color:var(--muted);font-size:13px">No order types.</p>'
+  } catch (e) { showToast(e.message, 'error') }
+}
+
+function cfgAddOrderType () {
+  const name = prompt('Order type name (e.g. Dine In):')
+  if (!name) return
+  apiFetch('POST', '/config/order-types', { name })
+    .then(() => { showToast('Added', 'success'); cfgLoadOrderTypes() })
+    .catch(e => showToast(e.message, 'error'))
+}
+
+// ─── PAYMENT METHODS ─────────────────────────────────────────────────────────
+async function cfgLoadPayment () {
+  try {
+    const { rows } = await apiFetch('GET', '/config/payment-methods')
+    const icons = { cash:'💵', card:'💳', ewallet:'📱', qr:'📲', bank:'🏦', voucher:'🎟', other:'💰' }
+    document.getElementById('cfg-pm-list').innerHTML = rows.map(r => `
+      <div class="cfg-list-item">
+        <span style="font-size:18px">${icons[r.type]||'💰'}</span>
+        <div style="flex:1"><div class="cfg-list-item-name">${r.name}</div><div class="cfg-list-item-sub">${r.type}</div></div>
+        <label class="cfg-toggle"><input type="checkbox" ${r.enabled ? 'checked' : ''} onchange="cfgToggleItem('/config/payment-methods','${r.id}',this.checked)"><span class="cfg-toggle-slider"></span></label>
+        <button class="btn btn-sm btn-danger" style="margin-left:8px" onclick="cfgDeleteItem('/config/payment-methods','${r.id}',cfgLoadPayment)">✕</button>
+      </div>`).join('') || '<p style="color:var(--muted);font-size:13px">No payment methods.</p>'
+  } catch (e) { showToast(e.message, 'error') }
+}
+
+function cfgAddPayment () {
+  const name = prompt('Payment method name (e.g. Touch\'n\'Go):')
+  if (!name) return
+  const types = ['cash','card','ewallet','qr','bank','voucher','other']
+  const type  = prompt('Type (' + types.join(', ') + '):') || 'other'
+  apiFetch('POST', '/config/payment-methods', { name, type })
+    .then(() => { showToast('Added', 'success'); cfgLoadPayment() })
+    .catch(e => showToast(e.message, 'error'))
+}
+
+// ─── DELIVERY PARTNERS ────────────────────────────────────────────────────────
+async function cfgLoadDelivery () {
+  try {
+    const { rows } = await apiFetch('GET', '/config/delivery-partners')
+    document.getElementById('cfg-dp-list').innerHTML = rows.map(r => `
+      <div class="cfg-list-item">
+        <div style="flex:1">
+          <div class="cfg-list-item-name">${r.name}</div>
+          <div class="cfg-list-item-sub">Commission: ${r.commission_rate || 0}%</div>
+        </div>
+        <label class="cfg-toggle"><input type="checkbox" ${r.enabled ? 'checked' : ''} onchange="cfgToggleItem('/config/delivery-partners','${r.id}',this.checked)"><span class="cfg-toggle-slider"></span></label>
+        <button class="btn btn-sm" style="margin-left:8px" onclick="cfgEditDelivery('${r.id}','${r.name}',${r.commission_rate||0})">Edit</button>
+        <button class="btn btn-sm btn-danger" style="margin-left:4px" onclick="cfgDeleteItem('/config/delivery-partners','${r.id}',cfgLoadDelivery)">✕</button>
+      </div>`).join('') || '<p style="color:var(--muted);font-size:13px">No partners.</p>'
+  } catch (e) { showToast(e.message, 'error') }
+}
+
+function cfgAddDelivery () {
+  const name = prompt('Partner name:')
+  if (!name) return
+  const rate = prompt('Commission rate % (default 0):') || '0'
+  apiFetch('POST', '/config/delivery-partners', { name, commission_rate: parseFloat(rate) })
+    .then(() => { showToast('Added', 'success'); cfgLoadDelivery() })
+    .catch(e => showToast(e.message, 'error'))
+}
+
+function cfgEditDelivery (id, name, rate) {
+  const newRate = prompt('Commission rate % for ' + name + ':', rate)
+  if (newRate === null) return
+  apiFetch('PATCH', '/config/delivery-partners/' + id, { commission_rate: parseFloat(newRate) || 0 })
+    .then(() => { showToast('Saved', 'success'); cfgLoadDelivery() })
+    .catch(e => showToast(e.message, 'error'))
+}
+
+// ─── KITCHENS ─────────────────────────────────────────────────────────────────
+async function cfgLoadKitchens () {
+  try {
+    const { rows } = await apiFetch('GET', '/config/kitchens')
+    document.getElementById('cfg-kitch-list').innerHTML = rows.map(r => `
+      <div class="cfg-list-item">
+        <div class="cfg-color-dot" style="background:${r.color}"></div>
+        <div style="flex:1"><div class="cfg-list-item-name">${r.name}</div></div>
+        <label class="cfg-toggle"><input type="checkbox" ${r.enabled ? 'checked' : ''} onchange="cfgToggleItem('/config/kitchens','${r.id}',this.checked)"><span class="cfg-toggle-slider"></span></label>
+        <button class="btn btn-sm" style="margin-left:8px" onclick="cfgEditKitchen('${r.id}','${r.name}','${r.color}')">Edit</button>
+        <button class="btn btn-sm btn-danger" style="margin-left:4px" onclick="cfgDeleteItem('/config/kitchens','${r.id}',cfgLoadKitchens)">✕</button>
+      </div>`).join('') || '<p style="color:var(--muted);font-size:13px">No kitchens yet.</p>'
+  } catch (e) { showToast(e.message, 'error') }
+}
+
+function cfgAddKitchen () {
+  const name = prompt('Kitchen name (e.g. Main Kitchen, Bar, Grill):')
+  if (!name) return
+  const color = prompt('Color (hex, e.g. #6366f1):') || '#6366f1'
+  apiFetch('POST', '/config/kitchens', { name, color })
+    .then(() => { showToast('Kitchen added', 'success'); cfgLoadKitchens() })
+    .catch(e => showToast(e.message, 'error'))
+}
+
+function cfgEditKitchen (id, name, color) {
+  const newName  = prompt('Kitchen name:', name)
+  if (newName === null) return
+  const newColor = prompt('Color (hex):', color) || color
+  apiFetch('PATCH', '/config/kitchens/' + id, { name: newName, color: newColor })
+    .then(() => { showToast('Saved', 'success'); cfgLoadKitchens() })
+    .catch(e => showToast(e.message, 'error'))
+}
+
+// ─── DESIGNATIONS ─────────────────────────────────────────────────────────────
+const PERM_KEYS = Object.keys(PERM_LABELS)
+
+async function cfgLoadDesignations () {
+  try {
+    const { rows } = await apiFetch('GET', '/config/designations')
+    const levels = { 1: 'Basic', 2: 'Supervisor', 3: 'Manager', 4: 'Admin' }
+    document.getElementById('cfg-des-list').innerHTML = rows.map(r => {
+      const perms = r.permissions || {}
+      const activePerms = PERM_KEYS.filter(k => perms[k]).map(k => PERM_LABELS[k])
+      return `
+      <div class="cfg-card" style="margin-bottom:12px">
+        <div class="cfg-card-hdr">
+          <div>
+            <div class="cfg-card-title">${r.name}</div>
+            <div class="cfg-card-sub">Level ${r.access_level} — ${levels[r.access_level]||'Custom'}</div>
+          </div>
+          <div style="display:flex;gap:8px">
+            <button class="btn btn-sm" onclick="cfgEditDesignation('${r.id}','${r.name}',${r.access_level},${JSON.stringify(r.permissions||{}).replace(/"/g,'&quot;')})">Edit Permissions</button>
+            <button class="btn btn-sm btn-danger" onclick="cfgDeleteItem('/config/designations','${r.id}',cfgLoadDesignations)">Delete</button>
+          </div>
+        </div>
+        <div class="cfg-card-body">
+          <div style="display:flex;flex-wrap:wrap;gap:6px">
+            ${activePerms.length ? activePerms.map(p => `<span class="cfg-badge cfg-badge-green">${p}</span>`).join('') : '<span style="font-size:12px;color:var(--muted)">No special permissions</span>'}
+          </div>
+        </div>
+      </div>`
+    }).join('') || '<div class="empty-state"><p>No designations. Click + Add Designation.</p></div>'
+  } catch (e) { showToast(e.message, 'error') }
+}
+
+function cfgAddDesignation () {
+  const name = prompt('Designation name (e.g. Cashier, Supervisor):')
+  if (!name) return
+  const level = prompt('Access level (1=Basic, 2=Supervisor, 3=Manager, 4=Admin):') || '1'
+  apiFetch('POST', '/config/designations', { name, access_level: parseInt(level), permissions: {} })
+    .then(() => { showToast('Added', 'success'); cfgLoadDesignations() })
+    .catch(e => showToast(e.message, 'error'))
+}
+
+function cfgEditDesignation (id, name, level, permsJson) {
+  let perms = {}
+  try { perms = typeof permsJson === 'string' ? JSON.parse(permsJson) : permsJson } catch {}
+  // Build permission editor modal via prompt (simple approach)
+  const lines = PERM_KEYS.map(k => `${perms[k] ? '[x]' : '[ ]'} ${PERM_LABELS[k]} (${k})`).join('\n')
+  const input = prompt(`Permissions for "${name}"\nType comma-separated keys to ENABLE (clear to disable all):\n\nAvailable:\n${lines}\n\nCurrently enabled: ${PERM_KEYS.filter(k=>perms[k]).join(', ')||'none'}`)
+  if (input === null) return
+  const newPerms = {}
+  input.split(',').map(s => s.trim()).filter(Boolean).forEach(k => { if (PERM_LABELS[k]) newPerms[k] = true })
+  apiFetch('PATCH', '/config/designations/' + id, { permissions: newPerms })
+    .then(() => { showToast('Permissions saved', 'success'); cfgLoadDesignations() })
+    .catch(e => showToast(e.message, 'error'))
+}
+
+// ─── TAX GROUPS ──────────────────────────────────────────────────────────────
+async function cfgLoadTax () {
+  try {
+    const { rows } = await apiFetch('GET', '/config/tax-groups')
+    document.getElementById('cfg-tax-list').innerHTML = rows.map(r => `
+      <div class="cfg-list-item">
+        <div style="flex:1">
+          <div class="cfg-list-item-name">${r.name} <span style="font-weight:400;color:var(--muted)">${r.rate}%</span></div>
+          ${r.is_default ? '<span class="cfg-badge cfg-badge-green">Default</span>' : ''}
+        </div>
+        <button class="btn btn-sm" onclick="cfgEditTax('${r.id}','${r.name}',${r.rate},${r.is_default})">Edit</button>
+        <button class="btn btn-sm btn-danger" style="margin-left:6px" onclick="cfgDeleteItem('/config/tax-groups','${r.id}',cfgLoadTax)">✕</button>
+      </div>`).join('') || '<p style="color:var(--muted);font-size:13px">No tax groups yet.</p>'
+  } catch (e) { showToast(e.message, 'error') }
+}
+
+function cfgAddTax () {
+  const name = prompt('Tax group name (e.g. SST 6%, Zero Rated):')
+  if (!name) return
+  const rate = prompt('Tax rate %:') || '0'
+  const isDef = confirm('Set as default tax group?')
+  apiFetch('POST', '/config/tax-groups', { name, rate: parseFloat(rate), is_default: isDef })
+    .then(() => { showToast('Tax group added', 'success'); cfgLoadTax() })
+    .catch(e => showToast(e.message, 'error'))
+}
+
+function cfgEditTax (id, name, rate, isDef) {
+  const newName = prompt('Tax group name:', name)
+  if (newName === null) return
+  const newRate = prompt('Tax rate %:', rate)
+  if (newRate === null) return
+  const newDef  = confirm('Set as default?')
+  apiFetch('PATCH', '/config/tax-groups/' + id, { name: newName, rate: parseFloat(newRate), is_default: newDef })
+    .then(() => { showToast('Saved', 'success'); cfgLoadTax() })
+    .catch(e => showToast(e.message, 'error'))
+}
+
+// Load config when view opens
+const _cfgOrigShowView = null // placeholder to hook into showView
 
 // Wire showView for licensing
 const _origShowView = showView

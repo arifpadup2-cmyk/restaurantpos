@@ -27,6 +27,7 @@ const downloadsRouter  = require('./routes/downloads')
 const setupRouter      = require('./routes/setup')
 const signupRouter     = require('./routes/signup')
 const adminAuthRouter  = require('./routes/admin-auth')
+const configRouter     = require('./routes/config')
 
 const PORT     = parseInt(process.env.PORT || '3001', 10)
 const API_KEY  = process.env.API_KEY || ''
@@ -320,6 +321,7 @@ async function start () {
   app.use('/setup',          setupRouter(sql))
   app.use('/api',            signupRouter(sql))
   app.use('/admin-auth',     adminAuthRouter(sql))
+  app.use('/config',         configRouter(sql))
 
   // Onboarding SPA route — serve onboarding.html for /onboarding/:id
   app.get('/onboarding/:id', (_req, res) => {
