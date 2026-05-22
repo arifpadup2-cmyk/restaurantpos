@@ -1601,6 +1601,18 @@ async function apiFetch (method, endpoint, body) {
   if (body !== undefined) opts.body = JSON.stringify(body)
   const res = await fetch(API_BASE + endpoint, opts)
   const data = await res.json().catch(() => ({}))
+  if (res.status === 401) {
+    localStorage.removeItem('bo_token')
+    localStorage.removeItem('bo_trial_ends')
+    localStorage.removeItem('bo_needs_onboarding')
+    token = ''; currentUser = null
+    showToast(data.error || 'Session expired. Please sign in again.', 'error', 5000)
+    setTimeout(() => {
+      document.getElementById('auth-screen').style.display = 'flex'
+      document.getElementById('app').style.display = 'none'
+    }, 1200)
+    throw new Error(data.error || 'Session expired')
+  }
   if (!res.ok) throw new Error(data.error || res.statusText)
   return data
 }

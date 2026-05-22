@@ -300,6 +300,9 @@ async function start () {
   await runMigrations()
   await seedAdminUser()
 
+  // Wire SQL into JWT middleware so deleted users are rejected immediately
+  require('./middleware/jwtAuth').initJwtAuth(sql)
+
   app.use('/auth',      authRouter(sql))
   app.use('/menu',      menuRouter(sql))
   app.use('/orders',    ordersRouter(sql))
