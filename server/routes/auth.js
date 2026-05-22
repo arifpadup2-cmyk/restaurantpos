@@ -160,8 +160,8 @@ module.exports = function authRouter (sql) {
         INSERT INTO bo_users (id, restaurant_id, username, password, email, role)
         VALUES (${uid}, ${id}, ${username}, ${hash}, ${email.toLowerCase()}, 'admin')`
 
-      const token = sign({ id: uid, username, role: 'admin' })
-      res.json({ ok: true, token, user: { id: uid, username, role: 'admin' }, trialEndsAt: trialEnds })
+      const token = sign({ id: uid, username, role: 'admin', restaurant_id: id })
+      res.json({ ok: true, token, user: { id: uid, username, role: 'admin', restaurant_id: id }, trialEndsAt: trialEnds })
     } catch (e) {
       res.status(500).json({ error: e.message })
     }
@@ -224,8 +224,8 @@ module.exports = function authRouter (sql) {
         INSERT INTO bo_users (id, restaurant_id, username, password, email, google_id, role)
         VALUES (${uid}, ${id}, ${username}, '', ${email}, ${googleId}, 'admin')`
 
-      const token = sign({ id: uid, username, role: 'admin' })
-      res.json({ ok: true, token, user: { id: uid, username, role: 'admin' }, trialEndsAt: trialEnds })
+      const token = sign({ id: uid, username, role: 'admin', restaurant_id: id })
+      res.json({ ok: true, token, user: { id: uid, username, role: 'admin', restaurant_id: id }, trialEndsAt: trialEnds })
     } catch (e) {
       res.status(500).json({ error: e.message })
     }
