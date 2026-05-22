@@ -12,6 +12,9 @@ module.exports = function settingsRouter (sql) {
     'branch_name', 'service_charge_rate', 'service_charge_label',
     'mgr_discount_threshold', 'require_void_reason', 'cash_variance_alert_pct',
     'kot_stay_seconds',
+    'owner_phone', 'business_type', 'country',
+    'address', 'opening_time', 'closing_time',
+    'table_count', 'outlet_phone', 'outlet_email',
   ]
 
   // GET /settings — returns all public settings

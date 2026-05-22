@@ -275,32 +275,73 @@ input:checked+.toggle-slider:before{transform:translateX(17px)}
 .settings-danger-group{border:1.5px solid var(--danger-border);border-radius:10px;padding:14px;background:var(--danger-bg);margin-bottom:12px}
 .empty-state{text-align:center;padding:40px 20px;color:var(--muted)}
 .empty-state .es-icon{width:48px;height:48px;margin:0 auto 10px;background:#f1f5f9;border-radius:12px;display:flex;align-items:center;justify-content:center;opacity:.7}
-/* Onboarding wizard */
-#onboard-overlay{position:fixed;inset:0;background:rgba(15,23,42,.55);z-index:9000;display:none;align-items:center;justify-content:center;padding:16px}
+/* Setup screen (full-page restaurant registration) */
+#onboard-overlay{position:fixed;inset:0;z-index:9000;display:none;background:#0f172a}
 #onboard-overlay.open{display:flex}
-.ob-modal{background:#fff;border-radius:20px;width:100%;max-width:480px;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,.25)}
-.ob-header{background:linear-gradient(135deg,#1e1b4b,#4338ca);padding:28px 28px 24px;color:#fff;text-align:center}
-.ob-step-dots{display:flex;justify-content:center;gap:8px;margin-bottom:16px}
-.ob-dot{width:8px;height:8px;border-radius:50%;background:rgba(255,255,255,.3);transition:.2s}
-.ob-dot.active{background:#fff;width:24px;border-radius:4px}
-.ob-header h2{font-size:22px;font-weight:700;margin:0 0 6px}
-.ob-header p{font-size:14px;opacity:.8;margin:0}
-.ob-body{padding:24px 28px}
-.ob-field{margin-bottom:16px}
-.ob-field label{display:block;font-size:12px;font-weight:600;color:#374151;margin-bottom:6px}
-.ob-field input,.ob-field select{width:100%;padding:10px 12px;border:1.5px solid #e5e7eb;border-radius:10px;font-size:14px;color:#1e1b4b;outline:none;transition:.15s;box-sizing:border-box}
-.ob-field input:focus,.ob-field select:focus{border-color:#6366f1;box-shadow:0 0 0 3px rgba(99,102,241,.1)}
-.ob-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-.ob-footer{display:flex;gap:10px;padding:0 28px 24px}
-.ob-btn-back{flex:0 0 auto;padding:10px 18px;border:1.5px solid #e5e7eb;border-radius:10px;background:#fff;font-size:14px;font-weight:600;color:#374151;cursor:pointer;transition:.15s}
-.ob-btn-back:hover{border-color:#6366f1;color:#4338ca}
-.ob-btn-next{flex:1;padding:10px 18px;border:none;border-radius:10px;background:linear-gradient(135deg,#4338ca,#6366f1);color:#fff;font-size:14px;font-weight:700;cursor:pointer;transition:.15s;display:flex;align-items:center;justify-content:center;gap:8px}
-.ob-btn-next:hover{opacity:.9}
-.ob-success-icon{width:64px;height:64px;background:#f0fdf4;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 16px;font-size:28px}
-.ob-checklist{list-style:none;padding:0;margin:16px 0}
-.ob-checklist li{padding:8px 0;border-bottom:1px solid #f1f5f9;font-size:13px;color:#374151;display:flex;align-items:center;gap:8px}
-.ob-checklist li:last-child{border:none}
-.ob-checklist li::before{content:'✓';width:20px;height:20px;background:#dcfce7;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:#16a34a;flex-shrink:0}
+.ss-layout{display:flex;min-height:100vh;width:100%}
+/* Left sidebar */
+.ss-sidebar{width:260px;background:#1a2744;padding:28px 20px;display:flex;flex-direction:column;gap:0;flex-shrink:0;border-right:1px solid #1e3a5f}
+.ss-sidebar-logo{font-size:17px;font-weight:800;color:#f1f5f9;margin-bottom:2px;letter-spacing:-.3px}
+.ss-sidebar-sub{font-size:11px;color:#64748b;margin-bottom:24px}
+.ss-progress-title{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:#475569;margin-bottom:12px}
+.ss-step{display:flex;align-items:flex-start;gap:12px;padding:10px 10px;border-radius:8px;cursor:default}
+.ss-step.active{background:rgba(59,130,246,.12)}
+.ss-step.done{opacity:.7}
+.ss-step-num{width:30px;height:30px;border-radius:50%;background:#1e3a5f;color:#64748b;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0;transition:.2s}
+.ss-step.active .ss-step-num{background:#3b82f6;color:#fff}
+.ss-step.done .ss-step-num{background:#10b981;color:#fff}
+.ss-step-label{font-size:13px;font-weight:600;color:#64748b;line-height:1.2;margin-top:2px}
+.ss-step.active .ss-step-label{color:#e2e8f0}
+.ss-step.done .ss-step-label{color:#10b981}
+.ss-step-desc{font-size:11px;color:#475569;margin-top:2px}
+.ss-step-connector{width:1px;height:18px;background:#1e3a5f;margin-left:24px}
+.ss-sidebar-note{margin-top:auto;background:#0f172a;border-radius:10px;padding:14px;border:1px solid #1e3a5f}
+.ss-sidebar-note-title{font-size:12px;font-weight:700;color:#f59e0b;margin-bottom:4px}
+.ss-sidebar-note-body{font-size:11px;color:#64748b;line-height:1.5}
+/* Main scroll area */
+.ss-main{flex:1;overflow-y:auto;padding:32px 36px}
+.ss-page-title{font-size:22px;font-weight:800;color:#f1f5f9;margin:0 0 4px}
+.ss-page-sub{font-size:13px;color:#64748b;margin:0 0 24px}
+/* Section cards */
+.ss-card{background:#162032;border:1px solid #1e3a5f;border-radius:14px;margin-bottom:20px;overflow:hidden}
+.ss-card-header{display:flex;align-items:center;gap:12px;padding:14px 20px;background:#0f172a;border-bottom:1px solid #1e3a5f}
+.ss-card-num{width:28px;height:28px;border-radius:50%;background:#3b82f6;color:#fff;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;flex-shrink:0}
+.ss-card-title{font-size:14px;font-weight:700;color:#e2e8f0}
+.ss-card-body{padding:20px}
+.ss-row{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px}
+.ss-row:last-child{margin-bottom:0}
+.ss-field{display:flex;flex-direction:column;gap:6px}
+.ss-field label{font-size:12px;font-weight:600;color:#94a3b8;letter-spacing:.2px}
+.ss-field input,.ss-field select,.ss-field textarea{padding:10px 12px;background:#0d1a2d;border:1.5px solid #1e3a5f;border-radius:8px;color:#e2e8f0;font-size:13px;outline:none;transition:.15s;box-sizing:border-box;width:100%}
+.ss-field input:focus,.ss-field select:focus,.ss-field textarea:focus{border-color:#3b82f6;background:#0f2040}
+.ss-field input[readonly]{opacity:.6;cursor:default}
+.ss-field select option{background:#162032}
+.ss-field textarea{resize:vertical;min-height:64px;font-family:inherit}
+.ss-phone-row{display:flex;gap:8px}
+.ss-phone-row select{width:110px;flex-shrink:0}
+.ss-phone-row input{flex:1}
+.ss-logo-drop{border:2px dashed #1e3a5f;border-radius:8px;padding:18px;text-align:center;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:6px;background:#0d1a2d;transition:.2s;min-height:80px;justify-content:center}
+.ss-logo-drop:hover{border-color:#3b82f6;background:#0f2040}
+.ss-logo-drop span{font-size:12px;color:#64748b}
+/* Submit bar */
+.ss-submit-bar{display:flex;justify-content:flex-end;align-items:center;gap:12px;padding-top:8px}
+.ss-submit-btn{padding:13px 28px;background:linear-gradient(135deg,#1d4ed8,#3b82f6);border:none;border-radius:10px;color:#fff;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:8px;transition:.2s}
+.ss-submit-btn:hover{opacity:.9}
+.ss-submit-btn:disabled{opacity:.5;cursor:not-allowed}
+/* Right completion panel */
+.ss-panel{width:240px;background:#1a2744;padding:24px 18px;flex-shrink:0;border-left:1px solid #1e3a5f;overflow-y:auto}
+.ss-panel-title{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:#475569;margin-bottom:6px}
+.ss-panel-sub{font-size:11px;color:#475569;margin-bottom:20px;line-height:1.5}
+.ss-checklist{display:flex;flex-direction:column;gap:14px}
+.ss-check-item{display:flex;align-items:flex-start;gap:10px}
+.ss-check-num{width:26px;height:26px;border-radius:50%;background:#1e3a5f;color:#64748b;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0;transition:.3s}
+.ss-check-num.done{background:#10b981;color:#fff}
+.ss-check-num.active{background:#3b82f6;color:#fff}
+.ss-check-label{font-size:12px;font-weight:600;color:#94a3b8;margin-top:2px}
+.ss-check-desc{font-size:11px;color:#475569;margin-top:1px}
+/* Responsive */
+@media(max-width:900px){.ss-sidebar{display:none}.ss-panel{display:none}.ss-main{padding:20px 16px}}
+@media(max-width:640px){.ss-row{grid-template-columns:1fr}}
 .empty-state h4{font-size:14px;font-weight:700;color:var(--text);margin-bottom:3px}
 .empty-state p{font-size:13px}
 .skeleton{background:linear-gradient(90deg,#f1f5f9 25%,#e2e8f0 50%,#f1f5f9 75%);background-size:200% 100%;animation:skeleton-shimmer 1.4s ease infinite;border-radius:6px}
@@ -1794,70 +1835,149 @@ function updateTrialBanner () {
   daysEl.textContent = days === 1 ? '1 day remaining' : days + ' days remaining'
 }
 
-// ─── ONBOARDING WIZARD ───────────────────────────────────────────
+// ─── SETUP SCREEN ─────────────────────────────────────────────────
 function showOnboarding () {
-  // Pre-fill restaurant name from settings
-  const nameEl = document.getElementById('ob-name')
-  if (nameEl && boSettings.restaurant_name && boSettings.restaurant_name !== 'My Restaurant')
-    nameEl.value = boSettings.restaurant_name
   const overlay = document.getElementById('onboard-overlay')
   if (overlay) overlay.classList.add('open')
-  obNext(1)
+  ssUpdateProgress()
+  ssWatchInputs()
 }
 
-function obStep1Next () {
-  const name  = (document.getElementById('ob-name').value || '').trim()
-  const owner = (document.getElementById('ob-owner').value || '').trim()
-  if (!name)  { showToast('Restaurant name is required', 'error'); return }
-  if (!owner) { showToast('Your name is required', 'error'); return }
-  obNext(2)
-}
-
-function obNext (step) {
-  for (let i = 1; i <= 3; i++) {
-    const el = document.getElementById('ob-step-' + i)
-    if (el) el.style.display = i === step ? '' : 'none'
+function ssPreviewLogo (input) {
+  if (!input.files || !input.files[0]) return
+  const reader = new FileReader()
+  reader.onload = e => {
+    const drop = document.getElementById('ss-logo-drop')
+    if (drop) drop.innerHTML = `<img src="${e.target.result}" style="max-height:70px;border-radius:8px;object-fit:contain">`
   }
+  reader.readAsDataURL(input.files[0])
 }
 
-async function obSave () {
-  const name     = (document.getElementById('ob-name').value || '').trim()
-  const owner    = (document.getElementById('ob-owner').value || '').trim()
-  const branch   = (document.getElementById('ob-branch').value || '').trim()
-  const currency = document.getElementById('ob-currency').value
-  const tax      = parseFloat(document.getElementById('ob-tax').value) || 0
-  const sc       = parseFloat(document.getElementById('ob-sc').value) || 0
-  const footer   = (document.getElementById('ob-footer').value || '').trim()
+function ssUpdateProgress () {
+  const brand  = (document.getElementById('ss-brand-name')?.value || '').trim()
+  const first  = (document.getElementById('ss-first-name')?.value || '').trim()
+  const last   = (document.getElementById('ss-last-name')?.value || '').trim()
+  const phone  = (document.getElementById('ss-phone')?.value || '').trim()
+  const outlet = (document.getElementById('ss-outlet-name')?.value || '').trim()
 
-  if (!name) { showToast('Restaurant name is required', 'error'); return }
-  if (!owner) { showToast('Your name is required', 'error'); return }
+  const s1done = !!brand
+  const s2done = !!(first && last && phone)
+  const s3done = !!outlet
+
+  const setStep = (id, done, active) => {
+    const el = document.getElementById(id)
+    if (!el) return
+    el.className = 'ss-step' + (done ? ' done' : active ? ' active' : '')
+    const num = el.querySelector('.ss-step-num')
+    if (num) num.textContent = done ? '✓' : id.slice(-1)
+  }
+  setStep('ss-step1', s1done, !s1done)
+  setStep('ss-step2', s2done, s1done && !s2done)
+  setStep('ss-step3', s3done, s1done && s2done && !s3done)
+  setStep('ss-step4', false, s1done && s2done && s3done)
+
+  const setCheck = (id, done, active) => {
+    const el = document.getElementById(id)
+    if (!el) return
+    el.className = 'ss-check-num' + (done ? ' done' : active ? ' active' : '')
+    if (done) el.textContent = '✓'
+  }
+  setCheck('ssc-1', s1done, !s1done)
+  setCheck('ssc-2', s2done, s1done && !s2done)
+  setCheck('ssc-3', s3done, s1done && s2done && !s3done)
+  setCheck('ssc-4', false, s3done)
+  setCheck('ssc-5', false, false)
+}
+
+function ssWatchInputs () {
+  const ids = ['ss-brand-name','ss-first-name','ss-last-name','ss-phone','ss-outlet-name']
+  ids.forEach(id => {
+    const el = document.getElementById(id)
+    if (el) el.addEventListener('input', ssUpdateProgress)
+  })
+}
+
+async function ssSubmit () {
+  const brandName   = (document.getElementById('ss-brand-name')?.value || '').trim()
+  const firstName   = (document.getElementById('ss-first-name')?.value || '').trim()
+  const lastName    = (document.getElementById('ss-last-name')?.value || '').trim()
+  const phoneCode   = document.getElementById('ss-phone-code')?.value || '+60'
+  const phoneNum    = (document.getElementById('ss-phone')?.value || '').trim()
+  const outletName  = (document.getElementById('ss-outlet-name')?.value || '').trim()
+  const currency    = document.getElementById('ss-currency')?.value || 'MYR'
+  const address     = (document.getElementById('ss-address')?.value || '').trim()
+  const openTime    = document.getElementById('ss-open-time')?.value || '09:00'
+  const closeTime   = document.getElementById('ss-close-time')?.value || '22:00'
+  const tableCount  = parseInt(document.getElementById('ss-tables')?.value) || 0
+  const tax         = parseFloat(document.getElementById('ss-tax')?.value) || 0
+  const sc          = parseFloat(document.getElementById('ss-sc')?.value) || 0
+  const footer      = (document.getElementById('ss-footer')?.value || '').trim()
+  const bizType     = document.getElementById('ss-biz-type')?.value || ''
+  const country     = document.getElementById('ss-country')?.value || 'MY'
+  const outletPhone = (document.getElementById('ss-outlet-phone')?.value || '').trim()
+  const outletEmail = (document.getElementById('ss-outlet-email')?.value || '').trim()
+
+  if (!brandName)  { showToast('Brand name is required', 'error'); return }
+  if (!firstName)  { showToast('First name is required', 'error'); return }
+  if (!lastName)   { showToast('Last name is required', 'error'); return }
+  if (!phoneNum)   { showToast('Mobile number is required', 'error'); return }
+  if (!outletName) { showToast('Outlet name is required', 'error'); return }
+
+  const btn = document.getElementById('ss-submit-btn')
+  if (btn) { btn.disabled = true; btn.textContent = 'Setting up your restaurant...' }
+
+  // Animate checklist completion
+  const animCheck = (id, delay) => setTimeout(() => {
+    const el = document.getElementById(id)
+    if (el) { el.className = 'ss-check-num done'; el.textContent = '✓' }
+  }, delay)
 
   try {
-    const saveData = {
-      restaurant_name:      name,
-      owner_name:           owner,
-      branch_name:          branch,
-      currency:             currency,
-      tax_rate:             tax,
-      service_charge_rate:  sc,
-      receipt_footer:       footer,
-      setup_done:           true,
-    }
-    await apiFetch('PUT', '/settings', saveData)
-    // Update local state
-    boSettings.restaurant_name     = saveData.restaurant_name
-    boSettings.branch_name         = saveData.branch_name
-    boSettings.currency            = saveData.currency
-    boSettings.tax_rate            = saveData.tax_rate
-    boSettings.service_charge_rate = saveData.service_charge_rate
-    boSettings.receipt_footer      = saveData.receipt_footer
-    // Update header
-    document.getElementById('hdr-name').textContent = saveData.restaurant_name
-    const sbBranch = document.getElementById('sb-branch')
-    if (sbBranch) sbBranch.textContent = saveData.branch_name || 'Back Office'
-  } catch (_e) { /* settings save failure is non-fatal */ }
+    await apiFetch('PUT', '/settings', {
+      restaurant_name:     brandName,
+      owner_name:          firstName + ' ' + lastName,
+      owner_phone:         phoneCode + phoneNum,
+      branch_name:         outletName,
+      currency,
+      tax_rate:            tax,
+      service_charge_rate: sc,
+      receipt_footer:      footer,
+      address,
+      opening_time:        openTime,
+      closing_time:        closeTime,
+      table_count:         String(tableCount),
+      outlet_phone:        outletPhone,
+      outlet_email:        outletEmail,
+      business_type:       bizType,
+      country,
+      setup_done:          true,
+    })
 
-  obNext(3)
+    animCheck('ssc-1', 0)
+    animCheck('ssc-2', 400)
+    animCheck('ssc-3', 800)
+    animCheck('ssc-4', 1200)
+    animCheck('ssc-5', 1600)
+
+    boSettings.setup_done           = true
+    boSettings.restaurant_name      = brandName
+    boSettings.branch_name          = outletName
+    boSettings.currency             = currency
+    boSettings.tax_rate             = tax
+    boSettings.service_charge_rate  = sc
+    boSettings.receipt_footer       = footer
+    document.getElementById('hdr-name').textContent = brandName
+    const sbBranch = document.getElementById('sb-branch')
+    if (sbBranch) sbBranch.textContent = outletName || 'Back Office'
+
+    setTimeout(() => obClose(), 2200)
+  } catch (e) {
+    showToast(e.message || 'Setup failed. Please try again.', 'error')
+    if (btn) {
+      btn.disabled = false
+      btn.innerHTML = 'Create Restaurant &amp; Continue <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>'
+    }
+  }
 }
 
 function obClose () {
@@ -1871,6 +1991,11 @@ function obClose () {
   loadStaff()
   showView('dashboard')
 }
+
+// Legacy stubs — kept for backward compatibility
+function obNext () {}
+function obSave () {}
+function obStep1Next () {}
 
 // ─── AUTH ────────────────────────────────────────────────────────
 function toggleBoPw () {
@@ -3722,129 +3847,244 @@ const _origShowView = showView
 
 <!-- ═══ ONBOARDING WIZARD ═══ -->
 <div id="onboard-overlay">
-  <div class="ob-modal">
+  <div class="ss-layout">
 
-    <!-- Step 1: Welcome -->
-    <div id="ob-step-1">
-      <div class="ob-header">
-        <div class="ob-step-dots">
-          <div class="ob-dot active"></div><div class="ob-dot"></div><div class="ob-dot"></div>
-        </div>
-        <h2>Welcome aboard! 🎉</h2>
-        <p>Let's set up your restaurant in 2 minutes</p>
+    <!-- Left Sidebar: Progress -->
+    <div class="ss-sidebar">
+      <div class="ss-sidebar-logo">Restaurant POS</div>
+      <div class="ss-sidebar-sub">Back Office Setup</div>
+      <div class="ss-progress-title">Setup Progress</div>
+      <div id="ss-step1" class="ss-step active">
+        <div class="ss-step-num">1</div>
+        <div><div class="ss-step-label">Brand Details</div><div class="ss-step-desc">Tell us about your restaurant</div></div>
       </div>
-      <div class="ob-body">
-        <div class="ob-field">
-          <label>Restaurant / Brand Name <span style="color:#ef4444">*</span></label>
-          <input id="ob-name" type="text" placeholder="e.g. Mama's Kitchen" autocomplete="organization">
+      <div class="ss-step-connector"></div>
+      <div id="ss-step2" class="ss-step">
+        <div class="ss-step-num">2</div>
+        <div><div class="ss-step-label">Owner Details</div><div class="ss-step-desc">Your personal information</div></div>
+      </div>
+      <div class="ss-step-connector"></div>
+      <div id="ss-step3" class="ss-step">
+        <div class="ss-step-num">3</div>
+        <div><div class="ss-step-label">Outlet Details</div><div class="ss-step-desc">Location &amp; operations</div></div>
+      </div>
+      <div class="ss-step-connector"></div>
+      <div id="ss-step4" class="ss-step">
+        <div class="ss-step-num">✓</div>
+        <div><div class="ss-step-label">Complete Setup</div><div class="ss-step-desc">Review and finish</div></div>
+      </div>
+      <div class="ss-sidebar-note" style="margin-top:24px">
+        <div class="ss-sidebar-note-title">7 Day Free Trial</div>
+        <div class="ss-sidebar-note-body">No credit card needed. Your data is 100% secure and can be exported anytime.</div>
+      </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="ss-main">
+      <p class="ss-page-title">New Restaurant Setup</p>
+      <p class="ss-page-sub">Complete the information below to setup your restaurant and get started</p>
+
+      <!-- Card 1: Brand Details -->
+      <div class="ss-card">
+        <div class="ss-card-header">
+          <div class="ss-card-num">1</div>
+          <div class="ss-card-title">Brand Details</div>
         </div>
-        <div class="ob-field">
-          <label>Your Full Name <span style="color:#ef4444">*</span></label>
-          <input id="ob-owner" type="text" placeholder="e.g. Ahmad bin Ali" autocomplete="name">
-        </div>
-        <div class="ob-field">
-          <label>Outlet / Branch Name <span style="font-weight:400;color:#9ca3af">(optional)</span></label>
-          <input id="ob-branch" type="text" placeholder="e.g. Main Branch, Outlet 1">
-        </div>
-        <div class="ob-field">
-          <label>Business Type</label>
-          <select id="ob-type">
-            <option value="">-- Select --</option>
-            <option>Restaurant</option>
-            <option>Cafe</option>
-            <option>Fast Food</option>
-            <option>Food Court</option>
-            <option>Bakery</option>
-            <option>Bar & Grill</option>
-            <option>Cloud Kitchen</option>
-            <option>Other</option>
-          </select>
+        <div class="ss-card-body">
+          <div class="ss-row">
+            <div class="ss-field">
+              <label>Brand Name <span style="color:#ef4444">*</span></label>
+              <input id="ss-brand-name" type="text" placeholder="e.g. Mama's Kitchen" autocomplete="organization">
+            </div>
+            <div class="ss-field">
+              <label>Restaurant Logo <span style="color:#64748b;font-weight:400">(optional)</span></label>
+              <div class="ss-logo-drop" id="ss-logo-drop" onclick="document.getElementById('ss-logo-input').click()">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#475569" stroke-width="1.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                <span>Click to upload logo</span>
+                <span style="font-size:11px;color:#334155">PNG, JPG up to 2MB</span>
+              </div>
+              <input id="ss-logo-input" type="file" accept="image/*" style="display:none" onchange="ssPreviewLogo(this)">
+            </div>
+          </div>
+          <div class="ss-row">
+            <div class="ss-field">
+              <label>Business Type</label>
+              <select id="ss-biz-type">
+                <option value="">-- Select --</option>
+                <option>Restaurant</option><option>Cafe</option><option>Fast Food</option>
+                <option>Food Court</option><option>Bakery</option><option>Bar &amp; Grill</option>
+                <option>Cloud Kitchen</option><option>Other</option>
+              </select>
+            </div>
+            <div class="ss-field">
+              <label>Country</label>
+              <select id="ss-country">
+                <option value="MY">Malaysia</option><option value="SG">Singapore</option>
+                <option value="ID">Indonesia</option><option value="TH">Thailand</option>
+                <option value="PH">Philippines</option><option value="AE">UAE</option>
+                <option value="SA">Saudi Arabia</option><option value="PK">Pakistan</option>
+                <option value="IN">India</option><option value="GB">United Kingdom</option>
+                <option value="US">United States</option><option value="OTHER">Other</option>
+              </select>
+            </div>
+          </div>
         </div>
       </div>
-      <div class="ob-footer">
-        <button class="ob-btn-next" onclick="obStep1Next()">
-          Continue
+
+      <!-- Card 2: Owner Details -->
+      <div class="ss-card">
+        <div class="ss-card-header">
+          <div class="ss-card-num">2</div>
+          <div class="ss-card-title">Owner Details</div>
+        </div>
+        <div class="ss-card-body">
+          <div class="ss-row">
+            <div class="ss-field">
+              <label>First Name <span style="color:#ef4444">*</span></label>
+              <input id="ss-first-name" type="text" placeholder="Ahmad" autocomplete="given-name">
+            </div>
+            <div class="ss-field">
+              <label>Last Name <span style="color:#ef4444">*</span></label>
+              <input id="ss-last-name" type="text" placeholder="bin Ali" autocomplete="family-name">
+            </div>
+          </div>
+          <div class="ss-row">
+            <div class="ss-field">
+              <label>Owner Mobile Number <span style="color:#ef4444">*</span></label>
+              <div class="ss-phone-row">
+                <select id="ss-phone-code">
+                  <option value="+60">+60 MY</option><option value="+65">+65 SG</option>
+                  <option value="+62">+62 ID</option><option value="+66">+66 TH</option>
+                  <option value="+63">+63 PH</option><option value="+971">+971 AE</option>
+                  <option value="+966">+966 SA</option><option value="+92">+92 PK</option>
+                  <option value="+91">+91 IN</option><option value="+44">+44 GB</option>
+                  <option value="+1">+1 US</option>
+                </select>
+                <input id="ss-phone" type="tel" placeholder="11 2345 6789">
+              </div>
+            </div>
+            <div class="ss-field">
+              <label>Owner Email Address</label>
+              <input id="ss-owner-email" type="email" placeholder="owner@email.com" autocomplete="email">
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Card 3: Outlet Details -->
+      <div class="ss-card">
+        <div class="ss-card-header">
+          <div class="ss-card-num">3</div>
+          <div class="ss-card-title">Outlet Details</div>
+        </div>
+        <div class="ss-card-body">
+          <div class="ss-row">
+            <div class="ss-field">
+              <label>Outlet Name <span style="color:#ef4444">*</span></label>
+              <input id="ss-outlet-name" type="text" placeholder="e.g. Main Branch">
+            </div>
+            <div class="ss-field">
+              <label>Outlet Phone Number</label>
+              <input id="ss-outlet-phone" type="tel" placeholder="+60 3 1234 5678">
+            </div>
+          </div>
+          <div class="ss-row">
+            <div class="ss-field">
+              <label>Outlet Email Address</label>
+              <input id="ss-outlet-email" type="email" placeholder="outlet@restaurant.com">
+            </div>
+            <div class="ss-field">
+              <label>Currency <span style="color:#ef4444">*</span></label>
+              <select id="ss-currency">
+                <option value="MYR">MYR — Malaysian Ringgit</option>
+                <option value="SGD">SGD — Singapore Dollar</option>
+                <option value="IDR">IDR — Indonesian Rupiah</option>
+                <option value="THB">THB — Thai Baht</option>
+                <option value="PHP">PHP — Philippine Peso</option>
+                <option value="AED">AED — UAE Dirham</option>
+                <option value="SAR">SAR — Saudi Riyal</option>
+                <option value="PKR">PKR — Pakistani Rupee</option>
+                <option value="INR">INR — Indian Rupee</option>
+                <option value="GBP">GBP — British Pound</option>
+                <option value="USD">USD — US Dollar</option>
+                <option value="EUR">EUR — Euro</option>
+              </select>
+            </div>
+          </div>
+          <div class="ss-row" style="margin-bottom:0">
+            <div class="ss-field">
+              <label>Address</label>
+              <textarea id="ss-address" rows="2" placeholder="e.g. No. 12, Jalan ABC, 50480 Kuala Lumpur"></textarea>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:16px">
+              <div class="ss-field">
+                <label>Opening Time</label>
+                <input id="ss-open-time" type="time" value="09:00">
+              </div>
+              <div class="ss-field">
+                <label>Closing Time</label>
+                <input id="ss-close-time" type="time" value="22:00">
+              </div>
+            </div>
+          </div>
+          <div class="ss-row" style="margin-top:16px">
+            <div class="ss-field">
+              <label>Number of Tables</label>
+              <input id="ss-tables" type="number" min="0" max="500" placeholder="0" value="0">
+            </div>
+            <div class="ss-field">
+              <label>Tax Rate (%)</label>
+              <input id="ss-tax" type="number" min="0" max="30" step="0.5" placeholder="0" value="0">
+            </div>
+          </div>
+          <div class="ss-field" style="margin-top:4px">
+            <label>Service Charge (%) <span style="color:#475569;font-weight:400">optional</span></label>
+            <input id="ss-sc" type="number" min="0" max="20" step="0.5" placeholder="0" value="0">
+          </div>
+          <div class="ss-field" style="margin-top:16px">
+            <label>Receipt Footer <span style="color:#475569;font-weight:400">optional</span></label>
+            <input id="ss-footer" type="text" placeholder="e.g. Thank you for dining with us!">
+          </div>
+        </div>
+      </div>
+
+      <!-- Submit -->
+      <div class="ss-submit-bar">
+        <button id="ss-submit-btn" class="ss-submit-btn" onclick="ssSubmit()">
+          Create Restaurant &amp; Continue
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
         </button>
       </div>
     </div>
 
-    <!-- Step 2: Settings -->
-    <div id="ob-step-2" style="display:none">
-      <div class="ob-header">
-        <div class="ob-step-dots">
-          <div class="ob-dot"></div><div class="ob-dot active"></div><div class="ob-dot"></div>
+    <!-- Right Panel: Setup Completion -->
+    <div class="ss-panel">
+      <div class="ss-panel-title">Setup Completion</div>
+      <div class="ss-panel-sub">Fill in all required fields below and click Create Restaurant to get started</div>
+      <div class="ss-checklist">
+        <div class="ss-check-item">
+          <div class="ss-check-num active" id="ssc-1">1</div>
+          <div><div class="ss-check-label">Create Restaurant</div><div class="ss-check-desc">Brand &amp; basic info</div></div>
         </div>
-        <h2>Configure your POS</h2>
-        <p>These can be changed anytime in Settings</p>
-      </div>
-      <div class="ob-body">
-        <div class="ob-row">
-          <div class="ob-field">
-            <label>Currency</label>
-            <select id="ob-currency">
-              <option value="MYR">MYR — Malaysian Ringgit</option>
-              <option value="USD">USD — US Dollar</option>
-              <option value="SGD">SGD — Singapore Dollar</option>
-              <option value="INR">INR — Indian Rupee</option>
-              <option value="AED">AED — UAE Dirham</option>
-              <option value="SAR">SAR — Saudi Riyal</option>
-              <option value="GBP">GBP — British Pound</option>
-              <option value="EUR">EUR — Euro</option>
-              <option value="IDR">IDR — Indonesian Rupiah</option>
-              <option value="THB">THB — Thai Baht</option>
-              <option value="PHP">PHP — Philippine Peso</option>
-              <option value="PKR">PKR — Pakistani Rupee</option>
-            </select>
-          </div>
-          <div class="ob-field">
-            <label>Tax Rate (%)</label>
-            <input id="ob-tax" type="number" min="0" max="30" step="0.5" placeholder="0" value="0">
-          </div>
+        <div class="ss-check-item">
+          <div class="ss-check-num" id="ssc-2">2</div>
+          <div><div class="ss-check-label">Owner Profile</div><div class="ss-check-desc">Contact details</div></div>
         </div>
-        <div class="ob-field">
-          <label>Service Charge (%) <span style="font-weight:400;color:#9ca3af">optional</span></label>
-          <input id="ob-sc" type="number" min="0" max="20" step="0.5" placeholder="0" value="0">
+        <div class="ss-check-item">
+          <div class="ss-check-num" id="ssc-3">3</div>
+          <div><div class="ss-check-label">Outlet Configuration</div><div class="ss-check-desc">Location &amp; hours</div></div>
         </div>
-        <div class="ob-field">
-          <label>Receipt Footer <span style="font-weight:400;color:#9ca3af">optional</span></label>
-          <input id="ob-footer" type="text" placeholder="e.g. Thank you for dining with us!">
+        <div class="ss-check-item">
+          <div class="ss-check-num" id="ssc-4">4</div>
+          <div><div class="ss-check-label">Initialize POS Access</div><div class="ss-check-desc">Setup your POS terminal</div></div>
+        </div>
+        <div class="ss-check-item">
+          <div class="ss-check-num" id="ssc-5">5</div>
+          <div><div class="ss-check-label">Open Back Office</div><div class="ss-check-desc">Manage your restaurant</div></div>
         </div>
       </div>
-      <div class="ob-footer">
-        <button class="ob-btn-back" onclick="obNext(1)">← Back</button>
-        <button class="ob-btn-next" onclick="obSave()">
-          Finish Setup
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
-        </button>
-      </div>
-    </div>
-
-    <!-- Step 3: Done -->
-    <div id="ob-step-3" style="display:none">
-      <div class="ob-header">
-        <div class="ob-step-dots">
-          <div class="ob-dot"></div><div class="ob-dot"></div><div class="ob-dot active"></div>
-        </div>
-        <h2>You're all set! 🚀</h2>
-        <p>Your back office is ready to use</p>
-      </div>
-      <div class="ob-body">
-        <div class="ob-success-icon">🎊</div>
-        <ul class="ob-checklist">
-          <li>Restaurant profile configured</li>
-          <li>Currency &amp; tax rate set</li>
-          <li id="ob-check-trial">7-day free trial started</li>
-        </ul>
-        <div style="background:#f0f9ff;border-radius:10px;padding:12px 14px;font-size:13px;color:#0369a1;margin-top:4px">
-          <strong>Next steps:</strong> Add your menu items, configure tables, then install the POS app on your terminal.
-        </div>
-      </div>
-      <div class="ob-footer">
-        <button class="ob-btn-next" onclick="obClose()">
-          Go to Dashboard
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
-        </button>
+      <div style="margin-top:20px;background:#0f172a;border-radius:8px;padding:10px 12px;font-size:11px;color:#475569;border:1px solid #1e3a5f;line-height:1.5">
+        Your data is 100% secure and encrypted
       </div>
     </div>
 
