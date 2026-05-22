@@ -113,13 +113,9 @@ module.exports = function authRouter (sql) {
     }
   })
 
-  // POST /auth/signup — self-service 7-day trial signup
+  // POST /auth/signup — self-service 7-day trial signup (email + password only)
   router.post('/signup', async (req, res) => {
-    const { restaurantName, ownerName, email, password } = req.body || {}
-    if (!restaurantName || !restaurantName.trim())
-      return res.status(400).json({ error: 'Restaurant name required' })
-    if (!ownerName || !ownerName.trim())
-      return res.status(400).json({ error: 'Your name required' })
+    const { email, password } = req.body || {}
     if (!email || !/^[^@]+@[^@]+\.[^@]+$/.test(email))
       return res.status(400).json({ error: 'Valid email required' })
     if (!password || password.length < 6)
@@ -138,22 +134,23 @@ module.exports = function authRouter (sql) {
       const keyEnc     = encryptText(licKey)
       const trialEnds  = new Date(Date.now() + 7 * 86400000).toISOString()
       const now        = new Date().toISOString()
+      const placeholder = email.toLowerCase().split('@')[0]
 
       await sql`
         INSERT INTO restaurants (
           id, name, brand_name, license_key_hash, license_prefix, license_key_enc,
           max_terminals, license_start_at,
-          owner_name, email, active, plan, status, trial_ends_at, signup_source
+          owner_name, email, active, plan, status, trial_ends_at, signup_source, setup_done
         ) VALUES (
-          ${id}, ${restaurantName.trim()}, ${restaurantName.trim()},
+          ${id}, ${placeholder}, ${placeholder},
           ${keyHash}, ${prefix}, ${keyEnc},
           5, ${now},
-          ${ownerName.trim()}, ${email.toLowerCase()},
-          true, 'trial', 'trial', ${trialEnds}, 'self_signup'
+          '', ${email.toLowerCase()},
+          true, 'trial', 'trial', ${trialEnds}, 'self_signup', false
         )`
 
       const uid      = Date.now().toString(36) + Math.random().toString(36).slice(2, 8)
-      const username = email.toLowerCase().split('@')[0].replace(/[^a-z0-9_]/g, '_').slice(0, 16) + '_' + id.slice(-4)
+      const username = placeholder.replace(/[^a-z0-9_]/g, '_').slice(0, 16) + '_' + id.slice(-4)
       const hash     = await bcrypt.hash(password, 10)
 
       await sql`
@@ -169,10 +166,8 @@ module.exports = function authRouter (sql) {
 
   // POST /auth/signup/google — self-service trial signup via Google
   router.post('/signup/google', async (req, res) => {
-    const { credential, restaurantName, ownerName } = req.body || {}
-    if (!credential)                             return res.status(400).json({ error: 'credential required' })
-    if (!restaurantName || !restaurantName.trim()) return res.status(400).json({ error: 'Restaurant name required' })
-    if (!ownerName || !ownerName.trim())           return res.status(400).json({ error: 'Your name required' })
+    const { credential } = req.body || {}
+    if (!credential) return res.status(400).json({ error: 'credential required' })
 
     const clientId = process.env.GOOGLE_CLIENT_ID
     if (!clientId) return res.status(503).json({ error: 'Google sign-in not configured on this server' })
@@ -204,21 +199,22 @@ module.exports = function authRouter (sql) {
       const trialEnds = new Date(Date.now() + 7 * 86400000).toISOString()
       const now       = new Date().toISOString()
 
+      const placeholder = (email || 'user').split('@')[0]
       await sql`
         INSERT INTO restaurants (
           id, name, brand_name, license_key_hash, license_prefix, license_key_enc,
           max_terminals, license_start_at,
-          owner_name, email, active, plan, status, trial_ends_at, signup_source
+          owner_name, email, active, plan, status, trial_ends_at, signup_source, setup_done
         ) VALUES (
-          ${id}, ${restaurantName.trim()}, ${restaurantName.trim()},
+          ${id}, ${placeholder}, ${placeholder},
           ${keyHash}, ${prefix}, ${keyEnc},
           5, ${now},
-          ${ownerName.trim()}, ${email},
-          true, 'trial', 'trial', ${trialEnds}, 'self_signup'
+          '', ${email},
+          true, 'trial', 'trial', ${trialEnds}, 'self_signup', false
         )`
 
       const uid      = Date.now().toString(36) + Math.random().toString(36).slice(2, 8)
-      const username = (email || 'user').split('@')[0].replace(/[^a-z0-9_]/g, '_').slice(0, 16) + '_' + id.slice(-4)
+      const username = placeholder.replace(/[^a-z0-9_]/g, '_').slice(0, 16) + '_' + id.slice(-4)
 
       await sql`
         INSERT INTO bo_users (id, restaurant_id, username, password, email, google_id, role)

@@ -526,14 +526,6 @@ input:checked+.toggle-slider:before{transform:translateX(17px)}
         <div class="auth-welcome-sub">7 days free &bull; No credit card needed</div>
         <div class="auth-form">
           <div class="auth-field">
-            <label for="su-restaurant">Restaurant / Business Name</label>
-            <input id="su-restaurant" type="text" placeholder="e.g. Mamas Kitchen" autocomplete="organization">
-          </div>
-          <div class="auth-field">
-            <label for="su-name">Your Full Name</label>
-            <input id="su-name" type="text" placeholder="e.g. Ahmad bin Ali" autocomplete="name">
-          </div>
-          <div class="auth-field">
             <label for="su-email">Email Address</label>
             <input id="su-email" type="email" placeholder="you@email.com" autocomplete="email">
           </div>
@@ -1724,17 +1716,11 @@ async function _googleLogin (credential) {
 
 async function _googleSignup (credential) {
   const errEl = document.getElementById('su-error')
-  const restaurantName = document.getElementById('su-restaurant').value.trim()
-  const ownerName      = document.getElementById('su-name').value.trim()
-  if (!restaurantName || !ownerName) {
-    if (errEl) { errEl.textContent = 'Fill Restaurant Name and Your Name before clicking Google.'; errEl.style.display = 'block' }
-    return
-  }
   if (errEl) { errEl.textContent = ''; errEl.style.display = 'none' }
   try {
     const r    = await fetch(API_BASE + '/auth/signup/google', {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ credential, restaurantName, ownerName }),
+      body: JSON.stringify({ credential }),
     })
     const data = await r.json()
     if (!r.ok) {
@@ -1749,7 +1735,6 @@ async function _googleSignup (credential) {
     localStorage.setItem('bo_token', token)
     currentUser = data.user
     if (data.trialEndsAt) localStorage.setItem('bo_trial_ends', data.trialEndsAt)
-    localStorage.setItem('bo_needs_onboarding', '1')
     showApp()
   } catch (e) {
     if (errEl) { errEl.textContent = e.message || 'Sign up failed'; errEl.style.display = 'block' }
@@ -1758,20 +1743,16 @@ async function _googleSignup (credential) {
 
 // ─── SIGNUP ──────────────────────────────────────────────────────
 async function signup () {
-  const errEl         = document.getElementById('su-error')
-  const restaurantName = document.getElementById('su-restaurant').value.trim()
-  const ownerName      = document.getElementById('su-name').value.trim()
-  const email          = document.getElementById('su-email').value.trim()
-  const password       = document.getElementById('su-password').value
+  const errEl  = document.getElementById('su-error')
+  const email  = document.getElementById('su-email').value.trim()
+  const password = document.getElementById('su-password').value
   if (errEl) { errEl.textContent = ''; errEl.style.display = 'none' }
-  if (!restaurantName) { errEl.textContent = 'Restaurant name required.'; errEl.style.display = 'block'; return }
-  if (!ownerName)      { errEl.textContent = 'Your name required.';       errEl.style.display = 'block'; return }
-  if (!email)          { errEl.textContent = 'Email required.';           errEl.style.display = 'block'; return }
+  if (!email)                        { errEl.textContent = 'Email required.';                    errEl.style.display = 'block'; return }
   if (!password || password.length < 6) { errEl.textContent = 'Password must be at least 6 characters.'; errEl.style.display = 'block'; return }
   try {
     const r    = await fetch(API_BASE + '/auth/signup', {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ restaurantName, ownerName, email, password }),
+      body: JSON.stringify({ email, password }),
     })
     const data = await r.json()
     if (!r.ok) {
@@ -1786,7 +1767,6 @@ async function signup () {
     localStorage.setItem('bo_token', token)
     currentUser = data.user
     if (data.trialEndsAt) localStorage.setItem('bo_trial_ends', data.trialEndsAt)
-    localStorage.setItem('bo_needs_onboarding', '1')
     showApp()
   } catch (e) {
     if (errEl) { errEl.textContent = e.message || 'Sign up failed'; errEl.style.display = 'block' }
@@ -1825,6 +1805,14 @@ function showOnboarding () {
   obNext(1)
 }
 
+function obStep1Next () {
+  const name  = (document.getElementById('ob-name').value || '').trim()
+  const owner = (document.getElementById('ob-owner').value || '').trim()
+  if (!name)  { showToast('Restaurant name is required', 'error'); return }
+  if (!owner) { showToast('Your name is required', 'error'); return }
+  obNext(2)
+}
+
 function obNext (step) {
   for (let i = 1; i <= 3; i++) {
     const el = document.getElementById('ob-step-' + i)
@@ -1834,20 +1822,26 @@ function obNext (step) {
 
 async function obSave () {
   const name     = (document.getElementById('ob-name').value || '').trim()
+  const owner    = (document.getElementById('ob-owner').value || '').trim()
   const branch   = (document.getElementById('ob-branch').value || '').trim()
   const currency = document.getElementById('ob-currency').value
   const tax      = parseFloat(document.getElementById('ob-tax').value) || 0
   const sc       = parseFloat(document.getElementById('ob-sc').value) || 0
   const footer   = (document.getElementById('ob-footer').value || '').trim()
 
+  if (!name) { showToast('Restaurant name is required', 'error'); return }
+  if (!owner) { showToast('Your name is required', 'error'); return }
+
   try {
     const saveData = {
-      restaurant_name:      name || boSettings.restaurant_name,
+      restaurant_name:      name,
+      owner_name:           owner,
       branch_name:          branch,
       currency:             currency,
       tax_rate:             tax,
       service_charge_rate:  sc,
       receipt_footer:       footer,
+      setup_done:           true,
     }
     await apiFetch('PUT', '/settings', saveData)
     // Update local state
@@ -1868,8 +1862,13 @@ async function obSave () {
 
 function obClose () {
   localStorage.removeItem('bo_needs_onboarding')
+  boSettings.setup_done = true
   const overlay = document.getElementById('onboard-overlay')
   if (overlay) overlay.classList.remove('open')
+  setTodayDates()
+  loadMenu()
+  loadDashboard()
+  loadStaff()
   showView('dashboard')
 }
 
@@ -1989,11 +1988,14 @@ function updateSidebarUser () {
 async function initApp () {
   updateSidebarUser()
   await loadBOSettings()
+  if (currentUser?.restaurant_id && !boSettings.setup_done) {
+    showOnboarding()
+    return
+  }
   setTodayDates()
   await loadMenu()
   await loadDashboard()
   await loadStaff()
-  if (localStorage.getItem('bo_needs_onboarding')) showOnboarding()
 }
 
 function setTodayDates () {
@@ -2027,6 +2029,7 @@ async function loadBOSettings () {
     boSettings.service_charge_label  = s.service_charge_label  || 'Service Charge'
     boSettings.mgr_discount_threshold= parseFloat(s.mgr_discount_threshold) || 10
     boSettings.require_void_reason   = parseInt(s.require_void_reason) ?? 1
+    boSettings.setup_done            = s.setup_done === true || s.setup_done === 'true'
   } catch (e) { /* use defaults */ }
   document.getElementById('hdr-name').textContent    = boSettings.restaurant_name
   const sbBranch = document.getElementById('sb-branch'); if (sbBranch) sbBranch.textContent = boSettings.branch_name || 'Back Office'
@@ -3732,8 +3735,12 @@ const _origShowView = showView
       </div>
       <div class="ob-body">
         <div class="ob-field">
-          <label>Restaurant / Brand Name</label>
-          <input id="ob-name" type="text" placeholder="Your restaurant name">
+          <label>Restaurant / Brand Name <span style="color:#ef4444">*</span></label>
+          <input id="ob-name" type="text" placeholder="e.g. Mama's Kitchen" autocomplete="organization">
+        </div>
+        <div class="ob-field">
+          <label>Your Full Name <span style="color:#ef4444">*</span></label>
+          <input id="ob-owner" type="text" placeholder="e.g. Ahmad bin Ali" autocomplete="name">
         </div>
         <div class="ob-field">
           <label>Outlet / Branch Name <span style="font-weight:400;color:#9ca3af">(optional)</span></label>
@@ -3755,7 +3762,7 @@ const _origShowView = showView
         </div>
       </div>
       <div class="ob-footer">
-        <button class="ob-btn-next" onclick="obNext(2)">
+        <button class="ob-btn-next" onclick="obStep1Next()">
           Continue
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
         </button>
