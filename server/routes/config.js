@@ -228,42 +228,64 @@ module.exports = function configRouter (sql) {
         }
         rows = await sql`SELECT * FROM delivery_partners WHERE restaurant_id = ${rid} ORDER BY name`
       }
-      res.json({ rows })
+      // attach has_orders flag so frontend knows if delete is allowed
+      const withFlags = await Promise.all(rows.map(async r => {
+        let hasOrders = false
+        try {
+          const [cnt] = await sql`SELECT COUNT(*)::int AS n FROM orders WHERE delivery_partner_id = ${r.id}`
+          hasOrders = (cnt?.n || 0) > 0
+        } catch (_) {}
+        return { ...r, has_orders: hasOrders }
+      }))
+      res.json({ rows: withFlags })
     } catch (e) { res.status(500).json({ error: e.message }) }
   })
 
   router.post('/delivery-partners', async (req, res) => {
-    const { name, commission_rate } = req.body || {}
+    const { name, commission_rate, logo_url } = req.body || {}
     const rid = req.user.restaurant_id
     if (!name) return res.status(400).json({ error: 'name required' })
     try {
       const [row] = await sql`
-        INSERT INTO delivery_partners (id, restaurant_id, name, enabled, commission_rate)
-        VALUES (${newId()}, ${rid}, ${name.trim()}, true, ${parseFloat(commission_rate) || 0})
+        INSERT INTO delivery_partners (id, restaurant_id, name, enabled, commission_rate, logo_url)
+        VALUES (${newId()}, ${rid}, ${name.trim()}, true, ${parseFloat(commission_rate) || 0}, ${logo_url || null})
         RETURNING *`
-      res.json(row)
+      res.json({ ...row, has_orders: false })
     } catch (e) { res.status(500).json({ error: e.message }) }
   })
 
   router.patch('/delivery-partners/:id', async (req, res) => {
-    const { name, enabled, commission_rate } = req.body || {}
+    const { name, enabled, commission_rate, logo_url } = req.body || {}
     const rid = req.user.restaurant_id
     try {
       const [row] = await sql`
         UPDATE delivery_partners SET
           name            = COALESCE(NULLIF(${(name || '').trim()}, ''), name),
           enabled         = COALESCE(${enabled !== undefined ? !!enabled : null}, enabled),
-          commission_rate = COALESCE(${commission_rate !== undefined ? parseFloat(commission_rate) : null}, commission_rate)
+          commission_rate = COALESCE(${commission_rate !== undefined ? parseFloat(commission_rate) : null}, commission_rate),
+          logo_url        = COALESCE(NULLIF(${logo_url !== undefined ? (logo_url || '') : ''}, ''), logo_url)
         WHERE id = ${req.params.id} AND restaurant_id = ${rid}
         RETURNING *`
       if (!row) return res.status(404).json({ error: 'not found' })
-      res.json(row)
+      let hasOrders = false
+      try {
+        const [cnt] = await sql`SELECT COUNT(*)::int AS n FROM orders WHERE delivery_partner_id = ${req.params.id}`
+        hasOrders = (cnt?.n || 0) > 0
+      } catch (_) {}
+      res.json({ ...row, has_orders: hasOrders })
     } catch (e) { res.status(500).json({ error: e.message }) }
   })
 
   router.delete('/delivery-partners/:id', async (req, res) => {
     const rid = req.user.restaurant_id
     try {
+      let hasOrders = false
+      try {
+        const [cnt] = await sql`SELECT COUNT(*)::int AS n FROM orders WHERE delivery_partner_id = ${req.params.id}`
+        hasOrders = (cnt?.n || 0) > 0
+      } catch (_) {}
+      if (hasOrders)
+        return res.status(409).json({ error: 'Cannot delete — orders exist for this partner. Disable it instead.' })
       await sql`DELETE FROM delivery_partners WHERE id = ${req.params.id} AND restaurant_id = ${rid}`
       res.json({ ok: true })
     } catch (e) { res.status(500).json({ error: e.message }) }

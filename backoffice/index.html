@@ -1750,6 +1750,36 @@ input:checked+.toggle-slider:before{transform:translateX(17px)}
   </div>
 </div>
 
+<!-- Delivery Partner Modal -->
+<div class="modal-overlay" id="modal-delivery">
+  <div class="modal" style="min-width:400px;max-width:480px">
+    <h3 id="dp-modal-title">Add Delivery Partner</h3>
+    <input type="hidden" id="dp-id">
+    <div class="form-group">
+      <label>Partner Name *</label>
+      <input id="dp-name" type="text" placeholder="e.g. GrabFood">
+    </div>
+    <div class="form-group">
+      <label>Commission Rate (%)</label>
+      <input id="dp-commission" type="number" min="0" max="100" step="0.1" placeholder="0">
+    </div>
+    <div class="form-group">
+      <label>Logo URL <span style="color:var(--muted);font-size:12px">(optional)</span></label>
+      <input id="dp-logo" type="url" placeholder="https://...">
+      <div id="dp-logo-preview" style="margin-top:8px;display:none">
+        <img id="dp-logo-img" src="" alt="logo" style="height:40px;object-fit:contain;border:1px solid var(--border);border-radius:6px;padding:4px;background:#fff">
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('modal-delivery')">Cancel</button>
+      <button class="btn btn-primary" onclick="cfgSaveDelivery()">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+        Save
+      </button>
+    </div>
+  </div>
+</div>
+
 <!-- Staff Modal -->
 <div class="modal-overlay" id="modal-staff">
   <div class="modal modal-sm" style="min-width:360px">
@@ -1825,7 +1855,7 @@ async function apiFetch (method, endpoint, body) {
     }, 1200)
     throw new Error(data.error || 'Session expired')
   }
-  if (!res.ok) throw new Error(data.error || res.statusText)
+  if (!res.ok) { const err = new Error(data.error || res.statusText); err.status = res.status; throw err }
   return data
 }
 
@@ -4054,7 +4084,7 @@ function cfgDeleteTable (id) {
 
 // ─── GENERIC LIST RENDERER ───────────────────────────────────────────────────
 function cfgToggleItem (endpoint, id, enabled) {
-  apiFetch('PATCH', endpoint + '/' + id, { enabled })
+  return apiFetch('PATCH', endpoint + '/' + id, { enabled })
     .catch(e => showToast(e.message, 'error'))
 }
 
@@ -4117,34 +4147,98 @@ function cfgAddPayment () {
 async function cfgLoadDelivery () {
   try {
     const { rows } = await apiFetch('GET', '/config/delivery-partners')
-    document.getElementById('cfg-dp-list').innerHTML = rows.map(r => `
+    document.getElementById('cfg-dp-list').innerHTML = rows.map(r => {
+      const logoHtml = r.logo_url
+        ? `<img src="${r.logo_url}" alt="${r.name}" style="height:36px;width:36px;object-fit:contain;border-radius:6px;border:1px solid var(--border);padding:3px;background:#fff;margin-right:10px" onerror="this.style.display='none'">`
+        : `<div style="height:36px;width:36px;border-radius:6px;background:var(--surface-alt);display:flex;align-items:center;justify-content:center;margin-right:10px;font-size:18px">🚗</div>`
+      const deleteOrDisable = r.has_orders
+        ? `<button class="btn btn-sm btn-outline" style="margin-left:4px;color:var(--warning,#f59e0b)" title="Has orders — disable only" onclick="cfgToggleItem('/config/delivery-partners','${r.id}',false).then(cfgLoadDelivery)">Disable</button>`
+        : `<button class="btn btn-sm btn-danger" style="margin-left:4px" onclick="cfgDeleteDelivery('${r.id}','${r.name}')">✕</button>`
+      return `
       <div class="cfg-list-item">
+        ${logoHtml}
         <div style="flex:1">
           <div class="cfg-list-item-name">${r.name}</div>
-          <div class="cfg-list-item-sub">Commission: ${r.commission_rate || 0}%</div>
+          <div class="cfg-list-item-sub">Commission: ${r.commission_rate || 0}%${r.has_orders ? ' · <span style="color:var(--warning,#f59e0b)">has orders</span>' : ''}</div>
         </div>
-        <label class="cfg-toggle"><input type="checkbox" ${r.enabled ? 'checked' : ''} onchange="cfgToggleItem('/config/delivery-partners','${r.id}',this.checked)"><span class="cfg-toggle-slider"></span></label>
-        <button class="btn btn-sm" style="margin-left:8px" onclick="cfgEditDelivery('${r.id}','${r.name}',${r.commission_rate||0})">Edit</button>
-        <button class="btn btn-sm btn-danger" style="margin-left:4px" onclick="cfgDeleteItem('/config/delivery-partners','${r.id}',cfgLoadDelivery)">✕</button>
-      </div>`).join('') || '<p style="color:var(--muted);font-size:13px">No partners.</p>'
+        <label class="cfg-toggle"><input type="checkbox" ${r.enabled ? 'checked' : ''} onchange="cfgToggleItem('/config/delivery-partners','${r.id}',this.checked).then(()=>cfgLoadDelivery())"><span class="cfg-toggle-slider"></span></label>
+        <button class="btn btn-sm" style="margin-left:8px" onclick="cfgOpenDeliveryModal(${JSON.stringify(r).replace(/"/g,'&quot;')})">Edit</button>
+        ${deleteOrDisable}
+      </div>`
+    }).join('') || '<p style="color:var(--muted);font-size:13px">No partners.</p>'
   } catch (e) { showToast(e.message, 'error') }
 }
 
 function cfgAddDelivery () {
-  const name = prompt('Partner name:')
-  if (!name) return
-  const rate = prompt('Commission rate % (default 0):') || '0'
-  apiFetch('POST', '/config/delivery-partners', { name, commission_rate: parseFloat(rate) })
-    .then(() => { showToast('Added', 'success'); cfgLoadDelivery() })
-    .catch(e => showToast(e.message, 'error'))
+  document.getElementById('dp-id').value = ''
+  document.getElementById('dp-modal-title').textContent = 'Add Delivery Partner'
+  document.getElementById('dp-name').value = ''
+  document.getElementById('dp-commission').value = ''
+  document.getElementById('dp-logo').value = ''
+  document.getElementById('dp-logo-preview').style.display = 'none'
+  showModal('modal-delivery')
+  setTimeout(() => document.getElementById('dp-name').focus(), 100)
 }
 
-function cfgEditDelivery (id, name, rate) {
-  const newRate = prompt('Commission rate % for ' + name + ':', rate)
-  if (newRate === null) return
-  apiFetch('PATCH', '/config/delivery-partners/' + id, { commission_rate: parseFloat(newRate) || 0 })
-    .then(() => { showToast('Saved', 'success'); cfgLoadDelivery() })
-    .catch(e => showToast(e.message, 'error'))
+function cfgOpenDeliveryModal (r) {
+  document.getElementById('dp-id').value = r.id
+  document.getElementById('dp-modal-title').textContent = 'Edit Delivery Partner'
+  document.getElementById('dp-name').value = r.name || ''
+  document.getElementById('dp-commission').value = r.commission_rate || 0
+  document.getElementById('dp-logo').value = r.logo_url || ''
+  const prev = document.getElementById('dp-logo-preview')
+  const img  = document.getElementById('dp-logo-img')
+  if (r.logo_url) { img.src = r.logo_url; prev.style.display = 'block' }
+  else            { prev.style.display = 'none' }
+  showModal('modal-delivery')
+}
+
+// live logo preview
+document.addEventListener('DOMContentLoaded', () => {
+  const logoInput = document.getElementById('dp-logo')
+  if (logoInput) {
+    logoInput.addEventListener('input', () => {
+      const url  = logoInput.value.trim()
+      const prev = document.getElementById('dp-logo-preview')
+      const img  = document.getElementById('dp-logo-img')
+      if (url) { img.src = url; prev.style.display = 'block' }
+      else      { prev.style.display = 'none' }
+    })
+  }
+})
+
+async function cfgSaveDelivery () {
+  const id         = document.getElementById('dp-id').value
+  const name       = document.getElementById('dp-name').value.trim()
+  const commission = parseFloat(document.getElementById('dp-commission').value) || 0
+  const logo_url   = document.getElementById('dp-logo').value.trim() || null
+  if (!name) return showToast('Partner name is required', 'error')
+  try {
+    if (id) {
+      await apiFetch('PATCH', '/config/delivery-partners/' + id, { name, commission_rate: commission, logo_url })
+    } else {
+      await apiFetch('POST', '/config/delivery-partners', { name, commission_rate: commission, logo_url })
+    }
+    closeModal('modal-delivery')
+    showToast(id ? 'Partner updated' : 'Partner added', 'success')
+    cfgLoadDelivery()
+  } catch (e) { showToast(e.message, 'error') }
+}
+
+async function cfgDeleteDelivery (id, name) {
+  if (!confirm(`Delete "${name}"? This cannot be undone.`)) return
+  try {
+    await apiFetch('DELETE', '/config/delivery-partners/' + id)
+    showToast('Deleted', 'success')
+    cfgLoadDelivery()
+  } catch (e) {
+    if (e.status === 409 || (e.message || '').includes('orders exist')) {
+      showToast('Cannot delete — orders exist for this partner. Use Disable instead.', 'error')
+      cfgLoadDelivery()
+    } else {
+      showToast(e.message, 'error')
+    }
+  }
 }
 
 // ─── KITCHENS ─────────────────────────────────────────────────────────────────
