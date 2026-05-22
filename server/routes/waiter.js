@@ -97,7 +97,7 @@ module.exports = function waiterRouter (sql) {
       // Settings for tax (best-effort)
       let taxRate = 0
       try {
-        const [row] = await sql`SELECT value FROM settings WHERE key = 'tax_rate'`
+        const [row] = await sql`SELECT value FROM settings WHERE key = 'tax_rate' AND restaurant_id = ${req.user?.restaurant_id || ''}`
         taxRate = parseFloat(row?.value || '0')
       } catch (_) {}
 
@@ -193,7 +193,7 @@ module.exports = function waiterRouter (sql) {
       const subtotal = items.reduce((s, i) => s + (parseFloat(i.unit_price) * parseInt(i.quantity)), 0)
       let taxRate = 0
       try {
-        const [row] = await sql`SELECT value FROM settings WHERE key = 'tax_rate'`
+        const [row] = await sql`SELECT value FROM settings WHERE key = 'tax_rate' AND restaurant_id = ${req.user?.restaurant_id || ''}`
         taxRate = parseFloat(row?.value || '0')
       } catch (_) {}
       const taxAmount = Math.round(subtotal * taxRate / 100 * 100) / 100

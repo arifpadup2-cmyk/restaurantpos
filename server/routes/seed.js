@@ -43,8 +43,9 @@ module.exports = function seedRouter (sql) {
         cash_variance_alert_pct:'5',
         kot_stay_seconds:       '8',
       }
+      const rid = req.user?.restaurant_id || ''
       for (const [key, value] of Object.entries(settingsMap)) {
-        await sql`INSERT INTO settings (key,value) VALUES (${key},${value}) ON CONFLICT (key) DO UPDATE SET value=EXCLUDED.value`
+        await sql`INSERT INTO settings (restaurant_id,key,value) VALUES (${rid},${key},${value}) ON CONFLICT (restaurant_id,key) DO UPDATE SET value=EXCLUDED.value`
       }
       log.push('Restaurant settings configured')
 

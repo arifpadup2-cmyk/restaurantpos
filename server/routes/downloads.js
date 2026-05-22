@@ -95,7 +95,7 @@ module.exports = function downloadsRouter (sql) {
         orders, order_items, shifts, expenses, day_closings,
         audit_log, no_sale_log, tables_layout, printers,
       ] = await Promise.all([
-        sql`SELECT * FROM settings`,
+        sql`SELECT * FROM settings WHERE restaurant_id = ${req.user.restaurant_id || ''}`,
         sql`SELECT * FROM cashiers`,
         sql`SELECT * FROM categories`,
         sql`SELECT * FROM menu_items`,

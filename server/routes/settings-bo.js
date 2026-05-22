@@ -19,10 +19,10 @@ module.exports = function settingsRouter (sql) {
 
   // GET /settings — returns all public settings
   router.get('/', async (req, res) => {
+    const rid = req.user?.restaurant_id || ''
     try {
-      const rows = await sql`SELECT key, value FROM settings WHERE key = ANY(${KEYS})`
+      const rows = await sql`SELECT key, value FROM settings WHERE key = ANY(${KEYS}) AND restaurant_id = ${rid}`
       const settings = Object.fromEntries(rows.map(r => [r.key, r.value]))
-      // Include setup_done from restaurants for restaurant users
       if (req.user?.restaurant_id) {
         const [r] = await sql`SELECT setup_done FROM restaurants WHERE id = ${req.user.restaurant_id}`
         settings.setup_done = r?.setup_done ?? false
@@ -35,24 +35,28 @@ module.exports = function settingsRouter (sql) {
 
   // PUT /settings — upsert restaurant settings
   router.put('/', async (req, res) => {
+    const rid  = req.user?.restaurant_id || ''
     const body = req.body || {}
     try {
       for (const key of KEYS) {
         if (body[key] === undefined) continue
         await sql`
-          INSERT INTO settings (key, value) VALUES (${key}, ${String(body[key])})
-          ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value`
+          INSERT INTO settings (restaurant_id, key, value) VALUES (${rid}, ${key}, ${String(body[key])})
+          ON CONFLICT (restaurant_id, key) DO UPDATE SET value = EXCLUDED.value`
       }
-      // Mark restaurant setup as done + update name/owner in restaurants table
       if (body.setup_done && req.user?.restaurant_id) {
-        const name  = (body.restaurant_name || '').trim() || null
-        const owner = (body.owner_name || '').trim() || null
+        const name          = (body.restaurant_name || '').trim() || null
+        const owner         = (body.owner_name || '').trim() || null
+        const business_type = (body.business_type || '').trim() || null
+        const country       = (body.country || '').trim() || null
         await sql`
           UPDATE restaurants
-          SET setup_done = true,
-              name       = COALESCE(${name}, name),
-              brand_name = COALESCE(${name}, brand_name),
-              owner_name = COALESCE(${owner}, owner_name)
+          SET setup_done    = true,
+              name          = COALESCE(${name}, name),
+              brand_name    = COALESCE(${name}, brand_name),
+              owner_name    = COALESCE(${owner}, owner_name),
+              business_type = COALESCE(${business_type}, business_type),
+              country       = COALESCE(${country}, country)
           WHERE id = ${req.user.restaurant_id}`
       }
       res.json({ ok: true })

@@ -92,21 +92,23 @@ module.exports = function configRouter (sql) {
     'opening_time', 'closing_time', 'currency', 'tax_rate', 'country',
   ]
 
-  router.get('/outlet', async (_req, res) => {
+  router.get('/outlet', async (req, res) => {
+    const rid = req.user?.restaurant_id || ''
     try {
-      const rows = await sql`SELECT key, value FROM settings WHERE key = ANY(${OUTLET_KEYS})`
+      const rows = await sql`SELECT key, value FROM settings WHERE key = ANY(${OUTLET_KEYS}) AND restaurant_id = ${rid}`
       res.json({ outlet: Object.fromEntries(rows.map(r => [r.key, r.value])) })
     } catch (e) { res.status(500).json({ error: e.message }) }
   })
 
   router.put('/outlet', async (req, res) => {
+    const rid  = req.user?.restaurant_id || ''
     const body = req.body || {}
     try {
       for (const key of OUTLET_KEYS) {
         if (body[key] === undefined) continue
         await sql`
-          INSERT INTO settings (key, value) VALUES (${key}, ${String(body[key])})
-          ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value`
+          INSERT INTO settings (restaurant_id, key, value) VALUES (${rid}, ${key}, ${String(body[key])})
+          ON CONFLICT (restaurant_id, key) DO UPDATE SET value = EXCLUDED.value`
       }
       res.json({ ok: true })
     } catch (e) { res.status(500).json({ error: e.message }) }
