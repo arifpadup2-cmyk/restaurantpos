@@ -115,6 +115,116 @@ module.exports = function configRouter (sql) {
     } catch (e) { res.status(500).json({ error: e.message }) }
   })
 
+  // ── BRANDS (list, multi-brand per owner) ────────────────────────────────────
+  router.get('/brands', async (req, res) => {
+    const rid = req.user.restaurant_id
+    if (!rid) return res.json({ rows: [] })
+    try {
+      const rows = await sql`SELECT * FROM brands WHERE restaurant_id = ${rid} ORDER BY created_at`
+      res.json({ rows })
+    } catch (e) { res.status(500).json({ error: e.message }) }
+  })
+
+  router.post('/brands', async (req, res) => {
+    const { name, logo_url, business_type, country, owner_name } = req.body || {}
+    const rid = req.user.restaurant_id
+    if (!name?.trim()) return res.status(400).json({ error: 'Brand name is required' })
+    try {
+      const [row] = await sql`
+        INSERT INTO brands (id, restaurant_id, name, logo_url, business_type, country, owner_name, created_at)
+        VALUES (${newId()}, ${rid}, ${name.trim()}, ${logo_url||null}, ${business_type||null}, ${country||'MY'}, ${(owner_name||'').trim()||null}, ${Date.now()})
+        RETURNING *`
+      res.json(row)
+    } catch (e) { res.status(500).json({ error: e.message }) }
+  })
+
+  router.patch('/brands/:id', async (req, res) => {
+    const { name, logo_url, business_type, country, owner_name } = req.body || {}
+    const rid = req.user.restaurant_id
+    try {
+      const [row] = await sql`
+        UPDATE brands SET
+          name          = COALESCE(NULLIF(${(name||'').trim()}, ''), name),
+          logo_url      = COALESCE(NULLIF(${logo_url||''}, ''), logo_url),
+          business_type = COALESCE(NULLIF(${business_type||''}, ''), business_type),
+          country       = COALESCE(NULLIF(${country||''}, ''), country),
+          owner_name    = COALESCE(NULLIF(${(owner_name||'').trim()}, ''), owner_name)
+        WHERE id = ${req.params.id} AND restaurant_id = ${rid}
+        RETURNING *`
+      if (!row) return res.status(404).json({ error: 'Brand not found' })
+      res.json(row)
+    } catch (e) { res.status(500).json({ error: e.message }) }
+  })
+
+  router.delete('/brands/:id', async (req, res) => {
+    const rid = req.user.restaurant_id
+    try {
+      let linked = 0
+      try { const [c] = await sql`SELECT COUNT(*)::int AS n FROM outlets WHERE brand_id = ${req.params.id}`; linked = c?.n || 0 } catch (_) {}
+      if (linked > 0) return res.status(409).json({ error: 'This brand has outlets linked to it. Remove the outlets first, then delete the brand.' })
+      await sql`DELETE FROM brands WHERE id = ${req.params.id} AND restaurant_id = ${rid}`
+      res.json({ ok: true })
+    } catch (e) { res.status(500).json({ error: e.message }) }
+  })
+
+  // ── OUTLETS (list, multi-outlet per owner) ────────────────────────────────
+  router.get('/outlets', async (req, res) => {
+    const rid = req.user.restaurant_id
+    try {
+      const rows = await sql`
+        SELECT o.*, b.name AS brand_name, b.logo_url AS brand_logo
+        FROM outlets o
+        LEFT JOIN brands b ON b.id = o.brand_id
+        WHERE o.restaurant_id = ${rid}
+        ORDER BY o.created_at`
+      res.json({ rows })
+    } catch (e) { res.status(500).json({ error: e.message }) }
+  })
+
+  router.post('/outlets', async (req, res) => {
+    const { name, brand_id, phone, email, address, opening_time, closing_time, currency } = req.body || {}
+    const rid = req.user.restaurant_id
+    if (!name?.trim()) return res.status(400).json({ error: 'Outlet name is required' })
+    try {
+      const [row] = await sql`
+        INSERT INTO outlets (id, restaurant_id, brand_id, name, phone, email, address, opening_time, closing_time, currency, created_at)
+        VALUES (${newId()}, ${rid}, ${brand_id||null}, ${name.trim()},
+                ${phone||null}, ${email||null}, ${address||null},
+                ${opening_time||'09:00'}, ${closing_time||'22:00'}, ${currency||'MYR'}, ${Date.now()})
+        RETURNING *`
+      res.json(row)
+    } catch (e) { res.status(500).json({ error: e.message }) }
+  })
+
+  router.patch('/outlets/:id', async (req, res) => {
+    const { name, brand_id, phone, email, address, opening_time, closing_time, currency } = req.body || {}
+    const rid = req.user.restaurant_id
+    try {
+      const [row] = await sql`
+        UPDATE outlets SET
+          name         = COALESCE(NULLIF(${(name||'').trim()}, ''), name),
+          brand_id     = ${brand_id !== undefined ? (brand_id || null) : sql`brand_id`},
+          phone        = COALESCE(NULLIF(${phone||''}, ''), phone),
+          email        = COALESCE(NULLIF(${email||''}, ''), email),
+          address      = COALESCE(NULLIF(${address||''}, ''), address),
+          opening_time = COALESCE(NULLIF(${opening_time||''}, ''), opening_time),
+          closing_time = COALESCE(NULLIF(${closing_time||''}, ''), closing_time),
+          currency     = COALESCE(NULLIF(${currency||''}, ''), currency)
+        WHERE id = ${req.params.id} AND restaurant_id = ${rid}
+        RETURNING *`
+      if (!row) return res.status(404).json({ error: 'Outlet not found' })
+      res.json(row)
+    } catch (e) { res.status(500).json({ error: e.message }) }
+  })
+
+  router.delete('/outlets/:id', async (req, res) => {
+    const rid = req.user.restaurant_id
+    try {
+      await sql`DELETE FROM outlets WHERE id = ${req.params.id} AND restaurant_id = ${rid}`
+      res.json({ ok: true })
+    } catch (e) { res.status(500).json({ error: e.message }) }
+  })
+
   // ── TAX GROUPS ─────────────────────────────────────────────────────────────
   router.get('/tax-groups', async (req, res) => {
     const rid = req.user.restaurant_id

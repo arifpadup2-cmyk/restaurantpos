@@ -56,9 +56,17 @@ module.exports = function authRouter (sql) {
     }
   })
 
-  // GET /auth/me — verify token and return user
-  router.get('/me', jwtAuth, (req, res) => {
-    res.json({ ok: true, user: req.user })
+  // GET /auth/me — verify token and return user with enriched profile
+  router.get('/me', jwtAuth, async (req, res) => {
+    const user = req.user
+    let owner_name = null
+    if (user.restaurant_id) {
+      try {
+        const [r] = await sql`SELECT owner_name FROM restaurants WHERE id = ${user.restaurant_id}`
+        owner_name = r?.owner_name || null
+      } catch (_) {}
+    }
+    res.json({ ok: true, user: { ...user, owner_name } })
   })
 
   // GET /auth/config — public config for the front-end
