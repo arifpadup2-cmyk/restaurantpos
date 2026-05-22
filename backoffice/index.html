@@ -699,10 +699,6 @@ input:checked+.toggle-slider:before{transform:translateX(17px)}
         <svg class="ni-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
         <span>Audit Log</span>
       </div>
-      <div class="nav-item" id="nav-printers" onclick="showView('printers')" role="button" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' ')showView('printers')">
-        <svg class="ni-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
-        <span>Printers</span>
-      </div>
       <div class="nav-item" id="nav-downloads" onclick="showView('downloads')" role="button" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' ')showView('downloads')">
         <svg class="ni-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
         <span>Downloads</span>
@@ -739,9 +735,6 @@ input:checked+.toggle-slider:before{transform:translateX(17px)}
         <span id="sync-status"></span>
         <button class="hdr-btn" title="Audit Log" onclick="showView('audit')">
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>
-        </button>
-        <button class="hdr-btn" title="Printers" onclick="showView('printers')">
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
         </button>
         <div class="hdr-date" id="hdr-time"></div>
         <button class="hdr-user" onclick="logout()">
@@ -871,7 +864,6 @@ input:checked+.toggle-slider:before{transform:translateX(17px)}
         <button class="qa-btn" onclick="exportCSV()"><div class="qa-icon" style="background:#fdf4ff;color:#9333ea"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg></div>Export CSV</button>
         <button class="qa-btn" onclick="downloadBackup()"><div class="qa-icon" style="background:var(--danger-bg);color:var(--danger)"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg></div>Backup</button>
         <button class="qa-btn" onclick="showView('audit')"><div class="qa-icon" style="background:#fffbeb;color:#b45309"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div>Audit Log</button>
-        <button class="qa-btn" onclick="showView('printers')"><div class="qa-icon" style="background:#f1f5f9;color:var(--muted)"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg></div>Printers</button>
       </div>
     </div>
   </div>
@@ -1457,23 +1449,6 @@ input:checked+.toggle-slider:before{transform:translateX(17px)}
     </div>
   </div>
 
-  <!-- ── PRINTERS VIEW ── -->
-  <div class="view" id="v-printers">
-    <div class="page-header" style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px">
-      <h2>Network Printers</h2>
-      <button class="btn btn-primary" onclick="openPrinterModal()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/><rect x="6" y="14" width="12" height="8"/><line x1="12" y1="17" x2="12" y2="17" stroke-linecap="round" stroke-width="3"/></svg> Add Printer</button>
-    </div>
-    <p style="font-size:13px;color:var(--muted);margin-bottom:20px">
-      Configure IP-addressable thermal printers. KOT tickets from waiter apps print directly to these printers.
-      Leave empty to use USB printers on POS terminals instead.
-    </p>
-    <div class="card">
-      <div class="table-wrap">
-        <table class="data-table">
-          <thead><tr><th>Name</th><th>Type</th><th>IP Address</th><th>Port</th><th>Area</th><th>Status</th><th>Actions</th></tr></thead>
-          <tbody id="printers-tbody"><tr><td colspan="7" style="text-align:center;color:var(--muted);padding:24px">Loading…</td></tr></tbody>
-        </table>
-      </div>
   <!-- ── LIVE ORDERS VIEW ── -->
   <div class="view" id="v-live" style="padding:0;max-width:none">
     <div class="live-wrap">
@@ -2422,7 +2397,6 @@ function showView (id) {
   if (id === 'orders')    { setOrdersDate('today'); loadOrders() }
   if (id === 'staff')     loadStaff()
   if (id === 'dashboard') loadDashboard()
-  if (id === 'printers')  loadPrinters()
   if (id === 'reports')   { loadReport(); loadExpReport(); }
   if (id === 'audit')     loadAuditLog()
   if (id === 'downloads') loadDownloadsPage()
@@ -2952,79 +2926,6 @@ document.querySelectorAll('.modal-overlay').forEach(el =>
 document.addEventListener('keydown', e => {
   if (e.key === 'Escape') document.querySelectorAll('.modal-overlay.show').forEach(el => el.classList.remove('show'))
 })
-
-// ─── PRINTERS ────────────────────────────────────────────────────
-let editingPrinterId = null
-
-async function loadPrinters () {
-  const tbody = document.getElementById('printers-tbody')
-  try {
-    const data = await apiFetch('GET', '/printers')
-    const printers = data.printers || []
-    if (!printers.length) {
-      tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:var(--muted);padding:24px">No printers configured. Add a network thermal printer to enable server-side KOT printing.</td></tr>'
-      return
-    }
-    tbody.innerHTML = printers.map(p => `
-      <tr>
-        <td><strong>${esc(p.name)}</strong></td>
-        <td>${esc(p.type)}</td>
-        <td><code>${esc(p.ip || '—')}</code></td>
-        <td>${p.port || 9100}</td>
-        <td><span class="badge badge-${p.area==='kitchen'?'orange':'blue'}">${esc(p.area)}</span></td>
-        <td><span class="badge ${p.active?'badge-green':'badge-red'}">${p.active?'Active':'Disabled'}</span></td>
-        <td>
-          <button class="btn btn-outline btn-sm" onclick="editPrinter('${p.id}')"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg> Edit</button>
-          <button class="btn btn-danger btn-sm" onclick="deletePrinter('${p.id}')"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6M14 11v6"/></svg> Delete</button>
-        </td>
-      </tr>`).join('')
-  } catch (e) {
-    tbody.innerHTML = `<tr><td colspan="7" style="color:var(--danger);padding:12px">Error: ${esc(e.message)}</td></tr>`
-  }
-}
-
-function openPrinterModal (printer) {
-  editingPrinterId = printer?.id || null
-  document.getElementById('pm-name').value  = printer?.name  || ''
-  document.getElementById('pm-type').value  = printer?.type  || 'epson'
-  document.getElementById('pm-ip').value    = printer?.ip    || ''
-  document.getElementById('pm-port').value  = printer?.port  || 9100
-  document.getElementById('pm-area').value  = printer?.area  || 'kitchen'
-  document.getElementById('pm-active').checked = printer?.active !== 0
-  document.getElementById('pm-modal-title').textContent = printer ? 'Edit Printer' : 'Add Printer'
-  showModal('modal-printer')
-}
-
-async function editPrinter (id) {
-  const data = await apiFetch('GET', '/printers')
-  const p    = (data.printers||[]).find(x => x.id === id)
-  if (p) openPrinterModal(p)
-}
-
-async function savePrinter () {
-  const body = {
-    name:   document.getElementById('pm-name').value.trim(),
-    type:   document.getElementById('pm-type').value,
-    ip:     document.getElementById('pm-ip').value.trim(),
-    port:   parseInt(document.getElementById('pm-port').value) || 9100,
-    area:   document.getElementById('pm-area').value,
-    active: document.getElementById('pm-active').checked ? 1 : 0,
-  }
-  if (!body.name) { showToast('Printer name required','error'); return }
-  try {
-    if (editingPrinterId) await apiFetch('PUT',  `/printers/${editingPrinterId}`, body)
-    else                  await apiFetch('POST', '/printers', body)
-    closeModal('modal-printer')
-    loadPrinters()
-    showToast('Printer saved.','success')
-  } catch (e) { showToast('Error: ' + e.message,'error') }
-}
-
-async function deletePrinter (id) {
-  if (!confirm('Delete this printer?')) return
-  try { await apiFetch('DELETE', `/printers/${id}`); loadPrinters(); showToast('Printer deleted.','success') }
-  catch (e) { showToast('Error: ' + e.message,'error') }
-}
 
 // ─── AUDIT LOG ───────────────────────────────────────────────────
 async function loadAuditLog () {
@@ -4377,46 +4278,6 @@ const _cfgOrigShowView = null // placeholder to hook into showView
 // Wire showView for licensing
 const _origShowView = showView
 </script>
-
-<!-- Printer Modal -->
-<div class="modal-overlay" id="modal-printer">
-  <div class="modal" style="min-width:400px">
-    <h3 id="pm-modal-title">Add Printer</h3>
-    <div class="form-row">
-      <div class="form-group"><label>Name *</label><input id="pm-name" type="text" placeholder="Kitchen Printer 1"></div>
-      <div class="form-group">
-        <label>Type</label>
-        <select id="pm-type">
-          <option value="epson">Epson</option>
-          <option value="star">Star</option>
-          <option value="escpos">Generic ESC/POS</option>
-        </select>
-      </div>
-    </div>
-    <div class="form-row">
-      <div class="form-group"><label>IP Address</label><input id="pm-ip" type="text" placeholder="192.168.1.200"></div>
-      <div class="form-group"><label>Port</label><input id="pm-port" type="number" value="9100" min="1" max="65535"></div>
-    </div>
-    <div class="form-row">
-      <div class="form-group">
-        <label>Area</label>
-        <select id="pm-area">
-          <option value="kitchen">Kitchen</option>
-          <option value="counter">Counter</option>
-          <option value="bar">Bar</option>
-        </select>
-      </div>
-      <div class="form-group" style="display:flex;align-items:center;gap:10px;padding-top:22px">
-        <input id="pm-active" type="checkbox" checked style="width:18px;height:18px">
-        <label for="pm-active" style="margin:0">Active</label>
-      </div>
-    </div>
-    <div class="modal-footer">
-      <button class="btn btn-outline" onclick="closeModal('modal-printer')">Cancel</button>
-      <button class="btn btn-primary" onclick="savePrinter()"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg> Save Printer</button>
-    </div>
-  </div>
-</div>
 
 <!-- ═══ ONBOARDING WIZARD ═══ -->
 <div id="onboard-overlay">
