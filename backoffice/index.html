@@ -1836,7 +1836,33 @@ function updateTrialBanner () {
 }
 
 // ─── SETUP SCREEN ─────────────────────────────────────────────────
+const SS_COUNTRY_CURRENCY = {
+  MY:'MYR', SG:'SGD', ID:'IDR', TH:'THB', PH:'PHP',
+  AE:'AED', SA:'SAR', PK:'PKR', IN:'INR', GB:'GBP',
+  US:'USD', EU:'EUR', OTHER:'USD',
+}
+
+function ssCountryChange (code) {
+  const cur = SS_COUNTRY_CURRENCY[code] || 'USD'
+  const sel = document.getElementById('ss-currency')
+  if (sel) sel.value = cur
+}
+
+function ss24hToggle (checked) {
+  const openW  = document.getElementById('ss-open-wrap')
+  const closeW = document.getElementById('ss-close-wrap')
+  if (openW)  openW.style.opacity  = checked ? '.35' : '1'
+  if (closeW) closeW.style.opacity = checked ? '.35' : '1'
+  const openI  = document.getElementById('ss-open-time')
+  const closeI = document.getElementById('ss-close-time')
+  if (openI)  openI.disabled  = checked
+  if (closeI) closeI.disabled = checked
+}
+
 function showOnboarding () {
+  // Pre-fill owner email from JWT
+  const emailEl = document.getElementById('ss-owner-email')
+  if (emailEl && currentUser?.email) emailEl.value = currentUser.email
   const overlay = document.getElementById('onboard-overlay')
   if (overlay) overlay.classList.add('open')
   ssUpdateProgress()
@@ -1906,12 +1932,10 @@ async function ssSubmit () {
   const outletName  = (document.getElementById('ss-outlet-name')?.value || '').trim()
   const currency    = document.getElementById('ss-currency')?.value || 'MYR'
   const address     = (document.getElementById('ss-address')?.value || '').trim()
-  const openTime    = document.getElementById('ss-open-time')?.value || '09:00'
-  const closeTime   = document.getElementById('ss-close-time')?.value || '22:00'
-  const tableCount  = parseInt(document.getElementById('ss-tables')?.value) || 0
+  const is24h       = document.getElementById('ss-24h')?.checked
+  const openTime    = is24h ? '00:00' : (document.getElementById('ss-open-time')?.value || '09:00')
+  const closeTime   = is24h ? '24:00' : (document.getElementById('ss-close-time')?.value || '22:00')
   const tax         = parseFloat(document.getElementById('ss-tax')?.value) || 0
-  const sc          = parseFloat(document.getElementById('ss-sc')?.value) || 0
-  const footer      = (document.getElementById('ss-footer')?.value || '').trim()
   const bizType     = document.getElementById('ss-biz-type')?.value || ''
   const country     = document.getElementById('ss-country')?.value || 'MY'
   const outletPhone = (document.getElementById('ss-outlet-phone')?.value || '').trim()
@@ -1940,12 +1964,9 @@ async function ssSubmit () {
       branch_name:         outletName,
       currency,
       tax_rate:            tax,
-      service_charge_rate: sc,
-      receipt_footer:      footer,
       address,
       opening_time:        openTime,
       closing_time:        closeTime,
-      table_count:         String(tableCount),
       outlet_phone:        outletPhone,
       outlet_email:        outletEmail,
       business_type:       bizType,
@@ -3916,17 +3937,6 @@ const _origShowView = showView
                 <option>Cloud Kitchen</option><option>Other</option>
               </select>
             </div>
-            <div class="ss-field">
-              <label>Country</label>
-              <select id="ss-country">
-                <option value="MY">Malaysia</option><option value="SG">Singapore</option>
-                <option value="ID">Indonesia</option><option value="TH">Thailand</option>
-                <option value="PH">Philippines</option><option value="AE">UAE</option>
-                <option value="SA">Saudi Arabia</option><option value="PK">Pakistan</option>
-                <option value="IN">India</option><option value="GB">United Kingdom</option>
-                <option value="US">United States</option><option value="OTHER">Other</option>
-              </select>
-            </div>
           </div>
         </div>
       </div>
@@ -3965,7 +3975,7 @@ const _origShowView = showView
             </div>
             <div class="ss-field">
               <label>Owner Email Address</label>
-              <input id="ss-owner-email" type="email" placeholder="owner@email.com" autocomplete="email">
+              <input id="ss-owner-email" type="email" placeholder="owner@email.com" readonly style="opacity:.65;cursor:default">
             </div>
           </div>
         </div>
@@ -3981,7 +3991,7 @@ const _origShowView = showView
           <div class="ss-row">
             <div class="ss-field">
               <label>Outlet Name <span style="color:#ef4444">*</span></label>
-              <input id="ss-outlet-name" type="text" placeholder="e.g. Main Branch">
+              <input id="ss-outlet-name" type="text" placeholder="e.g. Main Branch, Outlet KL">
             </div>
             <div class="ss-field">
               <label>Outlet Phone Number</label>
@@ -3990,8 +4000,22 @@ const _origShowView = showView
           </div>
           <div class="ss-row">
             <div class="ss-field">
-              <label>Outlet Email Address</label>
-              <input id="ss-outlet-email" type="email" placeholder="outlet@restaurant.com">
+              <label>Outlet Country <span style="color:#ef4444">*</span></label>
+              <select id="ss-country" onchange="ssCountryChange(this.value)">
+                <option value="MY">🇲🇾 Malaysia</option>
+                <option value="SG">🇸🇬 Singapore</option>
+                <option value="ID">🇮🇩 Indonesia</option>
+                <option value="TH">🇹🇭 Thailand</option>
+                <option value="PH">🇵🇭 Philippines</option>
+                <option value="AE">🇦🇪 UAE</option>
+                <option value="SA">🇸🇦 Saudi Arabia</option>
+                <option value="PK">🇵🇰 Pakistan</option>
+                <option value="IN">🇮🇳 India</option>
+                <option value="GB">🇬🇧 United Kingdom</option>
+                <option value="US">🇺🇸 United States</option>
+                <option value="EU">🇪🇺 Europe</option>
+                <option value="OTHER">🌍 Other</option>
+              </select>
             </div>
             <div class="ss-field">
               <label>Currency <span style="color:#ef4444">*</span></label>
@@ -4011,39 +4035,38 @@ const _origShowView = showView
               </select>
             </div>
           </div>
-          <div class="ss-row" style="margin-bottom:0">
+          <div class="ss-row">
             <div class="ss-field">
-              <label>Address</label>
-              <textarea id="ss-address" rows="2" placeholder="e.g. No. 12, Jalan ABC, 50480 Kuala Lumpur"></textarea>
-            </div>
-            <div style="display:flex;flex-direction:column;gap:16px">
-              <div class="ss-field">
-                <label>Opening Time</label>
-                <input id="ss-open-time" type="time" value="09:00">
-              </div>
-              <div class="ss-field">
-                <label>Closing Time</label>
-                <input id="ss-close-time" type="time" value="22:00">
-              </div>
-            </div>
-          </div>
-          <div class="ss-row" style="margin-top:16px">
-            <div class="ss-field">
-              <label>Number of Tables</label>
-              <input id="ss-tables" type="number" min="0" max="500" placeholder="0" value="0">
+              <label>Outlet Email Address</label>
+              <input id="ss-outlet-email" type="email" placeholder="outlet@restaurant.com">
             </div>
             <div class="ss-field">
               <label>Tax Rate (%)</label>
               <input id="ss-tax" type="number" min="0" max="30" step="0.5" placeholder="0" value="0">
             </div>
           </div>
-          <div class="ss-field" style="margin-top:4px">
-            <label>Service Charge (%) <span style="color:#475569;font-weight:400">optional</span></label>
-            <input id="ss-sc" type="number" min="0" max="20" step="0.5" placeholder="0" value="0">
+          <div class="ss-field">
+            <label>Address</label>
+            <textarea id="ss-address" rows="2" placeholder="e.g. No. 12, Jalan ABC, 50480 Kuala Lumpur"></textarea>
           </div>
-          <div class="ss-field" style="margin-top:16px">
-            <label>Receipt Footer <span style="color:#475569;font-weight:400">optional</span></label>
-            <input id="ss-footer" type="text" placeholder="e.g. Thank you for dining with us!">
+          <div class="ss-row" style="align-items:flex-end">
+            <div style="display:flex;flex-direction:column;gap:10px">
+              <div class="ss-field" style="margin:0" id="ss-open-wrap">
+                <label>Opening Time</label>
+                <input id="ss-open-time" type="time" value="09:00">
+              </div>
+              <div class="ss-field" style="margin:0" id="ss-close-wrap">
+                <label>Closing Time</label>
+                <input id="ss-close-time" type="time" value="22:00">
+              </div>
+            </div>
+            <div class="ss-field" style="margin:0">
+              <label style="opacity:0">Hours</label>
+              <label style="display:flex;align-items:center;gap:10px;padding:10px 14px;background:#0d1a2d;border:1.5px solid #1e3a5f;border-radius:8px;cursor:pointer;user-select:none">
+                <input type="checkbox" id="ss-24h" onchange="ss24hToggle(this.checked)" style="width:16px;height:16px;accent-color:#3b82f6;cursor:pointer">
+                <span style="font-size:13px;color:#e2e8f0;font-weight:500">Open 24 Hours</span>
+              </label>
+            </div>
           </div>
         </div>
       </div>
