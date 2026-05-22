@@ -143,6 +143,28 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 .pt td:first-child{font-weight:600;color:#e2e8f0}
 .bar{height:8px;background:#0f172a;border-radius:4px;overflow:hidden;display:inline-block;vertical-align:middle;margin-left:8px}
 .bar-f{height:100%;background:#6366f1;border-radius:4px}
+/* ── Wizard ── */
+.wiz-steps{display:flex;align-items:flex-start;justify-content:center;margin-bottom:22px}
+.wiz-step{display:flex;flex-direction:column;align-items:center;flex:1;min-width:0}
+.wiz-dot{width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;background:#0f172a;border:2px solid #334155;color:#64748b;transition:.2s;flex-shrink:0}
+.wiz-dot.active{background:#6366f1;border-color:#6366f1;color:#fff}
+.wiz-dot.done{background:#166534;border-color:#166534;color:#4ade80}
+.wiz-label{font-size:10px;color:#64748b;margin-top:5px;text-align:center}
+.wiz-conn{flex:1;height:2px;background:#334155;margin-top:14px;transition:.2s}
+.wiz-conn.done{background:#166534}
+.wiz-panel{display:none}
+.wiz-panel.active{display:block}
+.wiz-task{display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid #1e293b}
+.wiz-task:last-child{border-bottom:none}
+.wiz-task-ico{width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;flex-shrink:0;transition:.2s}
+.wiz-task-ico.pend{background:#1e293b;border:2px solid #334155;color:#475569}
+.wiz-task-ico.run{background:#1c1806;border:2px solid #854d0e;color:#fbbf24}
+.wiz-task-ico.ok{background:#052e16;border:2px solid #166534;color:#4ade80}
+.wiz-task-ico.err{background:#1c0a0a;border:2px solid #7f1d1d;color:#f87171}
+.rg-cb-group{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px}
+.rg-cb-group label{display:flex;align-items:center;gap:5px;font-size:12px;color:#94a3b8;cursor:pointer;background:#0f172a;border:1px solid #334155;padding:5px 10px;border-radius:6px;transition:.1s;text-transform:none;letter-spacing:0;font-weight:400;margin:0}
+.rg-cb-group label:hover{border-color:#6366f1;color:#818cf8}
+.rg-cb-group input[type=checkbox]{width:auto;margin:0;accent-color:#6366f1}
 @media(max-width:768px){.sidebar{display:none}.sg{grid-template-columns:1fr 1fr}.mg{grid-template-columns:1fr}}
 </style>
 </head>
@@ -482,35 +504,151 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
   </div>
 </div>
 
-<!-- ── REGISTER MODAL ── -->
+<!-- ── REGISTER WIZARD ── -->
 <div class="mo" id="mo-reg">
-  <div class="mb" style="max-width:480px">
+  <div class="mb" style="max-width:560px">
     <h3>Register New Restaurant</h3>
-    <div class="sub">Creates a direct client license (not from public signup)</div>
-    <div class="mf">
-      <label>Restaurant Name *</label><input id="rg-name" type="text" placeholder="Warung Makan Selera">
-      <div class="mg">
-        <div><label>Max Terminals</label><input id="rg-terms" type="number" value="5" min="1" max="50"></div>
-        <div><label>License Days (blank = unlimited)</label><input id="rg-days" type="number" placeholder="365" min="1"></div>
-      </div>
-      <div class="mg">
-        <div><label>Reseller Name</label><input id="rg-reseller" type="text" placeholder="Agent / Reseller"></div>
-        <div><label>Notes</label><input id="rg-notes" type="text" placeholder="Contact, location…"></div>
+    <div class="sub" id="wiz-sub">Step 1 of 4 — Brand Details</div>
+
+    <!-- Step indicators -->
+    <div class="wiz-steps">
+      <div class="wiz-step"><div class="wiz-dot active" id="wdot-1">1</div><div class="wiz-label">Brand</div></div>
+      <div class="wiz-conn" id="wconn-1"></div>
+      <div class="wiz-step"><div class="wiz-dot" id="wdot-2">2</div><div class="wiz-label">Owner</div></div>
+      <div class="wiz-conn" id="wconn-2"></div>
+      <div class="wiz-step"><div class="wiz-dot" id="wdot-3">3</div><div class="wiz-label">Outlet</div></div>
+      <div class="wiz-conn" id="wconn-3"></div>
+      <div class="wiz-step"><div class="wiz-dot" id="wdot-4">4</div><div class="wiz-label">Setup</div></div>
+    </div>
+
+    <!-- Step 1: Brand Details -->
+    <div class="wiz-panel active" id="wp-1">
+      <div class="mf">
+        <div class="mg">
+          <div><label>Brand Name *</label><input id="rg-brand" type="text" placeholder="e.g. Burger Palace"></div>
+          <div><label>Business Type *</label>
+            <select id="rg-btype">
+              <option value="">— Select type —</option>
+              <option>Restaurant</option><option>Café / Coffee Shop</option><option>Fast Food</option>
+              <option>Food Court / Stall</option><option>Bakery</option><option>Cloud Kitchen</option>
+              <option>Bar / Pub</option><option>Catering</option><option>Other</option>
+            </select>
+          </div>
+        </div>
+        <div class="mg">
+          <div><label>Country *</label>
+            <select id="rg-country">
+              <option value="">— Select country —</option>
+              <option>Qatar</option><option>Saudi Arabia</option><option>UAE</option>
+              <option>Kuwait</option><option>Bahrain</option><option>Oman</option>
+              <option>Malaysia</option><option>Indonesia</option><option>India</option>
+              <option>Pakistan</option><option>Philippines</option>
+              <option>United Kingdom</option><option>United States</option><option>Other</option>
+            </select>
+          </div>
+          <div><label>Reseller / Agent</label><input id="rg-reseller" type="text" placeholder="Leave blank for direct"></div>
+        </div>
+        <div class="mg">
+          <div><label>Max Terminals</label><input id="rg-terms" type="number" value="5" min="1" max="50"></div>
+          <div><label>License Days (blank = unlimited)</label><input id="rg-days" type="number" placeholder="365" min="1"></div>
+        </div>
+        <label>Internal Notes</label>
+        <input id="rg-notes" type="text" placeholder="Contact, setup date, referral…">
       </div>
     </div>
-    <div id="rg-result" style="display:none;background:#052e16;border:1px solid #166534;border-radius:10px;padding:14px;margin-bottom:12px">
-      <div style="font-weight:700;color:#4ade80;margin-bottom:10px">✅ Registered!</div>
-      <div class="cred-box" style="background:#0a1f14;border-color:#166534">
-        <div class="cred-row"><div><div class="cred-label">Restaurant ID</div><div class="cred-value" id="rg-rid"></div></div><button class="cred-copy" onclick="cp('rg-rid')">Copy</button></div>
-        <div class="cred-row"><div><div class="cred-label">License Key</div><div class="cred-value" id="rg-key"></div></div><button class="cred-copy" onclick="cp('rg-key')">Copy</button></div>
-        <div class="cred-row"><div><div class="cred-label">Expires</div><div class="cred-value" id="rg-exp" style="color:#fbbf24;font-size:13px"></div></div></div>
+
+    <!-- Step 2: Owner Details -->
+    <div class="wiz-panel" id="wp-2">
+      <div class="mf">
+        <div class="mg">
+          <div><label>Owner Full Name *</label><input id="rg-owner" type="text" placeholder="John Doe"></div>
+          <div><label>Owner Email *</label><input id="rg-email" type="email" placeholder="owner@restaurant.com"></div>
+        </div>
+        <div class="mg">
+          <div><label>Mobile / Phone *</label><input id="rg-mobile" type="tel" placeholder="+974 5555 1234"></div>
+          <div><label>WhatsApp</label><input id="rg-whatsapp" type="tel" placeholder="Same or different number"></div>
+        </div>
       </div>
-      <div style="font-size:11px;color:#86efac;background:#071810;padding:8px;border-radius:6px">⚠️ Copy the License Key now — cannot be retrieved later if encryption key changes.</div>
     </div>
+
+    <!-- Step 3: Outlet Details -->
+    <div class="wiz-panel" id="wp-3">
+      <div class="mf">
+        <div class="mg">
+          <div><label>Outlet Name *</label><input id="rg-outlet" type="text" placeholder="Main Branch"></div>
+          <div><label>Outlet Phone *</label><input id="rg-ophone" type="tel" placeholder="+974 4444 5678"></div>
+        </div>
+        <div class="mg">
+          <div><label>Outlet Email</label><input id="rg-oemail" type="email" placeholder="info@restaurant.com"></div>
+          <div><label>Google Maps URL</label><input id="rg-gmap" type="url" placeholder="https://maps.google.com/…"></div>
+        </div>
+        <label>Address *</label>
+        <input id="rg-address" type="text" placeholder="Street, Building, Area, City">
+        <div class="mg">
+          <div><label>Opening Time *</label><input id="rg-open" type="time" value="08:00"></div>
+          <div><label>Closing Time *</label><input id="rg-close" type="time" value="23:00"></div>
+        </div>
+        <label>Order Types</label>
+        <div class="rg-cb-group">
+          <label><input type="checkbox" name="rg-ordertypes" value="Dine-In"> Dine-In</label>
+          <label><input type="checkbox" name="rg-ordertypes" value="Takeaway"> Takeaway</label>
+          <label><input type="checkbox" name="rg-ordertypes" value="Delivery"> Delivery</label>
+          <label><input type="checkbox" name="rg-ordertypes" value="Drive-Through"> Drive-Through</label>
+        </div>
+        <label>Delivery Aggregators</label>
+        <div class="rg-cb-group">
+          <label><input type="checkbox" name="rg-aggregators" value="Talabat"> Talabat</label>
+          <label><input type="checkbox" name="rg-aggregators" value="Careem"> Careem</label>
+          <label><input type="checkbox" name="rg-aggregators" value="Deliveroo"> Deliveroo</label>
+          <label><input type="checkbox" name="rg-aggregators" value="Noon Food"> Noon Food</label>
+          <label><input type="checkbox" name="rg-aggregators" value="Snoonu"> Snoonu</label>
+          <label><input type="checkbox" name="rg-aggregators" value="HungerStation"> HungerStation</label>
+          <label><input type="checkbox" name="rg-aggregators" value="Own Delivery"> Own Delivery</label>
+        </div>
+        <div class="mg">
+          <div><label>Number of Tables</label><input id="rg-tables" type="number" value="0" min="0" max="500"></div>
+          <div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Step 4: Setup Completion -->
+    <div class="wiz-panel" id="wp-4">
+      <div id="wiz-running" style="display:none">
+        <div style="text-align:center;padding:12px 0 8px">
+          <div style="font-size:30px">⚙️</div>
+          <div style="font-weight:700;color:#f1f5f9;margin:8px 0 4px">Setting up your restaurant…</div>
+          <div style="font-size:13px;color:#64748b">This takes a few seconds</div>
+        </div>
+        <div id="wiz-tasks" style="margin-top:14px;background:#0f172a;border:1px solid #334155;border-radius:10px;padding:6px 14px"></div>
+      </div>
+      <div id="wiz-done" style="display:none">
+        <div style="background:#052e16;border:1px solid #166534;border-radius:10px;padding:14px;margin-bottom:14px">
+          <div style="font-weight:700;color:#4ade80;margin-bottom:12px">✅ Restaurant Created Successfully!</div>
+          <div class="cred-box" style="background:#0a1f14;border-color:#166534">
+            <div class="cred-row"><div><div class="cred-label">Restaurant ID</div><div class="cred-value" id="rg-rid"></div></div><button class="cred-copy" onclick="cp('rg-rid')">Copy</button></div>
+            <div class="cred-row"><div><div class="cred-label">License Key</div><div class="cred-value" id="rg-key"></div></div><button class="cred-copy" onclick="cp('rg-key')">Copy</button></div>
+            <div class="cred-row"><div><div class="cred-label">Expires</div><div class="cred-value" id="rg-exp" style="color:#fbbf24;font-size:13px"></div></div></div>
+          </div>
+          <div class="cred-box" style="background:#0a1f14;border-color:#166534;margin-top:10px">
+            <div style="font-size:11px;font-weight:700;color:#64748b;text-transform:uppercase;margin-bottom:8px">Back Office Login</div>
+            <div class="cred-row"><div><div class="cred-label">Username</div><div class="cred-value" id="rg-bou"></div></div><button class="cred-copy" onclick="cp('rg-bou')">Copy</button></div>
+            <div class="cred-row"><div><div class="cred-label">Password</div><div class="cred-value" id="rg-bop"></div></div><button class="cred-copy" onclick="cp('rg-bop')">Copy</button></div>
+          </div>
+          <div style="font-size:11px;color:#86efac;background:#071810;padding:8px;border-radius:6px;margin-top:10px">⚠️ Copy the credentials now — password shown only once.</div>
+        </div>
+      </div>
+      <div id="wiz-fail" style="display:none;background:#1c0a0a;border:1px solid #7f1d1d;border-radius:10px;padding:14px;margin-bottom:14px">
+        <div style="font-weight:700;color:#f87171;margin-bottom:6px">❌ Registration Failed</div>
+        <div id="wiz-fail-msg" style="font-size:13px;color:#fca5a5"></div>
+      </div>
+    </div>
+
     <div id="rg-err" style="color:#f87171;font-size:13px;margin-bottom:8px;min-height:16px"></div>
     <div class="ma">
-      <button class="btn btn-o" onclick="closeModal('mo-reg');loadRestaurants()">Close</button>
-      <button id="rg-btn" class="btn btn-p" onclick="submitReg()">Register</button>
+      <button class="btn btn-o" id="wiz-cancel-btn" onclick="closeModal('mo-reg');loadRestaurants()">Cancel</button>
+      <button class="btn btn-o" id="wiz-back-btn" onclick="wizBack()" style="display:none">← Back</button>
+      <button class="btn btn-p" id="wiz-next-btn" onclick="wizNext()">Next →</button>
     </div>
   </div>
 </div>
@@ -916,41 +1054,167 @@ async function deactivateTerm (tid, rid, name) {
   catch(e) { alert('Error: '+e.message) }
 }
 
-// ── Register ───────────────────────────────────────────────────────────────
+// ── Register Wizard ────────────────────────────────────────────────────────
+let _wizStep = 1
+
 function showReg () {
-  document.getElementById('rg-name').value = ''
-  document.getElementById('rg-reseller').value = ''
-  document.getElementById('rg-notes').value = ''
-  document.getElementById('rg-result').style.display = 'none'
+  _wizStep = 1
+  ;['rg-brand','rg-owner','rg-email','rg-mobile','rg-whatsapp',
+    'rg-outlet','rg-ophone','rg-oemail','rg-gmap','rg-address',
+    'rg-reseller','rg-notes'].forEach(id => { const el=document.getElementById(id); if(el) el.value='' })
+  document.getElementById('rg-tables').value  = '0'
+  document.getElementById('rg-terms').value   = '5'
+  document.getElementById('rg-days').value    = ''
+  document.getElementById('rg-open').value    = '08:00'
+  document.getElementById('rg-close').value   = '23:00'
+  document.getElementById('rg-btype').value   = ''
+  document.getElementById('rg-country').value = ''
+  document.querySelectorAll('input[name="rg-ordertypes"]').forEach(c => c.checked=false)
+  document.querySelectorAll('input[name="rg-aggregators"]').forEach(c => c.checked=false)
   document.getElementById('rg-err').textContent = ''
-  document.getElementById('rg-btn').disabled = false
-  document.getElementById('rg-btn').textContent = 'Register'
+  document.getElementById('wiz-running').style.display = 'none'
+  document.getElementById('wiz-done').style.display    = 'none'
+  document.getElementById('wiz-fail').style.display    = 'none'
+  wizGoto(1)
   openModal('mo-reg')
 }
 
-async function submitReg () {
-  const name = document.getElementById('rg-name').value.trim()
-  const err  = document.getElementById('rg-err')
+function wizGoto (step) {
+  _wizStep = step
+  const subs = [
+    'Step 1 of 4 — Brand Details',
+    'Step 2 of 4 — Owner Details',
+    'Step 3 of 4 — Outlet & Operations',
+    'Step 4 of 4 — Setup & Credentials',
+  ]
+  document.getElementById('wiz-sub').textContent = subs[step-1]
+
+  for(let i=1;i<=4;i++) {
+    document.getElementById('wp-'+i).classList.toggle('active', i===step)
+    const dot = document.getElementById('wdot-'+i)
+    dot.classList.remove('active','done')
+    if(i < step)       { dot.classList.add('done');   dot.textContent='✓' }
+    else if(i === step){ dot.classList.add('active');  dot.textContent=i   }
+    else               { dot.textContent=i }
+    if(i <= 3) document.getElementById('wconn-'+i).classList.toggle('done', i < step)
+  }
+
+  const backBtn   = document.getElementById('wiz-back-btn')
+  const nextBtn   = document.getElementById('wiz-next-btn')
+  const cancelBtn = document.getElementById('wiz-cancel-btn')
+  if(step === 4) {
+    backBtn.style.display = 'none'
+    nextBtn.style.display = 'none'
+    cancelBtn.textContent = 'Close'
+  } else {
+    backBtn.style.display  = step > 1 ? '' : 'none'
+    nextBtn.style.display  = ''
+    nextBtn.textContent    = step === 3 ? 'Create Restaurant →' : 'Next →'
+    cancelBtn.textContent  = 'Cancel'
+  }
+}
+
+function wizBack () { if(_wizStep > 1 && _wizStep < 4) wizGoto(_wizStep-1) }
+
+function wizNext () {
+  const err = document.getElementById('rg-err')
   err.textContent = ''
-  if(!name) { err.textContent='Restaurant name required.'; return }
-  const btn = document.getElementById('rg-btn')
-  btn.disabled=true; btn.textContent='Registering…'
+  if(_wizStep === 1) {
+    if(!document.getElementById('rg-brand').value.trim()) { err.textContent='Brand name is required.'; return }
+    if(!document.getElementById('rg-btype').value)        { err.textContent='Business type is required.'; return }
+    if(!document.getElementById('rg-country').value)      { err.textContent='Country is required.'; return }
+    wizGoto(2)
+  } else if(_wizStep === 2) {
+    if(!document.getElementById('rg-owner').value.trim())  { err.textContent='Owner name is required.'; return }
+    if(!document.getElementById('rg-email').value.trim())  { err.textContent='Owner email is required.'; return }
+    if(!document.getElementById('rg-mobile').value.trim()) { err.textContent='Owner mobile is required.'; return }
+    wizGoto(3)
+  } else if(_wizStep === 3) {
+    if(!document.getElementById('rg-outlet').value.trim())  { err.textContent='Outlet name is required.'; return }
+    if(!document.getElementById('rg-ophone').value.trim())  { err.textContent='Outlet phone is required.'; return }
+    if(!document.getElementById('rg-address').value.trim()) { err.textContent='Address is required.'; return }
+    if(!document.getElementById('rg-open').value)           { err.textContent='Opening time is required.'; return }
+    if(!document.getElementById('rg-close').value)          { err.textContent='Closing time is required.'; return }
+    submitReg()
+  }
+}
+
+const _delay = ms => new Promise(r => setTimeout(r, ms))
+
+async function submitReg () {
+  wizGoto(4)
+  document.getElementById('wiz-running').style.display = 'block'
+  const tasks = [
+    {id:'wt1', label:'Creating restaurant record'},
+    {id:'wt2', label:'Initializing database schema'},
+    {id:'wt3', label:'Generating POS license & credentials'},
+    {id:'wt4', label:'Setting up Back Office access'},
+  ]
+  document.getElementById('wiz-tasks').innerHTML = tasks.map(t =>
+    `<div class="wiz-task"><div class="wiz-task-ico pend" id="${t.id}">○</div><span style="font-size:13px;color:#94a3b8">${t.label}</span></div>`
+  ).join('')
+
+  const setT = (id, cls, ico) => {
+    const el = document.getElementById(id)
+    el.className = 'wiz-task-ico ' + cls
+    el.textContent = ico
+  }
+  setT('wt1','run','⟳')
+
+  const orderTypes  = [...document.querySelectorAll('input[name="rg-ordertypes"]:checked')].map(c=>c.value).join(',')
+  const aggregators = [...document.querySelectorAll('input[name="rg-aggregators"]:checked')].map(c=>c.value).join(',')
+
   try {
     const r = await api('POST', '/setup/register', {
-      name,
-      max_terminals: parseInt(document.getElementById('rg-terms').value)||5,
-      expires_days:  document.getElementById('rg-days').value||null,
-      reseller_name: document.getElementById('rg-reseller').value.trim()||null,
-      notes:         document.getElementById('rg-notes').value.trim()||null,
+      name:            document.getElementById('rg-brand').value.trim(),
+      brand_name:      document.getElementById('rg-brand').value.trim(),
+      business_type:   document.getElementById('rg-btype').value,
+      country:         document.getElementById('rg-country').value,
+      reseller_name:   document.getElementById('rg-reseller').value.trim()||null,
+      notes:           document.getElementById('rg-notes').value.trim()||null,
+      max_terminals:   parseInt(document.getElementById('rg-terms').value)||5,
+      expires_days:    document.getElementById('rg-days').value||null,
+      owner_name:      document.getElementById('rg-owner').value.trim(),
+      email:           document.getElementById('rg-email').value.trim(),
+      owner_mobile:    document.getElementById('rg-mobile').value.trim(),
+      whatsapp:        document.getElementById('rg-whatsapp').value.trim()||null,
+      outlet_name:     document.getElementById('rg-outlet').value.trim(),
+      outlet_phone:    document.getElementById('rg-ophone').value.trim(),
+      outlet_email:    document.getElementById('rg-oemail').value.trim()||null,
+      address:         document.getElementById('rg-address').value.trim(),
+      google_map_url:  document.getElementById('rg-gmap').value.trim()||null,
+      opening_time:    document.getElementById('rg-open').value,
+      closing_time:    document.getElementById('rg-close').value,
+      order_types:     orderTypes||null,
+      delivery_aggregators: aggregators||null,
+      table_count:     parseInt(document.getElementById('rg-tables').value)||0,
     })
+
+    setT('wt1','ok','✓'); await _delay(250)
+    setT('wt2','run','⟳'); await _delay(350)
+    setT('wt2','ok','✓')
+    setT('wt3','run','⟳'); await _delay(300)
+    setT('wt3','ok','✓')
+    setT('wt4','run','⟳'); await _delay(300)
+    setT('wt4','ok','✓'); await _delay(350)
+
+    document.getElementById('wiz-running').style.display = 'none'
     document.getElementById('rg-rid').textContent = r.restaurant.id
     document.getElementById('rg-key').textContent = r.restaurant.license_key
     document.getElementById('rg-exp').textContent = r.restaurant.expires_at ? fmtDate(r.restaurant.expires_at) : 'Unlimited'
-    document.getElementById('rg-result').style.display = 'block'
-    btn.textContent='Register Another'; btn.disabled=false
-    document.getElementById('rg-name').value = ''
+    document.getElementById('rg-bou').textContent = r.restaurant.bo_username || '—'
+    document.getElementById('rg-bop').textContent = r.restaurant.bo_password  || '—'
+    document.getElementById('wiz-done').style.display = 'block'
+    document.getElementById('wiz-cancel-btn').textContent = 'Close'
     loadRestaurants()
-  } catch(e) { err.textContent='Error: '+e.message; btn.disabled=false; btn.textContent='Register' }
+  } catch(e) {
+    setT('wt1','err','✗')
+    document.getElementById('wiz-running').style.display  = 'none'
+    document.getElementById('wiz-fail-msg').textContent   = e.message
+    document.getElementById('wiz-fail').style.display     = 'block'
+    document.getElementById('wiz-back-btn').style.display = ''
+    document.getElementById('wiz-cancel-btn').textContent = 'Cancel'
+  }
 }
 
 // ── Performance ────────────────────────────────────────────────────────────

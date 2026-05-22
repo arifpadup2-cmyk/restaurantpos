@@ -28,10 +28,21 @@ module.exports = function setupRouter (sql) {
 
   // ── Provider: register a new restaurant ───────────────────────────────────
   router.post('/register', jwtAuth, async (req, res) => {
-    const { name, max_terminals = 10, expires_days, notes, reseller_name } = req.body || {}
+    const {
+      name, max_terminals = 10, expires_days, notes, reseller_name,
+      // Brand
+      brand_name, business_type, country,
+      // Owner
+      owner_name, owner_mobile, email, whatsapp,
+      // Outlet
+      outlet_name, outlet_phone, outlet_email, address,
+      google_map_url, opening_time, closing_time,
+      order_types, delivery_aggregators, table_count,
+    } = req.body || {}
     if (!name || !name.trim()) return res.status(400).json({ error: 'name is required' })
 
     try {
+      const bcrypt       = require('bcryptjs')
       const id           = generateRestaurantId()
       const licenseKey   = generateLicenseKey()
       const keyHash      = await hashLicenseKey(licenseKey)
@@ -43,20 +54,47 @@ module.exports = function setupRouter (sql) {
         : null
       const licStartAt   = new Date().toISOString()
 
+      // Auto-generate BO credentials
+      const boUsername = (name.trim().toLowerCase().replace(/[^a-z0-9]/g,'').slice(0,12) || 'admin') +
+                         Math.floor(Math.random() * 900 + 100)
+      const boPassword = Math.random().toString(36).slice(2, 8).toUpperCase() +
+                         Math.floor(Math.random() * 90 + 10) + '!'
+      const boPassEnc  = encryptText(boPassword)
+      const boPassHash = await bcrypt.hash(boPassword, 10)
+
       await sql`
         INSERT INTO restaurants (
-          id, name, license_key_hash, license_prefix, license_key_enc,
+          id, name, brand_name, license_key_hash, license_prefix, license_key_enc,
           max_terminals, expires_at, license_given_days, license_start_at,
-          notes, reseller_name, active
+          notes, reseller_name, active,
+          business_type, country, owner_name, owner_mobile, email, whatsapp,
+          outlet_name, outlet_phone, outlet_email, address,
+          google_map_url, opening_time, closing_time,
+          order_types, delivery_aggregators, table_count,
+          bo_username, bo_password_enc, signup_source, status
         ) VALUES (
-          ${id}, ${name.trim()}, ${keyHash}, ${prefix}, ${keyEnc},
+          ${id}, ${name.trim()}, ${brand_name||name.trim()}, ${keyHash}, ${prefix}, ${keyEnc},
           ${max_terminals}, ${expiresAt}, ${givenDays}, ${licStartAt},
-          ${notes || null}, ${reseller_name || null}, ${true}
+          ${notes||null}, ${reseller_name||null}, ${true},
+          ${business_type||null}, ${country||'Malaysia'}, ${owner_name||null}, ${owner_mobile||null},
+          ${email||null}, ${whatsapp||null},
+          ${outlet_name||name.trim()}, ${outlet_phone||null}, ${outlet_email||null}, ${address||null},
+          ${google_map_url||null}, ${opening_time||null}, ${closing_time||null},
+          ${order_types||null}, ${delivery_aggregators||null}, ${table_count||0},
+          ${boUsername}, ${boPassEnc}, 'admin_panel', 'active'
         )`
+
+      // Create BO user
+      const boId = Date.now().toString(36) + Math.random().toString(36).slice(2,6)
+      await sql`
+        INSERT INTO bo_users (id, restaurant_id, username, password, role)
+        VALUES (${boId}, ${id}, ${boUsername}, ${boPassHash}, 'admin')
+        ON CONFLICT (username) DO NOTHING`
 
       res.json({
         ok: true,
-        restaurant: { id, name: name.trim(), license_key: licenseKey, max_terminals, expires_at: expiresAt },
+        restaurant: { id, name: name.trim(), license_key: licenseKey, max_terminals, expires_at: expiresAt,
+                      bo_username: boUsername, bo_password: boPassword },
         instructions: `Restaurant ID: ${id}  |  License Key: ${licenseKey}`,
       })
     } catch (e) { res.status(500).json({ error: e.message }) }

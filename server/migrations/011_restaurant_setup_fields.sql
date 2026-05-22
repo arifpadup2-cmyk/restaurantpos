@@ -1,0 +1,14 @@
+ALTER TABLE restaurants ADD COLUMN IF NOT EXISTS brand_name          TEXT;
+ALTER TABLE restaurants ADD COLUMN IF NOT EXISTS business_type       TEXT;
+ALTER TABLE restaurants ADD COLUMN IF NOT EXISTS owner_mobile        TEXT;
+ALTER TABLE restaurants ADD COLUMN IF NOT EXISTS whatsapp            TEXT;
+ALTER TABLE restaurants ADD COLUMN IF NOT EXISTS outlet_name         TEXT;
+ALTER TABLE restaurants ADD COLUMN IF NOT EXISTS outlet_phone        TEXT;
+ALTER TABLE restaurants ADD COLUMN IF NOT EXISTS outlet_email        TEXT;
+ALTER TABLE restaurants ADD COLUMN IF NOT EXISTS address             TEXT;
+ALTER TABLE restaurants ADD COLUMN IF NOT EXISTS google_map_url      TEXT;
+ALTER TABLE restaurants ADD COLUMN IF NOT EXISTS opening_time        TEXT;
+ALTER TABLE restaurants ADD COLUMN IF NOT EXISTS closing_time        TEXT;
+ALTER TABLE restaurants ADD COLUMN IF NOT EXISTS order_types         TEXT;
+ALTER TABLE restaurants ADD COLUMN IF NOT EXISTS delivery_aggregators TEXT;
+ALTER TABLE restaurants ADD COLUMN IF NOT EXISTS table_count         INT DEFAULT 0;
