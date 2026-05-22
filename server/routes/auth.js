@@ -61,5 +61,57 @@ module.exports = function authRouter (sql) {
     res.json({ ok: true, user: req.user })
   })
 
+  // GET /auth/config — public config for the front-end
+  router.get('/config', (_req, res) => {
+    res.json({ googleClientId: process.env.GOOGLE_CLIENT_ID || null })
+  })
+
+  // POST /auth/google — sign in with Google ID token
+  router.post('/google', async (req, res) => {
+    const { credential } = req.body || {}
+    if (!credential) return res.status(400).json({ error: 'credential required' })
+
+    const clientId = process.env.GOOGLE_CLIENT_ID
+    if (!clientId) return res.status(503).json({ error: 'Google sign-in not configured on this server' })
+
+    try {
+      // Verify token with Google tokeninfo endpoint (no extra package needed)
+      const r    = await fetch(`https://oauth2.googleapis.com/tokeninfo?id_token=${encodeURIComponent(credential)}`)
+      const info = await r.json()
+
+      if (info.error_description || !info.sub)
+        return res.status(401).json({ error: 'Invalid Google token: ' + (info.error_description || 'verification failed') })
+
+      if (info.aud !== clientId)
+        return res.status(401).json({ error: 'Token audience mismatch — wrong Google client ID' })
+
+      const googleId = info.sub
+      const email    = (info.email || '').toLowerCase()
+
+      // Look up by google_id first, then fall back to email
+      let rows = await sql`SELECT * FROM bo_users WHERE google_id = ${googleId} LIMIT 1`
+
+      if (!rows.length && email) {
+        rows = await sql`SELECT * FROM bo_users WHERE LOWER(email) = ${email} LIMIT 1`
+        if (rows.length) {
+          // First-time Google login — link the google_id to this account
+          await sql`UPDATE bo_users SET google_id = ${googleId} WHERE id = ${rows[0].id}`
+        }
+      }
+
+      if (!rows.length) {
+        return res.status(403).json({
+          error: `No Back Office account linked to ${info.email || 'this Google account'}. Contact your administrator.`,
+        })
+      }
+
+      const user  = rows[0]
+      const token = sign({ id: user.id, username: user.username, role: user.role })
+      res.json({ ok: true, token, user: { id: user.id, username: user.username, role: user.role } })
+    } catch (e) {
+      res.status(500).json({ error: e.message })
+    }
+  })
+
   return router
 }

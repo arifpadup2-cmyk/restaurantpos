@@ -84,11 +84,11 @@ module.exports = function setupRouter (sql) {
           ${boUsername}, ${boPassEnc}, 'admin_panel', 'active'
         )`
 
-      // Create BO user
+      // Create BO user (email stored so owner can sign in with Google later)
       const boId = Date.now().toString(36) + Math.random().toString(36).slice(2,6)
       await sql`
-        INSERT INTO bo_users (id, restaurant_id, username, password, role)
-        VALUES (${boId}, ${id}, ${boUsername}, ${boPassHash}, 'admin')
+        INSERT INTO bo_users (id, restaurant_id, username, password, email, role)
+        VALUES (${boId}, ${id}, ${boUsername}, ${boPassHash}, ${email||null}, 'admin')
         ON CONFLICT (username) DO NOTHING`
 
       res.json({
