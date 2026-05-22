@@ -148,7 +148,7 @@ module.exports = function setupRouter (sql) {
   router.patch('/restaurants/:id', jwtAuth, async (req, res) => {
     const { id } = req.params
     const {
-      active, name, max_terminals, expires_days, notes, status,
+      active, name, max_terminals, expires_days, notes, status, plan,
       extend_trial_days, reseller_name, last_billed_at,
       bo_username, bo_password, license_given_days,
     } = req.body || {}
@@ -159,6 +159,7 @@ module.exports = function setupRouter (sql) {
       if (max_terminals)                 updates.max_terminals    = parseInt(max_terminals, 10)
       if (notes           !== undefined) updates.notes            = notes
       if (status)                        updates.status           = status
+      if (plan)                          updates.plan             = plan
       if (reseller_name   !== undefined) updates.reseller_name    = reseller_name || null
       if (last_billed_at  !== undefined) updates.last_billed_at   = last_billed_at || null
       if (bo_username     !== undefined) updates.bo_username      = bo_username || null
