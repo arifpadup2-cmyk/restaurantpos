@@ -332,10 +332,19 @@ input:checked+.toggle-slider:before{transform:translateX(17px)}
     </div>
     <div class="auth-form">
       <label for="auth-username">Username</label>
-      <input id="auth-username" type="text" placeholder="admin" autocomplete="username">
+      <input id="auth-username" type="text" placeholder="admin" autocomplete="off" name="bo_username">
       <label for="auth-password">Password</label>
-      <input id="auth-password" type="password" placeholder="••••••••" autocomplete="current-password"
-        onkeydown="if(event.key==='Enter')login()">
+      <div style="position:relative;margin-bottom:14px">
+        <input id="auth-password" type="password" placeholder="••••••••" autocomplete="new-password"
+          name="bo_password" style="width:100%;padding-right:44px"
+          onkeydown="if(event.key==='Enter')login()">
+        <button type="button" onclick="toggleBoPw()" id="bo-pw-eye"
+          style="position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:#94a3b8;font-size:16px;line-height:1;padding:2px">👁</button>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px">
+        <input type="checkbox" id="bo-remember" style="width:auto;margin:0;accent-color:var(--primary)">
+        <label for="bo-remember" style="font-size:13px;color:var(--muted);text-transform:none;letter-spacing:0;font-weight:500;margin:0;cursor:pointer">Remember me</label>
+      </div>
       <button class="btn-auth" onclick="login()">Sign In</button>
       <div id="auth-error"></div>
       <p style="font-size:11px;color:var(--muted);margin-top:12px;text-align:center">
@@ -1388,9 +1397,17 @@ function showToast (msg, type = 'info', ms = 3500) {
 }
 
 // ─── AUTH ────────────────────────────────────────────────────────
+function toggleBoPw () {
+  const inp = document.getElementById('auth-password')
+  const btn = document.getElementById('bo-pw-eye')
+  if (inp.type === 'password') { inp.type = 'text'; btn.textContent = '🙈' }
+  else { inp.type = 'password'; btn.textContent = '👁' }
+}
+
 async function login () {
   const username = document.getElementById('auth-username').value.trim().toLowerCase()
   const pass     = document.getElementById('auth-password').value
+  const remember = document.getElementById('bo-remember')?.checked
   const errEl    = document.getElementById('auth-error')
   errEl.textContent = ''
   if (!username || !pass) { errEl.textContent = 'Enter username and password.'; return }
@@ -1398,6 +1415,8 @@ async function login () {
     const data = await apiFetch('POST', '/auth/login', { username, password: pass })
     token = data.token
     localStorage.setItem('bo_token', token)
+    if (remember) localStorage.setItem('bo_remember_user', username)
+    else          localStorage.removeItem('bo_remember_user')
     currentUser = data.user
     showApp()
   } catch (e) {
@@ -1467,6 +1486,13 @@ function updateSidebarUser () {
 
 // Check saved token on load
 ;(async function checkSession () {
+  const savedUser = localStorage.getItem('bo_remember_user')
+  if (savedUser) {
+    const uEl = document.getElementById('auth-username')
+    const rEl = document.getElementById('bo-remember')
+    if (uEl) uEl.value = savedUser
+    if (rEl) rEl.checked = true
+  }
   if (!token) { document.getElementById('auth-screen').style.display = 'flex'; return }
   try {
     const data = await apiFetch('GET', '/auth/me')

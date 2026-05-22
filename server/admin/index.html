@@ -167,6 +167,10 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
         <button type="button" class="pw-eye" onclick="toggleAdminPw()" id="pw-eye-btn">👁</button>
       </div>
     </div>
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px">
+      <input type="checkbox" id="adm-remember" style="width:auto;margin:0;accent-color:#f97316">
+      <label for="adm-remember" style="font-size:13px;color:#64748b;font-weight:500;cursor:pointer">Remember me</label>
+    </div>
     <button class="lbtn" id="lbtn" onclick="doLogin()">Sign In →</button>
   </div>
 </div>
@@ -540,6 +544,7 @@ function toggleAdminPw () {
 async function doLogin () {
   const u = document.getElementById('lu').value.trim()
   const p = document.getElementById('lp').value
+  const remember = document.getElementById('adm-remember')?.checked
   const err = document.getElementById('lerr')
   err.style.display = 'none'
   if (!u || !p) { showErr(err, 'Username and password required.'); return }
@@ -554,6 +559,8 @@ async function doLogin () {
     if (!r.ok || !d.ok) { showErr(err, d.error||'Login failed.'); btn.disabled=false; btn.textContent='Sign In →'; return }
     _tok = d.token
     localStorage.setItem('admin_tok', _tok)
+    if (remember) localStorage.setItem('admin_remember_user', u)
+    else          localStorage.removeItem('admin_remember_user')
     enterApp(d.user)
   } catch(e) { showErr(err, 'Network error: '+e.message); btn.disabled=false; btn.textContent='Sign In →' }
 }
@@ -1148,6 +1155,13 @@ document.addEventListener('keydown', e => {
 })
 
 ;(async () => {
+  const savedUser = localStorage.getItem('admin_remember_user')
+  if (savedUser) {
+    const uEl = document.getElementById('lu')
+    const rEl = document.getElementById('adm-remember')
+    if (uEl) uEl.value = savedUser
+    if (rEl) rEl.checked = true
+  }
   if(!_tok) return
   try {
     const r = await fetch('/admin-auth/me', { headers:{ Authorization:'Bearer '+_tok } })
