@@ -425,12 +425,9 @@ async function seedAdminUser () {
 
     const [existing] = await sql`SELECT id FROM admin_users WHERE username = ${ADMIN_UN}`
     if (existing) {
-      // Sync password whenever ADMIN_PASSWORD env var is explicitly provided
-      if (process.env.ADMIN_PASSWORD) {
-        const hash = await bcrypt.hash(ADMIN_PW, 10)
-        await sql`UPDATE admin_users SET password = ${hash}, name = ${ADMIN_NM} WHERE username = ${ADMIN_UN}`
-        console.log(`  ✓ Admin password updated: ${ADMIN_UN}`)
-      }
+      const hash = await bcrypt.hash(ADMIN_PW, 10)
+      await sql`UPDATE admin_users SET password = ${hash}, name = ${ADMIN_NM} WHERE username = ${ADMIN_UN}`
+      console.log(`  ✓ Admin credentials synced: ${ADMIN_UN}`)
       return
     }
 
