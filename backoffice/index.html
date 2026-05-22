@@ -25,18 +25,74 @@ button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-vis
 button,.nav-item,.filter-chip,.btn,[role="button"]{touch-action:manipulation}
 
 /* ─── AUTH ─────────────────────────────────────── */
-#auth-screen{min-height:100vh;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#1e293b,#0f172a)}
-.auth-box{background:#fff;border-radius:20px;padding:44px 40px;width:400px;box-shadow:0 24px 80px rgba(0,0,0,.5)}
-.auth-logo{text-align:center;margin-bottom:32px}
-.auth-icon{width:64px;height:64px;background:var(--primary);border-radius:16px;display:flex;align-items:center;justify-content:center;margin:0 auto 14px}
-.auth-logo h1{font-size:22px;font-weight:800}
-.auth-logo p{color:var(--muted);font-size:13px;margin-top:4px}
-.auth-form label{display:block;font-size:12px;font-weight:600;color:var(--muted);margin-bottom:5px;text-transform:uppercase;letter-spacing:.3px}
-.auth-form input{width:100%;padding:11px 14px;border:1.5px solid var(--border);border-radius:10px;font-size:14px;margin-bottom:14px;background:#f8fafc;transition:.15s}
-.auth-form input:focus{border-color:var(--primary);background:#fff}
-.btn-auth{width:100%;padding:13px;background:var(--primary);color:#fff;border-radius:10px;font-size:15px;font-weight:700;transition:.15s}
-.btn-auth:hover{background:var(--primary-d)}
-#auth-error{color:var(--danger);font-size:13px;margin-top:8px;text-align:center;min-height:18px}
+#auth-screen{min-height:100vh;display:flex}
+/* Left panel */
+.auth-left{flex:0 0 52%;background:#0f172a;position:relative;display:flex;flex-direction:column;padding:36px 48px;overflow:hidden}
+.auth-left::before{content:'';position:absolute;inset:0;background:url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.02'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");pointer-events:none}
+.auth-left-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:auto}
+.auth-brand{display:flex;align-items:center;gap:12px}
+.auth-brand-icon{width:42px;height:42px;background:var(--primary);border-radius:11px;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0}
+.auth-brand-name{font-size:15px;font-weight:800;color:#f1f5f9;line-height:1.2}
+.auth-brand-sub{font-size:11px;color:#64748b;font-weight:500}
+.auth-left-body{flex:1;display:flex;flex-direction:column;justify-content:center;padding:48px 0 32px}
+.auth-headline{font-size:30px;font-weight:800;color:#f1f5f9;line-height:1.25;margin-bottom:12px;letter-spacing:-.3px}
+.auth-subline{font-size:14px;color:#64748b;line-height:1.6;margin-bottom:40px;max-width:340px}
+.auth-features{display:flex;flex-direction:column;gap:16px}
+.auth-feat{display:flex;align-items:flex-start;gap:14px}
+.auth-feat-icon{width:36px;height:36px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0;margin-top:1px}
+.auth-feat-icon.orange{background:rgba(249,115,22,.15)}
+.auth-feat-icon.blue{background:rgba(59,130,246,.15)}
+.auth-feat-icon.green{background:rgba(34,197,94,.15)}
+.auth-feat-icon.purple{background:rgba(168,85,247,.15)}
+.auth-feat-title{font-size:13px;font-weight:700;color:#e2e8f0;margin-bottom:2px}
+.auth-feat-desc{font-size:12px;color:#64748b;line-height:1.4}
+.auth-left-foot{margin-top:auto;padding-top:32px;border-top:1px solid rgba(255,255,255,.06)}
+.auth-help-label{font-size:10px;font-weight:700;color:#475569;text-transform:uppercase;letter-spacing:.6px;margin-bottom:8px}
+.auth-help-contacts{display:flex;gap:16px;flex-wrap:wrap}
+.auth-help-contact{display:flex;align-items:center;gap:6px;font-size:12px;color:#64748b}
+.auth-help-contact span{color:#94a3b8;font-weight:500}
+/* Right panel */
+.auth-right{flex:1;background:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:48px 40px;position:relative}
+.auth-right-inner{width:100%;max-width:380px}
+.auth-welcome{font-size:28px;font-weight:800;color:#0f172a;margin-bottom:6px;letter-spacing:-.3px}
+.auth-welcome-sub{font-size:14px;color:#64748b;margin-bottom:32px}
+.auth-form label{display:block;font-size:12px;font-weight:600;color:#374151;margin-bottom:6px}
+.auth-form .auth-field{position:relative;margin-bottom:16px}
+.auth-form .auth-field input{width:100%;padding:11px 14px;border:1.5px solid #e5e7eb;border-radius:10px;font-size:14px;background:#f9fafb;transition:.15s;color:#0f172a;outline:none}
+.auth-form .auth-field input:focus{border-color:var(--primary);background:#fff;box-shadow:0 0 0 3px rgba(249,115,22,.1)}
+.auth-form .auth-field input::placeholder{color:#9ca3af}
+.auth-field-eye{position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:#9ca3af;font-size:16px;padding:2px;line-height:1}
+.auth-field-eye:hover{color:#374151}
+.auth-field-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px}
+.auth-field-row label{margin-bottom:0}
+.auth-forgot{font-size:12px;color:var(--primary);font-weight:600;background:none;border:none;cursor:pointer;padding:0}
+.auth-forgot:hover{text-decoration:underline}
+.auth-remember{display:flex;align-items:center;gap:8px;margin-bottom:20px}
+.auth-remember input[type=checkbox]{width:16px;height:16px;accent-color:var(--primary);cursor:pointer;flex-shrink:0}
+.auth-remember label{font-size:13px;color:#374151;cursor:pointer;font-weight:500;margin:0}
+.btn-auth{width:100%;padding:13px;background:var(--primary);color:#fff;border-radius:10px;font-size:15px;font-weight:700;transition:.15s;display:flex;align-items:center;justify-content:center;gap:8px}
+.btn-auth:hover{background:var(--primary-d);transform:translateY(-1px);box-shadow:0 6px 20px rgba(249,115,22,.3)}
+.btn-auth:disabled{opacity:.6;transform:none;cursor:not-allowed}
+.auth-divider{display:flex;align-items:center;gap:12px;margin:20px 0;color:#9ca3af;font-size:12px}
+.auth-divider::before,.auth-divider::after{content:'';flex:1;height:1px;background:#e5e7eb}
+.auth-social{display:flex;gap:10px;margin-bottom:24px}
+.auth-social-btn{flex:1;padding:10px;border:1.5px solid #e5e7eb;border-radius:10px;background:#fff;font-size:13px;font-weight:600;color:#374151;cursor:not-allowed;opacity:.5;display:flex;align-items:center;justify-content:center;gap:8px;transition:.15s}
+.auth-right-foot{font-size:12px;color:#9ca3af;text-align:center;margin-top:24px}
+.auth-right-foot a{color:var(--primary);font-weight:600}
+.auth-copyright{position:absolute;bottom:20px;font-size:11px;color:#d1d5db;text-align:center}
+#auth-error{color:#dc2626;font-size:13px;margin-top:-8px;margin-bottom:12px;min-height:18px;background:#fef2f2;border:1px solid #fecaca;border-radius:8px;padding:8px 12px;display:none}
+/* Responsive */
+@media(max-width:900px){
+  .auth-left{flex:0 0 45%;padding:28px 32px}
+  .auth-headline{font-size:24px}
+  .auth-left-body{padding:32px 0 20px}
+}
+@media(max-width:700px){
+  #auth-screen{flex-direction:column}
+  .auth-left{display:none}
+  .auth-right{padding:40px 24px;min-height:100vh;justify-content:center}
+  .auth-right-inner{max-width:100%}
+}
 
 /* ─── SIDEBAR ───────────────────────────────────── */
 #sidebar{position:fixed;top:0;left:0;bottom:0;width:var(--sb-w);background:var(--sb-bg);display:flex;flex-direction:column;z-index:200;overflow:hidden}
@@ -324,36 +380,108 @@ input:checked+.toggle-slider:before{transform:translateX(17px)}
 
 <!-- ═══ AUTH ═══ -->
 <div id="auth-screen" style="display:none">
-  <div class="auth-box">
-    <div class="auth-logo">
-      <div style="display:flex;align-items:center;justify-content:center;width:56px;height:56px;border-radius:14px;background:var(--primary);margin:0 auto"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 002-2V2"/><path d="M7 2v20"/><path d="M21 15V2a5 5 0 00-5 5v6c0 1.1.9 2 2 2h3zm0 0v7"/></svg></div>
-      <h1>Back Office</h1>
-      <p>Restaurant Management System</p>
-    </div>
-    <div class="auth-form">
-      <label for="auth-username">Username</label>
-      <input id="auth-username" type="text" placeholder="admin" autocomplete="off" name="bo_username">
-      <label for="auth-password">Password</label>
-      <div style="position:relative;margin-bottom:14px">
-        <input id="auth-password" type="password" placeholder="••••••••" autocomplete="new-password"
-          name="bo_password" style="width:100%;padding-right:44px"
-          onkeydown="if(event.key==='Enter')login()">
-        <button type="button" onclick="toggleBoPw()" id="bo-pw-eye"
-          style="position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:#94a3b8;font-size:16px;line-height:1;padding:2px">👁</button>
+  <!-- Left panel -->
+  <div class="auth-left">
+    <div class="auth-left-top">
+      <div class="auth-brand">
+        <div class="auth-brand-icon">🍽</div>
+        <div>
+          <div class="auth-brand-name" id="auth-brand-name">Restaurant Back Office</div>
+          <div class="auth-brand-sub">Management System</div>
+        </div>
       </div>
-      <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px">
-        <input type="checkbox" id="bo-remember" style="width:auto;margin:0;accent-color:var(--primary)">
-        <label for="bo-remember" style="font-size:13px;color:var(--muted);text-transform:none;letter-spacing:0;font-weight:500;margin:0;cursor:pointer">Remember me</label>
-      </div>
-      <button class="btn-auth" onclick="login()">Sign In</button>
-      <div id="auth-error"></div>
-      <p style="font-size:11px;color:var(--muted);margin-top:12px;text-align:center">
-        First time? Create an account below.
-      </p>
-      <button onclick="register()" style="width:100%;padding:10px;background:none;
-        border:1.5px solid var(--border);border-radius:8px;font-size:13px;font-weight:600;
-        color:var(--muted);margin-top:8px">Create Account</button>
     </div>
+    <div class="auth-left-body">
+      <div class="auth-headline">Manage your restaurant<br>smarter, every day.</div>
+      <div class="auth-subline">Monitor sales, manage orders, track inventory, and grow your business from one powerful dashboard.</div>
+      <div class="auth-features">
+        <div class="auth-feat">
+          <div class="auth-feat-icon orange">📊</div>
+          <div>
+            <div class="auth-feat-title">Real-time Dashboard</div>
+            <div class="auth-feat-desc">Live sales, orders and performance insights.</div>
+          </div>
+        </div>
+        <div class="auth-feat">
+          <div class="auth-feat-icon blue">🍳</div>
+          <div>
+            <div class="auth-feat-title">Order & Kitchen Management</div>
+            <div class="auth-feat-desc">Track orders and kitchen activity in real time.</div>
+          </div>
+        </div>
+        <div class="auth-feat">
+          <div class="auth-feat-icon green">📦</div>
+          <div>
+            <div class="auth-feat-title">Inventory Control</div>
+            <div class="auth-feat-desc">Manage stock, items and supplies easily.</div>
+          </div>
+        </div>
+        <div class="auth-feat">
+          <div class="auth-feat-icon purple">👨‍🍳</div>
+          <div>
+            <div class="auth-feat-title">Staff & Access Management</div>
+            <div class="auth-feat-desc">Manage your team and user permissions.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="auth-left-foot">
+      <div class="auth-help-label">Need Help?</div>
+      <div class="auth-help-contacts">
+        <div class="auth-help-contact">📞 <span id="auth-help-phone">Contact support</span></div>
+        <div class="auth-help-contact">✉️ <span id="auth-help-email">support@restaurantpos.com</span></div>
+      </div>
+    </div>
+  </div>
+  <!-- Right panel -->
+  <div class="auth-right">
+    <div class="auth-right-inner">
+      <div class="auth-welcome">Welcome Back!</div>
+      <div class="auth-welcome-sub">Sign in to access your back office</div>
+      <div class="auth-form">
+        <div class="auth-field">
+          <label for="auth-username">Email or Username</label>
+          <input id="auth-username" type="text" placeholder="Enter your email or username"
+            autocomplete="off" name="bo_username">
+        </div>
+        <div>
+          <div class="auth-field-row">
+            <label for="auth-password">Password</label>
+            <button type="button" class="auth-forgot" onclick="showToast('Contact your administrator to reset password','info')">Forgot password?</button>
+          </div>
+          <div class="auth-field">
+            <input id="auth-password" type="password" placeholder="Enter your password"
+              autocomplete="new-password" name="bo_password"
+              style="padding-right:44px" onkeydown="if(event.key==='Enter')login()">
+            <button type="button" class="auth-field-eye" onclick="toggleBoPw()" id="bo-pw-eye">👁</button>
+          </div>
+        </div>
+        <div id="auth-error" style="display:none"></div>
+        <div class="auth-remember">
+          <input type="checkbox" id="bo-remember">
+          <label for="bo-remember">Remember me</label>
+        </div>
+        <button class="btn-auth" id="btn-auth-signin" onclick="login()">
+          Sign in
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+        </button>
+        <div class="auth-divider">or continue with</div>
+        <div class="auth-social">
+          <button class="auth-social-btn" title="Coming soon">
+            <svg width="16" height="16" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
+            Sign in with Google
+          </button>
+          <button class="auth-social-btn" title="Coming soon">
+            <svg width="16" height="16" viewBox="0 0 24 24"><path fill="#00A4EF" d="M0 0h11.5v11.5H0z"/><path fill="#FFB900" d="M12.5 0H24v11.5H12.5z"/><path fill="#00B04F" d="M0 12.5h11.5V24H0z"/><path fill="#F25022" d="M12.5 12.5H24V24H12.5z"/></svg>
+            Sign in with Microsoft
+          </button>
+        </div>
+        <div class="auth-right-foot">
+          Don't have an account? <a href="#" onclick="register();return false">Contact your administrator</a>
+        </div>
+      </div>
+    </div>
+    <div class="auth-copyright">© 2025 Restaurant Back Office. All rights reserved.</div>
   </div>
 </div>
 
