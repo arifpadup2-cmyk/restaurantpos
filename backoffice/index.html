@@ -464,6 +464,46 @@ input:checked+.toggle-slider:before{transform:translateX(17px)}
 .rpt-soon-desc{font-size:11px;color:var(--muted);line-height:1.5;margin-bottom:6px}
 .rpt-soon-tag{display:inline-block;padding:2px 8px;background:#f1f5f9;color:#94a3b8;border-radius:5px;font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.4px}
 
+/* ─── ITEM EDITOR ──────────────────────────────────────── */
+#v-item-editor{padding:0;background:#f1f5f9;max-width:none!important}
+.ie-topbar{background:#fff;border-bottom:1.5px solid var(--border);padding:12px 24px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:200;gap:16px}
+.ie-breadcrumb{font-size:11px;color:var(--muted);margin-bottom:2px}
+.ie-breadcrumb a{color:var(--primary);text-decoration:none;cursor:pointer}
+.ie-title{font-size:17px;font-weight:800;color:var(--text);margin:0}
+.ie-body{display:flex;gap:18px;padding:20px 24px;max-width:1400px;margin:0 auto}
+.ie-main{flex:1;display:flex;flex-direction:column;gap:14px;min-width:0}
+.ie-sidebar{flex:0 0 240px}
+.ie-sidebar-inner{position:sticky;top:72px;display:flex;flex-direction:column;gap:14px}
+.ie-card{background:#fff;border:1.5px solid var(--border);border-radius:12px;overflow:hidden}
+.ie-card-hdr{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-bottom:1px solid #f1f5f9}
+.ie-card-hdr h3{font-size:13px;font-weight:700;margin:0}
+.ie-card-body{padding:16px}
+.ie-img-box{width:110px;height:110px;border-radius:10px;background:#f8fafc;border:2px dashed #cbd5e1;display:flex;align-items:center;justify-content:center;flex-shrink:0;overflow:hidden}
+.ie-img-box img{width:100%;height:100%;object-fit:cover}
+.ie-type-pill{display:inline-flex;align-items:center;gap:6px;padding:6px 14px;border:1.5px solid var(--border);border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;transition:.12s;color:var(--muted)}
+.ie-type-pill input[type=radio]{display:none}
+.ie-type-pill.selected{border-color:var(--primary);background:#fff7ed;color:var(--primary)}
+.ie-channel-row{display:flex;align-items:center;gap:12px;padding:10px 14px;border-radius:10px;background:#f8fafc;border:1.5px solid transparent;transition:.12s}
+.ie-channel-row.active{background:#fff7ed;border-color:rgba(249,115,22,.2)}
+.ie-channel-icon{width:32px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:15px}
+.ie-channel-lbl{font-size:13px;font-weight:600;flex:1}
+.ie-channel-price{width:110px}
+.ie-channel-price input{width:100%;padding:5px 8px;border:1.5px solid var(--border);border-radius:7px;font-size:12px;text-align:right}
+.ie-var-row td{padding:6px 8px;vertical-align:middle}
+.ie-var-row input{width:100%;padding:5px 8px;border:1.5px solid var(--border);border-radius:7px;font-size:12px}
+.ie-summary-row{display:flex;align-items:center;justify-content:space-between;padding:5px 0;border-bottom:1px solid #f1f5f9;font-size:12px}
+.ie-summary-row:last-child{border-bottom:none}
+.ie-summary-lbl{color:var(--muted)}
+.ie-summary-val{font-weight:700;color:var(--text)}
+.ie-mod-chip{display:flex;align-items:center;gap:8px;padding:8px 12px;background:#f8fafc;border:1px solid var(--border);border-radius:8px;margin-bottom:6px}
+.ie-mod-chip-name{flex:1;font-size:12px;font-weight:600}
+.ie-mod-chip-opts{font-size:10px;color:var(--muted)}
+/* Modifier group picker modal */
+#modal-mod-picker .modal{max-width:480px}
+.mod-pick-item{display:flex;align-items:center;gap:10px;padding:10px 14px;border-radius:8px;cursor:pointer;transition:.1s;border:1px solid transparent}
+.mod-pick-item:hover{background:#f8fafc;border-color:var(--border)}
+.mod-pick-item.linked{background:#fff7ed;border-color:rgba(249,115,22,.3)}
+
 /* ─── LIVE ORDERS VIEW ──────────────────────────────────── */
 #v-live{padding:0;background:#0f172a;min-height:calc(100vh - var(--hdr-h));max-width:none!important}
 #v-live.active{display:block}
@@ -836,6 +876,9 @@ input:checked+.toggle-slider:before{transform:translateX(17px)}
           <div class="nav-sub" id="navsub-tax" onclick="showConfigTab('tax')" role="button" tabindex="0">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="19" y1="5" x2="5" y2="19"/><circle cx="6.5" cy="6.5" r="2.5"/><circle cx="17.5" cy="17.5" r="2.5"/></svg><span>Tax Groups</span>
           </div>
+          <div class="nav-sub" id="navsub-modifier-groups" onclick="showConfigTab('modifier-groups')" role="button" tabindex="0">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg><span>Modifier Groups</span>
+          </div>
           <div class="nav-sub" id="navsub-pos-layout" onclick="showConfigTab('pos-layout')" role="button" tabindex="0">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg><span>POS Layout</span>
           </div>
@@ -1000,7 +1043,7 @@ input:checked+.toggle-slider:before{transform:translateX(17px)}
     <div class="dash-widget">
       <div class="dash-widget-hdr"><h4>Quick Actions</h4></div>
       <div style="padding:12px 14px;display:flex;flex-wrap:wrap;gap:8px">
-        <button class="qa-btn" onclick="showItemModal()"><div class="qa-icon" style="background:#fff7ed;color:var(--primary)"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></div>Add Menu Item</button>
+        <button class="qa-btn" onclick="showItemEditor(null)"><div class="qa-icon" style="background:#fff7ed;color:var(--primary)"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></div>Add Menu Item</button>
         <button class="qa-btn" onclick="showCatModal()"><div class="qa-icon" style="background:#fff7ed;color:var(--primary)"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 002-2V2"/><path d="M7 2v20"/></svg></div>Add Category</button>
         <button class="qa-btn" onclick="showStaffModal()"><div class="qa-icon" style="background:#eff6ff;color:#3b82f6"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></div>Add Staff</button>
         <button class="qa-btn" onclick="showView('reports');loadReport()"><div class="qa-icon" style="background:#f0fdf4;color:#16a34a"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg></div>View Reports</button>
@@ -1017,7 +1060,7 @@ input:checked+.toggle-slider:before{transform:translateX(17px)}
       <h2>Menu Management</h2>
       <div style="display:flex;gap:10px">
         <button class="btn btn-outline" onclick="showCatModal()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 002-2V2"/><path d="M7 2v20"/><path d="M21 15V2a5 5 0 00-5 5v6c0 1.1.9 2 2 2h3zm0 0v7"/></svg> Add Category</button>
-        <button class="btn btn-primary" onclick="showItemModal()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg> Add Item</button>
+        <button class="btn btn-primary" onclick="showItemEditor(null)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg> Add Item</button>
       </div>
     </div>
     <div class="card">
@@ -1854,6 +1897,13 @@ input:checked+.toggle-slider:before{transform:translateX(17px)}
         <div class="cfg-card"><div class="cfg-card-body"><div id="cfg-tax-list"></div></div></div>
       </div>
 
+      <!-- MODIFIER GROUPS -->
+      <div id="cfg-modifier-groups" class="cfg-section">
+        <div class="page-header"><h2>Modifier Groups</h2><button class="btn" onclick="cfgAddModifierGroup()">+ Add Group</button></div>
+        <p style="font-size:13px;color:var(--muted);margin-bottom:16px">Modifier groups let customers customize items (e.g. "Spice Level", "Add-ons"). Link groups to items in the Item Editor.</p>
+        <div id="cfg-modifier-groups-list"></div>
+      </div>
+
       <!-- POS LAYOUT -->
       <div id="cfg-pos-layout" class="cfg-section">
         <div class="page-header">
@@ -1901,27 +1951,230 @@ input:checked+.toggle-slider:before{transform:translateX(17px)}
   </div>
 </div>
 
-<!-- Item Modal -->
-<div class="modal-overlay" id="modal-item">
-  <div class="modal">
-    <h3 id="item-modal-title">Add Menu Item</h3>
-    <input type="hidden" id="item-id">
-    <div class="form-row">
-      <div class="form-group" style="flex:2"><label>Item Name *</label><input id="item-name" type="text" placeholder="e.g. Grilled Chicken" oninput="autoFillItemCode()"></div>
-      <div class="form-group"><label>Price *</label><input id="item-price" type="number" placeholder="0.00" min="0" step="0.01"></div>
+<!-- ══ ITEM EDITOR (full-page view) ══════════════════════════════════════════ -->
+<div class="view" id="v-item-editor" style="padding:0;max-width:none">
+  <!-- Sticky top bar -->
+  <div class="ie-topbar">
+    <div>
+      <div class="ie-breadcrumb"><a onclick="showView('menu')">Menu</a> › <span id="ie-breadcrumb">Add New Item</span></div>
+      <div class="ie-title" id="ie-title">Add New Item</div>
     </div>
-    <div class="form-row">
-      <div class="form-group" style="flex:1"><label>Item Code <span style="color:var(--muted);font-weight:400">(for quick search)</span></label><input id="item-code" type="text" placeholder="e.g. MJ or MJ001" style="text-transform:uppercase"></div>
-      <div class="form-group" style="flex:1"><label>Category *</label>
-        <select id="item-cat"><option value="">Select category...</option></select>
+    <div style="display:flex;gap:10px;flex-wrap:wrap">
+      <button class="btn btn-outline" onclick="showView('menu')">Cancel</button>
+      <button class="btn btn-outline" id="ie-btn-add-another" onclick="saveItemEditor(true)">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg> Save &amp; Add Another
+      </button>
+      <button class="btn btn-primary" onclick="saveItemEditor(false)">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg> Save Item
+      </button>
+    </div>
+  </div>
+
+  <input type="hidden" id="ie-id">
+
+  <div class="ie-body">
+    <!-- ── Main column ── -->
+    <div class="ie-main">
+
+      <!-- Basic Information -->
+      <div class="ie-card">
+        <div class="ie-card-hdr"><h3>Basic Information</h3></div>
+        <div class="ie-card-body">
+          <div class="form-row">
+            <div class="form-group" style="flex:2">
+              <label>Item Name *</label>
+              <input id="ie-name" type="text" placeholder="e.g. Grilled Chicken" oninput="ieAutoCode();ieUpdateSummary()">
+            </div>
+            <div class="form-group" style="flex:1">
+              <label>Item Code</label>
+              <input id="ie-code" type="text" placeholder="e.g. GC001" style="text-transform:uppercase">
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Category *</label>
+              <select id="ie-cat" onchange="ieUpdateSummary()"><option value="">Select category…</option></select>
+            </div>
+            <div class="form-group">
+              <label>Sub Category</label>
+              <input id="ie-subcat" type="text" placeholder="e.g. Grilled, Fried, Signature…">
+            </div>
+          </div>
+          <div class="form-group">
+            <label>Description</label>
+            <textarea id="ie-desc" placeholder="Item description shown on menu and waiter app…" rows="2" style="resize:vertical"></textarea>
+          </div>
+        </div>
+      </div>
+
+      <!-- Item Image -->
+      <div class="ie-card">
+        <div class="ie-card-hdr"><h3>Item Image</h3></div>
+        <div class="ie-card-body" style="display:flex;align-items:flex-start;gap:16px">
+          <div class="ie-img-box" id="ie-img-box">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+          </div>
+          <div style="flex:1">
+            <div class="form-group" style="margin-bottom:8px">
+              <label>Image URL</label>
+              <input id="ie-image" type="url" placeholder="https://example.com/burger.jpg" oninput="ieUpdateImgPreview()">
+            </div>
+            <div style="font-size:11px;color:var(--muted)">Paste a direct image URL. Recommended: 400×400 px, JPG or PNG.</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Pricing & Tax -->
+      <div class="ie-card">
+        <div class="ie-card-hdr"><h3>Pricing &amp; Tax</h3></div>
+        <div class="ie-card-body">
+          <div class="form-row" style="align-items:flex-end">
+            <div class="form-group">
+              <label>Base Price *</label>
+              <input id="ie-price" type="number" placeholder="0.00" min="0" step="0.01" oninput="ieUpdateFinalPrice();ieUpdateSummary()">
+            </div>
+            <div class="form-group">
+              <label>Tax Group</label>
+              <select id="ie-tax" onchange="ieUpdateFinalPrice();ieUpdateSummary()">
+                <option value="">No Tax</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Final Price (incl. tax)</label>
+              <div id="ie-final-price" style="padding:8px 12px;background:#f8fafc;border:1.5px solid var(--border);border-radius:8px;font-size:15px;font-weight:800;color:var(--primary);min-height:38px;display:flex;align-items:center">—</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Type, Tags & Availability -->
+      <div class="ie-card">
+        <div class="ie-card-hdr"><h3>Type, Tags &amp; Availability</h3></div>
+        <div class="ie-card-body">
+          <div class="form-row" style="gap:20px;flex-wrap:wrap">
+            <div class="form-group" style="flex:2">
+              <label>Item Type</label>
+              <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:4px">
+                <label class="ie-type-pill selected" id="ietype-single"><input type="radio" name="ie-type" value="single" checked onchange="ieUpdateSummary()"> Single</label>
+                <label class="ie-type-pill" id="ietype-combo"><input type="radio" name="ie-type" value="combo" onchange="ieUpdateSummary()"> Combo</label>
+                <label class="ie-type-pill" id="ietype-modifier"><input type="radio" name="ie-type" value="modifier" onchange="ieUpdateSummary()"> Modifier</label>
+              </div>
+            </div>
+            <div class="form-group" style="flex:1">
+              <label>Preparation Time (min)</label>
+              <input id="ie-prep" type="number" placeholder="0" min="0" step="1" style="max-width:120px">
+            </div>
+            <div class="form-group" style="flex:1">
+              <label>Status</label>
+              <div style="display:flex;align-items:center;gap:10px;padding:6px 0">
+                <label class="toggle-switch"><input type="checkbox" id="ie-active" checked onchange="ieUpdateSummary()"><span class="toggle-slider"></span></label>
+                <span id="ie-active-lbl" style="font-size:13px;font-weight:600">Active</span>
+              </div>
+            </div>
+          </div>
+          <div class="form-group" style="margin-top:4px">
+            <label>Tags <span style="font-size:11px;color:var(--muted);font-weight:400">(comma-separated)</span></label>
+            <input id="ie-tags" type="text" placeholder="e.g. spicy, popular, new, vegan, bestseller">
+          </div>
+        </div>
+      </div>
+
+      <!-- Channel Availability -->
+      <div class="ie-card">
+        <div class="ie-card-hdr"><h3>Channel Availability &amp; Pricing</h3><span style="font-size:11px;color:var(--muted)">Leave price blank to use base price</span></div>
+        <div class="ie-card-body" style="display:flex;flex-direction:column;gap:8px" id="ie-channels-wrap">
+          <!-- Rendered by ieRenderChannels() -->
+        </div>
+      </div>
+
+      <!-- Variants -->
+      <div class="ie-card">
+        <div class="ie-card-hdr">
+          <h3>Variants <span class="cfg-badge" id="ie-var-count" style="margin-left:6px">0</span></h3>
+          <button class="btn btn-outline btn-sm" onclick="ieAddVariantRow()">+ Add Variant</button>
+        </div>
+        <div class="ie-card-body" style="padding:0">
+          <div id="ie-var-empty" style="padding:20px;text-align:center;color:var(--muted);font-size:12px">No variants added. Use variants for sizes (S/M/L) or option sets with different prices.</div>
+          <table class="data-table" id="ie-var-table" style="display:none">
+            <thead><tr><th>Size / Label</th><th>Variant Name</th><th>Price</th><th>Active</th><th></th></tr></thead>
+            <tbody id="ie-var-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Additional Settings -->
+      <div class="ie-card">
+        <div class="ie-card-hdr"><h3>Additional Settings</h3></div>
+        <div class="ie-card-body">
+          <div class="form-row">
+            <div class="form-group">
+              <label>Barcode</label>
+              <input id="ie-barcode" type="text" placeholder="EAN-13, UPC, QR code…">
+            </div>
+            <div class="form-group">
+              <label>Kitchen Display Name <span style="font-size:11px;color:var(--muted);font-weight:400">(KDS)</span></label>
+              <input id="ie-kds-name" type="text" placeholder="Short name shown on kitchen screen">
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Internal Note <span style="font-size:11px;color:var(--muted);font-weight:400">(for kitchen staff)</span></label>
+              <input id="ie-note" type="text" placeholder="e.g. Always serve with dipping sauce">
+            </div>
+            <div class="form-group">
+              <label>Printer Group</label>
+              <input id="ie-printer-grp" type="text" placeholder="e.g. Kitchen, Bar, Dessert Station">
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Modifier Groups -->
+      <div class="ie-card" style="margin-bottom:32px">
+        <div class="ie-card-hdr">
+          <h3>Modifier Groups <span class="cfg-badge" id="ie-mod-count" style="margin-left:6px">0</span></h3>
+          <button class="btn btn-outline btn-sm" onclick="ieShowModPicker()">+ Link Group</button>
+        </div>
+        <div class="ie-card-body">
+          <div id="ie-mods-list"></div>
+          <div id="ie-mods-empty" style="text-align:center;padding:8px;color:var(--muted);font-size:12px">No modifier groups linked. <a href="#" onclick="showConfigTab('modifier-groups');return false" style="color:var(--primary)">Create one in Configuration → Modifier Groups</a>.</div>
+        </div>
+      </div>
+
+    </div><!-- /ie-main -->
+
+    <!-- ── Sidebar summary ── -->
+    <div class="ie-sidebar">
+      <div class="ie-sidebar-inner">
+        <div class="ie-card">
+          <div class="ie-card-hdr"><h3>Item Summary</h3></div>
+          <div class="ie-card-body" id="ie-summary-body" style="display:flex;flex-direction:column;gap:2px">
+            <div class="ie-summary-row"><span class="ie-summary-lbl">Name</span><span class="ie-summary-val" id="ies-name">—</span></div>
+            <div class="ie-summary-row"><span class="ie-summary-lbl">Type</span><span class="ie-summary-val" id="ies-type">Single</span></div>
+            <div class="ie-summary-row"><span class="ie-summary-lbl">Status</span><span class="ie-summary-val" id="ies-status" style="color:#22c55e">Active</span></div>
+            <div class="ie-summary-row"><span class="ie-summary-lbl">Price</span><span class="ie-summary-val" id="ies-price">—</span></div>
+            <div class="ie-summary-row"><span class="ie-summary-lbl">Tax</span><span class="ie-summary-val" id="ies-tax">None</span></div>
+            <div class="ie-summary-row"><span class="ie-summary-lbl">Variants</span><span class="ie-summary-val" id="ies-variants">0</span></div>
+            <div class="ie-summary-row"><span class="ie-summary-lbl">Mod Groups</span><span class="ie-summary-val" id="ies-mods">0</span></div>
+            <div style="padding-top:8px;border-top:1px solid #f1f5f9;margin-top:4px">
+              <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);margin-bottom:6px">Channels</div>
+              <div id="ies-channels" style="display:flex;flex-direction:column;gap:4px"></div>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
-    <div class="form-group"><label>Description</label>
-      <textarea id="item-desc" placeholder="Optional description..." rows="2" style="resize:none"></textarea>
-    </div>
-    <div class="modal-footer">
-      <button class="btn btn-outline" onclick="closeModal('modal-item')">Cancel</button>
-      <button class="btn btn-primary" onclick="saveItem()"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg> Save Item</button>
+  </div><!-- /ie-body -->
+</div>
+
+<!-- Modifier Group Picker Modal -->
+<div class="modal-overlay" id="modal-mod-picker">
+  <div class="modal" style="max-width:480px">
+    <h3>Link Modifier Group</h3>
+    <p style="font-size:12px;color:var(--muted);margin-bottom:12px">Select modifier groups to link to this item. Already linked groups are highlighted.</p>
+    <div id="mod-pick-list" style="max-height:320px;overflow-y:auto;display:flex;flex-direction:column;gap:6px"></div>
+    <div class="modal-footer" style="margin-top:16px">
+      <button class="btn btn-outline" onclick="closeModal('modal-mod-picker')">Done</button>
     </div>
   </div>
 </div>
@@ -2752,6 +3005,8 @@ const GSEARCH_INDEX = [
   { label:'Dashboard',         section:'Main',          icon:'📊', action:()=>showView('dashboard') },
   { label:'Live Orders',       section:'Main',          icon:'🔴', action:()=>showView('live') },
   { label:'Kitchen View',      section:'Main',          icon:'📺', action:()=>showView('kds') },
+  { label:'Add Menu Item',     section:'Main',          icon:'🍽️', action:()=>showItemEditor(null) },
+  { label:'Modifier Groups',   section:'Configuration', icon:'🔧', action:()=>showConfigTab('modifier-groups') },
   { label:'Orders History',    section:'Main',          icon:'📋', action:()=>showView('orders') },
   { label:'Menu',              section:'Main',          icon:'🍽️', action:()=>showView('menu') },
   { label:'Reports',           section:'Main',          icon:'📈', action:()=>showView('reports') },
@@ -2901,10 +3156,11 @@ function showView (id) {
   document.getElementById('v-' + id).classList.add('active')
   const navEl = document.getElementById('nav-' + id)
   if (navEl) navEl.classList.add('active')
-  if (id === 'menu')      loadMenu()
-  if (id === 'orders')    { setOrdersDate('today'); loadOrders() }
-  if (id === 'staff')     loadStaff()
-  if (id === 'dashboard') loadDashboard()
+  if (id === 'menu')         loadMenu()
+  if (id === 'item-editor')  {} // loaded by showItemEditor()
+  if (id === 'orders')       { setOrdersDate('today'); loadOrders() }
+  if (id === 'staff')        loadStaff()
+  if (id === 'dashboard')    loadDashboard()
   if (id === 'reports')   { loadRptFilterOptions(); setRptPreset('today', document.querySelector('.rpt-preset-btn')); loadReport(); loadExpReport(); }
   if (id === 'audit')     loadAuditLog()
   if (id === 'downloads') loadDownloadsPage()
@@ -3121,7 +3377,7 @@ function renderItems (filterId) {
             </label>
           </td>
           <td>
-            <button class="btn btn-outline btn-sm btn-icon" onclick='editItem(${JSON.stringify(i).replace(/'/g,"&#39;")})' title="Edit"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>
+            <button class="btn btn-outline btn-sm btn-icon" onclick='showItemEditor(${JSON.stringify(i).replace(/'/g,"&#39;")})' title="Edit"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>
             <button class="btn btn-danger btn-sm btn-icon" onclick="deleteItem('${i.id}')" title="Delete" style="margin-left:6px"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 011-1h4a1 1 0 011 1v2"/></svg></button>
           </td>
         </tr>`
@@ -3193,45 +3449,501 @@ async function deleteCategory (id) {
   } catch (e) { showToast('Error: ' + e.message,'error') }
 }
 
-function autoFillItemCode () {
-  const codeEl = document.getElementById('item-code')
+// ─── ITEM EDITOR ─────────────────────────────────────────────────────────────
+
+let _ieVariants    = []  // [{_key, id, name, size, price, active, _deleted}]
+let _ieLinkedMods  = []  // [{id, name, options, ...}]
+let _allModGroups  = []  // all modifier groups for this restaurant
+let _ieTaxRates    = []  // [{id, name, rate}]
+let _ieSaveAndAdd  = false
+
+function ieAutoCode () {
+  const codeEl = document.getElementById('ie-code')
   if (codeEl && !codeEl.dataset.manuallyEdited) {
-    const name = document.getElementById('item-name').value.trim()
+    const name = document.getElementById('ie-name').value.trim()
     codeEl.value = name.split(/\s+/).map(w => w[0] || '').join('').toUpperCase()
   }
 }
 
-function showItemModal (item) {
-  document.getElementById('item-modal-title').textContent = item ? 'Edit Item' : 'Add Menu Item'
-  document.getElementById('item-id').value    = item ? item.id : ''
-  document.getElementById('item-name').value  = item ? item.name : ''
-  document.getElementById('item-price').value = item ? item.price : ''
-  document.getElementById('item-code').value  = item ? (item.item_code || '') : ''
-  document.getElementById('item-cat').value   = item ? (item.category_id || '') : ''
-  document.getElementById('item-desc').value  = item ? (item.description || '') : ''
-  showModal('modal-item')
+function ieUpdateImgPreview () {
+  const url = document.getElementById('ie-image').value.trim()
+  const box = document.getElementById('ie-img-box')
+  if (!box) return
+  if (url) {
+    box.innerHTML = `<img src="${url}" onerror="this.parentElement.innerHTML='<svg width=28 height=28 viewBox=&quot;0 0 24 24&quot; fill=none stroke=&quot;#94a3b8&quot; stroke-width=1.5><rect x=3 y=3 width=18 height=18 rx=2/><circle cx=8.5 cy=8.5 r=1.5/><polyline points=&quot;21 15 16 10 5 21&quot;/></svg>'">`
+  } else {
+    box.innerHTML = `<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>`
+  }
 }
 
-function editItem (item) { showItemModal(item) }
+function ieUpdateFinalPrice () {
+  const base = parseFloat(document.getElementById('ie-price').value) || 0
+  const taxId = document.getElementById('ie-tax').value
+  const tax = _ieTaxRates.find(t => t.id === taxId)
+  const rate = tax ? parseFloat(tax.rate) : 0
+  const final = base + (base * rate / 100)
+  const cur = boSettings.currency || ''
+  document.getElementById('ie-final-price').textContent = base > 0 ? `${cur} ${final.toFixed(2)}` : '—'
+}
 
-async function saveItem () {
-  const id    = document.getElementById('item-id').value
-  const name  = document.getElementById('item-name').value.trim()
-  const price = parseFloat(document.getElementById('item-price').value)
-  const catId = document.getElementById('item-cat').value
-  if (!name)          { showToast('Item name is required.','error'); return }
-  if (!price || price <= 0) { showToast('Enter a valid price.','error'); return }
-  if (!catId)         { showToast('Select a category.','error'); return }
-  const itemCode = document.getElementById('item-code').value.trim().toUpperCase()
-  const payload = { name, price, category_id: catId, description: document.getElementById('item-desc').value.trim(), item_code: itemCode || null }
+function ieUpdateSummary () {
+  const name   = document.getElementById('ie-name')?.value || '—'
+  const price  = parseFloat(document.getElementById('ie-price')?.value) || 0
+  const type   = document.querySelector('input[name="ie-type"]:checked')?.value || 'single'
+  const active = document.getElementById('ie-active')?.checked
+  const taxId  = document.getElementById('ie-tax')?.value
+  const tax    = _ieTaxRates.find(t => t.id === taxId)
+
+  const set = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val }
+  set('ies-name', name || '—')
+  set('ies-type', type.charAt(0).toUpperCase() + type.slice(1))
+  const statusEl = document.getElementById('ies-status')
+  if (statusEl) { statusEl.textContent = active ? 'Active' : 'Inactive'; statusEl.style.color = active ? '#22c55e' : '#ef4444' }
+  set('ies-price', price > 0 ? `${boSettings.currency || ''} ${price.toFixed(2)}` : '—')
+  set('ies-tax', tax ? `${tax.name} (${tax.rate}%)` : 'None')
+  set('ies-variants', _ieVariants.filter(v => !v._deleted).length)
+  set('ies-mods', _ieLinkedMods.length)
+
+  // Type pills visual
+  document.querySelectorAll('.ie-type-pill').forEach(p => p.classList.remove('selected'))
+  const selPill = document.getElementById('ietype-' + type)
+  if (selPill) selPill.classList.add('selected')
+
+  // Channel summary in sidebar
+  const chWrap = document.getElementById('ies-channels')
+  if (chWrap) {
+    const channels = [
+      { key:'dine_in', label:'Dine-in', icon:'🍽️' },
+      { key:'takeaway', label:'Takeaway', icon:'🥡' },
+      { key:'delivery', label:'Delivery', icon:'🛵' },
+      { key:'online', label:'Online', icon:'📱' },
+    ]
+    chWrap.innerHTML = channels.map(ch => {
+      const tog = document.getElementById(`ie-ch-${ch.key}-active`)
+      const on  = tog ? tog.checked : true
+      return `<div style="display:flex;align-items:center;justify-content:space-between;font-size:11px"><span style="color:var(--muted)">${ch.icon} ${ch.label}</span><span style="font-weight:700;color:${on ? '#22c55e' : '#ef4444'}">${on ? 'On' : 'Off'}</span></div>`
+    }).join('')
+  }
+}
+
+function ieRenderChannels () {
+  const wrap = document.getElementById('ie-channels-wrap')
+  if (!wrap) return
+  const channels = [
+    { key:'dine_in',  label:'Dine-in',  icon:'🍽️', color:'#3b82f6' },
+    { key:'takeaway', label:'Takeaway', icon:'🥡', color:'#a855f7' },
+    { key:'delivery', label:'Delivery', icon:'🛵', color:'#22c55e' },
+    { key:'online',   label:'Online',   icon:'📱', color:'#f97316' },
+  ]
+  wrap.innerHTML = channels.map(ch => `
+    <div class="ie-channel-row" id="ie-ch-${ch.key}-row">
+      <div class="ie-channel-icon" style="background:${ch.color}22;font-size:16px">${ch.icon}</div>
+      <span class="ie-channel-lbl">${ch.label}</span>
+      <div class="ie-channel-price">
+        <input type="number" id="ie-ch-${ch.key}-price" placeholder="Base price" min="0" step="0.01">
+      </div>
+      <label class="toggle-switch" style="flex-shrink:0">
+        <input type="checkbox" id="ie-ch-${ch.key}-active" checked onchange="ieToggleChannelRow('${ch.key}');ieUpdateSummary()">
+        <span class="toggle-slider"></span>
+      </label>
+    </div>`).join('')
+  channels.forEach(ch => ieToggleChannelRow(ch.key))
+}
+
+function ieToggleChannelRow (key) {
+  const row = document.getElementById(`ie-ch-${key}-row`)
+  const tog = document.getElementById(`ie-ch-${key}-active`)
+  if (row && tog) row.classList.toggle('active', tog.checked)
+}
+
+function ieRenderVariants () {
+  const tbody  = document.getElementById('ie-var-tbody')
+  const empty  = document.getElementById('ie-var-empty')
+  const table  = document.getElementById('ie-var-table')
+  const count  = document.getElementById('ie-var-count')
+  const active = _ieVariants.filter(v => !v._deleted)
+  if (count) count.textContent = active.length
+  document.getElementById('ies-variants').textContent = active.length
+  if (!active.length) {
+    if (empty) empty.style.display = ''
+    if (table) table.style.display = 'none'
+    if (tbody) tbody.innerHTML = ''
+    return
+  }
+  if (empty) empty.style.display = 'none'
+  if (table) table.style.display = ''
+  tbody.innerHTML = active.map((v, idx) => `
+    <tr class="ie-var-row">
+      <td><input value="${v.size||''}" placeholder="S / M / L…" onchange="_ieVariants.find(x=>x._key==='${v._key}').size=this.value"></td>
+      <td><input value="${v.name||''}" placeholder="Small Portion…" onchange="_ieVariants.find(x=>x._key==='${v._key}').name=this.value"></td>
+      <td><input type="number" value="${v.price||0}" min="0" step="0.01" style="width:90px" onchange="_ieVariants.find(x=>x._key==='${v._key}').price=parseFloat(this.value)||0"></td>
+      <td><label class="toggle-switch"><input type="checkbox" ${v.active!==false?'checked':''} onchange="_ieVariants.find(x=>x._key==='${v._key}').active=this.checked"><span class="toggle-slider"></span></label></td>
+      <td><button class="btn btn-danger btn-sm btn-icon" onclick="ieRemoveVariant('${v._key}')"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/></svg></button></td>
+    </tr>`).join('')
+}
+
+function ieAddVariantRow () {
+  _ieVariants.push({ _key: Date.now().toString(36), id: null, name:'', size:'', price:0, active:true, _deleted:false })
+  ieRenderVariants()
+}
+
+function ieRemoveVariant (key) {
+  const v = _ieVariants.find(x => x._key === key)
+  if (v) v._deleted = true
+  ieRenderVariants()
+}
+
+function ieRenderModGroups () {
+  const list  = document.getElementById('ie-mods-list')
+  const empty = document.getElementById('ie-mods-empty')
+  const count = document.getElementById('ie-mod-count')
+  if (count) count.textContent = _ieLinkedMods.length
+  document.getElementById('ies-mods').textContent = _ieLinkedMods.length
+  if (!_ieLinkedMods.length) {
+    if (list) list.innerHTML = ''
+    if (empty) empty.style.display = ''
+    return
+  }
+  if (empty) empty.style.display = 'none'
+  list.innerHTML = _ieLinkedMods.map(g => `
+    <div class="ie-mod-chip">
+      <div style="flex:1">
+        <div class="ie-mod-chip-name">${g.name}</div>
+        <div class="ie-mod-chip-opts">${(g.options||[]).length} option${(g.options||[]).length!==1?'s':''} · ${g.required?'Required':'Optional'} · Pick ${g.min_select}–${g.max_select}</div>
+      </div>
+      <button class="btn btn-outline btn-sm btn-icon" onclick="ieUnlinkMod('${g.id}')"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+    </div>`).join('')
+}
+
+async function ieShowModPicker () {
+  if (!_allModGroups.length) {
+    try { const { groups } = await apiFetch('GET', '/menu/modifier-groups'); _allModGroups = groups || [] } catch (_) {}
+  }
+  const list = document.getElementById('mod-pick-list')
+  if (!list) return
+  if (!_allModGroups.length) {
+    list.innerHTML = `<div style="text-align:center;padding:20px;color:var(--muted);font-size:13px">No modifier groups yet. <a href="#" onclick="closeModal('modal-mod-picker');showConfigTab('modifier-groups');return false" style="color:var(--primary)">Create one first</a>.</div>`
+  } else {
+    const linkedIds = new Set(_ieLinkedMods.map(m => m.id))
+    list.innerHTML = _allModGroups.map(g => `
+      <div class="mod-pick-item ${linkedIds.has(g.id)?'linked':''}" onclick="ieToggleMod('${g.id}')">
+        <div style="flex:1">
+          <div style="font-size:13px;font-weight:600">${g.name}</div>
+          <div style="font-size:11px;color:var(--muted)">${(g.options||[]).length} options · ${g.required?'Required':'Optional'}</div>
+        </div>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="${linkedIds.has(g.id)?'#f97316':'#cbd5e1'}" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+      </div>`).join('')
+  }
+  showModal('modal-mod-picker')
+}
+
+function ieToggleMod (groupId) {
+  const g = _allModGroups.find(x => x.id === groupId)
+  if (!g) return
+  const idx = _ieLinkedMods.findIndex(x => x.id === groupId)
+  if (idx >= 0) _ieLinkedMods.splice(idx, 1)
+  else _ieLinkedMods.push(g)
+  ieRenderModGroups()
+  ieShowModPicker()
+}
+
+function ieUnlinkMod (groupId) {
+  _ieLinkedMods = _ieLinkedMods.filter(x => x.id !== groupId)
+  ieRenderModGroups()
+}
+
+async function showItemEditor (item) {
+  // Populate category dropdown
+  const catSel = document.getElementById('ie-cat')
+  catSel.innerHTML = '<option value="">Select category…</option>' +
+    allCategories.map(c => `<option value="${c.id}">${c.name}</option>`).join('')
+
+  // Populate tax dropdown
+  let taxes = _ieTaxRates
+  if (!taxes.length) {
+    try { const r = await apiFetch('GET', '/config/tax-groups'); taxes = r.rows || []; _ieTaxRates = taxes } catch (_) {}
+  }
+  const taxSel = document.getElementById('ie-tax')
+  taxSel.innerHTML = '<option value="">No Tax</option>' +
+    taxes.map(t => `<option value="${t.id}">${t.name} (${t.rate}%)</option>`).join('')
+
+  // Reset all fields
+  const s = v => v || ''
+  document.getElementById('ie-id').value       = s(item?.id)
+  document.getElementById('ie-name').value     = s(item?.name)
+  document.getElementById('ie-code').value     = s(item?.item_code)
+  document.getElementById('ie-subcat').value   = s(item?.sub_category)
+  document.getElementById('ie-desc').value     = s(item?.description)
+  document.getElementById('ie-price').value    = item?.price || ''
+  document.getElementById('ie-prep').value     = item?.preparation_time || ''
+  document.getElementById('ie-image').value    = s(item?.image_url)
+  document.getElementById('ie-tags').value     = s(item?.tags)
+  document.getElementById('ie-barcode').value  = s(item?.barcode)
+  document.getElementById('ie-kds-name').value = s(item?.kitchen_name)
+  document.getElementById('ie-note').value     = s(item?.internal_note)
+  document.getElementById('ie-printer-grp').value = s(item?.printer_group)
+  if (catSel) catSel.value = s(item?.category_id)
+  if (taxSel) taxSel.value = s(item?.tax_group_id)
+
+  // Item type
+  const typeVal = item?.item_type || 'single'
+  const typeRadio = document.querySelector(`input[name="ie-type"][value="${typeVal}"]`)
+  if (typeRadio) typeRadio.checked = true
+
+  // Active
+  const activeChk = document.getElementById('ie-active')
+  if (activeChk) { activeChk.checked = item ? item.active !== 0 && item.active !== false : true }
+  document.getElementById('ie-active-lbl').textContent = activeChk?.checked ? 'Active' : 'Inactive'
+
+  // Render channels
+  ieRenderChannels()
+  const channelKeys = ['dine_in','takeaway','delivery','online']
+  channelKeys.forEach(key => {
+    const priceEl  = document.getElementById(`ie-ch-${key}-price`)
+    const activeEl = document.getElementById(`ie-ch-${key}-active`)
+    if (priceEl) priceEl.value = item?.[`${key}_price`] || ''
+    if (activeEl) { activeEl.checked = item ? (item[`${key}_active`] !== false && item[`${key}_active`] !== 0) : true }
+    ieToggleChannelRow(key)
+  })
+
+  // Variants
+  _ieVariants = []
+  if (item?.variants?.length) {
+    _ieVariants = item.variants.map(v => ({ ...v, _key: v.id, _deleted: false }))
+  } else if (item?.id) {
+    try {
+      const r = await apiFetch('GET', `/menu/items/${item.id}`)
+      _ieVariants = (r.item?.variants || []).map(v => ({ ...v, _key: v.id, _deleted: false }))
+    } catch (_) {}
+  }
+  ieRenderVariants()
+
+  // Modifier groups
+  _ieLinkedMods = []
+  if (item?.id) {
+    try {
+      const r = await apiFetch('GET', `/menu/items/${item.id}`)
+      _ieLinkedMods = r.item?.mod_groups || []
+    } catch (_) {}
+  }
+  ieRenderModGroups()
+
+  // Image preview + title
+  ieUpdateImgPreview()
+  ieUpdateFinalPrice()
+
+  document.getElementById('ie-title').textContent     = item ? 'Edit Item' : 'Add New Item'
+  document.getElementById('ie-breadcrumb').textContent = item ? item.name : 'Add New Item'
+
+  showView('item-editor')
+  ieUpdateSummary()
+}
+
+// Keep legacy function names working
+function showItemModal (item) { showItemEditor(item) }
+function editItem (item) { showItemEditor(item) }
+
+async function saveItemEditor (addAnother) {
+  const id    = document.getElementById('ie-id').value
+  const name  = document.getElementById('ie-name').value.trim()
+  const price = parseFloat(document.getElementById('ie-price').value)
+  const catId = document.getElementById('ie-cat').value
+  if (!name)  { showToast('Item name is required.', 'error'); return }
+  if (!price || price <= 0) { showToast('Enter a valid price.', 'error'); return }
+  if (!catId) { showToast('Select a category.', 'error'); return }
+
+  const payload = {
+    name,
+    price,
+    category_id:      catId,
+    description:      document.getElementById('ie-desc').value.trim(),
+    item_code:        document.getElementById('ie-code').value.trim().toUpperCase() || null,
+    sub_category:     document.getElementById('ie-subcat').value.trim() || null,
+    image_url:        document.getElementById('ie-image').value.trim() || null,
+    item_type:        document.querySelector('input[name="ie-type"]:checked')?.value || 'single',
+    preparation_time: parseInt(document.getElementById('ie-prep').value) || 0,
+    tax_group_id:     document.getElementById('ie-tax').value || null,
+    barcode:          document.getElementById('ie-barcode').value.trim() || null,
+    kitchen_name:     document.getElementById('ie-kds-name').value.trim() || null,
+    internal_note:    document.getElementById('ie-note').value.trim() || null,
+    printer_group:    document.getElementById('ie-printer-grp').value.trim() || null,
+    tags:             document.getElementById('ie-tags').value.trim() || null,
+    active:           document.getElementById('ie-active').checked ? 1 : 0,
+    dine_in_price:    parseFloat(document.getElementById('ie-ch-dine_in-price').value) || null,
+    takeaway_price:   parseFloat(document.getElementById('ie-ch-takeaway-price').value) || null,
+    delivery_price:   parseFloat(document.getElementById('ie-ch-delivery-price').value) || null,
+    online_price:     parseFloat(document.getElementById('ie-ch-online-price').value) || null,
+    dine_in_active:   document.getElementById('ie-ch-dine_in-active').checked,
+    takeaway_active:  document.getElementById('ie-ch-takeaway-active').checked,
+    delivery_active:  document.getElementById('ie-ch-delivery-active').checked,
+    online_active:    document.getElementById('ie-ch-online-active').checked,
+  }
+
   try {
-    if (id) await apiFetch('PUT', `/menu/items/${id}`, payload)
-    else     await apiFetch('POST', '/menu/items', payload)
-    closeModal('modal-item')
+    let itemId = id
+    if (id) {
+      await apiFetch('PUT', `/menu/items/${id}`, payload)
+    } else {
+      const r = await apiFetch('POST', '/menu/items', payload)
+      itemId = r.item?.id
+    }
+
+    // Save variants
+    const activeVariants = _ieVariants.filter(v => !v._deleted)
+    for (const v of _ieVariants.filter(v => v._deleted && v.id)) {
+      await apiFetch('DELETE', `/menu/items/${itemId}/variants/${v.id}`)
+    }
+    for (const v of activeVariants) {
+      if (v.id) await apiFetch('PUT', `/menu/items/${itemId}/variants/${v.id}`, { name: v.name, size: v.size, price: v.price, active: v.active })
+      else      await apiFetch('POST', `/menu/items/${itemId}/variants`, { name: v.name, size: v.size, price: v.price, active: v.active })
+    }
+
+    // Save modifier group links (if new item, link all; if edit, sync)
+    if (itemId) {
+      const current = id ? (await apiFetch('GET', `/menu/items/${itemId}`)).item?.mod_groups?.map(g=>g.id) || [] : []
+      const desired = _ieLinkedMods.map(g => g.id)
+      for (const gid of desired.filter(g => !current.includes(g)))
+        await apiFetch('POST', `/menu/items/${itemId}/modifier-groups`, { group_id: gid })
+      for (const gid of current.filter(g => !desired.includes(g)))
+        await apiFetch('DELETE', `/menu/items/${itemId}/modifier-groups/${gid}`)
+    }
+
     loadMenu()
-    showToast('Menu item saved.','success')
+    showToast('Item saved.', 'success')
+    if (addAnother) showItemEditor(null)
+    else showView('menu')
+  } catch (e) { showToast('Error: ' + e.message, 'error') }
+}
+
+// ─── MODIFIER GROUPS CONFIG ───────────────────────────────────────────────────
+
+async function cfgLoadModifierGroups () {
+  const list = document.getElementById('cfg-modifier-groups-list')
+  if (!list) return
+  try {
+    const { groups } = await apiFetch('GET', '/menu/modifier-groups')
+    _allModGroups = groups || []
+    if (!groups.length) {
+      list.innerHTML = `<div class="cfg-card"><div class="cfg-card-body" style="text-align:center;color:var(--muted);padding:24px;font-size:13px">No modifier groups yet. Click "+ Add Group" to create one.</div></div>`
+      return
+    }
+    list.innerHTML = groups.map(g => `
+      <div class="cfg-card" style="margin-bottom:12px">
+        <div class="cfg-card-body" style="padding:14px 16px">
+          <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px">
+            <div style="flex:1">
+              <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">
+                <span style="font-size:14px;font-weight:700">${g.name}</span>
+                <span class="cfg-badge">${(g.options||[]).length} options</span>
+                ${g.required?'<span class="cfg-badge-blue">Required</span>':''}
+              </div>
+              <div style="font-size:11px;color:var(--muted)">Select ${g.min_select}–${g.max_select} · Options: ${(g.options||[]).map(o=>`<b>${o.name}</b>${o.price>0?' (+'+boSettings.currency+' '+parseFloat(o.price).toFixed(2)+')':''}`).join(', ') || 'None'}</div>
+            </div>
+            <div style="display:flex;gap:8px;flex-shrink:0">
+              <button class="btn btn-outline btn-sm" onclick='cfgEditModifierGroup(${JSON.stringify(g).replace(/'/g,"&#39;")})'>Edit</button>
+              <button class="btn btn-danger btn-sm" onclick="cfgDeleteModifierGroup('${g.id}')">Delete</button>
+            </div>
+          </div>
+        </div>
+      </div>`).join('')
+  } catch (e) { list.innerHTML = `<div style="color:var(--danger);font-size:13px">Error: ${e.message}</div>` }
+}
+
+function cfgAddModifierGroup () { cfgOpenModGroupModal(null) }
+function cfgEditModifierGroup (g) { cfgOpenModGroupModal(g) }
+
+function cfgOpenModGroupModal (g) {
+  const isEdit = !!g
+  const html = `
+    <div class="modal-overlay active" id="modal-mod-group" onclick="if(event.target===this)this.remove()">
+      <div class="modal" style="max-width:520px">
+        <h3>${isEdit?'Edit':'Add'} Modifier Group</h3>
+        <input type="hidden" id="mgm-id" value="${g?.id||''}">
+        <div class="form-group"><label>Group Name *</label><input id="mgm-name" type="text" placeholder="e.g. Spice Level, Add-ons" value="${g?.name||''}"></div>
+        <div class="form-row">
+          <div class="form-group"><label>Min Select</label><input id="mgm-min" type="number" min="0" value="${g?.min_select||0}" style="max-width:100px"></div>
+          <div class="form-group"><label>Max Select</label><input id="mgm-max" type="number" min="1" value="${g?.max_select||1}" style="max-width:100px"></div>
+          <div class="form-group"><label>Required?</label>
+            <div style="padding:8px 0"><label class="toggle-switch"><input type="checkbox" id="mgm-req" ${g?.required?'checked':''}><span class="toggle-slider"></span></label></div>
+          </div>
+        </div>
+        <div style="margin:10px 0 6px;font-size:12px;font-weight:700">Options</div>
+        <div id="mgm-opts-list" style="display:flex;flex-direction:column;gap:6px;margin-bottom:8px">
+          ${(g?.options||[]).map(o=>`<div class="mgm-opt-row" style="display:flex;gap:8px;align-items:center">
+            <input class="mgm-opt-name" type="text" value="${o.name}" placeholder="Option name" style="flex:1;padding:5px 8px;border:1.5px solid var(--border);border-radius:7px;font-size:12px">
+            <input class="mgm-opt-price" type="number" value="${o.price||0}" min="0" step="0.01" placeholder="+price" style="width:80px;padding:5px 8px;border:1.5px solid var(--border);border-radius:7px;font-size:12px">
+            <input type="hidden" class="mgm-opt-id" value="${o.id}">
+            <button type="button" onclick="this.parentElement.remove()" class="btn btn-danger btn-sm btn-icon"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+          </div>`).join('')}
+        </div>
+        <button class="btn btn-outline btn-sm" type="button" onclick="mgmAddOptRow()">+ Add Option</button>
+        <div class="modal-footer" style="margin-top:16px">
+          <button class="btn btn-outline" onclick="document.getElementById('modal-mod-group').remove()">Cancel</button>
+          <button class="btn btn-primary" onclick="cfgSaveModifierGroup()">Save Group</button>
+        </div>
+      </div>
+    </div>`
+  document.body.insertAdjacentHTML('beforeend', html)
+}
+
+function mgmAddOptRow () {
+  const list = document.getElementById('mgm-opts-list')
+  if (!list) return
+  const div = document.createElement('div')
+  div.className = 'mgm-opt-row'
+  div.style.cssText = 'display:flex;gap:8px;align-items:center'
+  div.innerHTML = `<input class="mgm-opt-name" type="text" placeholder="Option name" style="flex:1;padding:5px 8px;border:1.5px solid var(--border);border-radius:7px;font-size:12px">
+    <input class="mgm-opt-price" type="number" value="0" min="0" step="0.01" placeholder="+price" style="width:80px;padding:5px 8px;border:1.5px solid var(--border);border-radius:7px;font-size:12px">
+    <input type="hidden" class="mgm-opt-id" value="">
+    <button type="button" onclick="this.parentElement.remove()" class="btn btn-danger btn-sm btn-icon"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>`
+  list.appendChild(div)
+}
+
+async function cfgSaveModifierGroup () {
+  const id   = document.getElementById('mgm-id').value
+  const name = document.getElementById('mgm-name').value.trim()
+  if (!name) { showToast('Group name is required.','error'); return }
+  const payload = {
+    name,
+    min_select: parseInt(document.getElementById('mgm-min').value) || 0,
+    max_select: parseInt(document.getElementById('mgm-max').value) || 1,
+    required:   document.getElementById('mgm-req').checked,
+  }
+  try {
+    let groupId = id
+    if (id) {
+      await apiFetch('PUT', `/menu/modifier-groups/${id}`, payload)
+    } else {
+      const r = await apiFetch('POST', '/menu/modifier-groups', payload)
+      groupId = r.group?.id
+    }
+    // Sync options
+    const rows = document.querySelectorAll('#mgm-opts-list .mgm-opt-row')
+    for (const row of rows) {
+      const optId   = row.querySelector('.mgm-opt-id').value
+      const optName = row.querySelector('.mgm-opt-name').value.trim()
+      const optPrice= parseFloat(row.querySelector('.mgm-opt-price').value) || 0
+      if (!optName) continue
+      if (optId) await apiFetch('PUT', `/menu/modifier-groups/${groupId}/options/${optId}`, { name: optName, price: optPrice })
+      else       await apiFetch('POST', `/menu/modifier-groups/${groupId}/options`, { name: optName, price: optPrice })
+    }
+    document.getElementById('modal-mod-group')?.remove()
+    cfgLoadModifierGroups()
+    showToast('Modifier group saved.','success')
   } catch (e) { showToast('Error: ' + e.message,'error') }
 }
+
+async function cfgDeleteModifierGroup (id) {
+  if (!confirm('Delete this modifier group? It will be unlinked from all items.')) return
+  try {
+    await apiFetch('DELETE', `/menu/modifier-groups/${id}`)
+    cfgLoadModifierGroups()
+    showToast('Modifier group deleted.','success')
+  } catch (e) { showToast('Error: ' + e.message,'error') }
+}
+
+// Keep old saveItem working (if called from elsewhere)
+async function saveItem () { saveItemEditor(false) }
 
 async function toggleItemActive (id, active) {
   try {
@@ -4745,7 +5457,7 @@ function showCfgTab (tab) {
     tables: cfgLoadTables, 'order-types': cfgLoadOrderTypes,
     payment: cfgLoadPayment, delivery: cfgLoadDelivery,
     kitchens: cfgLoadKitchens, designations: cfgLoadDesignations, tax: cfgLoadTax,
-    'pos-layout': cfgLoadPosLayout,
+    'pos-layout': cfgLoadPosLayout, 'modifier-groups': cfgLoadModifierGroups,
   }
   if (loaders[tab]) loaders[tab]()
 }
