@@ -511,6 +511,32 @@ input:checked+.toggle-slider:before{transform:translateX(17px)}
 
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms !important;transition-duration:.01ms !important}}
 @media print{#sidebar,#top-header,.page-header button,.filter-bar,.btn{display:none !important}#main-wrap{margin-left:0 !important}.card{border:1px solid #ccc;box-shadow:none}}
+
+/* ── GLOBAL SEARCH DROPDOWN ──────────────────── */
+.gsearch-wrap{position:relative;flex:1;max-width:360px}
+.gsearch-dropdown{position:absolute;top:calc(100% + 6px);left:0;right:0;background:#fff;border:1.5px solid var(--border);border-radius:10px;box-shadow:0 8px 24px rgba(0,0,0,.1);z-index:3000;overflow:hidden;display:none;max-height:320px;overflow-y:auto}
+.gsearch-dropdown.show{display:block}
+.gsd-item{display:flex;align-items:center;gap:10px;padding:10px 14px;cursor:pointer;font-size:13px;border-bottom:1px solid #f1f5f9;transition:.1s}
+.gsd-item:last-child{border-bottom:none}
+.gsd-item:hover,.gsd-item.focused{background:#f8fafc}
+.gsd-item-icon{width:28px;height:28px;border-radius:7px;background:#f1f5f9;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:14px}
+.gsd-item-label{font-weight:600;color:var(--text)}
+.gsd-item-section{font-size:11px;color:var(--muted)}
+.gsd-empty{padding:14px;text-align:center;color:var(--muted);font-size:13px}
+/* ── REPORT DATE PRESETS ─────────────────────── */
+.rpt-preset-bar{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px}
+.rpt-preset-btn{padding:6px 14px;border-radius:20px;border:1.5px solid var(--border);background:#fff;font-size:12px;font-weight:600;color:var(--muted);cursor:pointer;transition:.12s}
+.rpt-preset-btn:hover{border-color:var(--primary);color:var(--primary)}
+.rpt-preset-btn.active{background:var(--primary);color:#fff;border-color:var(--primary)}
+/* ── TABLE SECTION PILLS ─────────────────────── */
+.sec-pill{display:inline-flex;align-items:center;gap:6px;padding:5px 12px;border-radius:20px;border:1.5px solid var(--border);background:#fff;font-size:12px;font-weight:600;cursor:pointer;transition:.12s;color:var(--text)}
+.sec-pill:hover{border-color:var(--primary);color:var(--primary)}
+.sec-pill .sec-pill-del{color:var(--danger);font-size:14px;opacity:.6;margin-left:2px}
+.sec-pill .sec-pill-del:hover{opacity:1}
+/* ── CURRENCY SYMBOL TAG ─────────────────────── */
+.input-prefix{display:flex;align-items:center;gap:0;border:1.5px solid var(--border);border-radius:8px;overflow:hidden;background:#fff}
+.input-prefix-tag{padding:9px 10px;background:#f8fafc;border-right:1px solid var(--border);font-size:13px;color:var(--muted);font-weight:600;white-space:nowrap;flex-shrink:0}
+.input-prefix input{border:none;padding:9px 11px;font-size:13px;flex:1;outline:none;background:transparent}
 </style>
 </head>
 <body>
@@ -756,6 +782,9 @@ input:checked+.toggle-slider:before{transform:translateX(17px)}
           <div class="nav-sub" id="navsub-tax" onclick="showConfigTab('tax')" role="button" tabindex="0">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="19" y1="5" x2="5" y2="19"/><circle cx="6.5" cy="6.5" r="2.5"/><circle cx="17.5" cy="17.5" r="2.5"/></svg><span>Tax Groups</span>
           </div>
+          <div class="nav-sub" id="navsub-pos-layout" onclick="showConfigTab('pos-layout')" role="button" tabindex="0">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg><span>POS Layout</span>
+          </div>
         </div>
       </div>
       <div class="nav-item" id="nav-bo-settings" onclick="showView('bo-settings')" role="button" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' ')showView('bo-settings')">
@@ -785,9 +814,10 @@ input:checked+.toggle-slider:before{transform:translateX(17px)}
         <h3 id="hdr-greeting-text">Back Office</h3>
         <p id="hdr-date-text"></p>
       </div>
-      <div class="hdr-search">
+      <div class="hdr-search gsearch-wrap">
         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="color:#94a3b8;flex-shrink:0"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-        <input type="text" placeholder="Search orders, menu, staff…" id="global-search">
+        <input type="text" placeholder="Search sections, settings…" id="global-search" autocomplete="off" oninput="gsearchInput(this.value)" onkeydown="gsearchKey(event)" onfocus="gsearchInput(this.value)" onblur="setTimeout(()=>gsearchClose(),150)">
+        <div id="gsearch-dropdown" class="gsearch-dropdown"></div>
       </div>
       <div class="hdr-spacer"></div>
       <div class="hdr-actions">
@@ -1008,11 +1038,43 @@ input:checked+.toggle-slider:before{transform:translateX(17px)}
     <div class="card">
       <div class="card-header"><h3>Sales Report</h3></div>
       <div class="card-body">
-        <div class="form-row" style="align-items:flex-end;margin-bottom:16px">
+        <!-- Date presets -->
+        <div class="rpt-preset-bar" id="rpt-preset-bar">
+          <button class="rpt-preset-btn active" onclick="setRptPreset('today',this)">Today</button>
+          <button class="rpt-preset-btn" onclick="setRptPreset('yesterday',this)">Yesterday</button>
+          <button class="rpt-preset-btn" onclick="setRptPreset('this-week',this)">This Week</button>
+          <button class="rpt-preset-btn" onclick="setRptPreset('last-week',this)">Last Week</button>
+          <button class="rpt-preset-btn" onclick="setRptPreset('this-month',this)">This Month</button>
+          <button class="rpt-preset-btn" onclick="setRptPreset('last-month',this)">Last Month</button>
+          <button class="rpt-preset-btn" id="rpt-custom-btn" onclick="setRptPreset('custom',this)">Custom Range</button>
+        </div>
+        <!-- Custom date inputs (hidden unless Custom selected) -->
+        <div id="rpt-custom-range" style="display:none;gap:8px;align-items:flex-end;flex-wrap:wrap;margin-bottom:10px">
           <div class="form-group" style="margin:0"><label>From</label><input type="date" id="rep-from"></div>
           <div class="form-group" style="margin:0"><label>To</label><input type="date" id="rep-to"></div>
-          <button class="btn btn-primary" onclick="loadReport()"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="5 3 19 12 5 21 5 3"/></svg> Generate</button>
-          <button class="btn btn-outline" onclick="exportCSV()"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> Export CSV</button>
+        </div>
+        <!-- Filters row -->
+        <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:flex-end;margin-bottom:14px">
+          <div class="form-group" style="margin:0;min-width:120px">
+            <label style="font-size:11px;font-weight:600;color:var(--muted)">Country</label>
+            <select id="rpt-country" onchange="cascadeRptFilters()" style="font-size:13px;padding:7px 10px;border:1.5px solid var(--border);border-radius:6px;width:100%;color:var(--text)">
+              <option value="">All Countries</option>
+            </select>
+          </div>
+          <div class="form-group" style="margin:0;min-width:140px">
+            <label style="font-size:11px;font-weight:600;color:var(--muted)">Brand</label>
+            <select id="rpt-brand" onchange="cascadeRptFilters()" style="font-size:13px;padding:7px 10px;border:1.5px solid var(--border);border-radius:6px;width:100%;color:var(--text)">
+              <option value="">All Brands</option>
+            </select>
+          </div>
+          <div class="form-group" style="margin:0;min-width:140px">
+            <label style="font-size:11px;font-weight:600;color:var(--muted)">Outlet</label>
+            <select id="rpt-outlet" style="font-size:13px;padding:7px 10px;border:1.5px solid var(--border);border-radius:6px;width:100%;color:var(--text)">
+              <option value="">All Outlets</option>
+            </select>
+          </div>
+          <button class="btn btn-primary" onclick="loadReport()" style="align-self:flex-end"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="5 3 19 12 5 21 5 3"/></svg> Generate</button>
+          <button class="btn btn-outline" onclick="exportCSV()" style="align-self:flex-end"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> Export CSV</button>
         </div>
         <div id="report-summary" style="display:none">
           <div class="kpi-grid" id="rep-kpis" style="margin-bottom:16px"></div>
@@ -1631,7 +1693,14 @@ input:checked+.toggle-slider:before{transform:translateX(17px)}
 
       <!-- TABLES -->
       <div id="cfg-tables" class="cfg-section">
-        <div class="page-header"><h2>Tables</h2><button class="btn" onclick="cfgAddTable()">+ Add Table</button></div>
+        <div class="page-header">
+          <h2>Tables</h2>
+          <div style="display:flex;gap:8px">
+            <button class="btn btn-outline btn-sm" onclick="cfgOpenSectionModal(null)">+ Add Section</button>
+            <button class="btn" onclick="cfgOpenTableModal(null)">+ Add Table</button>
+          </div>
+        </div>
+        <div id="cfg-sections-bar" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px"></div>
         <div id="cfg-tables-list" class="cfg-list"></div>
       </div>
 
@@ -1671,6 +1740,25 @@ input:checked+.toggle-slider:before{transform:translateX(17px)}
       <div id="cfg-tax" class="cfg-section">
         <div class="page-header"><h2>Tax Groups</h2><button class="btn" onclick="cfgAddTax()">+ Add Tax Group</button></div>
         <div class="cfg-card"><div class="cfg-card-body"><div id="cfg-tax-list"></div></div></div>
+      </div>
+
+      <!-- POS LAYOUT -->
+      <div id="cfg-pos-layout" class="cfg-section">
+        <div class="page-header">
+          <h2>POS Layout</h2>
+          <button class="btn" onclick="cfgSavePosLayout()">Save Layout</button>
+        </div>
+        <div class="cfg-card">
+          <div class="cfg-card-hdr" style="padding:14px 18px">
+            <div>
+              <div style="font-weight:700;font-size:14px">Action Buttons</div>
+              <div style="font-size:12px;color:var(--muted);margin-top:2px">Toggle which buttons appear inline in the POS bottom bar. Others remain accessible via "More Options".</div>
+            </div>
+          </div>
+          <div class="cfg-card-body" style="padding:0">
+            <div id="cfg-pos-btns-list"></div>
+          </div>
+        </div>
       </div>
 
     </div><!-- cfg-content -->
@@ -1817,14 +1905,38 @@ input:checked+.toggle-slider:before{transform:translateX(17px)}
         <label>Closing Time</label>
         <input id="outlet-close" type="time" value="22:00">
       </div>
+    </div>
+    <div class="form-row">
       <div class="form-group">
-        <label>Currency</label>
-        <select id="outlet-currency">
+        <label>Country</label>
+        <select id="outlet-country" onchange="outletCurrencyAutofill()">
+          <option value="MY">Malaysia (MY)</option>
+          <option value="AE">UAE (AE)</option>
+          <option value="SG">Singapore (SG)</option>
+          <option value="ID">Indonesia (ID)</option>
+          <option value="TH">Thailand (TH)</option>
+          <option value="PH">Philippines (PH)</option>
+          <option value="SA">Saudi Arabia (SA)</option>
+          <option value="PK">Pakistan (PK)</option>
+          <option value="IN">India (IN)</option>
+          <option value="GB">United Kingdom (GB)</option>
+          <option value="US">United States (US)</option>
+          <option value="EU">Eurozone (EU)</option>
+          <option value="OTHER">Other</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Currency Code</label>
+        <select id="outlet-currency" onchange="outletCurrencyAutofill()">
           <option value="MYR">MYR</option><option value="SGD">SGD</option><option value="IDR">IDR</option>
           <option value="THB">THB</option><option value="PHP">PHP</option><option value="AED">AED</option>
           <option value="SAR">SAR</option><option value="PKR">PKR</option><option value="INR">INR</option>
           <option value="GBP">GBP</option><option value="USD">USD</option><option value="EUR">EUR</option>
         </select>
+      </div>
+      <div class="form-group">
+        <label>Currency Symbol</label>
+        <input id="outlet-currency-symbol" type="text" placeholder="e.g. RM" maxlength="5" style="max-width:80px">
       </div>
     </div>
     <div class="modal-footer">
@@ -1833,6 +1945,50 @@ input:checked+.toggle-slider:before{transform:translateX(17px)}
         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
         Save Outlet
       </button>
+    </div>
+  </div>
+</div>
+
+<!-- Table Modal -->
+<div class="modal-overlay" id="modal-table">
+  <div class="modal" style="min-width:380px;max-width:460px">
+    <h3 id="table-modal-title">Add Table</h3>
+    <input type="hidden" id="table-modal-id">
+    <div class="form-row">
+      <div class="form-group">
+        <label>Table Name *</label>
+        <input id="table-modal-name" type="text" placeholder="e.g. T1, VIP 1, Patio A">
+      </div>
+      <div class="form-group">
+        <label>Capacity (seats)</label>
+        <input id="table-modal-capacity" type="number" min="1" max="100" value="4">
+      </div>
+    </div>
+    <div class="form-group">
+      <label>Section <span style="color:var(--muted);font-size:12px">(optional)</span></label>
+      <select id="table-modal-section">
+        <option value="">No Section</option>
+      </select>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('modal-table')">Cancel</button>
+      <button class="btn btn-primary" onclick="cfgSaveTableModal()"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg> Save Table</button>
+    </div>
+  </div>
+</div>
+
+<!-- Table Section Modal -->
+<div class="modal-overlay" id="modal-table-section">
+  <div class="modal" style="min-width:320px;max-width:400px">
+    <h3 id="section-modal-title">Add Section</h3>
+    <input type="hidden" id="section-modal-id">
+    <div class="form-group">
+      <label>Section Name *</label>
+      <input id="section-modal-name" type="text" placeholder="e.g. Indoor, Outdoor, VIP, Rooftop">
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('modal-table-section')">Cancel</button>
+      <button class="btn btn-primary" onclick="cfgSaveSectionModal()"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg> Save Section</button>
     </div>
   </div>
 </div>
@@ -2443,23 +2599,105 @@ async function initApp () {
   await loadMenu()
   await loadDashboard()
   await loadStaff()
+  loadRptFilterOptions()  // pre-load filter options in background
+}
+
+// ─── GLOBAL SEARCH ───────────────────────────────────────────────
+const GSEARCH_INDEX = [
+  { label:'Dashboard',         section:'Main',          icon:'📊', action:()=>showView('dashboard') },
+  { label:'Live Orders',       section:'Main',          icon:'🔴', action:()=>showView('live') },
+  { label:'Orders History',    section:'Main',          icon:'📋', action:()=>showView('orders') },
+  { label:'Menu',              section:'Main',          icon:'🍽️', action:()=>showView('menu') },
+  { label:'Reports',           section:'Main',          icon:'📈', action:()=>showView('reports') },
+  { label:'Staff',             section:'Manage',        icon:'👥', action:()=>showView('staff') },
+  { label:'Audit Log',         section:'Manage',        icon:'🛡️', action:()=>showView('audit') },
+  { label:'Downloads',         section:'Manage',        icon:'⬇️', action:()=>showView('downloads') },
+  { label:'Brand Settings',    section:'Configuration', icon:'🏷️', action:()=>showConfigTab('brand') },
+  { label:'Outlet Settings',   section:'Configuration', icon:'🏪', action:()=>showConfigTab('outlet') },
+  { label:'Tables',            section:'Configuration', icon:'🪑', action:()=>showConfigTab('tables') },
+  { label:'Order Types',       section:'Configuration', icon:'📝', action:()=>showConfigTab('order-types') },
+  { label:'Payment Methods',   section:'Configuration', icon:'💳', action:()=>showConfigTab('payment') },
+  { label:'Delivery Partners', section:'Configuration', icon:'🚗', action:()=>showConfigTab('delivery') },
+  { label:'Kitchens',          section:'Configuration', icon:'🍳', action:()=>showConfigTab('kitchens') },
+  { label:'Designations',      section:'Configuration', icon:'🎖️', action:()=>showConfigTab('designations') },
+  { label:'Tax Groups',        section:'Configuration', icon:'🧾', action:()=>showConfigTab('tax') },
+  { label:'POS Layout',        section:'Configuration', icon:'🖥️', action:()=>showConfigTab('pos-layout') },
+  { label:'Back Office Settings',section:'Settings',    icon:'⚙️', action:()=>showView('bo-settings') },
+]
+
+let _gsearchIdx = -1
+
+function gsearchInput (q) {
+  const dd = document.getElementById('gsearch-dropdown')
+  if (!q.trim()) { dd.classList.remove('show'); return }
+  const ql = q.toLowerCase()
+  const hits = GSEARCH_INDEX.filter(x =>
+    x.label.toLowerCase().includes(ql) || x.section.toLowerCase().includes(ql)
+  ).slice(0, 8)
+  if (!hits.length) {
+    dd.innerHTML = `<div class="gsd-empty">No results for "${q}"</div>`
+  } else {
+    _gsearchIdx = -1
+    dd.innerHTML = hits.map((h, i) => `
+      <div class="gsd-item" data-idx="${i}" onmousedown="gsearchPick(${i})">
+        <div class="gsd-item-icon">${h.icon}</div>
+        <div><div class="gsd-item-label">${h.label}</div><div class="gsd-item-section">${h.section}</div></div>
+      </div>`).join('')
+    dd._hits = hits
+  }
+  dd.classList.add('show')
+}
+
+function gsearchKey (e) {
+  const dd = document.getElementById('gsearch-dropdown')
+  const items = dd.querySelectorAll('.gsd-item')
+  if (e.key === 'ArrowDown') {
+    e.preventDefault()
+    _gsearchIdx = Math.min(_gsearchIdx + 1, items.length - 1)
+    items.forEach((el, i) => el.classList.toggle('focused', i === _gsearchIdx))
+  } else if (e.key === 'ArrowUp') {
+    e.preventDefault()
+    _gsearchIdx = Math.max(_gsearchIdx - 1, 0)
+    items.forEach((el, i) => el.classList.toggle('focused', i === _gsearchIdx))
+  } else if (e.key === 'Enter') {
+    if (_gsearchIdx >= 0 && dd._hits?.[_gsearchIdx]) {
+      gsearchPick(_gsearchIdx)
+    }
+  } else if (e.key === 'Escape') {
+    gsearchClose()
+  }
+}
+
+function gsearchPick (idx) {
+  const dd = document.getElementById('gsearch-dropdown')
+  const hit = dd._hits?.[idx]
+  if (hit) {
+    document.getElementById('global-search').value = ''
+    dd.classList.remove('show')
+    hit.action()
+  }
+}
+
+function gsearchClose () {
+  document.getElementById('gsearch-dropdown')?.classList.remove('show')
 }
 
 function setTodayDates () {
   const today = todayStr()
   const weekAgo = new Date(Date.now() - 7*86400000).toISOString().split('T')[0]
-  document.getElementById('dash-date').value    = today
-  document.getElementById('orders-date').value  = today
-  document.getElementById('rep-from').value     = today
-  document.getElementById('rep-to').value       = today
-  document.getElementById('exp-rep-from').value = today
-  document.getElementById('exp-rep-to').value   = today
-  document.getElementById('perf-from').value    = weekAgo
-  document.getElementById('perf-to').value      = today
-  document.getElementById('void-rep-from').value = today
-  document.getElementById('void-rep-to').value   = today
-  document.getElementById('audit-from').value    = today
-  document.getElementById('audit-to').value      = today
+  const set = (id, v) => { const el = document.getElementById(id); if (el) el.value = v }
+  set('dash-date',    today)
+  set('orders-date',  today)
+  set('rep-from',     today)
+  set('rep-to',       today)
+  set('exp-rep-from', today)
+  set('exp-rep-to',   today)
+  set('perf-from',    weekAgo)
+  set('perf-to',      today)
+  set('void-rep-from',today)
+  set('void-rep-to',  today)
+  set('audit-from',   today)
+  set('audit-to',     today)
 }
 
 // ─── SETTINGS ────────────────────────────────────────────────────
@@ -2521,7 +2759,7 @@ function showView (id) {
   if (id === 'orders')    { setOrdersDate('today'); loadOrders() }
   if (id === 'staff')     loadStaff()
   if (id === 'dashboard') loadDashboard()
-  if (id === 'reports')   { loadReport(); loadExpReport(); }
+  if (id === 'reports')   { loadRptFilterOptions(); setRptPreset('today', document.querySelector('.rpt-preset-btn')); loadReport(); loadExpReport(); }
   if (id === 'audit')     loadAuditLog()
   if (id === 'downloads') loadDownloadsPage()
   if (id === 'config')  { document.getElementById('navg-config').classList.add('open'); showCfgTab('brand'); cfgLoadBrands() }
@@ -2908,14 +3146,111 @@ function renderOrdersView () {
     : `<tr><td colspan="11" class="empty-state">No orders found</td></tr>`
 }
 
+// ─── REPORT DATE PRESETS & FILTERS ──────────────────────────────
+let _rptFilterData = { brands: [], outlets: [], countries: [] }
+
+async function loadRptFilterOptions () {
+  try {
+    const d = await apiFetch('GET', '/reports/filter-options')
+    _rptFilterData = d
+    const csel = document.getElementById('rpt-country')
+    const bsel = document.getElementById('rpt-brand')
+    if (csel) {
+      const prev = csel.value
+      csel.innerHTML = '<option value="">All Countries</option>' +
+        d.countries.map(c => `<option value="${c}"${c===prev?' selected':''}>${c}</option>`).join('')
+    }
+    if (bsel) {
+      const prev = bsel.value
+      bsel.innerHTML = '<option value="">All Brands</option>' +
+        d.brands.map(b => `<option value="${b.id}"${b.id===prev?' selected':''}>${b.name}</option>`).join('')
+    }
+    cascadeRptFilters()
+  } catch (_) {}
+}
+
+function cascadeRptFilters () {
+  const country = document.getElementById('rpt-country')?.value || ''
+  const brand   = document.getElementById('rpt-brand')?.value   || ''
+  const osel    = document.getElementById('rpt-outlet')
+  if (!osel) return
+  const prevOut = osel.value
+  let outlets = _rptFilterData.outlets || []
+  if (country) outlets = outlets.filter(o => o.country === country)
+  if (brand)   outlets = outlets.filter(o => o.brand_id === brand)
+  osel.innerHTML = '<option value="">All Outlets</option>' +
+    outlets.map(o => `<option value="${o.id}"${o.id===prevOut?' selected':''}>${o.name}</option>`).join('')
+}
+
+function setRptPreset (preset, btn) {
+  document.querySelectorAll('.rpt-preset-btn').forEach(b => b.classList.remove('active'))
+  if (btn) btn.classList.add('active')
+  const today = new Date()
+  const fmt = d => d.toISOString().split('T')[0]
+  const customRange = document.getElementById('rpt-custom-range')
+
+  if (preset === 'custom') {
+    if (customRange) customRange.style.display = 'flex'
+    return
+  }
+  if (customRange) customRange.style.display = 'none'
+
+  let from, to
+  if (preset === 'today') {
+    from = to = fmt(today)
+  } else if (preset === 'yesterday') {
+    const y = new Date(today); y.setDate(y.getDate() - 1)
+    from = to = fmt(y)
+  } else if (preset === 'this-week') {
+    const d = new Date(today)
+    d.setDate(d.getDate() - d.getDay() + (d.getDay() === 0 ? -6 : 1))
+    from = fmt(d); to = fmt(today)
+  } else if (preset === 'last-week') {
+    const d = new Date(today)
+    d.setDate(d.getDate() - d.getDay() - 6)
+    from = fmt(d)
+    const e = new Date(d); e.setDate(e.getDate() + 6)
+    to = fmt(e)
+  } else if (preset === 'this-month') {
+    from = fmt(new Date(today.getFullYear(), today.getMonth(), 1))
+    to   = fmt(today)
+  } else if (preset === 'last-month') {
+    const f = new Date(today.getFullYear(), today.getMonth() - 1, 1)
+    const l = new Date(today.getFullYear(), today.getMonth(), 0)
+    from = fmt(f); to = fmt(l)
+  }
+  const frEl = document.getElementById('rep-from')
+  const toEl = document.getElementById('rep-to')
+  if (frEl) frEl.value = from
+  if (toEl) toEl.value = to
+}
+
 // ─── REPORTS ─────────────────────────────────────────────────────
 async function loadReport () {
-  const from = document.getElementById('rep-from').value
-  const to   = document.getElementById('rep-to').value
+  // Resolve dates from custom or preset
+  let from = document.getElementById('rep-from')?.value
+  let to   = document.getElementById('rep-to')?.value
+  // If preset active and custom range hidden, dates are set by setRptPreset
+  const customRange = document.getElementById('rpt-custom-range')
+  const isCustomVisible = customRange && customRange.style.display !== 'none'
+  if ((!from || !to) && !isCustomVisible) {
+    // Default to today
+    from = to = new Date().toISOString().split('T')[0]
+  }
   if (!from || !to) { showToast('Select date range.','error'); return }
+
+  const country   = document.getElementById('rpt-country')?.value  || ''
+  const brand_id  = document.getElementById('rpt-brand')?.value    || ''
+  const outlet_id = document.getElementById('rpt-outlet')?.value   || ''
+
+  const params = new URLSearchParams({ from, to })
+  if (country)   params.set('country',   country)
+  if (brand_id)  params.set('brand_id',  brand_id)
+  if (outlet_id) params.set('outlet_id', outlet_id)
+
   const cur = boSettings.currency
   try {
-    const { orders, expenses: exps } = await apiFetch('GET', `/reports?from=${from}&to=${to}`)
+    const { orders, expenses: exps } = await apiFetch('GET', `/reports?${params}`)
 
     const totalSales = orders.reduce((s, o) => s + (parseFloat(o.total) || 0), 0)
     const totalExps  = exps.reduce((s, e) => s + (parseFloat(e.amount) || 0), 0)
@@ -4095,6 +4430,7 @@ function showCfgTab (tab) {
     tables: cfgLoadTables, 'order-types': cfgLoadOrderTypes,
     payment: cfgLoadPayment, delivery: cfgLoadDelivery,
     kitchens: cfgLoadKitchens, designations: cfgLoadDesignations, tax: cfgLoadTax,
+    'pos-layout': cfgLoadPosLayout,
   }
   if (loaders[tab]) loaders[tab]()
 }
@@ -4257,6 +4593,8 @@ async function cfgOpenOutletModal (outlet) {
       sel.appendChild(opt)
     })
   } catch (_) {}
+  const CURRENCY_SYMBOLS = { MYR:'RM', SGD:'S$', IDR:'Rp', THB:'฿', PHP:'₱', AED:'د.إ', SAR:'﷼', PKR:'₨', INR:'₹', GBP:'£', USD:'$', EUR:'€' }
+  const COUNTRY_CURRENCY = { MY:'MYR', AE:'AED', SG:'SGD', ID:'IDR', TH:'THB', PH:'PHP', SA:'SAR', PK:'PKR', IN:'INR', GB:'GBP', US:'USD', EU:'EUR' }
   document.getElementById('outlet-id').value     = outlet?.id || ''
   document.getElementById('outlet-modal-title').textContent = outlet ? 'Edit Outlet' : 'Add Outlet'
   document.getElementById('outlet-name').value   = outlet?.name || ''
@@ -4265,24 +4603,45 @@ async function cfgOpenOutletModal (outlet) {
   document.getElementById('outlet-address').value = outlet?.address || ''
   document.getElementById('outlet-open').value   = outlet?.opening_time || '09:00'
   document.getElementById('outlet-close').value  = outlet?.closing_time || '22:00'
-  document.getElementById('outlet-currency').value = outlet?.currency || 'MYR'
+  document.getElementById('outlet-country').value = outlet?.country || 'MY'
+  document.getElementById('outlet-currency').value = outlet?.currency_code || outlet?.currency || 'MYR'
+  document.getElementById('outlet-currency-symbol').value = outlet?.currency_symbol || CURRENCY_SYMBOLS[outlet?.currency_code || outlet?.currency || 'MYR'] || ''
   showModal('modal-outlet')
   setTimeout(() => document.getElementById('outlet-name').focus(), 100)
+}
+
+function outletCurrencyAutofill () {
+  const CURRENCY_SYMBOLS = { MYR:'RM', SGD:'S$', IDR:'Rp', THB:'฿', PHP:'₱', AED:'د.إ', SAR:'﷼', PKR:'₨', INR:'₹', GBP:'£', USD:'$', EUR:'€' }
+  const COUNTRY_CURRENCY = { MY:'MYR', AE:'AED', SG:'SGD', ID:'IDR', TH:'THB', PH:'PHP', SA:'SAR', PK:'PKR', IN:'INR', GB:'GBP', US:'USD', EU:'EUR' }
+  const country = document.getElementById('outlet-country')?.value
+  const curSel  = document.getElementById('outlet-currency')
+  const symEl   = document.getElementById('outlet-currency-symbol')
+  if (country && COUNTRY_CURRENCY[country] && curSel) {
+    curSel.value = COUNTRY_CURRENCY[country]
+  }
+  const cur = curSel?.value
+  if (cur && CURRENCY_SYMBOLS[cur] && symEl && !symEl.dataset.manual) {
+    symEl.value = CURRENCY_SYMBOLS[cur]
+  }
 }
 
 async function cfgSaveOutletModal () {
   const id   = document.getElementById('outlet-id').value
   const name = document.getElementById('outlet-name').value.trim()
   if (!name) { showToast('Outlet name is required', 'error'); return }
+  const currency_code = document.getElementById('outlet-currency').value
   const body = {
     name,
-    brand_id:     document.getElementById('outlet-brand-id').value || null,
-    phone:        document.getElementById('outlet-phone').value.trim(),
-    email:        document.getElementById('outlet-email').value.trim(),
-    address:      document.getElementById('outlet-address').value.trim(),
-    opening_time: document.getElementById('outlet-open').value,
-    closing_time: document.getElementById('outlet-close').value,
-    currency:     document.getElementById('outlet-currency').value,
+    brand_id:        document.getElementById('outlet-brand-id').value || null,
+    phone:           document.getElementById('outlet-phone').value.trim(),
+    email:           document.getElementById('outlet-email').value.trim(),
+    address:         document.getElementById('outlet-address').value.trim(),
+    opening_time:    document.getElementById('outlet-open').value,
+    closing_time:    document.getElementById('outlet-close').value,
+    country:         document.getElementById('outlet-country').value,
+    currency:        currency_code,
+    currency_code,
+    currency_symbol: document.getElementById('outlet-currency-symbol').value.trim() || 'RM',
   }
   try {
     id ? await apiFetch('PATCH', '/config/outlets/' + id, body)
@@ -4303,34 +4662,129 @@ async function cfgDeleteOutlet (id, name) {
 }
 
 // ─── TABLES ──────────────────────────────────────────────────────────────────
+let _tableSections = []
+
 async function cfgLoadTables () {
   try {
-    const data = await apiFetch('GET', '/tables')
+    const [sectData, tblData] = await Promise.all([
+      apiFetch('GET', '/config/table-sections'),
+      apiFetch('GET', '/config/tables'),
+    ])
+    _tableSections = sectData.rows || []
+    const tables   = tblData.rows   || []
+
+    // Sections bar
+    const bar = document.getElementById('cfg-sections-bar')
+    bar.innerHTML = _tableSections.map(s => `
+      <span class="sec-pill">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="13" height="13"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+        <span onclick="cfgOpenSectionModal(${JSON.stringify(s).replace(/"/g,'&quot;')})">${s.name}</span>
+        <span class="sec-pill-del" onclick="cfgDeleteSection('${s.id}','${s.name.replace(/'/g,"\\'")}')" title="Delete section">✕</span>
+      </span>`).join('')
+
+    // Group tables by section
+    const bySection = {}
+    for (const t of tables) {
+      const key = t.section_id || '__none__'
+      if (!bySection[key]) bySection[key] = []
+      bySection[key].push(t)
+    }
+
     const list = document.getElementById('cfg-tables-list')
-    const tables = data.tables || data || []
-    list.innerHTML = tables.length ? tables.map(t => `
-      <div class="cfg-list-item">
-        <div class="cfg-list-item-name">Table ${t.table_number}${t.label ? ' — ' + t.label : ''}</div>
-        <div class="cfg-list-item-sub">${t.seats ? t.seats + ' seats' : ''} ${t.section || ''}</div>
-        <button class="btn btn-sm btn-danger" onclick="cfgDeleteTable('${t.id}')">Delete</button>
-      </div>`).join('') : '<div class="empty-state"><p>No tables yet. Click + Add Table.</p></div>'
+    let html = ''
+    // Section groups
+    for (const s of _tableSections) {
+      const grp = bySection[s.id] || []
+      html += `<div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;padding:6px 0 4px">${s.name}</div>`
+      html += grp.map(t => tableRow(t)).join('') || `<div style="color:var(--muted);font-size:12px;padding:6px 12px">No tables in this section</div>`
+    }
+    // Unsectioned
+    const unsec = bySection['__none__'] || []
+    if (unsec.length || !_tableSections.length) {
+      if (_tableSections.length) html += `<div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;padding:10px 0 4px">General</div>`
+      html += unsec.map(t => tableRow(t)).join('')
+    }
+    list.innerHTML = html || '<div class="empty-state"><p>No tables yet. Click + Add Table.</p></div>'
   } catch (e) { showToast(friendlyError(e.message), 'error') }
 }
 
-function cfgAddTable () {
-  const num = prompt('Table number:')
-  if (!num) return
-  const label = prompt('Label (optional, e.g. "Window Seat"):') || ''
-  const seats = prompt('Seats (optional):') || ''
-  apiFetch('POST', '/tables', { table_number: parseInt(num), label, seats: parseInt(seats) || null })
-    .then(() => { showToast('Table added', 'success'); cfgLoadTables() })
+function tableRow (t) {
+  return `<div class="cfg-list-item">
+    <div style="flex:1">
+      <div class="cfg-list-item-name">${t.name}</div>
+      <div class="cfg-list-item-sub">${t.capacity ? t.capacity + ' seats' : ''}${t.section_name ? ' · ' + t.section_name : ''}</div>
+    </div>
+    <button class="btn btn-sm btn-outline" style="margin-right:4px" onclick="cfgOpenTableModal(${JSON.stringify(t).replace(/"/g,'&quot;')})">Edit</button>
+    <button class="btn btn-sm btn-danger" onclick="cfgDeleteTableById('${t.id}','${t.name.replace(/'/g,"\\'")}')" style="padding:5px 10px">✕</button>
+  </div>`
+}
+
+function cfgOpenTableModal (t) {
+  document.getElementById('table-modal-title').textContent = t ? 'Edit Table' : 'Add Table'
+  document.getElementById('table-modal-id').value = t?.id || ''
+  document.getElementById('table-modal-name').value = t?.name || ''
+  document.getElementById('table-modal-capacity').value = t?.capacity || 4
+  // Populate section dropdown
+  const sel = document.getElementById('table-modal-section')
+  sel.innerHTML = '<option value="">No Section</option>' +
+    _tableSections.map(s => `<option value="${s.id}"${t?.section_id === s.id ? ' selected' : ''}>${s.name}</option>`).join('')
+  showModal('modal-table')
+  setTimeout(() => document.getElementById('table-modal-name').focus(), 80)
+}
+
+async function cfgSaveTableModal () {
+  const id       = document.getElementById('table-modal-id').value
+  const name     = document.getElementById('table-modal-name').value.trim()
+  const capacity = parseInt(document.getElementById('table-modal-capacity').value) || 4
+  const section_id = document.getElementById('table-modal-section').value || null
+  if (!name) { showToast('Table name is required', 'error'); return }
+  try {
+    if (id) {
+      await apiFetch('PATCH', '/config/tables/' + id, { name, capacity, section_id })
+    } else {
+      await apiFetch('POST', '/config/tables', { name, capacity, section_id })
+    }
+    closeModal('modal-table')
+    showToast(id ? 'Table updated' : 'Table added', 'success')
+    cfgLoadTables()
+  } catch (e) { showToast(friendlyError(e.message), 'error') }
+}
+
+function cfgDeleteTableById (id, name) {
+  if (!confirm(`Delete table "${name}"?`)) return
+  apiFetch('DELETE', '/config/tables/' + id)
+    .then(() => { showToast('Table deleted', 'success'); cfgLoadTables() })
     .catch(e => showToast(friendlyError(e.message), 'error'))
 }
 
-function cfgDeleteTable (id) {
-  if (!confirm('Delete this table?')) return
-  apiFetch('DELETE', '/tables/' + id)
-    .then(() => { showToast('Table deleted', 'success'); cfgLoadTables() })
+function cfgOpenSectionModal (s) {
+  document.getElementById('section-modal-title').textContent = s ? 'Edit Section' : 'Add Section'
+  document.getElementById('section-modal-id').value = s?.id || ''
+  document.getElementById('section-modal-name').value = s?.name || ''
+  showModal('modal-table-section')
+  setTimeout(() => document.getElementById('section-modal-name').focus(), 80)
+}
+
+async function cfgSaveSectionModal () {
+  const id   = document.getElementById('section-modal-id').value
+  const name = document.getElementById('section-modal-name').value.trim()
+  if (!name) { showToast('Section name is required', 'error'); return }
+  try {
+    if (id) {
+      await apiFetch('PATCH', '/config/table-sections/' + id, { name })
+    } else {
+      await apiFetch('POST', '/config/table-sections', { name })
+    }
+    closeModal('modal-table-section')
+    showToast(id ? 'Section updated' : 'Section added', 'success')
+    cfgLoadTables()
+  } catch (e) { showToast(friendlyError(e.message), 'error') }
+}
+
+function cfgDeleteSection (id, name) {
+  if (!confirm(`Delete section "${name}"? Tables in this section will move to General.`)) return
+  apiFetch('DELETE', '/config/table-sections/' + id)
+    .then(() => { showToast('Section deleted', 'success'); cfgLoadTables() })
     .catch(e => showToast(friendlyError(e.message), 'error'))
 }
 
@@ -4596,6 +5050,55 @@ function cfgEditTax (id, name, rate, isDef) {
   apiFetch('PATCH', '/config/tax-groups/' + id, { name: newName, rate: parseFloat(newRate), is_default: newDef })
     .then(() => { showToast('Saved', 'success'); cfgLoadTax() })
     .catch(e => showToast(friendlyError(e.message), 'error'))
+}
+
+// ─── POS LAYOUT ──────────────────────────────────────────────────────────────
+const POS_BTN_LABELS = {
+  discount:'Discount', note:'Order Note', hold:'Hold Order', recall:'Recall Order',
+  draft:'Draft Bill', cancel:'Cancel Order', waiter:'Waiter / Captain',
+  split:'Split Payment', transfer:'Transfer Table', comp:'Comp Item',
+}
+
+let _posLayoutBtns = []
+
+async function cfgLoadPosLayout () {
+  try {
+    const { rows } = await apiFetch('GET', '/config/pos-buttons')
+    _posLayoutBtns = rows
+    const list = document.getElementById('cfg-pos-btns-list')
+    if (!list) return
+    list.innerHTML = rows.map((b, i) => `
+      <div class="cfg-list-item" id="pos-btn-row-${b.key}" style="gap:14px">
+        <div style="display:flex;align-items:center;gap:10px;flex:1">
+          <span style="font-size:13px;color:var(--muted);min-width:20px">${i+1}</span>
+          <div style="flex:1">
+            <div class="cfg-list-item-name">${POS_BTN_LABELS[b.key] || b.key}</div>
+            <div style="font-size:11px;color:var(--muted)">${b.visible ? 'Visible in bottom bar' : 'Hidden inside More Options'}</div>
+          </div>
+        </div>
+        <label class="toggle-switch" title="${b.visible ? 'Click to hide' : 'Click to show inline'}">
+          <input type="checkbox" ${b.visible ? 'checked' : ''} onchange="posLayoutToggle('${b.key}', this.checked)">
+          <span class="toggle-slider"></span>
+        </label>
+      </div>`).join('')
+  } catch (e) { showToast(friendlyError(e.message), 'error') }
+}
+
+function posLayoutToggle (key, checked) {
+  const btn = _posLayoutBtns.find(b => b.key === key)
+  if (btn) btn.visible = checked
+  const row = document.getElementById('pos-btn-row-' + key)
+  if (row) {
+    const sub = row.querySelector('div[style*="font-size:11px"]')
+    if (sub) sub.textContent = checked ? 'Visible in bottom bar' : 'Hidden inside More Options'
+  }
+}
+
+async function cfgSavePosLayout () {
+  try {
+    await apiFetch('PATCH', '/config/pos-buttons', { buttons: _posLayoutBtns })
+    showToast('POS layout saved', 'success')
+  } catch (e) { showToast(friendlyError(e.message), 'error') }
 }
 
 // Load config when view opens

@@ -427,7 +427,7 @@ textarea:focus-visible {
 .disc-badge{background:#fef9c3;color:#a16207;font-size:12px;padding:2px 8px;border-radius:10px}
 
 /* More Options Hub */
-.more-modal{width:min(960px,96vw);max-height:92vh;display:flex;flex-direction:column;padding:18px}
+.more-modal{width:min(760px,88vw);max-height:78vh;display:flex;flex-direction:column;padding:18px}
 .hub-head{display:flex;align-items:flex-start;justify-content:space-between;padding-bottom:12px;border-bottom:1.5px solid var(--border);flex-shrink:0;gap:12px}
 .hub-body{display:flex;flex:1;overflow:hidden;min-height:0;margin-top:12px;gap:10px}
 .hub-sidebar{width:130px;flex-shrink:0;background:var(--bg);border-radius:10px;overflow-y:auto;padding:6px;display:flex;flex-direction:column;gap:2px}
@@ -816,14 +816,16 @@ textarea:focus-visible {
 .btn-save-print{display:none}
 .btn-save-print:hover{border-color:var(--primary);color:var(--primary)}
 /* Bottom action bar */
-.entry-bottom-bar{display:flex;border-top:2px solid var(--border);background:#fff;flex-shrink:0;height:72px;padding:8px 10px}
-.ebb-btn{flex:1;display:flex;flex-direction:row;align-items:center;justify-content:center;gap:10px;cursor:pointer;border:2px solid var(--border);background:var(--bg);border-radius:10px;padding:8px 12px;transition:.15s}
-.ebb-btn:last-child{border-right:none}
+.entry-bottom-bar{display:flex;border-top:2px solid var(--border);background:#fff;flex-shrink:0;height:72px;padding:8px 10px;gap:7px;overflow-x:auto}
+.ebb-btn{flex-shrink:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;cursor:pointer;border:1.5px solid var(--border);background:var(--bg);border-radius:10px;padding:7px 10px;transition:.15s;min-width:56px}
+.ebb-btn.ebb-more{flex:1;flex-direction:row;min-width:90px;gap:8px;padding:8px 14px}
+.ebb-btn.ebb-quick.danger{border-color:#fecaca}
 .ebb-btn:hover{background:#fafafa}
 .ebb-btn:active{background:var(--bg)}
 .ebb-icon{width:20px;height:20px;display:flex;align-items:center;justify-content:center;color:var(--secondary);flex-shrink:0}
-.ebb-label{font-size:15px;font-weight:800;color:var(--secondary);text-transform:uppercase;letter-spacing:0;text-align:center;line-height:1.2;margin-top:1px}
-.ebb-sub{font-size:12px;color:var(--muted);text-align:center;line-height:1.1}
+.ebb-label{font-size:11px;font-weight:800;color:var(--secondary);text-transform:uppercase;letter-spacing:0;text-align:center;line-height:1.2}
+.ebb-more .ebb-label{font-size:14px}
+.ebb-sub{font-size:11px;color:var(--muted);text-align:center;line-height:1.1}
 /* New order type popup */
 .notp-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:4px}
 .notp-btn{padding:20px 12px;border-radius:12px;border:2px solid var(--border);cursor:pointer;text-align:center;transition:.15s;background:var(--bg);display:flex;flex-direction:column;align-items:center;gap:8px}
@@ -1411,8 +1413,8 @@ textarea:focus-visible {
           </div><!-- end entry-main -->
 
           <!-- Bottom Action Bar -->
-          <div class="entry-bottom-bar">
-            <button class="ebb-btn" onclick="showMoreOptions()">
+          <div class="entry-bottom-bar" id="entry-bottom-bar">
+            <button class="ebb-btn ebb-more" onclick="showMoreOptions()">
               <div class="ebb-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="18" height="18"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg></div>
               <div class="ebb-label">More Options</div>
               <div class="ebb-sub">Discount, notes, split, manager actions</div>
@@ -2547,9 +2549,103 @@ async function checkApiConnectivity() {
     setSyncStatus(true);
     fetchMenuFromApi().catch(() => {});
     fetchCashiersFromApi().catch(() => {});
+    fetchOrderTypesFromApi().catch(() => {});
   } catch {
     setSyncStatus(false);
   }
+}
+
+let _posOrderTypes = []
+let _posButtonConfig = []
+
+async function fetchOrderTypesFromApi() {
+  try {
+    const outletParam = cfg.outletId ? `?outlet_id=${encodeURIComponent(cfg.outletId)}` : ''
+    const data = await apiFetch('GET', '/sync/pos-config' + outletParam)
+    if (data.order_types?.length) {
+      _posOrderTypes = data.order_types
+      rebuildNewOrderModal()
+    }
+    if (data.pos_buttons?.length) {
+      _posButtonConfig = data.pos_buttons
+      buildBottomBar()
+    }
+  } catch (_) {}
+}
+
+const POS_BTN_META = {
+  discount: { label:'Discount',     icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" width="16" height="16"><line x1="19" y1="5" x2="5" y2="19"/><circle cx="6.5" cy="6.5" r="2.5"/><circle cx="17.5" cy="17.5" r="2.5"/></svg>', action:'showDiscount()' },
+  note:     { label:'Note',         icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" width="16" height="16"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>', action:'showOrderNoteDialog()' },
+  hold:     { label:'Hold',         icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" width="16" height="16"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>', action:'holdOrder()' },
+  recall:   { label:'Recall',       icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" width="16" height="16"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 102.13-9.36L1 10"/></svg>', action:'recallOrder()' },
+  draft:    { label:'Draft Bill',   icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" width="16" height="16"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>', action:'printDraftBill()' },
+  cancel:   { label:'Cancel',       icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" width="16" height="16"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>', action:'cancelCurrentOrder()', danger:true },
+  waiter:   { label:'Waiter',       icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" width="16" height="16"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>', action:'showWaiterDialog()' },
+  split:    { label:'Split Pay',    icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" width="16" height="16"><line x1="12" y1="2" x2="12" y2="22"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>', action:"openSplitPaymentFromMore()" },
+  transfer: { label:'Transfer',     icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" width="16" height="16"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 014-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 01-4 4H3"/></svg>', action:'openTransferForCurrentOrder()' },
+  comp:     { label:'Comp Item',    icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" width="16" height="16"><polyline points="20 12 20 22 4 22 4 12"/><rect x="2" y="7" width="20" height="5"/><line x1="12" y1="22" x2="12" y2="7"/><path d="M12 7H7.5a2.5 2.5 0 010-5C11 2 12 7 12 7z"/><path d="M12 7h4.5a2.5 2.5 0 000-5C13 2 12 7 12 7z"/></svg>', action:'toggleSelectedComp()' },
+}
+
+function buildBottomBar() {
+  const bar = document.getElementById('entry-bottom-bar')
+  if (!bar) return
+  const visible = _posButtonConfig.filter(b => b.visible).sort((a,b) => a.sort_order - b.sort_order)
+  let html = ''
+  for (const b of visible) {
+    const m = POS_BTN_META[b.key]
+    if (!m) continue
+    const cls = m.danger ? 'ebb-btn ebb-quick danger' : 'ebb-btn ebb-quick'
+    html += `<button class="${cls}" onclick="${m.action}" title="${m.label}">
+      <div class="ebb-icon">${m.icon}</div>
+      <div class="ebb-label" style="font-size:11px">${m.label}</div>
+    </button>`
+  }
+  html += `<button class="ebb-btn ebb-more" onclick="showMoreOptions()">
+    <div class="ebb-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="18" height="18"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg></div>
+    <div class="ebb-label">More Options</div>
+    ${visible.length === 0 ? '<div class="ebb-sub">Discount, notes, split, manager actions</div>' : ''}
+  </button>`
+  bar.innerHTML = html
+}
+
+function rebuildNewOrderModal () {
+  const OT_ICONS = {
+    'dine':    { icon: '🍽️', type: 'dine-in'   },
+    'takeaway':{ icon: '🛍️', type: 'takeaway'  },
+    'delivery':{ icon: '🚗', type: 'delivery'  },
+    'drive':   { icon: '🚘', type: 'drive-thru'},
+    'online':  { icon: '📱', type: 'online'    },
+  }
+  const grid = document.querySelector('#modal-new-order .notp-grid')
+  if (!grid) return
+  grid.innerHTML = _posOrderTypes.map(t => {
+    const meta = OT_ICONS[t.icon] || { icon: '📋', type: t.name.toLowerCase().replace(/\s+/g,'-') }
+    const type = meta.type
+    const action = type === 'dine-in'
+      ? `closeModal('modal-new-order');showTableSelectPopup()`
+      : `closeModal('modal-new-order');showPosEntry('${type}')`
+    return `<button class="notp-btn" onclick="${action}">
+      <span class="notp-icon">${t.icon && t.icon.length > 2 ? t.icon : meta.icon}</span>
+      <span class="notp-label">${t.name}</span>
+    </button>`
+  }).join('')
+}
+
+function showNewOrderDialog() {
+  if (_posOrderTypes.length === 1) {
+    const t = _posOrderTypes[0]
+    const OT_ICONS = {
+      'dine':    'dine-in',
+      'takeaway':'takeaway',
+      'delivery':'delivery',
+      'drive':   'drive-thru',
+      'online':  'online',
+    }
+    const type = OT_ICONS[t.icon] || t.name.toLowerCase().replace(/\s+/g,'-')
+    if (type === 'dine-in') { showTableSelectPopup(); return }
+    showPosEntry(type); return
+  }
+  showModal('modal-new-order');
 }
 
 // Push unsynced local records to central API, then pull menu + cashiers.
@@ -3191,10 +3287,6 @@ function showPosOrders() {
   cancelKotReturnTimer();
   document.getElementById('pos-orders-panel').style.display = 'flex';
   document.getElementById('pos-entry-panel').style.display  = 'none';
-}
-
-function showNewOrderDialog() {
-  showModal('modal-new-order');
 }
 
 function showPosEntry(type) {
@@ -4199,8 +4291,8 @@ async function confirmPayment() {
        status,subtotal,tax_rate,tax_amount,discount_type,discount_value,discount_amount,
        service_charge_rate,service_charge_amount,total,
        payment_method,payment_received,change_amount,notes,cashier_id,cashier_name,shift_id,
-       customer_id,approved_by,created_at,updated_at,billed_at,synced)
-      VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`,
+       customer_id,approved_by,outlet_id,created_at,updated_at,billed_at,synced)
+      VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`,
       [orderId, orderNum, cart.type,
        cart.tableId||null, cart.tableName||null, cart.customerName||null,
        cart.customerPhone||null, cart.customerAddress||null,
@@ -4210,6 +4302,7 @@ async function confirmPayment() {
        effectiveMethod, received, change, cart.notes||null,
        cashier.name, cashier.name, shift.id,
        _selectedCustomer?.id||null, cart._discApprovedBy||null,
+       cfg.outletId||null,
        now, now, now, 0]);
 
     for (const item of cart.items) {
@@ -4811,14 +4904,14 @@ async function placeOrder() {
     await db.run(`INSERT INTO orders
       (id,order_number,order_type,table_id,table_name,customer_name,customer_phone,customer_address,
        status,subtotal,tax_rate,tax_amount,discount_type,discount_value,discount_amount,total,
-       notes,cashier_id,cashier_name,shift_id,terminal_id,created_at,updated_at,synced)
-      VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`,
+       notes,cashier_id,cashier_name,shift_id,terminal_id,outlet_id,created_at,updated_at,synced)
+      VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`,
       [activeOrderId, activeOrderNum, cart.type,
        cart.tableId||null, cart.tableName||null, cart.customerName||null,
        cart.customerPhone||null, cart.customerAddress||null,
        'active', subtotal, settings.tax_rate, taxAmt,
        cart.discountType, cart.discountValue, discAmt, total,
-       cart.notes||null, cashier.name, cashier.name, shift.id, MACHINE_ID,
+       cart.notes||null, cashier.name, cashier.name, shift.id, MACHINE_ID, cfg.outletId||null,
        now, now, 0]);
 
     for (const item of cart.items) {

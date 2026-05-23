@@ -190,35 +190,39 @@ module.exports = function configRouter (sql) {
   })
 
   router.post('/outlets', async (req, res) => {
-    const { name, brand_id, phone, email, address, opening_time, closing_time, currency } = req.body || {}
+    const { name, brand_id, phone, email, address, opening_time, closing_time, currency, country, currency_code, currency_symbol } = req.body || {}
     const rid = req.user.restaurant_id
     if (!rid) return res.status(400).json({ error: 'No restaurant account linked to this user.' })
     if (!name?.trim()) return res.status(400).json({ error: 'Outlet name is required' })
     try {
       const [row] = await sql`
-        INSERT INTO outlets (id, restaurant_id, brand_id, name, phone, email, address, opening_time, closing_time, currency, created_at)
+        INSERT INTO outlets (id, restaurant_id, brand_id, name, phone, email, address, opening_time, closing_time, currency, country, currency_code, currency_symbol, created_at)
         VALUES (${outletId()}, ${rid}, ${brand_id||null}, ${name.trim()},
                 ${phone||null}, ${email||null}, ${address||null},
-                ${opening_time||'09:00'}, ${closing_time||'22:00'}, ${currency||'MYR'}, ${Date.now()})
+                ${opening_time||'09:00'}, ${closing_time||'22:00'}, ${currency||'MYR'},
+                ${country||'MY'}, ${currency_code||'MYR'}, ${currency_symbol||'RM'}, ${Date.now()})
         RETURNING *`
       res.json(row)
     } catch (e) { res.status(500).json({ error: e.message }) }
   })
 
   router.patch('/outlets/:id', async (req, res) => {
-    const { name, brand_id, phone, email, address, opening_time, closing_time, currency } = req.body || {}
+    const { name, brand_id, phone, email, address, opening_time, closing_time, currency, country, currency_code, currency_symbol } = req.body || {}
     const rid = req.user.restaurant_id
     try {
       const [row] = await sql`
         UPDATE outlets SET
-          name         = COALESCE(NULLIF(${(name||'').trim()}, ''), name),
-          brand_id     = ${brand_id !== undefined ? (brand_id || null) : sql`brand_id`},
-          phone        = COALESCE(NULLIF(${phone||''}, ''), phone),
-          email        = COALESCE(NULLIF(${email||''}, ''), email),
-          address      = COALESCE(NULLIF(${address||''}, ''), address),
-          opening_time = COALESCE(NULLIF(${opening_time||''}, ''), opening_time),
-          closing_time = COALESCE(NULLIF(${closing_time||''}, ''), closing_time),
-          currency     = COALESCE(NULLIF(${currency||''}, ''), currency)
+          name            = COALESCE(NULLIF(${(name||'').trim()}, ''), name),
+          brand_id        = ${brand_id !== undefined ? (brand_id || null) : sql`brand_id`},
+          phone           = COALESCE(NULLIF(${phone||''}, ''), phone),
+          email           = COALESCE(NULLIF(${email||''}, ''), email),
+          address         = COALESCE(NULLIF(${address||''}, ''), address),
+          opening_time    = COALESCE(NULLIF(${opening_time||''}, ''), opening_time),
+          closing_time    = COALESCE(NULLIF(${closing_time||''}, ''), closing_time),
+          currency        = COALESCE(NULLIF(${currency||''}, ''), currency),
+          country         = COALESCE(NULLIF(${country||''}, ''), country),
+          currency_code   = COALESCE(NULLIF(${currency_code||''}, ''), currency_code),
+          currency_symbol = COALESCE(NULLIF(${currency_symbol||''}, ''), currency_symbol)
         WHERE id = ${req.params.id} AND restaurant_id = ${rid}
         RETURNING *`
       if (!row) return res.status(404).json({ error: 'Outlet not found' })
@@ -230,6 +234,152 @@ module.exports = function configRouter (sql) {
     const rid = req.user.restaurant_id
     try {
       await sql`DELETE FROM outlets WHERE id = ${req.params.id} AND restaurant_id = ${rid}`
+      res.json({ ok: true })
+    } catch (e) { res.status(500).json({ error: e.message }) }
+  })
+
+  // ── TABLE SECTIONS ─────────────────────────────────────────────────────────
+  router.get('/table-sections', async (req, res) => {
+    const rid = req.user.restaurant_id
+    try {
+      const rows = await sql`SELECT * FROM table_sections WHERE restaurant_id = ${rid} ORDER BY sort_order, name`
+      res.json({ rows })
+    } catch (e) { res.status(500).json({ error: e.message }) }
+  })
+
+  router.post('/table-sections', async (req, res) => {
+    const { name } = req.body || {}
+    const rid = req.user.restaurant_id
+    if (!name?.trim()) return res.status(400).json({ error: 'name required' })
+    try {
+      const [row] = await sql`
+        INSERT INTO table_sections (id, restaurant_id, name, sort_order, created_at)
+        VALUES (${newId()}, ${rid}, ${name.trim()},
+          (SELECT COALESCE(MAX(sort_order),0)+1 FROM table_sections WHERE restaurant_id = ${rid}),
+          ${Date.now()})
+        RETURNING *`
+      res.json(row)
+    } catch (e) { res.status(500).json({ error: e.message }) }
+  })
+
+  router.patch('/table-sections/:id', async (req, res) => {
+    const { name, sort_order } = req.body || {}
+    const rid = req.user.restaurant_id
+    try {
+      const [row] = await sql`
+        UPDATE table_sections SET
+          name       = COALESCE(NULLIF(${(name||'').trim()}, ''), name),
+          sort_order = COALESCE(${sort_order != null ? parseInt(sort_order) : null}, sort_order)
+        WHERE id = ${req.params.id} AND restaurant_id = ${rid}
+        RETURNING *`
+      if (!row) return res.status(404).json({ error: 'not found' })
+      res.json(row)
+    } catch (e) { res.status(500).json({ error: e.message }) }
+  })
+
+  router.delete('/table-sections/:id', async (req, res) => {
+    const rid = req.user.restaurant_id
+    try {
+      // Unlink tables from this section before deleting
+      await sql`UPDATE tables_layout SET section_id = NULL WHERE section_id = ${req.params.id} AND restaurant_id = ${rid}`
+      await sql`DELETE FROM table_sections WHERE id = ${req.params.id} AND restaurant_id = ${rid}`
+      res.json({ ok: true })
+    } catch (e) { res.status(500).json({ error: e.message }) }
+  })
+
+  // ── TABLES (layout management) ─────────────────────────────────────────────
+  router.get('/tables', async (req, res) => {
+    const rid = req.user.restaurant_id
+    try {
+      const rows = await sql`
+        SELECT t.*, s.name AS section_name
+        FROM tables_layout t
+        LEFT JOIN table_sections s ON s.id = t.section_id
+        WHERE t.restaurant_id = ${rid}
+        ORDER BY s.sort_order NULLS LAST, t.name`
+      res.json({ rows })
+    } catch (e) { res.status(500).json({ error: e.message }) }
+  })
+
+  router.post('/tables', async (req, res) => {
+    const { name, capacity, section_id } = req.body || {}
+    const rid = req.user.restaurant_id
+    if (!name?.trim()) return res.status(400).json({ error: 'name required' })
+    try {
+      const [row] = await sql`
+        INSERT INTO tables_layout (id, name, capacity, status, restaurant_id, section_id)
+        VALUES (${newId()}, ${name.trim()}, ${parseInt(capacity) || 4}, 'available', ${rid}, ${section_id || null})
+        RETURNING *`
+      res.json(row)
+    } catch (e) { res.status(500).json({ error: e.message }) }
+  })
+
+  router.patch('/tables/:id', async (req, res) => {
+    const { name, capacity, section_id } = req.body || {}
+    const rid = req.user.restaurant_id
+    try {
+      const [row] = await sql`
+        UPDATE tables_layout SET
+          name       = COALESCE(NULLIF(${(name||'').trim()}, ''), name),
+          capacity   = COALESCE(${capacity != null ? parseInt(capacity) : null}, capacity),
+          section_id = ${section_id !== undefined ? (section_id || null) : sql`section_id`}
+        WHERE id = ${req.params.id} AND restaurant_id = ${rid}
+        RETURNING *`
+      if (!row) return res.status(404).json({ error: 'not found' })
+      res.json(row)
+    } catch (e) { res.status(500).json({ error: e.message }) }
+  })
+
+  router.delete('/tables/:id', async (req, res) => {
+    const rid = req.user.restaurant_id
+    try {
+      await sql`DELETE FROM tables_layout WHERE id = ${req.params.id} AND restaurant_id = ${rid}`
+      res.json({ ok: true })
+    } catch (e) { res.status(500).json({ error: e.message }) }
+  })
+
+  // ── POS BUTTON CONFIG ─────────────────────────────────────────────────────
+  const POS_BUTTONS_DEF = [
+    { key: 'discount',  label: 'Discount',       sort_order: 0,  default_visible: true  },
+    { key: 'note',      label: 'Order Note',      sort_order: 1,  default_visible: true  },
+    { key: 'hold',      label: 'Hold Order',      sort_order: 2,  default_visible: false },
+    { key: 'recall',    label: 'Recall',          sort_order: 3,  default_visible: false },
+    { key: 'draft',     label: 'Draft Bill',      sort_order: 4,  default_visible: false },
+    { key: 'cancel',    label: 'Cancel Order',    sort_order: 5,  default_visible: false },
+    { key: 'waiter',    label: 'Waiter/Captain',  sort_order: 6,  default_visible: false },
+    { key: 'split',     label: 'Split Payment',   sort_order: 7,  default_visible: false },
+    { key: 'transfer',  label: 'Transfer Table',  sort_order: 8,  default_visible: false },
+    { key: 'comp',      label: 'Comp Item',       sort_order: 9,  default_visible: false },
+  ]
+
+  router.get('/pos-buttons', async (req, res) => {
+    const rid = req.user.restaurant_id
+    try {
+      const saved = await sql`SELECT button_key, visible, sort_order FROM pos_button_config WHERE restaurant_id = ${rid}`
+      const savedMap = Object.fromEntries(saved.map(r => [r.button_key, r]))
+      const rows = POS_BUTTONS_DEF.map(d => ({
+        key:         d.key,
+        label:       d.label,
+        visible:     savedMap[d.key] ? savedMap[d.key].visible : d.default_visible,
+        sort_order:  savedMap[d.key] ? savedMap[d.key].sort_order : d.sort_order,
+      }))
+      rows.sort((a, b) => a.sort_order - b.sort_order)
+      res.json({ rows })
+    } catch (e) { res.status(500).json({ error: e.message }) }
+  })
+
+  router.patch('/pos-buttons', async (req, res) => {
+    const rid = req.user.restaurant_id
+    const { buttons } = req.body || {}
+    if (!Array.isArray(buttons)) return res.status(400).json({ error: 'buttons array required' })
+    try {
+      for (const b of buttons) {
+        await sql`
+          INSERT INTO pos_button_config (id, restaurant_id, button_key, visible, sort_order)
+          VALUES (${newId()}, ${rid}, ${b.key}, ${!!b.visible}, ${parseInt(b.sort_order) || 0})
+          ON CONFLICT (restaurant_id, button_key)
+          DO UPDATE SET visible = EXCLUDED.visible, sort_order = EXCLUDED.sort_order`
+      }
       res.json({ ok: true })
     } catch (e) { res.status(500).json({ error: e.message }) }
   })

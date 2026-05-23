@@ -163,6 +163,49 @@ app.post('/internal/notify', auth, (req, res) => {
   res.json({ ok: true })
 })
 
+// POS config (order types + button config) — API-key-scoped by outlet_id
+app.get('/sync/pos-config', auth, async (req, res) => {
+  const { outlet_id } = req.query
+  try {
+    let rid = null
+    if (outlet_id) {
+      const [o] = await sql`SELECT restaurant_id FROM outlets WHERE id = ${outlet_id}`
+      rid = o?.restaurant_id || null
+    }
+
+    const POS_BUTTONS_DEF = [
+      { key: 'discount',  sort_order: 0,  default_visible: true  },
+      { key: 'note',      sort_order: 1,  default_visible: true  },
+      { key: 'hold',      sort_order: 2,  default_visible: false },
+      { key: 'recall',    sort_order: 3,  default_visible: false },
+      { key: 'draft',     sort_order: 4,  default_visible: false },
+      { key: 'cancel',    sort_order: 5,  default_visible: false },
+      { key: 'waiter',    sort_order: 6,  default_visible: false },
+      { key: 'split',     sort_order: 7,  default_visible: false },
+      { key: 'transfer',  sort_order: 8,  default_visible: false },
+      { key: 'comp',      sort_order: 9,  default_visible: false },
+    ]
+
+    const [orderTypes, savedBtns] = await Promise.all([
+      rid
+        ? sql`SELECT * FROM order_types WHERE restaurant_id = ${rid} AND enabled = true ORDER BY sort_order, name`
+        : sql`SELECT * FROM order_types WHERE enabled = true ORDER BY sort_order, name`,
+      rid
+        ? sql`SELECT button_key, visible, sort_order FROM pos_button_config WHERE restaurant_id = ${rid}`
+        : Promise.resolve([]),
+    ])
+
+    const savedMap = Object.fromEntries(savedBtns.map(r => [r.button_key, r]))
+    const pos_buttons = POS_BUTTONS_DEF.map(d => ({
+      key:        d.key,
+      visible:    savedMap[d.key] ? savedMap[d.key].visible : d.default_visible,
+      sort_order: savedMap[d.key] ? savedMap[d.key].sort_order : d.sort_order,
+    })).sort((a, b) => a.sort_order - b.sort_order)
+
+    res.json({ order_types: orderTypes, pos_buttons })
+  } catch (e) { res.status(500).json({ error: e.message }) }
+})
+
 // POS sync endpoints (Electron terminals → central DB)
 app.get('/sync/menu', auth, async (_req, res) => {
   try {
@@ -262,7 +305,7 @@ const ORDER_COLS = [
   'customer_phone','customer_address','status','subtotal','tax_rate','tax_amount',
   'discount_type','discount_value','discount_amount','total','payment_method',
   'payment_received','change_amount','notes','cashier_id','cashier_name',
-  'shift_id','terminal_id','created_at','updated_at','billed_at','synced',
+  'shift_id','terminal_id','outlet_id','created_at','updated_at','billed_at','synced',
   'void_reason','voided_by','approved_by','service_charge_rate','service_charge_amount','customer_id',
 ]
 const ITEM_COLS    = ['id','order_id','item_id','item_name','category_name','quantity','unit_price','total_price','notes','void_reason','voided_by','voided_at','cancelled']
