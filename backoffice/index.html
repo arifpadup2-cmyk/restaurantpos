@@ -109,7 +109,10 @@ button,.nav-item,.filter-chip,.btn,[role="button"]{touch-action:manipulation}
 .sb-logo-text{flex:1;min-width:0}
 .sb-logo-name{font-size:13px;font-weight:700;color:#f1f5f9;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .sb-logo-sub{font-size:11px;color:#475569;margin-top:1px}
-.sb-nav{flex:1;padding:10px 10px;overflow-y:auto}
+.sb-nav{flex:1;padding:10px 10px;overflow-y:auto;scrollbar-width:thin;scrollbar-color:rgba(255,255,255,.12) transparent}
+.sb-nav::-webkit-scrollbar{width:4px}
+.sb-nav::-webkit-scrollbar-track{background:transparent}
+.sb-nav::-webkit-scrollbar-thumb{background:rgba(255,255,255,.15);border-radius:4px}
 .sb-section{font-size:10px;font-weight:700;color:#334155;text-transform:uppercase;letter-spacing:.8px;padding:12px 10px 5px}
 .nav-item{display:flex;align-items:center;gap:9px;padding:9px 10px;border-radius:8px;color:var(--sb-text);font-size:13px;font-weight:500;cursor:pointer;transition:.12s;margin-bottom:1px}
 .nav-item:hover{background:rgba(255,255,255,.06);color:#e2e8f0}

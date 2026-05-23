@@ -50,7 +50,14 @@ module.exports = function authRouter (sql) {
         return res.status(401).json({ error: 'Invalid username or password' })
 
       const token = sign({ id: user.id, username: user.username, role: user.role, restaurant_id: user.restaurant_id || null })
-      res.json({ ok: true, token, user: { id: user.id, username: user.username, role: user.role, restaurant_id: user.restaurant_id || null } })
+      let owner_name = null
+      if (user.restaurant_id) {
+        try {
+          const [r] = await sql`SELECT owner_name FROM restaurants WHERE id = ${user.restaurant_id}`
+          owner_name = r?.owner_name || null
+        } catch (_) {}
+      }
+      res.json({ ok: true, token, user: { id: user.id, username: user.username, role: user.role, restaurant_id: user.restaurant_id || null, owner_name } })
     } catch (e) {
       res.status(500).json({ error: e.message })
     }
@@ -115,7 +122,14 @@ module.exports = function authRouter (sql) {
 
       const user  = rows[0]
       const token = sign({ id: user.id, username: user.username, role: user.role, restaurant_id: user.restaurant_id || null })
-      res.json({ ok: true, token, user: { id: user.id, username: user.username, role: user.role, restaurant_id: user.restaurant_id || null } })
+      let owner_name = null
+      if (user.restaurant_id) {
+        try {
+          const [r] = await sql`SELECT owner_name FROM restaurants WHERE id = ${user.restaurant_id}`
+          owner_name = r?.owner_name || null
+        } catch (_) {}
+      }
+      res.json({ ok: true, token, user: { id: user.id, username: user.username, role: user.role, restaurant_id: user.restaurant_id || null, owner_name } })
     } catch (e) {
       res.status(500).json({ error: e.message })
     }
@@ -166,7 +180,14 @@ module.exports = function authRouter (sql) {
         VALUES (${uid}, ${id}, ${username}, ${hash}, ${email.toLowerCase()}, 'admin')`
 
       const token = sign({ id: uid, username, role: 'admin', restaurant_id: id, email: email.toLowerCase() })
-      res.json({ ok: true, token, user: { id: uid, username, role: 'admin', restaurant_id: id, email: email.toLowerCase() }, trialEndsAt: trialEnds })
+      let owner_name = null
+      if (id) {
+        try {
+          const [r] = await sql`SELECT owner_name FROM restaurants WHERE id = ${id}`
+          owner_name = r?.owner_name || null
+        } catch (_) {}
+      }
+      res.json({ ok: true, token, user: { id: uid, username, role: 'admin', restaurant_id: id, email: email.toLowerCase(), owner_name }, trialEndsAt: trialEnds })
     } catch (e) {
       res.status(500).json({ error: e.message })
     }
@@ -229,7 +250,14 @@ module.exports = function authRouter (sql) {
         VALUES (${uid}, ${id}, ${username}, '', ${email}, ${googleId}, 'admin')`
 
       const token = sign({ id: uid, username, role: 'admin', restaurant_id: id, email })
-      res.json({ ok: true, token, user: { id: uid, username, role: 'admin', restaurant_id: id, email }, trialEndsAt: trialEnds })
+      let owner_name = null
+      if (id) {
+        try {
+          const [r] = await sql`SELECT owner_name FROM restaurants WHERE id = ${id}`
+          owner_name = r?.owner_name || null
+        } catch (_) {}
+      }
+      res.json({ ok: true, token, user: { id: uid, username, role: 'admin', restaurant_id: id, email, owner_name }, trialEndsAt: trialEnds })
     } catch (e) {
       res.status(500).json({ error: e.message })
     }
