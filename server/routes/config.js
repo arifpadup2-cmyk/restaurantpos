@@ -370,6 +370,7 @@ module.exports = function configRouter (sql) {
 
   router.patch('/pos-buttons', async (req, res) => {
     const rid = req.user.restaurant_id
+    if (!rid) return res.status(400).json({ error: 'No restaurant linked to this account' })
     const { buttons } = req.body || {}
     if (!Array.isArray(buttons)) return res.status(400).json({ error: 'buttons array required' })
     try {

@@ -64,9 +64,9 @@ module.exports = function signupRouter (sql) {
       // Create bo_users entry so owner can login to Back Office
       const boUserId = id.toLowerCase() + '-bo'
       await sql`
-        INSERT INTO bo_users (id, username, password, role)
-        VALUES (${boUserId}, ${boUsername}, ${boPassHash}, 'admin')
-        ON CONFLICT (username) DO NOTHING`
+        INSERT INTO bo_users (id, username, password, role, restaurant_id)
+        VALUES (${boUserId}, ${boUsername}, ${boPassHash}, 'admin', ${id})
+        ON CONFLICT (username) DO UPDATE SET restaurant_id = EXCLUDED.restaurant_id`
 
       res.json({
         ok: true,
