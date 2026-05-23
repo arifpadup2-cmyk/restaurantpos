@@ -437,6 +437,12 @@ input:checked+.toggle-slider:before{transform:translateX(17px)}
 .cfg-color-dot{width:16px;height:16px;border-radius:50%;flex-shrink:0;border:2px solid rgba(0,0,0,.1)}
 /* ─── TOAST ──────────────────────────────────────── */
 #toast-region{position:fixed;bottom:22px;right:22px;z-index:9999;display:flex;flex-direction:column;gap:7px;pointer-events:none}
+/* ─── MOBILE APP LAUNCHER GRID ──────────────────── */
+.mob-app-grid{display:none}
+.mob-app-icon{display:flex;flex-direction:column;align-items:center;gap:7px;padding:6px 4px;background:none;border:none;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:transform .12s,opacity .12s;width:100%}
+.mob-app-icon:active{transform:scale(.88);opacity:.7}
+.mob-app-tile{width:60px;height:60px;border-radius:16px;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 8px rgba(0,0,0,.12)}
+.mob-app-label{font-size:10.5px;font-weight:600;color:var(--text);text-align:center;line-height:1.25;max-width:68px}
 /* ─── MOBILE BOTTOM NAV ─────────────────────────── */
 #mob-nav-bar{position:fixed;bottom:0;left:0;right:0;height:56px;background:var(--sb-bg);border-top:1px solid rgba(255,255,255,.07);z-index:300;display:none;align-items:stretch}
 .mob-tab{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;background:none;border:none;color:#475569;font-size:9.5px;font-weight:700;cursor:pointer;padding:4px 2px;-webkit-tap-highlight-color:transparent;transition:color .12s;letter-spacing:.03em;text-transform:uppercase;min-height:48px}
@@ -489,6 +495,8 @@ input:checked+.toggle-slider:before{transform:translateX(17px)}
   .hdr-left p{display:none}
   .hdr-date{display:none}
   .hdr-user-name{display:none}
+  /* App launcher grid */
+  .mob-app-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:6px 2px;margin-bottom:14px;padding:4px 0}
   /* View padding */
   .view{padding:12px 12px}
   /* KPI: 2-col responsive */
@@ -1137,6 +1145,59 @@ input:checked+.toggle-slider:before{transform:translateX(17px)}
 
   <!-- ── DASHBOARD ── -->
   <div class="view active" id="v-dashboard">
+
+    <!-- Mobile: app-launcher icon grid (hidden on desktop) -->
+    <div class="mob-app-grid">
+      <button class="mob-app-icon" onclick="showView('live');mobSetTab('live')">
+        <div class="mob-app-tile" style="background:linear-gradient(135deg,#f97316,#ea580c)">
+          <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="9" rx="1"/><rect x="14" y="3" width="7" height="5" rx="1"/><rect x="14" y="12" width="7" height="9" rx="1"/><rect x="3" y="16" width="7" height="5" rx="1"/></svg>
+        </div>
+        <span class="mob-app-label">Live Orders</span>
+      </button>
+      <button class="mob-app-icon" onclick="showView('kds');mobSetTab('live')">
+        <div class="mob-app-tile" style="background:linear-gradient(135deg,#ef4444,#dc2626)">
+          <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+        </div>
+        <span class="mob-app-label">Kitchen</span>
+      </button>
+      <button class="mob-app-icon" onclick="showView('orders');mobSetTab('orders')">
+        <div class="mob-app-tile" style="background:linear-gradient(135deg,#3b82f6,#2563eb)">
+          <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+        </div>
+        <span class="mob-app-label">Orders</span>
+      </button>
+      <button class="mob-app-icon" onclick="showView('menu');mobSetTab('orders')">
+        <div class="mob-app-tile" style="background:linear-gradient(135deg,#22c55e,#16a34a)">
+          <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 002-2V2"/><path d="M7 2v20"/><path d="M21 15V2a5 5 0 00-5 5v6c0 1.1.9 2 2 2h3zm0 0v7"/></svg>
+        </div>
+        <span class="mob-app-label">Menu</span>
+      </button>
+      <button class="mob-app-icon" onclick="showView('reports');mobSetTab('reports')">
+        <div class="mob-app-tile" style="background:linear-gradient(135deg,#8b5cf6,#7c3aed)">
+          <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+        </div>
+        <span class="mob-app-label">Reports</span>
+      </button>
+      <button class="mob-app-icon" onclick="showView('staff');mobSetTab('more')">
+        <div class="mob-app-tile" style="background:linear-gradient(135deg,#6366f1,#4f46e5)">
+          <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
+        </div>
+        <span class="mob-app-label">Staff</span>
+      </button>
+      <button class="mob-app-icon" onclick="showConfigTab('brand');mobSetTab('more')">
+        <div class="mob-app-tile" style="background:linear-gradient(135deg,#0ea5e9,#0284c7)">
+          <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
+        </div>
+        <span class="mob-app-label">Config</span>
+      </button>
+      <button class="mob-app-icon" onclick="showView('bo-settings');mobSetTab('more')">
+        <div class="mob-app-tile" style="background:linear-gradient(135deg,#64748b,#475569)">
+          <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+        </div>
+        <span class="mob-app-label">Settings</span>
+      </button>
+    </div>
+
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
       <div>
         <h2 style="font-size:18px;font-weight:800">Dashboard</h2>
