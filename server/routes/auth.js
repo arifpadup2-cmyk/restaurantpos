@@ -4,11 +4,31 @@ const express  = require('express')
 const bcrypt   = require('bcryptjs')
 const { sign, jwtAuth } = require('../middleware/jwtAuth')
 
+// ── Simple in-memory rate limiter ─────────────────────────────────────────────
+const _rateBuckets = new Map()
+// Periodically prune expired buckets (every 10 min)
+setInterval(() => {
+  const now = Date.now()
+  for (const [k, v] of _rateBuckets) if (now > v.reset) _rateBuckets.delete(k)
+}, 600000)
+
+function isRateLimited (ip, scope, maxReqs, windowMs) {
+  const key = ip + ':' + scope
+  const now = Date.now()
+  let entry = _rateBuckets.get(key)
+  if (!entry || now > entry.reset) entry = { count: 0, reset: now + windowMs }
+  entry.count++
+  _rateBuckets.set(key, entry)
+  return entry.count > maxReqs
+}
+
 module.exports = function authRouter (sql) {
   const router = express.Router()
 
-  // POST /auth/register — create first/new admin user
-  router.post('/register', async (req, res) => {
+  // POST /auth/register — create admin user (requires existing admin session)
+  router.post('/register', jwtAuth, async (req, res) => {
+    if (!req.user.admin && req.user.role !== 'admin')
+      return res.status(403).json({ error: 'Admin access required' })
     const { username, password } = req.body || {}
     if (!username || !password)
       return res.status(400).json({ error: 'username and password required' })
@@ -35,6 +55,10 @@ module.exports = function authRouter (sql) {
 
   // POST /auth/login
   router.post('/login', async (req, res) => {
+    const ip = req.ip || 'unknown'
+    if (isRateLimited(ip, 'login', 10, 15 * 60 * 1000))
+      return res.status(429).json({ error: 'Too many login attempts. Try again in 15 minutes.' })
+
     const { username, password } = req.body || {}
     if (!username || !password)
       return res.status(400).json({ error: 'username and password required' })
@@ -45,6 +69,9 @@ module.exports = function authRouter (sql) {
         return res.status(401).json({ error: 'Invalid username or password' })
 
       const user = rows[0]
+      if (user.active === false)
+        return res.status(401).json({ error: 'Account disabled. Contact your administrator.' })
+
       const ok   = await bcrypt.compare(password, user.password)
       if (!ok)
         return res.status(401).json({ error: 'Invalid username or password' })
@@ -83,6 +110,10 @@ module.exports = function authRouter (sql) {
 
   // POST /auth/google — sign in with Google ID token
   router.post('/google', async (req, res) => {
+    const ip = req.ip || 'unknown'
+    if (isRateLimited(ip, 'google', 10, 15 * 60 * 1000))
+      return res.status(429).json({ error: 'Too many requests. Try again later.' })
+
     const { credential } = req.body || {}
     if (!credential) return res.status(400).json({ error: 'credential required' })
 
@@ -90,7 +121,6 @@ module.exports = function authRouter (sql) {
     if (!clientId) return res.status(503).json({ error: 'Google sign-in not configured on this server' })
 
     try {
-      // Verify token with Google tokeninfo endpoint (no extra package needed)
       const r    = await fetch(`https://oauth2.googleapis.com/tokeninfo?id_token=${encodeURIComponent(credential)}`)
       const info = await r.json()
 
@@ -103,13 +133,11 @@ module.exports = function authRouter (sql) {
       const googleId = info.sub
       const email    = (info.email || '').toLowerCase()
 
-      // Look up by google_id first, then fall back to email
       let rows = await sql`SELECT * FROM bo_users WHERE google_id = ${googleId} LIMIT 1`
 
       if (!rows.length && email) {
         rows = await sql`SELECT * FROM bo_users WHERE LOWER(email) = ${email} LIMIT 1`
         if (rows.length) {
-          // First-time Google login — link the google_id to this account
           await sql`UPDATE bo_users SET google_id = ${googleId} WHERE id = ${rows[0].id}`
         }
       }
@@ -120,7 +148,10 @@ module.exports = function authRouter (sql) {
         })
       }
 
-      const user  = rows[0]
+      const user = rows[0]
+      if (user.active === false)
+        return res.status(401).json({ error: 'Account disabled. Contact your administrator.' })
+
       const token = sign({ id: user.id, username: user.username, role: user.role, restaurant_id: user.restaurant_id || null })
       let owner_name = null
       if (user.restaurant_id) {
@@ -137,6 +168,10 @@ module.exports = function authRouter (sql) {
 
   // POST /auth/signup — self-service 7-day trial signup (email + password only)
   router.post('/signup', async (req, res) => {
+    const ip = req.ip || 'unknown'
+    if (isRateLimited(ip, 'signup', 5, 60 * 60 * 1000))
+      return res.status(429).json({ error: 'Too many signup attempts. Try again in 1 hour.' })
+
     const { email, password } = req.body || {}
     if (!email || !/^[^@]+@[^@]+\.[^@]+$/.test(email))
       return res.status(400).json({ error: 'Valid email required' })
@@ -195,6 +230,10 @@ module.exports = function authRouter (sql) {
 
   // POST /auth/signup/google — self-service trial signup via Google
   router.post('/signup/google', async (req, res) => {
+    const ip = req.ip || 'unknown'
+    if (isRateLimited(ip, 'signup', 5, 60 * 60 * 1000))
+      return res.status(429).json({ error: 'Too many signup attempts. Try again in 1 hour.' })
+
     const { credential } = req.body || {}
     if (!credential) return res.status(400).json({ error: 'credential required' })
 

@@ -15,17 +15,19 @@ module.exports = function seedRouter (sql) {
 
     try {
       if (clearExisting) {
-        await sql`DELETE FROM order_items`
-        await sql`DELETE FROM orders`
-        await sql`DELETE FROM expenses`
-        await sql`DELETE FROM shifts`
-        await sql`DELETE FROM day_closings`
-        await sql`DELETE FROM audit_log WHERE id NOT IN (SELECT id FROM audit_log LIMIT 0)`
-        await sql`DELETE FROM no_sale_log`
-        await sql`DELETE FROM cashiers WHERE name != 'admin'`
-        await sql`DELETE FROM categories`
-        await sql`DELETE FROM menu_items`
-        await sql`DELETE FROM customers`
+        await sql`DELETE FROM order_items WHERE order_id IN (
+          SELECT id FROM orders WHERE outlet_id IN (SELECT id FROM outlets WHERE restaurant_id = ${rid})
+        )`
+        await sql`DELETE FROM orders     WHERE outlet_id IN (SELECT id FROM outlets WHERE restaurant_id = ${rid})`
+        await sql`DELETE FROM expenses   WHERE restaurant_id = ${rid}`
+        await sql`DELETE FROM shifts     WHERE restaurant_id = ${rid}`
+        await sql`DELETE FROM day_closings WHERE restaurant_id = ${rid}`
+        await sql`DELETE FROM audit_log  WHERE restaurant_id = ${rid}`
+        await sql`DELETE FROM no_sale_log WHERE restaurant_id = ${rid}`
+        await sql`DELETE FROM cashiers   WHERE restaurant_id = ${rid} AND name != 'admin'`
+        await sql`DELETE FROM categories WHERE restaurant_id = ${rid}`
+        await sql`DELETE FROM menu_items WHERE restaurant_id = ${rid}`
+        await sql`DELETE FROM customers  WHERE restaurant_id = ${rid}`
         log.push('Cleared existing demo data')
       }
 
@@ -339,14 +341,19 @@ module.exports = function seedRouter (sql) {
 
   // POST /seed/clear — wipe all transactional data (keep menu/staff)
   router.post('/clear', async (req, res) => {
+    const rid = req.user?.restaurant_id || null
+    if (!rid) return res.status(400).json({ error: 'No restaurant linked to this account' })
     try {
-      await sql`DELETE FROM order_items`
-      await sql`DELETE FROM orders`
-      await sql`DELETE FROM expenses`
-      await sql`DELETE FROM shifts`
-      await sql`DELETE FROM day_closings`
-      await sql`DELETE FROM audit_log`
-      await sql`DELETE FROM no_sale_log`
+      // Scope deletes strictly to this restaurant via outlet join or restaurant_id column
+      await sql`DELETE FROM order_items WHERE order_id IN (
+        SELECT id FROM orders WHERE outlet_id IN (SELECT id FROM outlets WHERE restaurant_id = ${rid})
+      )`
+      await sql`DELETE FROM orders WHERE outlet_id IN (SELECT id FROM outlets WHERE restaurant_id = ${rid})`
+      await sql`DELETE FROM expenses    WHERE restaurant_id = ${rid}`
+      await sql`DELETE FROM shifts      WHERE restaurant_id = ${rid}`
+      await sql`DELETE FROM day_closings WHERE restaurant_id = ${rid}`
+      await sql`DELETE FROM audit_log   WHERE restaurant_id = ${rid}`
+      await sql`DELETE FROM no_sale_log WHERE restaurant_id = ${rid}`
       res.json({ ok: true, message: 'Transaction data cleared. Menu and staff retained.' })
     } catch (e) {
       res.status(500).json({ error: e.message })

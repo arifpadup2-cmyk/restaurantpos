@@ -130,7 +130,13 @@ app.use('/updates', express.static(updatesPath))
 // ── Auth middleware ───────────────────────────────────────────────────────────
 
 function auth (req, res, next) {
-  if (!API_KEY) return next()
+  if (!API_KEY) {
+    // In production, deny all sync requests when API_KEY is not configured.
+    // In dev, allow through but log a warning.
+    if (process.env.NODE_ENV === 'production')
+      return res.status(503).json({ error: 'Server misconfigured: API_KEY not set.' })
+    return next()
+  }
   const key = req.headers['x-api-key']
   if (key !== API_KEY) return res.status(401).json({ error: 'Unauthorized' })
   next()
@@ -140,7 +146,9 @@ function auth (req, res, next) {
 
 io.on('connection', socket => {
   const area = socket.handshake.query.area || 'general'
+  const rid  = socket.handshake.query.restaurant_id
   socket.join(area)
+  if (rid) socket.join('rest:' + rid)
   socket.on('disconnect', () => {})
 })
 
@@ -158,8 +166,12 @@ app.get('/health', async (_req, res) => {
 // Internal notify — called by Electron POS after direct DB writes
 // so Socket.io can broadcast to KDS / waiter apps.
 app.post('/internal/notify', auth, (req, res) => {
-  const { event, payload } = req.body || {}
-  if (event && payload) io.emit(event, payload)
+  const { event, payload, restaurant_id } = req.body || {}
+  if (event && payload) {
+    // Scope to restaurant room when restaurant_id is provided; broadcast otherwise (legacy).
+    if (restaurant_id) io.to('rest:' + restaurant_id).emit(event, payload)
+    else io.emit(event, payload)
+  }
   res.json({ ok: true })
 })
 
@@ -330,8 +342,27 @@ module.exports = { sql, io, sanitizeOrder, sanitizeOrderItem, sanitizeExpense, s
 
 // ── Startup ───────────────────────────────────────────────────────────────────
 
+async function migratePinHashes () {
+  const bcrypt = require('bcryptjs')
+  try {
+    const rows = await sql`SELECT id, pin FROM cashiers WHERE pin_hash IS NULL AND pin IS NOT NULL AND length(pin) <= 8`
+    for (const row of rows) {
+      const hash = await bcrypt.hash(String(row.pin), 10)
+      await sql`UPDATE cashiers SET pin_hash = ${hash} WHERE id = ${row.id}`
+    }
+    if (rows.length > 0) console.log(`  ✓ Migrated ${rows.length} cashier PIN hashes`)
+  } catch (e) {
+    console.error('  ⚠ PIN hash migration failed:', e.message)
+  }
+}
+
 async function start () {
   console.log('Restaurant POS — API Server starting...\n')
+
+  if (!process.env.API_KEY) {
+    console.error('  ⚠️  WARNING: API_KEY env var not set.')
+    console.error('     Set API_KEY on Render to protect /sync/* endpoints from unauthenticated access.\n')
+  }
 
   try {
     await sql`SELECT 1`
@@ -343,6 +374,7 @@ async function start () {
 
   await runMigrations()
   await seedAdminUser()
+  await migratePinHashes()
 
   // Wire SQL into JWT middleware so deleted users are rejected immediately
   require('./middleware/jwtAuth').initJwtAuth(sql)

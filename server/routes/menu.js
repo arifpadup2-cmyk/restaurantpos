@@ -12,14 +12,17 @@ module.exports = function menuRouter (sql) {
   // ── CATEGORIES ─────────────────────────────────────────────────────────────
 
   router.get('/', async (req, res) => {
+    const rid = req.user?.restaurant_id
+    if (!rid) return res.json({ categories: [], items: [] })
     try {
-      const rid = req.user?.restaurant_id || null
       const [categories, items, variants] = await Promise.all([
-        sql`SELECT * FROM categories ORDER BY sort_order, name`,
-        sql`SELECT * FROM menu_items ORDER BY name`,
-        sql`SELECT * FROM item_variants ORDER BY item_id, sort_order, name`,
+        sql`SELECT * FROM categories WHERE restaurant_id = ${rid} ORDER BY sort_order, name`,
+        sql`SELECT * FROM menu_items WHERE restaurant_id = ${rid} ORDER BY name`,
+        sql`
+          SELECT iv.* FROM item_variants iv
+          WHERE iv.item_id IN (SELECT id FROM menu_items WHERE restaurant_id = ${rid})
+          ORDER BY iv.item_id, iv.sort_order, iv.name`,
       ])
-      // attach variants to items
       const varMap = {}
       variants.forEach(v => { (varMap[v.item_id] = varMap[v.item_id] || []).push(v) })
       items.forEach(i => { i.variants = varMap[i.id] || [] })
@@ -43,6 +46,7 @@ module.exports = function menuRouter (sql) {
 
   router.put('/categories/:id', async (req, res) => {
     const { name, color, sort_order, active } = req.body || {}
+    const rid = req.user?.restaurant_id
     try {
       const row = await sql`
         UPDATE categories SET
@@ -52,6 +56,7 @@ module.exports = function menuRouter (sql) {
           active     = COALESCE(${active ?? null}, active),
           synced_at  = ${Date.now()}
         WHERE id = ${req.params.id}
+          AND (restaurant_id = ${rid} OR (${rid} IS NULL AND restaurant_id IS NULL))
         RETURNING *`
       if (!row.length) return res.status(404).json({ error: 'not found' })
       res.json({ ok: true, category: row[0] })
@@ -59,8 +64,10 @@ module.exports = function menuRouter (sql) {
   })
 
   router.delete('/categories/:id', async (req, res) => {
+    const rid = req.user?.restaurant_id
     try {
-      await sql`DELETE FROM categories WHERE id = ${req.params.id}`
+      await sql`DELETE FROM categories WHERE id = ${req.params.id}
+        AND (restaurant_id = ${rid} OR (${rid} IS NULL AND restaurant_id IS NULL))`
       res.json({ ok: true })
     } catch (e) { res.status(500).json({ error: e.message }) }
   })
@@ -69,8 +76,11 @@ module.exports = function menuRouter (sql) {
 
   // GET /menu/items/:id — single item with variants + modifier groups
   router.get('/items/:id', async (req, res) => {
+    const rid = req.user?.restaurant_id
     try {
-      const [item] = await sql`SELECT * FROM menu_items WHERE id = ${req.params.id}`
+      const [item] = await sql`
+        SELECT * FROM menu_items WHERE id = ${req.params.id}
+          AND (restaurant_id = ${rid} OR (${rid} IS NULL AND restaurant_id IS NULL))`
       if (!item) return res.status(404).json({ error: 'not found' })
       const [variants, modGroups] = await Promise.all([
         sql`SELECT * FROM item_variants WHERE item_id = ${item.id} ORDER BY sort_order, name`,
@@ -126,6 +136,7 @@ module.exports = function menuRouter (sql) {
       dine_in_price, takeaway_price, delivery_price, online_price,
       dine_in_active, takeaway_active, delivery_active, online_active,
     } = req.body || {}
+    const rid = req.user?.restaurant_id
     try {
       const row = await sql`
         UPDATE menu_items SET
@@ -155,6 +166,7 @@ module.exports = function menuRouter (sql) {
           online_active   = CASE WHEN ${online_active !== undefined} THEN ${online_active} ELSE online_active END,
           synced_at      = ${Date.now()}
         WHERE id = ${req.params.id}
+          AND (restaurant_id = ${rid} OR (${rid} IS NULL AND restaurant_id IS NULL))
         RETURNING *`
       if (!row.length) return res.status(404).json({ error: 'not found' })
       res.json({ ok: true, item: row[0] })
@@ -162,8 +174,10 @@ module.exports = function menuRouter (sql) {
   })
 
   router.delete('/items/:id', async (req, res) => {
+    const rid = req.user?.restaurant_id
     try {
-      await sql`DELETE FROM menu_items WHERE id = ${req.params.id}`
+      await sql`DELETE FROM menu_items WHERE id = ${req.params.id}
+        AND (restaurant_id = ${rid} OR (${rid} IS NULL AND restaurant_id IS NULL))`
       res.json({ ok: true })
     } catch (e) { res.status(500).json({ error: e.message }) }
   })
@@ -171,8 +185,13 @@ module.exports = function menuRouter (sql) {
   // ── VARIANTS ───────────────────────────────────────────────────────────────
 
   router.get('/items/:id/variants', async (req, res) => {
+    const rid = req.user?.restaurant_id
     try {
-      const rows = await sql`SELECT * FROM item_variants WHERE item_id = ${req.params.id} ORDER BY sort_order, name`
+      const rows = await sql`
+        SELECT iv.* FROM item_variants iv
+        WHERE iv.item_id = ${req.params.id}
+          AND iv.item_id IN (SELECT id FROM menu_items WHERE restaurant_id = ${rid} OR (${rid} IS NULL AND restaurant_id IS NULL))
+        ORDER BY iv.sort_order, iv.name`
       res.json({ variants: rows })
     } catch (e) { res.status(500).json({ error: e.message }) }
   })
@@ -180,7 +199,11 @@ module.exports = function menuRouter (sql) {
   router.post('/items/:id/variants', async (req, res) => {
     const { name, size, price, active, sort_order } = req.body || {}
     if (!name || price == null) return res.status(400).json({ error: 'name and price required' })
+    const rid = req.user?.restaurant_id
     try {
+      const [item] = await sql`SELECT id FROM menu_items WHERE id = ${req.params.id}
+        AND (restaurant_id = ${rid} OR (${rid} IS NULL AND restaurant_id IS NULL))`
+      if (!item) return res.status(404).json({ error: 'item not found' })
       const row = await sql`
         INSERT INTO item_variants (id, item_id, name, size, price, active, sort_order)
         VALUES (${uid()}, ${req.params.id}, ${name}, ${size || ''}, ${price}, ${active !== false}, ${sort_order || 0})
@@ -191,6 +214,7 @@ module.exports = function menuRouter (sql) {
 
   router.put('/items/:itemId/variants/:vid', async (req, res) => {
     const { name, size, price, active, sort_order } = req.body || {}
+    const rid = req.user?.restaurant_id
     try {
       const row = await sql`
         UPDATE item_variants SET
@@ -199,7 +223,9 @@ module.exports = function menuRouter (sql) {
           price      = COALESCE(${price ?? null}, price),
           active     = COALESCE(${active ?? null}, active),
           sort_order = COALESCE(${sort_order ?? null}, sort_order)
-        WHERE id = ${req.params.vid} AND item_id = ${req.params.itemId}
+        WHERE id = ${req.params.vid}
+          AND item_id = ${req.params.itemId}
+          AND item_id IN (SELECT id FROM menu_items WHERE restaurant_id = ${rid} OR (${rid} IS NULL AND restaurant_id IS NULL))
         RETURNING *`
       if (!row.length) return res.status(404).json({ error: 'not found' })
       res.json({ ok: true, variant: row[0] })
@@ -207,8 +233,12 @@ module.exports = function menuRouter (sql) {
   })
 
   router.delete('/items/:itemId/variants/:vid', async (req, res) => {
+    const rid = req.user?.restaurant_id
     try {
-      await sql`DELETE FROM item_variants WHERE id = ${req.params.vid} AND item_id = ${req.params.itemId}`
+      await sql`DELETE FROM item_variants
+        WHERE id = ${req.params.vid}
+          AND item_id = ${req.params.itemId}
+          AND item_id IN (SELECT id FROM menu_items WHERE restaurant_id = ${rid} OR (${rid} IS NULL AND restaurant_id IS NULL))`
       res.json({ ok: true })
     } catch (e) { res.status(500).json({ error: e.message }) }
   })
@@ -244,6 +274,7 @@ module.exports = function menuRouter (sql) {
 
   router.put('/modifier-groups/:id', async (req, res) => {
     const { name, min_select, max_select, required } = req.body || {}
+    const rid = req.user?.restaurant_id || null
     try {
       const row = await sql`
         UPDATE modifier_groups SET
@@ -251,7 +282,7 @@ module.exports = function menuRouter (sql) {
           min_select = COALESCE(${min_select ?? null}, min_select),
           max_select = COALESCE(${max_select ?? null}, max_select),
           required   = COALESCE(${required ?? null}, required)
-        WHERE id = ${req.params.id}
+        WHERE id = ${req.params.id} AND restaurant_id = ${rid}
         RETURNING *`
       if (!row.length) return res.status(404).json({ error: 'not found' })
       res.json({ ok: true, group: row[0] })
@@ -259,8 +290,9 @@ module.exports = function menuRouter (sql) {
   })
 
   router.delete('/modifier-groups/:id', async (req, res) => {
+    const rid = req.user?.restaurant_id || null
     try {
-      await sql`DELETE FROM modifier_groups WHERE id = ${req.params.id}`
+      await sql`DELETE FROM modifier_groups WHERE id = ${req.params.id} AND restaurant_id = ${rid}`
       res.json({ ok: true })
     } catch (e) { res.status(500).json({ error: e.message }) }
   })
@@ -269,7 +301,10 @@ module.exports = function menuRouter (sql) {
   router.post('/modifier-groups/:id/options', async (req, res) => {
     const { name, price, active, sort_order } = req.body || {}
     if (!name) return res.status(400).json({ error: 'name required' })
+    const rid = req.user?.restaurant_id || null
     try {
+      const [grp] = await sql`SELECT id FROM modifier_groups WHERE id = ${req.params.id} AND restaurant_id = ${rid}`
+      if (!grp) return res.status(404).json({ error: 'group not found' })
       const row = await sql`
         INSERT INTO modifier_options (id, group_id, name, price, active, sort_order)
         VALUES (${uid()}, ${req.params.id}, ${name}, ${price || 0}, ${active !== false}, ${sort_order || 0})
@@ -280,13 +315,16 @@ module.exports = function menuRouter (sql) {
 
   router.put('/modifier-groups/:gid/options/:oid', async (req, res) => {
     const { name, price, active } = req.body || {}
+    const rid = req.user?.restaurant_id || null
     try {
       const row = await sql`
         UPDATE modifier_options SET
           name   = COALESCE(${name ?? null}, name),
           price  = COALESCE(${price ?? null}, price),
           active = COALESCE(${active ?? null}, active)
-        WHERE id = ${req.params.oid} AND group_id = ${req.params.gid}
+        WHERE id = ${req.params.oid}
+          AND group_id = ${req.params.gid}
+          AND group_id IN (SELECT id FROM modifier_groups WHERE restaurant_id = ${rid})
         RETURNING *`
       if (!row.length) return res.status(404).json({ error: 'not found' })
       res.json({ ok: true, option: row[0] })
@@ -294,8 +332,12 @@ module.exports = function menuRouter (sql) {
   })
 
   router.delete('/modifier-groups/:gid/options/:oid', async (req, res) => {
+    const rid = req.user?.restaurant_id || null
     try {
-      await sql`DELETE FROM modifier_options WHERE id = ${req.params.oid} AND group_id = ${req.params.gid}`
+      await sql`DELETE FROM modifier_options
+        WHERE id = ${req.params.oid}
+          AND group_id = ${req.params.gid}
+          AND group_id IN (SELECT id FROM modifier_groups WHERE restaurant_id = ${rid})`
       res.json({ ok: true })
     } catch (e) { res.status(500).json({ error: e.message }) }
   })
@@ -305,7 +347,11 @@ module.exports = function menuRouter (sql) {
   router.post('/items/:id/modifier-groups', async (req, res) => {
     const { group_id } = req.body || {}
     if (!group_id) return res.status(400).json({ error: 'group_id required' })
+    const rid = req.user?.restaurant_id || null
     try {
+      const [item] = await sql`SELECT id FROM menu_items WHERE id = ${req.params.id}
+        AND (restaurant_id = ${rid} OR (${rid} IS NULL AND restaurant_id IS NULL))`
+      if (!item) return res.status(404).json({ error: 'item not found' })
       await sql`
         INSERT INTO item_modifier_groups (item_id, group_id)
         VALUES (${req.params.id}, ${group_id})
@@ -315,8 +361,12 @@ module.exports = function menuRouter (sql) {
   })
 
   router.delete('/items/:itemId/modifier-groups/:gid', async (req, res) => {
+    const rid = req.user?.restaurant_id || null
     try {
-      await sql`DELETE FROM item_modifier_groups WHERE item_id = ${req.params.itemId} AND group_id = ${req.params.gid}`
+      await sql`DELETE FROM item_modifier_groups
+        WHERE item_id = ${req.params.itemId}
+          AND group_id = ${req.params.gid}
+          AND item_id IN (SELECT id FROM menu_items WHERE restaurant_id = ${rid} OR (${rid} IS NULL AND restaurant_id IS NULL))`
       res.json({ ok: true })
     } catch (e) { res.status(500).json({ error: e.message }) }
   })

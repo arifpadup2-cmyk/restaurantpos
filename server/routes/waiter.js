@@ -1,6 +1,7 @@
 'use strict'
 
 const express          = require('express')
+const bcrypt           = require('bcryptjs')
 const { sign, jwtAuth } = require('../middleware/jwtAuth')
 const { printKOT }     = require('../lib/printer')
 
@@ -22,7 +23,19 @@ module.exports = function waiterRouter (sql) {
 
       if (!cashier)
         return res.status(401).json({ error: 'Cashier not found' })
-      if (cashier.pin !== pin)
+
+      // Prefer bcrypt hash; fall back to plain-text and migrate lazily
+      let pinOk = false
+      if (cashier.pin_hash) {
+        pinOk = await bcrypt.compare(String(pin), cashier.pin_hash)
+      } else {
+        pinOk = cashier.pin === String(pin)
+        if (pinOk) {
+          const hash = await bcrypt.hash(String(pin), 10)
+          await sql`UPDATE cashiers SET pin_hash = ${hash} WHERE id = ${cashier.id}`
+        }
+      }
+      if (!pinOk)
         return res.status(401).json({ error: 'Wrong PIN' })
 
       const token = sign({

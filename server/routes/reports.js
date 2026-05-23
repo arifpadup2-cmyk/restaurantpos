@@ -74,10 +74,12 @@ module.exports = function reportsRouter (sql) {
   router.get('/expenses', async (req, res) => {
     const { from, to } = req.query
     const { start, end } = dateRange(from, to)
+    const rid = req.user.restaurant_id
     try {
       const exps = await sql`
         SELECT * FROM expenses
         WHERE created_at >= ${start} AND created_at < ${end}
+          AND (restaurant_id = ${rid} OR restaurant_id IS NULL)
         ORDER BY created_at DESC`
       res.json({ expenses: exps })
     } catch (e) { res.status(500).json({ error: e.message }) }
@@ -134,6 +136,7 @@ module.exports = function reportsRouter (sql) {
   router.get('/wastage', async (req, res) => {
     const { from, to } = req.query
     const { start, end } = dateRange(from, to)
+    const rid = req.user.restaurant_id
     try {
       const rows = await sql`
         SELECT o.order_number, o.order_type, o.cashier_name, o.total,
@@ -149,6 +152,7 @@ module.exports = function reportsRouter (sql) {
         LEFT JOIN order_items oi ON oi.order_id = o.id
         WHERE o.created_at >= ${start} AND o.created_at < ${end}
           AND o.status IN ('void','cancelled')
+          AND o.outlet_id IN (SELECT id FROM outlets WHERE restaurant_id = ${rid})
         GROUP BY o.id
         ORDER BY o.created_at DESC`
       res.json({ rows })
@@ -159,6 +163,7 @@ module.exports = function reportsRouter (sql) {
   router.get('/device-activity', async (req, res) => {
     const from = Number(req.query.from) || new Date().setHours(0,0,0,0)
     const to   = Number(req.query.to)   || Date.now()
+    const rid  = req.user.restaurant_id
     try {
       const rows = await sql`
         SELECT terminal_id,
@@ -173,6 +178,7 @@ module.exports = function reportsRouter (sql) {
         FROM audit_log
         WHERE created_at >= ${from} AND created_at <= ${to}
           AND terminal_id IS NOT NULL
+          AND (restaurant_id = ${rid} OR restaurant_id IS NULL)
         GROUP BY terminal_id
         ORDER BY event_count DESC`
       res.json({ rows })
