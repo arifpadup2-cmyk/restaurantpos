@@ -286,7 +286,7 @@ module.exports = function setupRouter (sql) {
 
   // ── Public: POS terminal connects ────────────────────────────────────────
   router.post('/connect', async (req, res) => {
-    const { restaurant_id, license_key, machine_id } = req.body || {}
+    const { restaurant_id, license_key, machine_id, outlet_id } = req.body || {}
     if (!restaurant_id || !license_key)
       return res.status(400).json({ error: 'restaurant_id and license_key are required', code: 'MISSING_CREDENTIALS' })
 
@@ -303,6 +303,18 @@ module.exports = function setupRouter (sql) {
       if (!valid)
         return res.status(401).json({ error: 'Invalid License Key. Check your license key and try again.', code: 'INVALID_KEY' })
 
+      // Validate outlet if provided
+      let outlet = null
+      if (outlet_id) {
+        const [o] = await sql`SELECT * FROM outlets WHERE id = ${outlet_id} AND restaurant_id = ${restaurant_id}`
+        if (!o)
+          return res.status(404).json({ error: 'Outlet ID not found. Check your Outlet ID and try again.', code: 'INVALID_OUTLET' })
+        // Check outlet license
+        if (o.license_end_date && new Date(o.license_end_date) < new Date())
+          return res.status(403).json({ error: 'Outlet license has expired. Contact your provider to renew.', code: 'OUTLET_EXPIRED' })
+        outlet = o
+      }
+
       const mid        = (machine_id || '').trim() || generateMachineId()
       const terminalId = `${restaurant_id}-${mid}-${Date.now().toString(36)}`
 
@@ -311,7 +323,7 @@ module.exports = function setupRouter (sql) {
         WHERE restaurant_id = ${restaurant_id} AND machine_id = ${mid}`
 
       if (existingTerm) {
-        await sql`UPDATE terminal_registrations SET last_seen=now(), active=true WHERE id=${existingTerm.id}`
+        await sql`UPDATE terminal_registrations SET last_seen=now(), active=true, outlet_id=${outlet_id || null} WHERE id=${existingTerm.id}`
       } else {
         const [{ cnt }] = await sql`
           SELECT COUNT(*)::int AS cnt FROM terminal_registrations
@@ -321,14 +333,15 @@ module.exports = function setupRouter (sql) {
             error: `Terminal limit reached (${restaurant.max_terminals}). Deactivate unused terminals or contact provider.`,
             code: 'TERMINAL_LIMIT',
           })
-        await sql`INSERT INTO terminal_registrations (id, restaurant_id, machine_id, last_seen)
-                  VALUES (${terminalId}, ${restaurant_id}, ${mid}, now())`
+        await sql`INSERT INTO terminal_registrations (id, restaurant_id, machine_id, outlet_id, last_seen)
+                  VALUES (${terminalId}, ${restaurant_id}, ${mid}, ${outlet_id || null}, now())`
       }
 
       res.json({
         ok: true,
         machine_id: mid,
         restaurant: { id: restaurant.id, name: restaurant.name },
+        outlet: outlet ? { id: outlet.id, name: outlet.name } : null,
         db: {
           host:     process.env.DB_HOST || '127.0.0.1',
           port:     parseInt(process.env.DB_PORT || '5432', 10),
@@ -354,6 +367,28 @@ module.exports = function setupRouter (sql) {
       const valid = await verifyLicenseKey(license_key, restaurant.license_key_hash)
       if (!valid) return res.json({ ok: false, code: 'INVALID_KEY', error: 'Invalid license key' })
       res.json({ ok: true, restaurant: { id: restaurant.id, name: restaurant.name }, expires_at: restaurant.expires_at })
+    } catch (e) { res.status(500).json({ error: e.message }) }
+  })
+
+  // ── Provider: all outlets (admin panel) ──────────────────────────────────
+  router.get('/outlets', jwtAuth, async (_req, res) => {
+    try {
+      const rows = await sql`
+        SELECT o.*, b.name AS brand_name, r.name AS restaurant_name, r.country
+        FROM outlets o
+        LEFT JOIN brands b ON b.id = o.brand_id
+        LEFT JOIN restaurants r ON r.id = o.restaurant_id
+        ORDER BY o.created_at DESC`
+      res.json({ ok: true, outlets: rows })
+    } catch (e) { res.status(500).json({ error: e.message }) }
+  })
+
+  // ── Provider: update outlet license date ─────────────────────────────────
+  router.patch('/outlets/:id', jwtAuth, async (req, res) => {
+    const { license_end_date } = req.body || {}
+    try {
+      await sql`UPDATE outlets SET license_end_date = ${license_end_date || null} WHERE id = ${req.params.id}`
+      res.json({ ok: true })
     } catch (e) { res.status(500).json({ error: e.message }) }
   })
 

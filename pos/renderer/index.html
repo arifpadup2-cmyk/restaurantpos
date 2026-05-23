@@ -1008,8 +1008,17 @@ textarea:focus-visible {
     <div class="setup-field">
       <label>Terminal Name <span style="font-weight:400;color:#94a3b8">(auto-generated if blank)</span></label>
       <input id="setup-mid" type="text" placeholder="POS-01" autocomplete="off"
-        onkeydown="if(event.key==='Enter')setupSave()">
+        onkeydown="if(event.key==='Enter')document.getElementById('setup-outlet').focus()">
       <span class="setup-hint">E.g. POS-01, POS-02, WAITER-01</span>
+    </div>
+
+    <div class="setup-field">
+      <label>Outlet ID <span style="font-weight:400;color:#94a3b8">(from Back Office → Configuration → Outlet)</span></label>
+      <input id="setup-outlet" type="text" placeholder="outlet-ABC123" autocomplete="off"
+        oninput="this.value=this.value.toLowerCase().replace(/\s/g,'')"
+        onkeydown="if(event.key==='Enter')setupSave()"
+        style="font-family:monospace;letter-spacing:.5px">
+      <span class="setup-hint">Leave blank if not using multi-outlet</span>
     </div>
 
     <!-- Restore: file upload -->
@@ -2757,11 +2766,12 @@ async function setupTestLicense() {
 async function setupTest() { return setupTestLicense(); }
 
 async function setupSave() {
-  const ip   = document.getElementById('setup-ip').value.trim();
-  const rid  = document.getElementById('setup-rid').value.trim();
-  const key  = document.getElementById('setup-lkey').value.trim();
-  const mid  = document.getElementById('setup-mid').value.trim();
-  const errEl = document.getElementById('setup-error');
+  const ip     = document.getElementById('setup-ip').value.trim();
+  const rid    = document.getElementById('setup-rid').value.trim();
+  const key    = document.getElementById('setup-lkey').value.trim();
+  const mid    = document.getElementById('setup-mid').value.trim();
+  const outId  = (document.getElementById('setup-outlet')?.value || '').trim();
+  const errEl  = document.getElementById('setup-error');
   errEl.textContent = '';
 
   if (!ip)  { errEl.textContent = '❌ Server IP address is required.'; return; }
@@ -2775,10 +2785,12 @@ async function setupSave() {
   setupSetProgress(20, 'Validating license…');
   let connectData;
   try {
+    const body = { restaurant_id: rid, license_key: key, machine_id: mid };
+    if (outId) body.outlet_id = outId;
     const resp = await fetch(`http://${ip}:3001/setup/connect`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ restaurant_id: rid, license_key: key, machine_id: mid }),
+      body: JSON.stringify(body),
     });
     connectData = await resp.json();
     if (!resp.ok || !connectData.ok) {
@@ -2811,6 +2823,8 @@ async function setupSave() {
     restaurantId: rid,
     licenseKey:   key,
     restaurantName: connectData.restaurant.name,
+    outletId:     connectData.outlet?.id || outId || '',
+    outletName:   connectData.outlet?.name || '',
     dbPort:       hasAdvanced && advPort ? advPort : String(dbCfg.port),
     dbName:       hasAdvanced && advName ? advName : dbCfg.database,
     dbUser:       hasAdvanced && advUser ? advUser : dbCfg.user,

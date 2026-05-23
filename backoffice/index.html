@@ -4220,14 +4220,21 @@ async function cfgLoadOutlets () {
       return
     }
     list.innerHTML = rows.map(r => `
-      <div class="cfg-list-item" style="cursor:pointer" onclick="cfgOpenOutletModal(${JSON.stringify(r).replace(/"/g,'&quot;')})">
-        <div style="height:40px;width:40px;border-radius:8px;background:var(--primary-light,#eff6ff);display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0">🏪</div>
-        <div style="flex:1;min-width:0">
-          <div class="cfg-list-item-name">${r.name}</div>
-          <div class="cfg-list-item-sub">${r.brand_name ? '🏷️ ' + r.brand_name + ' · ' : ''}${[r.phone, r.currency].filter(Boolean).join(' · ')}${r.address ? ' · ' + r.address.split('\n')[0] : ''}</div>
+      <div class="cfg-list-item" style="cursor:pointer;flex-direction:column;align-items:stretch;gap:8px" onclick="cfgOpenOutletModal(${JSON.stringify(r).replace(/"/g,'&quot;')})">
+        <div style="display:flex;align-items:center;gap:12px">
+          <div style="height:40px;width:40px;border-radius:8px;background:var(--primary-light,#eff6ff);display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0">🏪</div>
+          <div style="flex:1;min-width:0">
+            <div class="cfg-list-item-name">${r.name}</div>
+            <div class="cfg-list-item-sub">${r.brand_name ? '🏷️ ' + r.brand_name + ' · ' : ''}${[r.phone, r.currency].filter(Boolean).join(' · ')}${r.address ? ' · ' + r.address.split('\n')[0] : ''}</div>
+          </div>
+          <button class="btn btn-sm" onclick="event.stopPropagation();cfgOpenOutletModal(${JSON.stringify(r).replace(/"/g,'&quot;')})">Edit</button>
+          <button class="btn btn-sm btn-danger" style="margin-left:4px" onclick="event.stopPropagation();cfgDeleteOutlet('${r.id}','${r.name}')">Delete</button>
         </div>
-        <button class="btn btn-sm" onclick="event.stopPropagation();cfgOpenOutletModal(${JSON.stringify(r).replace(/"/g,'&quot;')})">Edit</button>
-        <button class="btn btn-sm btn-danger" style="margin-left:4px" onclick="event.stopPropagation();cfgDeleteOutlet('${r.id}','${r.name}')">Delete</button>
+        <div style="display:flex;align-items:center;gap:8px;background:var(--bg-secondary,#f8fafc);border-radius:6px;padding:7px 12px;font-size:12px" onclick="event.stopPropagation()">
+          <span style="color:var(--muted);font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.4px;flex-shrink:0">Outlet ID</span>
+          <span style="font-family:monospace;font-weight:700;color:var(--primary,#2563eb);flex:1;word-break:break-all">${r.id}</span>
+          <button class="btn btn-sm" style="padding:3px 10px;font-size:11px;flex-shrink:0" onclick="navigator.clipboard.writeText('${r.id}').then(()=>showToast('Outlet ID copied','success')).catch(()=>{})">Copy</button>
+        </div>
       </div>`).join('')
   } catch (e) { showToast(friendlyError(e.message), 'error') }
 }

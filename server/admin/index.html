@@ -270,6 +270,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
       <div class="sec">Overview</div>
       <div class="ni active" onclick="nav('dashboard')" id="nav-dashboard"><span class="ic">📊</span>Dashboard</div>
       <div class="ni" onclick="nav('restaurants')" id="nav-restaurants"><span class="ic">🏪</span>Restaurants</div>
+      <div class="ni" onclick="nav('outlets')" id="nav-outlets"><span class="ic">🏬</span>Outlets</div>
       <div class="sec">Tools</div>
       <div class="ni" onclick="nav('performance')" id="nav-performance"><span class="ic">📈</span>Performance</div>
       <div class="ni" onclick="nav('install')" id="nav-install"><span class="ic">📋</span>Install Guide</div>
@@ -325,6 +326,33 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
                 </tr>
               </thead>
               <tbody id="r-tbody"><tr><td colspan="10" style="text-align:center;padding:20px;color:#475569">Loading…</td></tr></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- OUTLETS -->
+      <div class="view" id="v-outlets">
+        <div class="ph">
+          <div><h2>Outlets</h2><p>All outlets across all restaurants — set license dates here</p></div>
+          <button class="btn btn-o" onclick="loadOutlets()">↻ Refresh</button>
+        </div>
+        <div class="fr">
+          <select id="of-brand" onchange="renderOutlets()"><option value="">All Brands</option></select>
+          <select id="of-country" onchange="renderOutlets()"><option value="">All Countries</option></select>
+          <input id="of-name" oninput="renderOutlets()" placeholder="Search outlet name…" style="width:180px">
+          <input id="of-id" oninput="renderOutlets()" placeholder="Search outlet ID…" style="width:200px;font-family:monospace">
+        </div>
+        <div class="card" style="overflow:hidden">
+          <div style="overflow-x:auto">
+            <table class="dt">
+              <thead>
+                <tr>
+                  <th>Outlet ID</th><th>Outlet Name</th><th>Brand</th><th>Restaurant</th>
+                  <th>Country</th><th>License End Date</th><th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="o-tbody"><tr><td colspan="7" style="text-align:center;padding:20px;color:#475569">Loading…</td></tr></tbody>
             </table>
           </div>
         </div>
@@ -939,6 +967,7 @@ function nav (id) {
   document.getElementById('nav-'+id).classList.add('active')
   if (id==='dashboard')   loadDashboard()
   if (id==='restaurants') loadRestaurants()
+  if (id==='outlets')     loadOutlets()
   if (id==='performance') loadPerformance()
   if (id==='install')     { loadInstallFiles(); populateCredSelect() }
   if (id==='system')      loadHealth()
@@ -1011,6 +1040,103 @@ async function loadRestaurants () {
   } catch(e) {
     document.getElementById('r-tbody').innerHTML = `<tr><td colspan="10" style="text-align:center;padding:20px;color:#f87171">${e.message}</td></tr>`
   }
+}
+
+// ── Outlets ────────────────────────────────────────────────────────────────
+let _outlets = []
+
+async function loadOutlets () {
+  document.getElementById('o-tbody').innerHTML = `<tr><td colspan="7" style="text-align:center;padding:20px;color:#475569">Loading…</td></tr>`
+  try {
+    const { outlets } = await api('GET', '/setup/outlets')
+    _outlets = outlets
+    populateOutletFilters(outlets)
+    renderOutlets()
+  } catch(e) {
+    document.getElementById('o-tbody').innerHTML = `<tr><td colspan="7" style="text-align:center;padding:20px;color:#f87171">${e.message}</td></tr>`
+  }
+}
+
+function populateOutletFilters (data) {
+  const brands   = [...new Set(data.map(r=>r.brand_name).filter(Boolean))].sort()
+  const countries = [...new Set(data.map(r=>r.country).filter(Boolean))].sort()
+  const bSel = document.getElementById('of-brand')
+  const cSel = document.getElementById('of-country')
+  const prev_b = bSel.value, prev_c = cSel.value
+  bSel.innerHTML   = '<option value="">All Brands</option>'   + brands.map(b=>`<option ${b===prev_b?'selected':''}>${esc(b)}</option>`).join('')
+  cSel.innerHTML   = '<option value="">All Countries</option>'+ countries.map(c=>`<option ${c===prev_c?'selected':''}>${esc(c)}</option>`).join('')
+}
+
+function renderOutlets () {
+  const bf = (document.getElementById('of-brand')||{}).value||''
+  const cf = (document.getElementById('of-country')||{}).value||''
+  const nf = ((document.getElementById('of-name')||{}).value||'').toLowerCase()
+  const idf= ((document.getElementById('of-id')||{}).value||'').toLowerCase()
+
+  let rows = _outlets
+  if(bf)  rows = rows.filter(r=>(r.brand_name||'')===bf)
+  if(cf)  rows = rows.filter(r=>(r.country||'')===cf)
+  if(nf)  rows = rows.filter(r=>(r.name||'').toLowerCase().includes(nf))
+  if(idf) rows = rows.filter(r=>(r.id||'').toLowerCase().includes(idf))
+
+  if(!rows.length) {
+    document.getElementById('o-tbody').innerHTML = `<tr><td colspan="7" style="text-align:center;padding:20px;color:#475569">No outlets match filter</td></tr>`
+    return
+  }
+  document.getElementById('o-tbody').innerHTML = rows.map(r=>{
+    const expDate  = r.license_end_date ? r.license_end_date.split('T')[0] : ''
+    const isExpired = expDate && new Date(expDate) < new Date()
+    const dateColor = isExpired ? 'color:#f87171' : expDate ? 'color:#4ade80' : 'color:#64748b'
+    return `<tr>
+      <td><span class="mono" style="font-size:11px">${esc(r.id)}</span><button class="bsm" style="margin-left:6px;font-size:10px" onclick="navigator.clipboard.writeText('${esc(r.id)}').then(()=>alert('Copied!'))">Copy</button></td>
+      <td><div class="strong">${esc(r.name)}</div></td>
+      <td style="color:#94a3b8;font-size:12px">${esc(r.brand_name||'—')}</td>
+      <td style="color:#94a3b8;font-size:12px">${esc(r.restaurant_name||'—')}</td>
+      <td style="color:#94a3b8;font-size:12px">${esc(r.country||'—')}</td>
+      <td style="${dateColor};font-size:12px">${expDate ? (isExpired ? '⚠️ Expired ' : '✅ ') + expDate : '—'}</td>
+      <td>
+        <button class="bsm b" onclick="setOutletLicense('${esc(r.id)}','${esc(r.name)}','${expDate}')">📅 Set License</button>
+      </td>
+    </tr>`
+  }).join('')
+}
+
+async function setOutletLicense (id, name, current) {
+  const el = document.createElement('div')
+  el.className = 'mo'
+  el.style.display = 'flex'
+  el.innerHTML = `
+    <div class="mb" style="max-width:400px">
+      <h3>Set Outlet License</h3>
+      <div class="sub">${esc(name)}</div>
+      <div class="mf" style="margin-top:14px">
+        <label>License End Date</label>
+        <input id="ol-date" type="date" value="${current||''}" style="margin-bottom:0">
+        <div style="font-size:12px;color:#64748b;margin-top:6px">Leave blank to remove the license end date (no expiry).</div>
+      </div>
+      <div class="qb" style="margin-top:10px">
+        <button onclick="document.getElementById('ol-date').value=new Date(Date.now()+30*86400000).toISOString().split('T')[0]">+30d</button>
+        <button onclick="document.getElementById('ol-date').value=new Date(Date.now()+90*86400000).toISOString().split('T')[0]">+90d</button>
+        <button onclick="document.getElementById('ol-date').value=new Date(Date.now()+365*86400000).toISOString().split('T')[0]">+1 Year</button>
+        <button onclick="document.getElementById('ol-date').value=''">Clear</button>
+      </div>
+      <div class="ma">
+        <button class="btn btn-o" onclick="this.closest('.mo').remove()">Cancel</button>
+        <button class="btn btn-p" id="ol-save-btn" onclick="saveOutletLicense('${esc(id)}',this)">Save</button>
+      </div>
+    </div>`
+  el.addEventListener('click', e => { if(e.target===el) el.remove() })
+  document.body.appendChild(el)
+}
+
+async function saveOutletLicense (id, btn) {
+  const dateVal = document.getElementById('ol-date').value
+  btn.disabled = true; btn.textContent = 'Saving…'
+  try {
+    await api('PATCH', `/setup/outlets/${id}`, { license_end_date: dateVal || null })
+    btn.closest('.mo').remove()
+    loadOutlets()
+  } catch(e) { alert('Error: '+e.message); btn.disabled=false; btn.textContent='Save' }
 }
 
 function populateFilters (data) {
