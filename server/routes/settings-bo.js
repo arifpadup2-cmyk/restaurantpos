@@ -44,20 +44,23 @@ module.exports = function settingsRouter (sql) {
           INSERT INTO settings (restaurant_id, key, value) VALUES (${rid}, ${key}, ${String(body[key])})
           ON CONFLICT (restaurant_id, key) DO UPDATE SET value = EXCLUDED.value`
       }
-      if (body.setup_done && req.user?.restaurant_id) {
+      if (req.user?.restaurant_id) {
         const name          = (body.restaurant_name || '').trim() || null
         const owner         = (body.owner_name || '').trim() || null
         const business_type = (body.business_type || '').trim() || null
         const country       = (body.country || '').trim() || null
-        await sql`
-          UPDATE restaurants
-          SET setup_done    = true,
-              name          = COALESCE(${name}, name),
-              brand_name    = COALESCE(${name}, brand_name),
-              owner_name    = COALESCE(${owner}, owner_name),
-              business_type = COALESCE(${business_type}, business_type),
-              country       = COALESCE(${country}, country)
-          WHERE id = ${req.user.restaurant_id}`
+        const setupDone     = body.setup_done ? true : undefined
+        if (name || owner || business_type || country || setupDone) {
+          await sql`
+            UPDATE restaurants
+            SET name          = COALESCE(${name}, name),
+                brand_name    = COALESCE(${name}, brand_name),
+                owner_name    = COALESCE(${owner}, owner_name),
+                business_type = COALESCE(${business_type}, business_type),
+                country       = COALESCE(${country}, country),
+                setup_done    = COALESCE(${setupDone ?? null}::boolean, setup_done)
+            WHERE id = ${req.user.restaurant_id}`
+        }
       }
       res.json({ ok: true })
     } catch (e) { res.status(500).json({ error: e.message }) }
