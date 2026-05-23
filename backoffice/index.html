@@ -2382,7 +2382,7 @@ function startClock () {
     if (dateEl) dateEl.textContent = now.toLocaleDateString([], {weekday:'long',month:'short',day:'numeric'})
     const hr = now.getHours()
     const greet = hr < 12 ? 'Good morning' : hr < 17 ? 'Good afternoon' : 'Good evening'
-    const greetName = currentUser ? (currentUser.owner_name || currentUser.email?.split('@')[0] || currentUser.username) : null
+    const greetName = currentUser ? (currentUser.owner_name || currentUser.email?.split('@')[0] || 'Restaurant Admin') : null
     if (greetEl) greetEl.textContent = greet + (greetName ? ', ' + greetName : '') + '!'
   }
   tick(); setInterval(tick, 30000)
@@ -2390,7 +2390,7 @@ function startClock () {
 
 function updateSidebarUser () {
   if (!currentUser) return
-  const displayName = currentUser.owner_name || currentUser.email?.split('@')[0] || currentUser.username || '—'
+  const displayName = currentUser.owner_name || currentUser.email?.split('@')[0] || 'Restaurant Admin'
   const nameEl    = document.getElementById('sb-user-name')
   const roleEl    = document.getElementById('sb-user-role')
   const avatarEl  = document.getElementById('hdr-avatar-text')
