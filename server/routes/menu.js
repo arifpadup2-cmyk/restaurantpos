@@ -14,10 +14,15 @@ module.exports = function menuRouter (sql) {
   router.get('/', async (req, res) => {
     const rid = req.user?.restaurant_id
     if (!rid) return res.json({ categories: [], items: [] })
+    const oid = req.query.outlet_id || null
     try {
       const [categories, items, variants] = await Promise.all([
-        sql`SELECT * FROM categories WHERE restaurant_id = ${rid} ORDER BY sort_order, name`,
-        sql`SELECT * FROM menu_items WHERE restaurant_id = ${rid} ORDER BY name`,
+        oid
+          ? sql`SELECT * FROM categories WHERE restaurant_id = ${rid} AND (outlet_id = ${oid} OR outlet_id IS NULL) ORDER BY sort_order, name`
+          : sql`SELECT * FROM categories WHERE restaurant_id = ${rid} ORDER BY sort_order, name`,
+        oid
+          ? sql`SELECT * FROM menu_items WHERE restaurant_id = ${rid} AND (outlet_id = ${oid} OR outlet_id IS NULL) ORDER BY name`
+          : sql`SELECT * FROM menu_items WHERE restaurant_id = ${rid} ORDER BY name`,
         sql`
           SELECT iv.* FROM item_variants iv
           WHERE iv.item_id IN (SELECT id FROM menu_items WHERE restaurant_id = ${rid})
