@@ -541,6 +541,19 @@ input:checked+.toggle-slider:before{transform:translateX(17px)}
   .filter-bar{overflow-x:auto;flex-wrap:nowrap;scrollbar-width:none;padding-bottom:2px}
   .filter-bar::-webkit-scrollbar{display:none}
   .filter-chip{flex-shrink:0}
+  /* ─── Item Editor: mobile ─── */
+  #v-item-editor.active{padding-bottom:calc(58px + env(safe-area-inset-bottom,0px))}
+  .ie-topbar{padding:10px 12px;gap:8px}
+  .ie-btn-add-another{display:none}
+  .ie-body{flex-direction:column;padding:12px 12px 20px;gap:12px}
+  .ie-sidebar{flex:none;width:100%}
+  .ie-sidebar-inner{position:static}
+  .ie-card-body{padding:12px}
+  .ie-channel-row{flex-wrap:wrap;gap:6px}
+  .ie-channel-price{width:100%}
+  .ie-channel-price input{width:100%}
+  .ie-img-box{width:80px;height:80px}
+  #ie-var-table{display:block;overflow-x:auto}
 }
 /* ─── REPORT TABS ───────────────────────────────────────── */
 .rpt-tabs{display:flex;gap:3px;border-bottom:2px solid var(--border);margin-bottom:18px;padding-bottom:0}
@@ -574,14 +587,18 @@ input:checked+.toggle-slider:before{transform:translateX(17px)}
 .btn-pick-img:hover{background:#dcfce7;border-color:#86efac}
 
 /* ─── ITEM EDITOR ──────────────────────────────────────── */
-#v-item-editor{padding:0;background:#f1f5f9;max-width:none!important}
-.ie-topbar{background:#fff;border-bottom:1.5px solid var(--border);padding:12px 24px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:200;gap:16px}
+/* Item editor is outside #app in DOM — use fixed overlay to show correctly */
+#v-item-editor{display:none;position:fixed;inset:0;z-index:150;background:#f1f5f9;overflow-y:auto;max-width:none!important;padding:0}
+#v-item-editor.active{display:block}
+.ie-topbar{background:#fff;border-bottom:1.5px solid var(--border);padding:12px 24px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:200;gap:16px;flex-wrap:wrap}
+.ie-topbar-left{display:flex;flex-direction:column;gap:2px;flex:1;min-width:0}
+.ie-topbar-actions{display:flex;gap:8px;flex-wrap:wrap;align-items:center;flex-shrink:0}
 .ie-breadcrumb{font-size:11px;color:var(--muted);margin-bottom:2px}
 .ie-breadcrumb a{color:var(--primary);text-decoration:none;cursor:pointer}
 .ie-title{font-size:17px;font-weight:800;color:var(--text);margin:0}
-.ie-body{display:flex;gap:18px;padding:20px 24px;max-width:1400px;margin:0 auto}
+.ie-body{display:flex;gap:18px;padding:20px 24px;max-width:1400px;margin:0 auto;padding-bottom:40px}
 .ie-main{flex:1;display:flex;flex-direction:column;gap:14px;min-width:0}
-.ie-sidebar{flex:0 0 240px}
+.ie-sidebar{flex:0 0 260px;min-width:0}
 .ie-sidebar-inner{position:sticky;top:72px;display:flex;flex-direction:column;gap:14px}
 .ie-card{background:#fff;border:1.5px solid var(--border);border-radius:12px;overflow:hidden}
 .ie-card-hdr{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-bottom:1px solid #f1f5f9}
@@ -2320,13 +2337,13 @@ input:checked+.toggle-slider:before{transform:translateX(17px)}
 <div class="view" id="v-item-editor" style="padding:0;max-width:none">
   <!-- Sticky top bar -->
   <div class="ie-topbar">
-    <div>
-      <div class="ie-breadcrumb"><a onclick="showView('menu')">Menu</a> › <span id="ie-breadcrumb">Add New Item</span></div>
+    <div class="ie-topbar-left">
+      <div class="ie-breadcrumb"><a onclick="showView('menu')">← Menu</a> › <span id="ie-breadcrumb">Add New Item</span></div>
       <div class="ie-title" id="ie-title">Add New Item</div>
     </div>
-    <div style="display:flex;gap:10px;flex-wrap:wrap">
+    <div class="ie-topbar-actions">
       <button class="btn btn-outline" onclick="showView('menu')">Cancel</button>
-      <button class="btn btn-outline" id="ie-btn-add-another" onclick="saveItemEditor(true)">
+      <button class="btn btn-outline ie-btn-add-another" id="ie-btn-add-another" onclick="saveItemEditor(true)">
         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg> Save &amp; Add Another
       </button>
       <button class="btn btn-primary" onclick="saveItemEditor(false)">
