@@ -176,14 +176,77 @@ module.exports = function configRouter (sql) {
     } catch (e) { res.status(500).json({ error: e.message }) }
   })
 
+  // ── MARKETS ────────────────────────────────────────────────────────────────
+  router.get('/markets', async (req, res) => {
+    const rid = req.user.restaurant_id
+    if (!rid) return res.json({ rows: [] })
+    try {
+      const rows = await sql`
+        SELECT m.*, b.name AS brand_name
+        FROM markets m
+        LEFT JOIN brands b ON b.id = m.brand_id
+        WHERE m.restaurant_id = ${rid}
+        ORDER BY m.created_at`
+      res.json({ rows })
+    } catch (e) { res.status(500).json({ error: e.message }) }
+  })
+
+  router.post('/markets', async (req, res) => {
+    const { name, brand_id, country, currency_code, currency_symbol } = req.body || {}
+    const rid = req.user.restaurant_id
+    if (!rid) return res.status(400).json({ error: 'No restaurant account linked.' })
+    if (!name?.trim()) return res.status(400).json({ error: 'Market name is required' })
+    if (!brand_id) return res.status(400).json({ error: 'Brand is required' })
+    try {
+      const [row] = await sql`
+        INSERT INTO markets (id, restaurant_id, brand_id, name, country, currency_code, currency_symbol, created_at)
+        VALUES (${newId()}, ${rid}, ${brand_id}, ${name.trim()},
+                ${country||null}, ${currency_code||'USD'}, ${currency_symbol||'$'}, ${Date.now()})
+        RETURNING *`
+      res.json(row)
+    } catch (e) { res.status(500).json({ error: e.message }) }
+  })
+
+  router.patch('/markets/:id', async (req, res) => {
+    const { name, brand_id, country, currency_code, currency_symbol } = req.body || {}
+    const rid = req.user.restaurant_id
+    try {
+      const [row] = await sql`
+        UPDATE markets SET
+          name            = COALESCE(NULLIF(${(name||'').trim()}, ''), name),
+          brand_id        = ${brand_id !== undefined ? (brand_id || null) : sql`brand_id`},
+          country         = COALESCE(NULLIF(${country||''}, ''), country),
+          currency_code   = COALESCE(NULLIF(${currency_code||''}, ''), currency_code),
+          currency_symbol = COALESCE(NULLIF(${currency_symbol||''}, ''), currency_symbol)
+        WHERE id = ${req.params.id} AND restaurant_id = ${rid}
+        RETURNING *`
+      if (!row) return res.status(404).json({ error: 'Market not found' })
+      res.json(row)
+    } catch (e) { res.status(500).json({ error: e.message }) }
+  })
+
+  router.delete('/markets/:id', async (req, res) => {
+    const rid = req.user.restaurant_id
+    try {
+      let linked = 0
+      try { const [c] = await sql`SELECT COUNT(*)::int AS n FROM outlets WHERE market_id = ${req.params.id}`; linked = c?.n || 0 } catch (_) {}
+      if (linked > 0) return res.status(409).json({ error: 'This market has outlets linked. Remove the outlets first.' })
+      await sql`DELETE FROM markets WHERE id = ${req.params.id} AND restaurant_id = ${rid}`
+      res.json({ ok: true })
+    } catch (e) { res.status(500).json({ error: e.message }) }
+  })
+
   // ── OUTLETS (list, multi-outlet per owner) ────────────────────────────────
   router.get('/outlets', async (req, res) => {
     const rid = req.user.restaurant_id
     try {
       const rows = await sql`
-        SELECT o.*, b.name AS brand_name, b.logo_url AS brand_logo
+        SELECT o.*, b.name AS brand_name, b.logo_url AS brand_logo,
+               m.name AS market_name, m.country AS market_country,
+               m.currency_code AS market_currency_code, m.currency_symbol AS market_currency_symbol
         FROM outlets o
         LEFT JOIN brands b ON b.id = o.brand_id
+        LEFT JOIN markets m ON m.id = o.market_id
         WHERE o.restaurant_id = ${rid}
         ORDER BY o.created_at`
       res.json({ rows })
@@ -191,30 +254,33 @@ module.exports = function configRouter (sql) {
   })
 
   router.post('/outlets', async (req, res) => {
-    const { name, brand_id, phone, email, address, opening_time, closing_time, currency, country, currency_code, currency_symbol } = req.body || {}
+    const { name, brand_id, market_id, phone, email, address, opening_time, closing_time, currency, country, currency_code, currency_symbol } = req.body || {}
     const rid = req.user.restaurant_id
     if (!rid) return res.status(400).json({ error: 'No restaurant account linked to this user.' })
     if (!name?.trim()) return res.status(400).json({ error: 'Outlet name is required' })
+    if (!market_id) return res.status(400).json({ error: 'Market is required for every outlet.' })
     try {
+      const mkt = market_id ? (await sql`SELECT * FROM markets WHERE id = ${market_id} AND restaurant_id = ${rid}`)[0] : null
       const [row] = await sql`
-        INSERT INTO outlets (id, restaurant_id, brand_id, name, phone, email, address, opening_time, closing_time, currency, country, currency_code, currency_symbol, created_at)
-        VALUES (${outletId()}, ${rid}, ${brand_id||null}, ${name.trim()},
-                ${phone||null}, ${email||null}, ${address||null},
-                ${opening_time||'09:00'}, ${closing_time||'22:00'}, ${currency||'MYR'},
-                ${country||'MY'}, ${currency_code||'MYR'}, ${currency_symbol||'RM'}, ${Date.now()})
+        INSERT INTO outlets (id, restaurant_id, brand_id, market_id, name, phone, email, address, opening_time, closing_time, currency, country, currency_code, currency_symbol, created_at)
+        VALUES (${outletId()}, ${rid}, ${brand_id||mkt?.brand_id||null}, ${market_id},
+                ${name.trim()}, ${phone||null}, ${email||null}, ${address||null},
+                ${opening_time||'09:00'}, ${closing_time||'22:00'}, ${mkt?.currency_code||currency||'USD'},
+                ${mkt?.country||country||null}, ${mkt?.currency_code||currency_code||'USD'}, ${mkt?.currency_symbol||currency_symbol||'$'}, ${Date.now()})
         RETURNING *`
       res.json(row)
     } catch (e) { res.status(500).json({ error: e.message }) }
   })
 
   router.patch('/outlets/:id', async (req, res) => {
-    const { name, brand_id, phone, email, address, opening_time, closing_time, currency, country, currency_code, currency_symbol } = req.body || {}
+    const { name, brand_id, market_id, phone, email, address, opening_time, closing_time, currency, country, currency_code, currency_symbol } = req.body || {}
     const rid = req.user.restaurant_id
     try {
       const [row] = await sql`
         UPDATE outlets SET
           name            = COALESCE(NULLIF(${(name||'').trim()}, ''), name),
           brand_id        = ${brand_id !== undefined ? (brand_id || null) : sql`brand_id`},
+          market_id       = ${market_id !== undefined ? (market_id || null) : sql`market_id`},
           phone           = COALESCE(NULLIF(${phone||''}, ''), phone),
           email           = COALESCE(NULLIF(${email||''}, ''), email),
           address         = COALESCE(NULLIF(${address||''}, ''), address),
@@ -291,25 +357,33 @@ module.exports = function configRouter (sql) {
   // ── TABLES (layout management) ─────────────────────────────────────────────
   router.get('/tables', async (req, res) => {
     const rid = req.user.restaurant_id
+    const oid = req.query.outlet_id || null
     try {
-      const rows = await sql`
-        SELECT t.*, s.name AS section_name
-        FROM tables_layout t
-        LEFT JOIN table_sections s ON s.id = t.section_id
-        WHERE t.restaurant_id = ${rid}
-        ORDER BY s.sort_order NULLS LAST, t.name`
+      const rows = oid
+        ? await sql`
+          SELECT t.*, s.name AS section_name
+          FROM tables_layout t
+          LEFT JOIN table_sections s ON s.id = t.section_id
+          WHERE t.restaurant_id = ${rid} AND (t.outlet_id = ${oid} OR t.outlet_id IS NULL)
+          ORDER BY s.sort_order NULLS LAST, t.name`
+        : await sql`
+          SELECT t.*, s.name AS section_name
+          FROM tables_layout t
+          LEFT JOIN table_sections s ON s.id = t.section_id
+          WHERE t.restaurant_id = ${rid}
+          ORDER BY s.sort_order NULLS LAST, t.name`
       res.json({ rows })
     } catch (e) { res.status(500).json({ error: e.message }) }
   })
 
   router.post('/tables', async (req, res) => {
-    const { name, capacity, section_id } = req.body || {}
+    const { name, capacity, section_id, outlet_id } = req.body || {}
     const rid = req.user.restaurant_id
     if (!name?.trim()) return res.status(400).json({ error: 'name required' })
     try {
       const [row] = await sql`
-        INSERT INTO tables_layout (id, name, capacity, status, restaurant_id, section_id)
-        VALUES (${newId()}, ${name.trim()}, ${parseInt(capacity) || 4}, 'available', ${rid}, ${section_id || null})
+        INSERT INTO tables_layout (id, name, capacity, status, restaurant_id, section_id, outlet_id)
+        VALUES (${newId()}, ${name.trim()}, ${parseInt(capacity) || 4}, 'available', ${rid}, ${section_id || null}, ${outlet_id || null})
         RETURNING *`
       res.json(row)
     } catch (e) { res.status(500).json({ error: e.message }) }
@@ -389,21 +463,24 @@ module.exports = function configRouter (sql) {
   // ── TAX GROUPS ─────────────────────────────────────────────────────────────
   router.get('/tax-groups', async (req, res) => {
     const rid = req.user.restaurant_id
+    const oid = req.query.outlet_id || null
     try {
-      const rows = await sql`SELECT * FROM tax_groups WHERE restaurant_id = ${rid} ORDER BY created_at`
+      const rows = oid
+        ? await sql`SELECT * FROM tax_groups WHERE restaurant_id = ${rid} AND (outlet_id = ${oid} OR outlet_id IS NULL) ORDER BY created_at`
+        : await sql`SELECT * FROM tax_groups WHERE restaurant_id = ${rid} ORDER BY created_at`
       res.json({ rows })
     } catch (e) { res.status(500).json({ error: e.message }) }
   })
 
   router.post('/tax-groups', async (req, res) => {
-    const { name, rate, is_default } = req.body || {}
+    const { name, rate, is_default, outlet_id } = req.body || {}
     const rid = req.user.restaurant_id
     if (!name) return res.status(400).json({ error: 'name required' })
     try {
       if (is_default) await sql`UPDATE tax_groups SET is_default = false WHERE restaurant_id = ${rid}`
       const [row] = await sql`
-        INSERT INTO tax_groups (id, restaurant_id, name, rate, is_default, created_at)
-        VALUES (${newId()}, ${rid}, ${name.trim()}, ${parseFloat(rate) || 0}, ${!!is_default}, ${Date.now()})
+        INSERT INTO tax_groups (id, restaurant_id, outlet_id, name, rate, is_default, created_at)
+        VALUES (${newId()}, ${rid}, ${outlet_id || null}, ${name.trim()}, ${parseFloat(rate) || 0}, ${!!is_default}, ${Date.now()})
         RETURNING *`
       res.json(row)
     } catch (e) { res.status(500).json({ error: e.message }) }
@@ -498,9 +575,12 @@ module.exports = function configRouter (sql) {
   // ── ORDER TYPES ────────────────────────────────────────────────────────────
   router.get('/order-types', async (req, res) => {
     const rid = req.user.restaurant_id
+    const oid = req.query.outlet_id || null
     try {
-      let rows = await sql`SELECT * FROM order_types WHERE restaurant_id = ${rid} ORDER BY sort_order, name`
-      if (!rows.length) {
+      let rows = oid
+        ? await sql`SELECT * FROM order_types WHERE restaurant_id = ${rid} AND (outlet_id = ${oid} OR outlet_id IS NULL) ORDER BY sort_order, name`
+        : await sql`SELECT * FROM order_types WHERE restaurant_id = ${rid} ORDER BY sort_order, name`
+      if (!rows.length && !oid) {
         for (const d of DEFAULT_ORDER_TYPES) {
           await sql`INSERT INTO order_types (id, restaurant_id, name, enabled, icon, sort_order)
             VALUES (${newId()}, ${rid}, ${d.name}, true, ${d.icon}, ${d.sort_order})`
@@ -512,13 +592,13 @@ module.exports = function configRouter (sql) {
   })
 
   router.post('/order-types', async (req, res) => {
-    const { name, icon, logo_url } = req.body || {}
+    const { name, icon, logo_url, outlet_id } = req.body || {}
     const rid = req.user.restaurant_id
     if (!name) return res.status(400).json({ error: 'name required' })
     try {
       const [row] = await sql`
-        INSERT INTO order_types (id, restaurant_id, name, enabled, icon, logo_url, sort_order)
-        VALUES (${newId()}, ${rid}, ${name.trim()}, true, ${icon || ''}, ${logo_url || null},
+        INSERT INTO order_types (id, restaurant_id, outlet_id, name, enabled, icon, logo_url, sort_order)
+        VALUES (${newId()}, ${rid}, ${outlet_id || null}, ${name.trim()}, true, ${icon || ''}, ${logo_url || null},
           (SELECT COALESCE(MAX(sort_order),0)+1 FROM order_types WHERE restaurant_id = ${rid}))
         RETURNING *`
       res.json(row)
@@ -552,20 +632,23 @@ module.exports = function configRouter (sql) {
   // ── KITCHENS ───────────────────────────────────────────────────────────────
   router.get('/kitchens', async (req, res) => {
     const rid = req.user.restaurant_id
+    const oid = req.query.outlet_id || null
     try {
-      const rows = await sql`SELECT * FROM kitchens WHERE restaurant_id = ${rid} ORDER BY sort_order, name`
+      const rows = oid
+        ? await sql`SELECT * FROM kitchens WHERE restaurant_id = ${rid} AND (outlet_id = ${oid} OR outlet_id IS NULL) ORDER BY sort_order, name`
+        : await sql`SELECT * FROM kitchens WHERE restaurant_id = ${rid} ORDER BY sort_order, name`
       res.json({ rows })
     } catch (e) { res.status(500).json({ error: e.message }) }
   })
 
   router.post('/kitchens', async (req, res) => {
-    const { name, color } = req.body || {}
+    const { name, color, outlet_id } = req.body || {}
     const rid = req.user.restaurant_id
     if (!name) return res.status(400).json({ error: 'name required' })
     try {
       const [row] = await sql`
-        INSERT INTO kitchens (id, restaurant_id, name, color, enabled, sort_order)
-        VALUES (${newId()}, ${rid}, ${name.trim()}, ${color || '#6366f1'}, true,
+        INSERT INTO kitchens (id, restaurant_id, outlet_id, name, color, enabled, sort_order)
+        VALUES (${newId()}, ${rid}, ${outlet_id || null}, ${name.trim()}, ${color || '#6366f1'}, true,
           (SELECT COALESCE(MAX(sort_order),0)+1 FROM kitchens WHERE restaurant_id = ${rid}))
         RETURNING *`
       res.json(row)
@@ -599,9 +682,12 @@ module.exports = function configRouter (sql) {
   // ── DESIGNATIONS ───────────────────────────────────────────────────────────
   router.get('/designations', async (req, res) => {
     const rid = req.user.restaurant_id
+    const oid = req.query.outlet_id || null
     try {
-      let rows = await sql`SELECT * FROM designations WHERE restaurant_id = ${rid} ORDER BY access_level, name`
-      if (!rows.length) {
+      let rows = oid
+        ? await sql`SELECT * FROM designations WHERE restaurant_id = ${rid} AND (outlet_id = ${oid} OR outlet_id IS NULL) ORDER BY access_level, name`
+        : await sql`SELECT * FROM designations WHERE restaurant_id = ${rid} ORDER BY access_level, name`
+      if (!rows.length && !oid) {
         for (const d of DEFAULT_DESIGNATIONS) {
           await sql`INSERT INTO designations (id, restaurant_id, name, access_level, permissions)
             VALUES (${newId()}, ${rid}, ${d.name}, ${d.access_level}, ${sql.json(d.permissions)})`
@@ -613,13 +699,13 @@ module.exports = function configRouter (sql) {
   })
 
   router.post('/designations', async (req, res) => {
-    const { name, access_level, permissions } = req.body || {}
+    const { name, access_level, permissions, outlet_id } = req.body || {}
     const rid = req.user.restaurant_id
     if (!name) return res.status(400).json({ error: 'name required' })
     try {
       const [row] = await sql`
-        INSERT INTO designations (id, restaurant_id, name, access_level, permissions)
-        VALUES (${newId()}, ${rid}, ${name.trim()}, ${parseInt(access_level) || 1}, ${sql.json(permissions || {})})
+        INSERT INTO designations (id, restaurant_id, outlet_id, name, access_level, permissions)
+        VALUES (${newId()}, ${rid}, ${outlet_id || null}, ${name.trim()}, ${parseInt(access_level) || 1}, ${sql.json(permissions || {})})
         RETURNING *`
       res.json(row)
     } catch (e) { res.status(500).json({ error: e.message }) }

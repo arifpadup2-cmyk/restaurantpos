@@ -15,19 +15,21 @@ module.exports = function reportsRouter (sql) {
 
   // GET /reports/dashboard?date=YYYY-MM-DD&outlet_id=&brand_id=&country=
   router.get('/dashboard', async (req, res) => {
-    const { date, outlet_id, brand_id, country } = req.query
-    const d = date || new Date().toISOString().split('T')[0]
-    const { start, end } = dateRange(d, d)
+    const { date, from, to, outlet_id, brand_id, market_id, country } = req.query
+    const fromDate = from || date || new Date().toISOString().split('T')[0]
+    const toDate   = to   || date || fromDate
+    const { start, end } = dateRange(fromDate, toDate)
     try {
       let outletIds = null
       if (outlet_id) {
         outletIds = [outlet_id]
-      } else if (brand_id || country) {
+      } else if (brand_id || market_id || country) {
         const outlets = await sql`
           SELECT id FROM outlets
           WHERE restaurant_id = ${req.user.restaurant_id}
-          ${brand_id ? sql`AND brand_id = ${brand_id}` : sql``}
-          ${country  ? sql`AND country  = ${country}`  : sql``}`
+          ${brand_id  ? sql`AND brand_id  = ${brand_id}`  : sql``}
+          ${market_id ? sql`AND market_id = ${market_id}` : sql``}
+          ${country   ? sql`AND country   = ${country}`   : sql``}`
         outletIds = outlets.map(o => o.id)
         if (outletIds.length === 0) return res.json({ orders: [], expenses: [] })
       }
@@ -41,21 +43,21 @@ module.exports = function reportsRouter (sql) {
     } catch (e) { res.status(500).json({ error: e.message }) }
   })
 
-  // GET /reports?from=YYYY-MM-DD&to=YYYY-MM-DD&outlet_id=&brand_id=&country=
+  // GET /reports?from=YYYY-MM-DD&to=YYYY-MM-DD&outlet_id=&brand_id=&market_id=
   router.get('/', async (req, res) => {
-    const { from, to, outlet_id, brand_id, country } = req.query
+    const { from, to, outlet_id, brand_id, market_id, country } = req.query
     const { start, end } = dateRange(from, to)
     try {
-      // Build outlet id list based on filters
       let outletIds = null
       if (outlet_id) {
         outletIds = [outlet_id]
-      } else if (brand_id || country) {
+      } else if (brand_id || market_id || country) {
         const outlets = await sql`
           SELECT id FROM outlets
           WHERE restaurant_id = ${req.user.restaurant_id}
-          ${brand_id ? sql`AND brand_id = ${brand_id}` : sql``}
-          ${country  ? sql`AND country  = ${country}`  : sql``}`
+          ${brand_id  ? sql`AND brand_id  = ${brand_id}`  : sql``}
+          ${market_id ? sql`AND market_id = ${market_id}` : sql``}
+          ${country   ? sql`AND country   = ${country}`   : sql``}`
         outletIds = outlets.map(o => o.id)
         if (outletIds.length === 0) return res.json({ orders: [], expenses: [] })
       }
@@ -185,16 +187,16 @@ module.exports = function reportsRouter (sql) {
     } catch (e) { res.status(500).json({ error: e.message }) }
   })
 
-  // GET /reports/filter-options — brands, outlets, countries for this restaurant
+  // GET /reports/filter-options — brands, markets, outlets for this restaurant
   router.get('/filter-options', async (req, res) => {
     const rid = req.user.restaurant_id
     try {
-      const [brands, outlets] = await Promise.all([
+      const [brands, markets, outlets] = await Promise.all([
         sql`SELECT id, name FROM brands WHERE restaurant_id = ${rid} ORDER BY name`,
-        sql`SELECT id, name, brand_id, country, currency_code, currency_symbol FROM outlets WHERE restaurant_id = ${rid} ORDER BY name`,
+        sql`SELECT id, name, brand_id, country, currency_code, currency_symbol FROM markets WHERE restaurant_id = ${rid} ORDER BY name`,
+        sql`SELECT id, name, brand_id, market_id, country, currency_code, currency_symbol FROM outlets WHERE restaurant_id = ${rid} ORDER BY name`,
       ])
-      const countries = [...new Set(outlets.map(o => o.country).filter(Boolean))].sort()
-      res.json({ brands, outlets, countries })
+      res.json({ brands, markets, outlets })
     } catch (e) { res.status(500).json({ error: e.message }) }
   })
 

@@ -617,6 +617,52 @@ input:checked+.toggle-slider:before{transform:translateX(17px)}
 .kds-footer{padding:7px 16px;background:#0a1020;display:flex;align-items:center;gap:8px;font-size:10px;color:#334155;flex-shrink:0;border-top:1px solid rgba(255,255,255,.05)}
 .kds-empty{display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;gap:12px;color:#334155}
 .kds-empty svg{opacity:.3}
+/* ── LIVE ORDERS + KDS: LIGHT THEME OVERRIDES ──────────────── */
+#v-live,#v-kds{background:var(--bg)!important}
+.live-topbar,.kds-topbar{background:#fff!important;border-bottom-color:var(--border)!important}
+.ls-chip,.ls-refresh-chip{background:var(--card)!important;border-color:var(--border)!important}
+.ls-chip-val{color:var(--text)!important}.ls-chip-lbl,.ls-refresh-chip{color:var(--muted)!important}
+.live-col{background:#fff!important;border:1px solid var(--border)!important}
+.live-col-hdr{border-bottom-color:var(--border)!important}
+.live-col-hdr h4{color:var(--muted)!important}
+.live-col-body::-webkit-scrollbar-thumb,.kds-grid::-webkit-scrollbar-thumb{background:rgba(0,0,0,.12)!important}
+.lo-card{background:#f8fafc!important;border-color:var(--border)!important}
+.lo-card:hover{background:#f0f4ff!important}
+.lo-timer{background:#f1f5f9!important;color:var(--text)!important}
+.lo-table{color:var(--muted)!important}
+.lo-items{border-top-color:var(--border)!important}
+.lo-item-qty{color:var(--text)!important}.lo-item-name{color:#475569!important}
+.lo-progress{background:#e5e7eb!important}
+.lo-total{color:var(--text)!important}.lo-age{color:var(--muted)!important}
+.live-right{background:#f8fafc!important;border-left-color:var(--border)!important}
+.lr-section{border-bottom-color:var(--border)!important}
+.lr-section h5{color:var(--muted)!important}
+.lr-row-lbl{color:var(--muted)!important}.lr-row-val{color:var(--text)!important}
+.lr-bar{background:#e5e7eb!important}
+.recent-row{border-bottom-color:var(--border)!important}
+.recent-num{color:var(--muted)!important}.recent-amt{color:#16a34a!important}
+.live-footer,.kds-footer{background:#fff!important;border-top-color:var(--border)!important;color:var(--muted)!important}
+.kds-card{background:#fff!important;border-color:var(--border)!important}
+.kds-card.kds-urgent{background:#fff0f0!important}
+.kds-card.kds-warn{background:#fffbeb!important}
+.kds-delay-red{color:#dc2626!important}.kds-delay-yellow{color:#d97706!important}
+.kds-staff{color:var(--muted)!important}
+.kds-items-hdr{color:var(--muted)!important;border-bottom-color:var(--border)!important}
+.kds-item{border-bottom-color:var(--border)!important}
+.kds-item-qty{color:var(--text)!important}.kds-item-name{color:#475569!important}
+.kds-card-foot{border-top-color:var(--border)!important}
+.kds-progress{background:#e5e7eb!important}
+.kds-done-lbl{color:var(--muted)!important}.kds-empty{color:var(--muted)!important}
+/* ── OUTLET CONTEXT BAR ─────────────────────────────────────── */
+#outlet-ctx-bar{background:#fff;border-bottom:2px solid var(--primary);padding:9px 24px;display:none}
+.outlet-ctx-inner{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.outlet-ctx-label{font-size:11px;font-weight:700;color:var(--primary);text-transform:uppercase;letter-spacing:.5px;white-space:nowrap}
+.outlet-ctx-badge{font-size:12px;font-weight:600;color:var(--primary);background:rgba(99,102,241,.08);padding:3px 10px;border-radius:20px;white-space:nowrap}
+/* ── MENU TABS ──────────────────────────────────────────────── */
+.menu-tab-bar{display:flex;gap:4px;margin-bottom:20px;border-bottom:2px solid var(--border);padding-bottom:0}
+.menu-tab{padding:9px 18px;font-size:13px;font-weight:600;color:var(--muted);cursor:pointer;border:none;background:none;border-bottom:3px solid transparent;margin-bottom:-2px;border-radius:4px 4px 0 0;transition:.15s}
+.menu-tab:hover{color:var(--text);background:var(--bg)}
+.menu-tab.active{color:var(--primary);border-bottom-color:var(--primary)}
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms !important;transition-duration:.01ms !important}}
 @media print{#sidebar,#top-header,.page-header button,.filter-bar,.btn{display:none !important}#main-wrap{margin-left:0 !important}.card{border:1px solid #ccc;box-shadow:none}}
 
@@ -839,19 +885,56 @@ input:checked+.toggle-slider:before{transform:translateX(17px)}
         <svg class="ni-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
         <span>Orders</span>
       </div>
-      <div class="nav-item" id="nav-menu" onclick="showView('menu')" role="button" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' ')showView('menu')">
-        <svg class="ni-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 002-2V2"/><path d="M7 2v20"/><path d="M21 15V2a5 5 0 00-5 5v6c0 1.1.9 2 2 2h3zm0 0v7"/></svg>
-        <span>Menu</span>
+      <div class="nav-group" id="navg-menu">
+        <div class="nav-group-hdr" id="nav-menu" onclick="showView('menu');showMenuTab('categories')" role="button" tabindex="0">
+          <svg class="ni-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 002-2V2"/><path d="M7 2v20"/><path d="M21 15V2a5 5 0 00-5 5v6c0 1.1.9 2 2 2h3zm0 0v7"/></svg>
+          <span>Menu</span>
+          <svg class="nav-chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+        </div>
+        <div class="nav-group-body" id="navg-menu-body">
+          <div class="nav-sub active" id="navsub-menu-categories" onclick="showView('menu');showMenuTab('categories')" role="button" tabindex="0">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/></svg><span>Categories</span>
+          </div>
+          <div class="nav-sub" id="navsub-menu-items" onclick="showView('menu');showMenuTab('items')" role="button" tabindex="0">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 002-2V2"/><path d="M7 2v20"/><path d="M21 15V2a5 5 0 00-5 5v6c0 1.1.9 2 2 2h3zm0 0v7"/></svg><span>Menu Items</span>
+          </div>
+          <div class="nav-sub" id="navsub-menu-modifiers" onclick="showConfigTab('modifier-groups')" role="button" tabindex="0">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg><span>Modifier Groups</span>
+          </div>
+        </div>
       </div>
-      <div class="nav-item nav-group-header" id="nav-reports" onclick="showView('reports');showRptTab('sales')" role="button" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' '){showView('reports');showRptTab('sales')}">
-        <svg class="ni-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
-        <span>Reports</span>
-      </div>
-      <div class="nav-sub-group" id="navg-reports">
-        <div class="nav-sub" id="navsub-rpt-sales"       onclick="showView('reports');showRptTab('sales')"     role="button" tabindex="0">💰 Sales</div>
-        <div class="nav-sub" id="navsub-rpt-ops"         onclick="showView('reports');showRptTab('ops')"       role="button" tabindex="0">🍽️ Operations</div>
-        <div class="nav-sub" id="navsub-rpt-inventory"   onclick="showView('reports');showRptTab('inventory')" role="button" tabindex="0">📦 Inventory</div>
-        <div class="nav-sub" id="navsub-rpt-security"    onclick="showView('reports');showRptTab('security')"  role="button" tabindex="0">🔒 Audit &amp; Security</div>
+      <div class="nav-group" id="navg-reports">
+        <div class="nav-group-hdr" id="nav-reports" onclick="showView('reports');showRptTab('sales')" role="button" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' '){showView('reports');showRptTab('sales')}">
+          <svg class="ni-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+          <span>Reports</span>
+          <svg class="nav-chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+        </div>
+        <div class="nav-group-body" id="navg-reports-body">
+          <div class="nav-sub active" id="navsub-rpt-sales" onclick="showView('reports');showRptTab('sales')" role="button" tabindex="0">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg><span>Sales Report</span>
+          </div>
+          <div class="nav-sub" id="navsub-rpt-expenses" onclick="showView('reports');showRptTab('expenses')" role="button" tabindex="0">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg><span>Expenses</span>
+          </div>
+          <div class="nav-sub" id="navsub-rpt-cashier" onclick="showView('reports');showRptTab('cashier')" role="button" tabindex="0">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/></svg><span>Cashier Performance</span>
+          </div>
+          <div class="nav-sub" id="navsub-rpt-voids" onclick="showView('reports');showRptTab('voids')" role="button" tabindex="0">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg><span>Voids &amp; Discounts</span>
+          </div>
+          <div class="nav-sub" id="navsub-rpt-consumption" onclick="showView('reports');showRptTab('consumption')" role="button" tabindex="0">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 002-2V2"/><path d="M7 2v20"/><path d="M21 15V2a5 5 0 00-5 5v6c0 1.1.9 2 2 2h3zm0 0v7"/></svg><span>Item Consumption</span>
+          </div>
+          <div class="nav-sub" id="navsub-rpt-wastage" onclick="showView('reports');showRptTab('wastage')" role="button" tabindex="0">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/></svg><span>Wastage</span>
+          </div>
+          <div class="nav-sub" id="navsub-rpt-devices" onclick="showView('reports');showRptTab('devices')" role="button" tabindex="0">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg><span>Device Activity</span>
+          </div>
+          <div class="nav-sub" id="navsub-rpt-security" onclick="showView('reports');showRptTab('security')" role="button" tabindex="0">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg><span>Audit &amp; Security</span>
+          </div>
+        </div>
       </div>
       <div class="sb-section">Manage</div>
       <div class="nav-item" id="nav-staff" onclick="showView('staff')" role="button" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' ')showView('staff')">
@@ -876,8 +959,11 @@ input:checked+.toggle-slider:before{transform:translateX(17px)}
           <div class="nav-sub" id="navsub-brand" onclick="showConfigTab('brand')" role="button" tabindex="0">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="6"/><path d="M15.477 12.89L17 22l-5-3-5 3 1.523-9.11"/></svg><span>Brand</span>
           </div>
+          <div class="nav-sub" id="navsub-markets" onclick="showConfigTab('markets')" role="button" tabindex="0">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10z"/></svg><span>Markets</span>
+          </div>
           <div class="nav-sub" id="navsub-outlet" onclick="showConfigTab('outlet')" role="button" tabindex="0">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg><span>Outlet</span>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg><span>Outlets</span>
           </div>
           <div class="nav-sub" id="navsub-tables" onclick="showConfigTab('tables')" role="button" tabindex="0">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg><span>Tables</span>
@@ -954,6 +1040,16 @@ input:checked+.toggle-slider:before{transform:translateX(17px)}
         </button>
       </div>
     </header>
+    <!-- Outlet context bar — shown for outlet-scoped sections -->
+    <div id="outlet-ctx-bar">
+      <div class="outlet-ctx-inner">
+        <span class="outlet-ctx-label">Managing Outlet:</span>
+        <select id="ctx-brand" onchange="ctxCascade()" style="font-size:12px;padding:5px 9px;border:1.5px solid var(--border);border-radius:6px;background:var(--card);color:var(--text)"><option value="">All Brands</option></select>
+        <select id="ctx-market" onchange="ctxCascade()" style="font-size:12px;padding:5px 9px;border:1.5px solid var(--border);border-radius:6px;background:var(--card);color:var(--text)"><option value="">All Markets</option></select>
+        <select id="ctx-outlet" onchange="ctxOutletChange()" style="font-size:12px;padding:5px 9px;border:1.5px solid var(--border);border-radius:6px;background:var(--card);color:var(--text);min-width:160px"><option value="">-- Select Outlet --</option></select>
+        <span id="ctx-outlet-badge" class="outlet-ctx-badge" style="display:none"></span>
+      </div>
+    </div>
     <div id="view-container">
 
   <!-- ── DASHBOARD ── -->
@@ -964,12 +1060,17 @@ input:checked+.toggle-slider:before{transform:translateX(17px)}
         <p style="font-size:12px;color:var(--muted)" id="dash-subtitle">Here's what's happening today</p>
       </div>
       <div class="date-filter" style="flex-wrap:wrap;gap:6px">
-        <select id="dash-country" onchange="cascadeDashFilters()" style="font-size:12px;padding:6px 8px;border:1.5px solid var(--border);border-radius:6px;color:var(--text);background:var(--card)"><option value="">All Countries</option></select>
         <select id="dash-brand" onchange="cascadeDashFilters()" style="font-size:12px;padding:6px 8px;border:1.5px solid var(--border);border-radius:6px;color:var(--text);background:var(--card)"><option value="">All Brands</option></select>
-        <select id="dash-outlet" style="font-size:12px;padding:6px 8px;border:1.5px solid var(--border);border-radius:6px;color:var(--text);background:var(--card)"><option value="">All Outlets</option></select>
-        <input type="date" id="dash-date" onchange="loadDashboard()">
-        <button class="btn btn-outline btn-sm" onclick="setDashDate('today');loadDashboard()">Today</button>
-        <button class="btn btn-outline btn-sm" onclick="setDashDate('yesterday');loadDashboard()">Yesterday</button>
+        <select id="dash-market" onchange="cascadeDashFilters()" style="font-size:12px;padding:6px 8px;border:1.5px solid var(--border);border-radius:6px;color:var(--text);background:var(--card)"><option value="">All Markets</option></select>
+        <select id="dash-outlet" onchange="loadDashboard()" style="font-size:12px;padding:6px 8px;border:1.5px solid var(--border);border-radius:6px;color:var(--text);background:var(--card)"><option value="">All Outlets</option></select>
+        <input type="date" id="dash-from" onchange="loadDashboard()" style="display:none">
+        <input type="date" id="dash-to" onchange="loadDashboard()" style="display:none">
+        <input type="date" id="dash-date" onchange="setDashPreset('custom-date');loadDashboard()" style="display:none">
+        <button class="btn btn-outline btn-sm dash-preset active" onclick="setDashPreset('today',this)">Today</button>
+        <button class="btn btn-outline btn-sm dash-preset" onclick="setDashPreset('yesterday',this)">Yesterday</button>
+        <button class="btn btn-outline btn-sm dash-preset" onclick="setDashPreset('this-week',this)">This Week</button>
+        <button class="btn btn-outline btn-sm dash-preset" onclick="setDashPreset('this-month',this)">This Month</button>
+        <button class="btn btn-outline btn-sm dash-preset" onclick="setDashPreset('last-month',this)">Last Month</button>
       </div>
     </div>
 
@@ -1086,29 +1187,43 @@ input:checked+.toggle-slider:before{transform:translateX(17px)}
     <div class="page-header">
       <h2>Menu Management</h2>
       <div style="display:flex;gap:10px">
-        <button class="btn btn-outline" onclick="showCatModal()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 002-2V2"/><path d="M7 2v20"/><path d="M21 15V2a5 5 0 00-5 5v6c0 1.1.9 2 2 2h3zm0 0v7"/></svg> Add Category</button>
-        <button class="btn btn-primary" onclick="showItemEditor(null)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg> Add Item</button>
+        <button class="btn btn-outline" id="menu-btn-add-cat" onclick="showCatModal()" style="display:none"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 002-2V2"/><path d="M7 2v20"/><path d="M21 15V2a5 5 0 00-5 5v6c0 1.1.9 2 2 2h3zm0 0v7"/></svg> Add Category</button>
+        <button class="btn btn-primary" id="menu-btn-add-item" onclick="showItemEditor(null)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg> Add Item</button>
       </div>
     </div>
-    <div class="card">
-      <div class="card-header"><h3>Categories</h3><span id="cat-count" style="font-size:13px;color:var(--muted)"></span></div>
-      <div class="table-wrap">
-        <table class="data-table">
-          <thead><tr><th>Name</th><th>Color</th><th>Sort Order</th><th>Status</th><th>Actions</th></tr></thead>
-          <tbody id="cat-tbody"></tbody>
-        </table>
+    <div class="menu-tab-bar">
+      <button class="menu-tab active" id="menu-tab-categories" onclick="showMenuTab('categories')">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display:inline;vertical-align:middle;margin-right:5px"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/></svg>Categories
+      </button>
+      <button class="menu-tab" id="menu-tab-items" onclick="showMenuTab('items')">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display:inline;vertical-align:middle;margin-right:5px"><path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 002-2V2"/><path d="M7 2v20"/><path d="M21 15V2a5 5 0 00-5 5v6c0 1.1.9 2 2 2h3zm0 0v7"/></svg>Menu Items
+      </button>
+    </div>
+    <!-- Categories pane -->
+    <div id="menu-pane-categories">
+      <div class="card">
+        <div class="card-header"><h3>Categories</h3><span id="cat-count" style="font-size:13px;color:var(--muted)"></span></div>
+        <div class="table-wrap">
+          <table class="data-table">
+            <thead><tr><th>Name</th><th>Color</th><th>Sort Order</th><th>Status</th><th>Actions</th></tr></thead>
+            <tbody id="cat-tbody"></tbody>
+          </table>
+        </div>
       </div>
     </div>
-    <div class="card">
-      <div class="card-header">
-        <h3>Menu Items</h3>
-        <div class="filter-bar" id="menu-cat-filter" style="margin:0"></div>
-      </div>
-      <div class="table-wrap">
-        <table class="data-table">
-          <thead><tr><th>Name</th><th>Category</th><th>Price</th><th>Description</th><th>Available</th><th>Actions</th></tr></thead>
-          <tbody id="items-tbody"></tbody>
-        </table>
+    <!-- Items pane -->
+    <div id="menu-pane-items" style="display:none">
+      <div class="card">
+        <div class="card-header">
+          <h3>Menu Items</h3>
+          <div class="filter-bar" id="menu-cat-filter" style="margin:0"></div>
+        </div>
+        <div class="table-wrap">
+          <table class="data-table">
+            <thead><tr><th>Name</th><th>Category</th><th>Price</th><th>Description</th><th>Available</th><th>Actions</th></tr></thead>
+            <tbody id="items-tbody"></tbody>
+          </table>
+        </div>
       </div>
     </div>
   </div>
@@ -1143,28 +1258,13 @@ input:checked+.toggle-slider:before{transform:translateX(17px)}
 
   <!-- ── REPORTS ── -->
   <div class="view" id="v-reports">
-    <div class="page-header"><h2>Reports</h2></div>
-    <div class="rpt-tabs">
-      <button class="rpt-tab active" onclick="switchRptTab('sales',this)">
-        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="display:inline;vertical-align:middle;margin-right:5px"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>Sales
-      </button>
-      <button class="rpt-tab" onclick="switchRptTab('ops',this)">
-        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="display:inline;vertical-align:middle;margin-right:5px"><path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 002-2V2"/><path d="M7 2v20"/><path d="M21 15V2a5 5 0 00-5 5v6c0 1.1.9 2 2 2h3zm0 0v7"/></svg>Operations
-      </button>
-      <button class="rpt-tab" onclick="switchRptTab('inventory',this)">
-        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="display:inline;vertical-align:middle;margin-right:5px"><path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z"/></svg>Inventory
-      </button>
-      <button class="rpt-tab" onclick="switchRptTab('security',this)">
-        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="display:inline;vertical-align:middle;margin-right:5px"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>Audit &amp; Security
-      </button>
-    </div>
+    <div class="page-header"><h2 id="rpt-page-title">Sales Report</h2></div>
 
-    <!-- ─── SALES TAB ─── -->
+    <!-- ─── SALES PANE ─── -->
     <div id="rpt-pane-sales">
     <div class="card">
       <div class="card-header"><h3>Sales Report</h3></div>
       <div class="card-body">
-        <!-- Date presets -->
         <div class="rpt-preset-bar" id="rpt-preset-bar">
           <button class="rpt-preset-btn active" onclick="setRptPreset('today',this)">Today</button>
           <button class="rpt-preset-btn" onclick="setRptPreset('yesterday',this)">Yesterday</button>
@@ -1174,17 +1274,15 @@ input:checked+.toggle-slider:before{transform:translateX(17px)}
           <button class="rpt-preset-btn" onclick="setRptPreset('last-month',this)">Last Month</button>
           <button class="rpt-preset-btn" id="rpt-custom-btn" onclick="setRptPreset('custom',this)">Custom Range</button>
         </div>
-        <!-- Custom date inputs (hidden unless Custom selected) -->
         <div id="rpt-custom-range" style="display:none;gap:8px;align-items:flex-end;flex-wrap:wrap;margin-bottom:10px">
           <div class="form-group" style="margin:0"><label>From</label><input type="date" id="rep-from"></div>
           <div class="form-group" style="margin:0"><label>To</label><input type="date" id="rep-to"></div>
         </div>
-        <!-- Filters row -->
         <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:flex-end;margin-bottom:14px">
-          <div class="form-group" style="margin:0;min-width:120px">
-            <label style="font-size:11px;font-weight:600;color:var(--muted)">Country</label>
-            <select id="rpt-country" onchange="cascadeRptFilters()" style="font-size:13px;padding:7px 10px;border:1.5px solid var(--border);border-radius:6px;width:100%;color:var(--text)">
-              <option value="">All Countries</option>
+          <div class="form-group" style="margin:0;min-width:140px">
+            <label style="font-size:11px;font-weight:600;color:var(--muted)">Market</label>
+            <select id="rpt-market" onchange="cascadeRptFilters()" style="font-size:13px;padding:7px 10px;border:1.5px solid var(--border);border-radius:6px;width:100%;color:var(--text)">
+              <option value="">All Markets</option>
             </select>
           </div>
           <div class="form-group" style="margin:0;min-width:140px">
@@ -1213,6 +1311,10 @@ input:checked+.toggle-slider:before{transform:translateX(17px)}
         </div>
       </div>
     </div>
+    </div><!-- /rpt-pane-sales -->
+
+    <!-- ─── EXPENSES PANE ─── -->
+    <div id="rpt-pane-expenses" style="display:none">
     <div class="card">
       <div class="card-header"><h3>Expenses Report</h3></div>
       <div class="card-body">
@@ -1232,6 +1334,10 @@ input:checked+.toggle-slider:before{transform:translateX(17px)}
         </div>
       </div>
     </div>
+    </div><!-- /rpt-pane-expenses -->
+
+    <!-- ─── CASHIER PERFORMANCE PANE ─── -->
+    <div id="rpt-pane-cashier" style="display:none">
     <div class="card">
       <div class="card-header">
         <h3>Cashier Performance</h3>
@@ -1250,6 +1356,10 @@ input:checked+.toggle-slider:before{transform:translateX(17px)}
         </div>
       </div>
     </div>
+    </div><!-- /rpt-pane-cashier -->
+
+    <!-- ─── VOIDS & DISCOUNTS PANE ─── -->
+    <div id="rpt-pane-voids" style="display:none">
     <div class="card">
       <div class="card-header">
         <h3>Void / Discount Report</h3>
@@ -1268,53 +1378,77 @@ input:checked+.toggle-slider:before{transform:translateX(17px)}
         </div>
       </div>
     </div>
-    </div><!-- /rpt-pane-sales -->
+    </div><!-- /rpt-pane-voids -->
 
-    <!-- ─── OPERATIONS TAB ─── -->
-    <div id="rpt-pane-ops" style="display:none">
-      <!-- Item Consumption -->
-      <div class="card">
-        <div class="card-header">
-          <h3>Item Consumption Report</h3>
-          <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
-            <input type="date" id="ic-from"><input type="date" id="ic-to">
-            <button class="btn btn-primary btn-sm" onclick="loadItemConsumption()"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="5 3 19 12 5 21 5 3"/></svg> Generate</button>
-            <button class="btn btn-outline btn-sm" onclick="exportItemConsumptionCSV()"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> CSV</button>
-          </div>
-        </div>
-        <div class="card-body">
-          <div class="table-wrap">
-            <table class="data-table">
-              <thead><tr><th>#</th><th>Item Name</th><th>Category</th><th>Qty Sold</th><th>Orders</th><th>Revenue</th></tr></thead>
-              <tbody id="ic-tbody"><tr><td colspan="6" style="text-align:center;color:var(--muted);padding:20px">Select date range and Generate</td></tr></tbody>
-            </table>
-          </div>
-          <div id="ic-total" style="text-align:right;padding:10px 0;font-size:14px;font-weight:700;display:none"></div>
+    <!-- ─── ITEM CONSUMPTION PANE ─── -->
+    <div id="rpt-pane-consumption" style="display:none">
+    <div class="card">
+      <div class="card-header">
+        <h3>Item Consumption Report</h3>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+          <input type="date" id="ic-from"><input type="date" id="ic-to">
+          <button class="btn btn-primary btn-sm" onclick="loadItemConsumption()"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="5 3 19 12 5 21 5 3"/></svg> Generate</button>
+          <button class="btn btn-outline btn-sm" onclick="exportItemConsumptionCSV()"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> CSV</button>
         </div>
       </div>
-      <!-- Wastage Report -->
-      <div class="card">
-        <div class="card-header">
-          <h3>Wastage Report <span style="font-size:10px;font-weight:400;color:var(--muted)">(Voided &amp; Cancelled Orders)</span></h3>
-          <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
-            <input type="date" id="wast-from"><input type="date" id="wast-to">
-            <button class="btn btn-primary btn-sm" onclick="loadWastageReport()"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="5 3 19 12 5 21 5 3"/></svg> Generate</button>
-            <button class="btn btn-outline btn-sm" onclick="exportWastageCSV()"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> CSV</button>
-          </div>
+      <div class="card-body">
+        <div class="table-wrap">
+          <table class="data-table">
+            <thead><tr><th>#</th><th>Item Name</th><th>Category</th><th>Qty Sold</th><th>Orders</th><th>Revenue</th></tr></thead>
+            <tbody id="ic-tbody"><tr><td colspan="6" style="text-align:center;color:var(--muted);padding:20px">Select date range and Generate</td></tr></tbody>
+          </table>
         </div>
-        <div class="card-body">
-          <div class="table-wrap">
-            <table class="data-table">
-              <thead><tr><th>Order #</th><th>Type</th><th>Status</th><th>Cashier</th><th>Items</th><th>Value</th><th>Reason</th><th>Time</th></tr></thead>
-              <tbody id="wast-tbody"><tr><td colspan="8" style="text-align:center;color:var(--muted);padding:20px">Select date range and Generate</td></tr></tbody>
-            </table>
-          </div>
-          <div id="wast-total" style="text-align:right;padding:10px 0;font-size:14px;font-weight:700;display:none"></div>
+        <div id="ic-total" style="text-align:right;padding:10px 0;font-size:14px;font-weight:700;display:none"></div>
+      </div>
+    </div>
+    </div><!-- /rpt-pane-consumption -->
+
+    <!-- ─── WASTAGE PANE ─── -->
+    <div id="rpt-pane-wastage" style="display:none">
+    <div class="card">
+      <div class="card-header">
+        <h3>Wastage Report <span style="font-size:10px;font-weight:400;color:var(--muted)">(Voided &amp; Cancelled Orders)</span></h3>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+          <input type="date" id="wast-from"><input type="date" id="wast-to">
+          <button class="btn btn-primary btn-sm" onclick="loadWastageReport()"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="5 3 19 12 5 21 5 3"/></svg> Generate</button>
+          <button class="btn btn-outline btn-sm" onclick="exportWastageCSV()"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> CSV</button>
         </div>
       </div>
-    </div><!-- /rpt-pane-ops -->
+      <div class="card-body">
+        <div class="table-wrap">
+          <table class="data-table">
+            <thead><tr><th>Order #</th><th>Type</th><th>Status</th><th>Cashier</th><th>Items</th><th>Value</th><th>Reason</th><th>Time</th></tr></thead>
+            <tbody id="wast-tbody"><tr><td colspan="8" style="text-align:center;color:var(--muted);padding:20px">Select date range and Generate</td></tr></tbody>
+          </table>
+        </div>
+        <div id="wast-total" style="text-align:right;padding:10px 0;font-size:14px;font-weight:700;display:none"></div>
+      </div>
+    </div>
+    </div><!-- /rpt-pane-wastage -->
 
-    <!-- ─── INVENTORY TAB ─── -->
+    <!-- ─── DEVICE ACTIVITY PANE ─── -->
+    <div id="rpt-pane-devices" style="display:none">
+    <div class="card">
+      <div class="card-header">
+        <h3>Device Activity Report</h3>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+          <input type="date" id="dev-from"><input type="date" id="dev-to">
+          <button class="btn btn-primary btn-sm" onclick="loadDeviceActivity()"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="5 3 19 12 5 21 5 3"/></svg> Generate</button>
+          <button class="btn btn-outline btn-sm" onclick="exportDeviceActivityCSV()"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> CSV</button>
+        </div>
+      </div>
+      <div class="card-body">
+        <div class="table-wrap">
+          <table class="data-table">
+            <thead><tr><th>Terminal ID</th><th>Events</th><th>Cashiers</th><th>Voids</th><th>Cancels</th><th>Discounts</th><th>Approvals</th><th>First Seen</th><th>Last Active</th></tr></thead>
+            <tbody id="dev-tbody"><tr><td colspan="9" style="text-align:center;color:var(--muted);padding:20px">Select date range and Generate</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+    </div><!-- /rpt-pane-devices -->
+
+    <!-- ─── INVENTORY PANE ─── -->
     <div id="rpt-pane-inventory" style="display:none">
       <div class="card" style="border:1.5px solid var(--info-border);background:var(--info-bg)">
         <div class="card-body" style="display:flex;align-items:center;gap:14px;padding:16px">
@@ -1422,25 +1556,6 @@ input:checked+.toggle-slider:before{transform:translateX(17px)}
             <table class="data-table">
               <thead><tr><th>Name</th><th>Role</th><th>PIN Set</th><th>Status</th><th>Created</th></tr></thead>
               <tbody id="perm-tbody"><tr><td colspan="5" style="text-align:center;color:var(--muted);padding:20px">Click Load</td></tr></tbody>
-            </table>
-          </div>
-        </div>
-      </div>
-      <!-- Device Activity -->
-      <div class="card">
-        <div class="card-header">
-          <h3>Device Activity Report</h3>
-          <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
-            <input type="date" id="dev-from"><input type="date" id="dev-to">
-            <button class="btn btn-primary btn-sm" onclick="loadDeviceActivity()"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="5 3 19 12 5 21 5 3"/></svg> Generate</button>
-            <button class="btn btn-outline btn-sm" onclick="exportDeviceActivityCSV()"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> CSV</button>
-          </div>
-        </div>
-        <div class="card-body">
-          <div class="table-wrap">
-            <table class="data-table">
-              <thead><tr><th>Terminal ID</th><th>Events</th><th>Cashiers</th><th>Voids</th><th>Cancels</th><th>Discounts</th><th>Approvals</th><th>First Seen</th><th>Last Active</th></tr></thead>
-              <tbody id="dev-tbody"><tr><td colspan="9" style="text-align:center;color:var(--muted);padding:20px">Select date range and Generate</td></tr></tbody>
             </table>
           </div>
         </div>
@@ -1907,7 +2022,16 @@ input:checked+.toggle-slider:before{transform:translateX(17px)}
         <div id="cfg-brands-list"></div>
       </div>
 
-      <!-- OUTLET -->
+      <!-- MARKETS -->
+      <div id="cfg-markets" class="cfg-section">
+        <div class="page-header">
+          <h2>Markets</h2>
+          <button class="btn" onclick="cfgOpenMarketModal(null)">+ Add Market</button>
+        </div>
+        <div id="cfg-markets-list"></div>
+      </div>
+
+      <!-- OUTLETS -->
       <div id="cfg-outlet" class="cfg-section">
         <div class="page-header">
           <h2>Outlets</h2>
@@ -2363,6 +2487,40 @@ input:checked+.toggle-slider:before{transform:translateX(17px)}
   </div>
 </div>
 
+<!-- Market Modal -->
+<div class="modal-overlay" id="modal-market">
+  <div class="modal" style="min-width:420px;max-width:500px">
+    <h3 id="market-modal-title">Add Market</h3>
+    <input type="hidden" id="mkt-id">
+    <div class="form-group">
+      <label>Brand *</label>
+      <select id="mkt-brand" style="width:100%"><option value="">-- Select Brand --</option></select>
+    </div>
+    <div class="form-group">
+      <label>Market Name *</label>
+      <input id="mkt-name" class="form-control" placeholder="e.g. Mumbai Central, Delhi NCR">
+    </div>
+    <div class="form-group">
+      <label>Country</label>
+      <input id="mkt-country" class="form-control" placeholder="e.g. India">
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>Currency Code</label>
+        <input id="mkt-ccode" class="form-control" placeholder="e.g. INR">
+      </div>
+      <div class="form-group">
+        <label>Currency Symbol</label>
+        <input id="mkt-csym" class="form-control" placeholder="e.g. ₹">
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-outline" onclick="closeModal('modal-market')">Cancel</button>
+      <button class="btn btn-primary" onclick="cfgSaveMarketModal()">Save</button>
+    </div>
+  </div>
+</div>
+
 <!-- Outlet Modal -->
 <div class="modal-overlay" id="modal-outlet">
   <div class="modal" style="min-width:460px;max-width:560px">
@@ -2374,11 +2532,17 @@ input:checked+.toggle-slider:before{transform:translateX(17px)}
         <input id="outlet-name" type="text" placeholder="e.g. Main Branch">
       </div>
       <div class="form-group">
-        <label>Brand</label>
-        <select id="outlet-brand-id">
-          <option value="">-- Select Brand --</option>
+        <label>Market *</label>
+        <select id="outlet-market-id" onchange="outletMarketChange()">
+          <option value="">-- Select Market --</option>
         </select>
       </div>
+    </div>
+    <div class="form-group" style="display:none" id="outlet-brand-row">
+      <label>Brand</label>
+      <select id="outlet-brand-id">
+        <option value="">-- No Brand --</option>
+      </select>
     </div>
     <div class="form-row">
       <div class="form-group">
@@ -3248,7 +3412,8 @@ function setTodayDates () {
   const today = todayStr()
   const weekAgo = new Date(Date.now() - 7*86400000).toISOString().split('T')[0]
   const set = (id, v) => { const el = document.getElementById(id); if (el) el.value = v }
-  set('dash-date',    today)
+  set('dash-from',    today)
+  set('dash-to',      today)
   set('orders-date',  today)
   set('rep-from',     today)
   set('rep-to',       today)
@@ -3314,26 +3479,92 @@ async function saveBOSettings () {
   } catch (e) { showToast('Error: ' + e.message,'error') }
 }
 
+// ─── AUTO-SELECT SINGLE OPTION ───────────────────────────────────
+function autoSelectSingle (...ids) {
+  ids.forEach(id => {
+    const sel = document.getElementById(id); if (!sel) return
+    const opts = [...sel.options].filter(o => o.value)
+    if (opts.length === 1) sel.value = opts[0].value
+  })
+}
+
+// ─── OUTLET CONTEXT BAR ──────────────────────────────────────────
+let _ctxOutlet = ''
+function initCtxBar () {
+  const bSel = document.getElementById('ctx-brand')
+  const mSel = document.getElementById('ctx-market')
+  if (!bSel || !mSel) return
+  const brands = _rptFilterData.brands || []
+  const prevB = bSel.value
+  bSel.innerHTML = '<option value="">All Brands</option>' + brands.map(b=>`<option value="${b.id}"${b.id===prevB?' selected':''}>${b.name}</option>`).join('')
+  autoSelectSingle('ctx-brand')
+  ctxCascade()
+}
+
+function ctxCascade () {
+  const brand  = document.getElementById('ctx-brand')?.value  || ''
+  const market = document.getElementById('ctx-market')?.value || ''
+  const mSel = document.getElementById('ctx-market')
+  if (mSel) {
+    const markets = (_rptFilterData.markets || []).filter(m => !brand || m.brand_id === brand)
+    const prevM = mSel.value
+    mSel.innerHTML = '<option value="">All Markets</option>' + markets.map(m=>`<option value="${m.id}"${m.id===prevM?' selected':''}>${m.name}</option>`).join('')
+    autoSelectSingle('ctx-market')
+  }
+  const oSel = document.getElementById('ctx-outlet')
+  if (oSel) {
+    let outlets = (_rptFilterData.outlets || []).filter(o =>
+      (!brand  || o.brand_id  === brand) &&
+      (!document.getElementById('ctx-market')?.value || o.market_id === document.getElementById('ctx-market')?.value))
+    const prevO = oSel.value
+    oSel.innerHTML = '<option value="">-- Select Outlet --</option>' + outlets.map(o=>`<option value="${o.id}"${o.id===prevO?' selected':''}>${o.name}</option>`).join('')
+    autoSelectSingle('ctx-outlet')
+  }
+  ctxOutletChange()
+}
+
+function ctxOutletChange () {
+  _ctxOutlet = document.getElementById('ctx-outlet')?.value || ''
+  const badge = document.getElementById('ctx-outlet-badge')
+  if (badge) {
+    if (_ctxOutlet) {
+      const outlet = (_rptFilterData.outlets||[]).find(o=>o.id===_ctxOutlet)
+      badge.textContent = outlet?.name || _ctxOutlet
+      badge.style.display = ''
+    } else {
+      badge.style.display = 'none'
+    }
+  }
+}
+
 // ─── DASHBOARD FILTERS ───────────────────────────────────────────
 function cascadeDashFilters () {
-  const country = document.getElementById('dash-country').value
-  const brand   = document.getElementById('dash-brand').value
-  let outlets   = (_rptFilterData.outlets || []).filter(o =>
-    (!country || o.country === country) && (!brand || o.brand_id === brand))
-  const sel = document.getElementById('dash-outlet')
-  const cur = sel.value
-  sel.innerHTML = '<option value="">All Outlets</option>' + outlets.map(o => `<option value="${o.id}"${o.id===cur?' selected':''}>${o.name}</option>`).join('')
+  const brand  = document.getElementById('dash-brand')?.value  || ''
+  const market = document.getElementById('dash-market')?.value || ''
+  const markets = (_rptFilterData.markets || []).filter(m => !brand || m.brand_id === brand)
+  const mSel = document.getElementById('dash-market')
+  if (mSel) {
+    const curM = mSel.value
+    mSel.innerHTML = '<option value="">All Markets</option>' + markets.map(m=>`<option value="${m.id}"${m.id===curM?' selected':''}>${m.name}</option>`).join('')
+  }
+  let outlets = (_rptFilterData.outlets || []).filter(o =>
+    (!brand  || o.brand_id  === brand) &&
+    (!market || o.market_id === (document.getElementById('dash-market')?.value||market)))
+  const oSel = document.getElementById('dash-outlet')
+  if (oSel) {
+    const curO = oSel.value
+    oSel.innerHTML = '<option value="">All Outlets</option>' + outlets.map(o=>`<option value="${o.id}"${o.id===curO?' selected':''}>${o.name}</option>`).join('')
+  }
+  autoSelectSingle('dash-brand','dash-market','dash-outlet')
 }
 
 function populateDashFilters () {
-  const countries = [...new Set((_rptFilterData.outlets||[]).map(o=>o.country).filter(Boolean))]
-  const brands    = _rptFilterData.brands || []
-  const cSel = document.getElementById('dash-country')
+  const brands = _rptFilterData.brands || []
   const bSel = document.getElementById('dash-brand')
-  if (!cSel || !bSel) return
-  const cv = cSel.value, bv = bSel.value
-  cSel.innerHTML = '<option value="">All Countries</option>' + countries.map(c=>`<option value="${c}"${c===cv?' selected':''}>${c}</option>`).join('')
+  if (!bSel) return
+  const bv = bSel.value
   bSel.innerHTML = '<option value="">All Brands</option>' + brands.map(b=>`<option value="${b.id}"${b.id===bv?' selected':''}>${b.name}</option>`).join('')
+  autoSelectSingle('dash-brand')
   cascadeDashFilters()
 }
 
@@ -3349,20 +3580,20 @@ function populateOutletSelectors () {
 }
 
 // ─── REPORTS SUB-NAV ─────────────────────────────────────────────
+const RPT_TAB_TITLES = {
+  sales: 'Sales Report', expenses: 'Expenses', cashier: 'Cashier Performance',
+  voids: 'Voids & Discounts', consumption: 'Item Consumption', wastage: 'Wastage Report',
+  devices: 'Device Activity', inventory: 'Inventory Reports', security: 'Audit & Security'
+}
 function showRptTab (tab) {
-  document.querySelectorAll('.rpt-tab').forEach(t => t.classList.remove('active'))
   document.querySelectorAll('[id^="rpt-pane-"]').forEach(p => p.style.display = 'none')
-  const tabEl = document.querySelector(`.rpt-tab[onclick*="'${tab}'"]`)
-  if (tabEl) tabEl.classList.add('active')
   const pane = document.getElementById('rpt-pane-' + tab)
   if (pane) pane.style.display = ''
   document.querySelectorAll('.nav-sub[id^="navsub-rpt-"]').forEach(s => s.classList.remove('active'))
   const subEl = document.getElementById('navsub-rpt-' + tab)
   if (subEl) subEl.classList.add('active')
-  if (tab === 'sales')     loadReport()
-  if (tab === 'ops')       loadExpReport()
-  if (tab === 'inventory') { if (typeof loadItemConsumption === 'function') loadItemConsumption() }
-  if (tab === 'security')  loadAuditLogForReport()
+  const titleEl = document.getElementById('rpt-page-title')
+  if (titleEl) titleEl.textContent = RPT_TAB_TITLES[tab] || 'Reports'
 }
 
 // ─── BRAND LOGO FILE UPLOAD ───────────────────────────────────────
@@ -3420,6 +3651,7 @@ async function cfgSaveOrderTypeModal () {
 }
 
 // ─── NAVIGATION ──────────────────────────────────────────────────
+const OUTLET_SCOPED_VIEWS = new Set(['menu','staff','config'])
 function showView (id) {
   document.querySelectorAll('.view').forEach(v => v.classList.remove('active'))
   document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'))
@@ -3427,12 +3659,14 @@ function showView (id) {
   document.getElementById('v-' + id).classList.add('active')
   const navEl = document.getElementById('nav-' + id)
   if (navEl) navEl.classList.add('active')
-  if (id === 'menu')         loadMenu()
-  if (id === 'item-editor')  {} // loaded by showItemEditor()
+  const ctxBar = document.getElementById('outlet-ctx-bar')
+  if (ctxBar) ctxBar.style.display = OUTLET_SCOPED_VIEWS.has(id) ? '' : 'none'
+  if (id === 'menu')      { document.getElementById('navg-menu')?.classList.add('open'); loadMenu() }
+  if (id === 'item-editor')  {}
   if (id === 'orders')       { setOrdersDate('today'); populateOutletSelectors(); loadOrders() }
   if (id === 'staff')        loadStaff()
   if (id === 'dashboard')    { populateOutletSelectors(); loadDashboard() }
-  if (id === 'reports')   { document.getElementById('navg-reports')?.classList.add('open'); loadRptFilterOptions(); setRptPreset('today', document.querySelector('.rpt-preset-btn')); loadReport(); loadExpReport(); showRptTab('sales') }
+  if (id === 'reports')   { document.getElementById('navg-reports')?.classList.add('open'); loadRptFilterOptions(); setRptPreset('today', document.querySelector('.rpt-preset-btn')); loadReport(); showRptTab('sales') }
   if (id === 'audit')     loadAuditLog()
   if (id === 'downloads') loadDownloadsPage()
   if (id === 'config')  { document.getElementById('navg-config').classList.add('open'); showCfgTab('brand'); cfgLoadBrands() }
@@ -3445,32 +3679,57 @@ function toggleNavGroup (id) {
   document.getElementById('navg-' + id).classList.toggle('open')
 }
 
+const OUTLET_SCOPED_CFG_TABS = new Set(['tables','order-types','payment','kitchens','designations','tax','modifier-groups','pos-layout'])
 function showConfigTab (tab) {
   document.querySelectorAll('.view').forEach(v => v.classList.remove('active'))
   document.getElementById('v-config').classList.add('active')
   document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'))
   document.getElementById('navg-config').classList.add('open')
+  const ctxBar = document.getElementById('outlet-ctx-bar')
+  if (ctxBar) ctxBar.style.display = OUTLET_SCOPED_CFG_TABS.has(tab) ? '' : 'none'
   showCfgTab(tab)
   if (document.getElementById('v-config').getBoundingClientRect)
     window.scrollTo(0, 0)
 }
 
 // ─── DASHBOARD ───────────────────────────────────────────────────
-function setDashDate (which) {
-  document.getElementById('dash-date').value = which === 'today' ? todayStr() : yesterdayStr()
+function setDashPreset (preset, btn) {
+  document.querySelectorAll('.dash-preset').forEach(b => b.classList.remove('active'))
+  if (btn) btn.classList.add('active')
+  const today = todayStr()
+  const fromEl = document.getElementById('dash-from')
+  const toEl   = document.getElementById('dash-to')
+  if (!fromEl || !toEl) return
+  const d = new Date()
+  if (preset === 'today') {
+    fromEl.value = today; toEl.value = today
+  } else if (preset === 'yesterday') {
+    const y = yesterdayStr(); fromEl.value = y; toEl.value = y
+  } else if (preset === 'this-week') {
+    const mon = new Date(d); mon.setDate(d.getDate() - ((d.getDay()+6)%7))
+    fromEl.value = mon.toISOString().split('T')[0]; toEl.value = today
+  } else if (preset === 'this-month') {
+    fromEl.value = today.slice(0,7) + '-01'; toEl.value = today
+  } else if (preset === 'last-month') {
+    const fm = new Date(d.getFullYear(), d.getMonth()-1, 1)
+    const lm = new Date(d.getFullYear(), d.getMonth(), 0)
+    fromEl.value = fm.toISOString().split('T')[0]
+    toEl.value   = lm.toISOString().split('T')[0]
+  }
 }
 
 async function loadDashboard () {
-  const date    = document.getElementById('dash-date').value || todayStr()
-  const outlet  = document.getElementById('dash-outlet')?.value  || ''
-  const brand   = document.getElementById('dash-brand')?.value   || ''
-  const country = document.getElementById('dash-country')?.value || ''
+  const from   = document.getElementById('dash-from')?.value   || todayStr()
+  const to     = document.getElementById('dash-to')?.value     || from
+  const outlet = document.getElementById('dash-outlet')?.value  || ''
+  const brand  = document.getElementById('dash-brand')?.value   || ''
+  const market = document.getElementById('dash-market')?.value  || ''
   const cur  = boSettings.currency
   try {
-    let qs = '/reports/dashboard?date=' + date
-    if (outlet)  qs += '&outlet_id=' + encodeURIComponent(outlet)
-    if (brand)   qs += '&brand_id='  + encodeURIComponent(brand)
-    if (country) qs += '&country='   + encodeURIComponent(country)
+    let qs = `/reports/dashboard?from=${from}&to=${to}`
+    if (outlet) qs += '&outlet_id=' + encodeURIComponent(outlet)
+    if (brand)  qs += '&brand_id='  + encodeURIComponent(brand)
+    if (market) qs += '&market_id=' + encodeURIComponent(market)
     const { orders, expenses: exps } = await apiFetch('GET', qs)
 
     const sales    = orders.reduce((s, o) => s + (parseFloat(o.total) || 0), 0)
@@ -3493,7 +3752,7 @@ async function loadDashboard () {
     const salesTotalEl = document.getElementById('sales-chart-total')
     if (salesTotalEl) salesTotalEl.textContent = `${cur} ${sales.toFixed(2)}`
     const periodEl = document.getElementById('sales-chart-period')
-    if (periodEl) periodEl.textContent = document.getElementById('dash-date').value || todayStr()
+    if (periodEl) { const f=document.getElementById('dash-from')?.value||todayStr(),t=document.getElementById('dash-to')?.value||f; periodEl.textContent = f===t?f:`${f} – ${t}` }
 
     // Orders by type bars (Sales Overview widget)
     document.getElementById('dash-by-type').innerHTML = barChart([
@@ -3602,6 +3861,20 @@ function barChart (items, cur) {
         <div style="height:100%;width:${item.sales/maxSales*100}%;background:${item.color};border-radius:5px;transition:.3s"></div>
       </div>
     </div>`).join('')
+}
+
+// ─── MENU TABS ────────────────────────────────────────────────────
+function showMenuTab (tab) {
+  document.querySelectorAll('.menu-tab').forEach(t => t.classList.remove('active'))
+  const tabEl = document.getElementById('menu-tab-' + tab)
+  if (tabEl) tabEl.classList.add('active')
+  document.getElementById('menu-pane-categories').style.display = tab === 'categories' ? '' : 'none'
+  document.getElementById('menu-pane-items').style.display      = tab === 'items'      ? '' : 'none'
+  document.getElementById('menu-btn-add-cat').style.display  = tab === 'categories' ? '' : 'none'
+  document.getElementById('menu-btn-add-item').style.display = tab === 'items'      ? '' : 'none'
+  document.querySelectorAll('.nav-sub[id^="navsub-menu-"]').forEach(s => s.classList.remove('active'))
+  const subEl = document.getElementById('navsub-menu-' + tab)
+  if (subEl) subEl.classList.add('active')
 }
 
 // ─── MENU MANAGEMENT ─────────────────────────────────────────────
@@ -4401,34 +4674,39 @@ async function loadRptFilterOptions () {
   try {
     const d = await apiFetch('GET', '/reports/filter-options')
     _rptFilterData = d
-    const csel = document.getElementById('rpt-country')
     const bsel = document.getElementById('rpt-brand')
-    if (csel) {
-      const prev = csel.value
-      csel.innerHTML = '<option value="">All Countries</option>' +
-        d.countries.map(c => `<option value="${c}"${c===prev?' selected':''}>${c}</option>`).join('')
-    }
     if (bsel) {
       const prev = bsel.value
       bsel.innerHTML = '<option value="">All Brands</option>' +
         d.brands.map(b => `<option value="${b.id}"${b.id===prev?' selected':''}>${b.name}</option>`).join('')
     }
+    autoSelectSingle('rpt-brand')
     cascadeRptFilters()
     populateOutletSelectors()
+    initCtxBar()
   } catch (_) {}
 }
 
 function cascadeRptFilters () {
-  const country = document.getElementById('rpt-country')?.value || ''
-  const brand   = document.getElementById('rpt-brand')?.value   || ''
-  const osel    = document.getElementById('rpt-outlet')
+  const brand  = document.getElementById('rpt-brand')?.value  || ''
+  const market = document.getElementById('rpt-market')?.value || ''
+  const msel = document.getElementById('rpt-market')
+  if (msel) {
+    const markets = (_rptFilterData.markets || []).filter(m => !brand || m.brand_id === brand)
+    const prevM = msel.value
+    msel.innerHTML = '<option value="">All Markets</option>' +
+      markets.map(m => `<option value="${m.id}"${m.id===prevM?' selected':''}>${m.name}</option>`).join('')
+    autoSelectSingle('rpt-market')
+  }
+  const osel = document.getElementById('rpt-outlet')
   if (!osel) return
   const prevOut = osel.value
   let outlets = _rptFilterData.outlets || []
-  if (country) outlets = outlets.filter(o => o.country === country)
-  if (brand)   outlets = outlets.filter(o => o.brand_id === brand)
+  if (brand)  outlets = outlets.filter(o => o.brand_id  === brand)
+  if (market) outlets = outlets.filter(o => o.market_id === market)
   osel.innerHTML = '<option value="">All Outlets</option>' +
     outlets.map(o => `<option value="${o.id}"${o.id===prevOut?' selected':''}>${o.name}</option>`).join('')
+  autoSelectSingle('rpt-outlet')
 }
 
 function setRptPreset (preset, btn) {
@@ -4488,13 +4766,13 @@ async function loadReport () {
   }
   if (!from || !to) { showToast('Select date range.','error'); return }
 
-  const country   = document.getElementById('rpt-country')?.value  || ''
-  const brand_id  = document.getElementById('rpt-brand')?.value    || ''
-  const outlet_id = document.getElementById('rpt-outlet')?.value   || ''
+  const brand_id   = document.getElementById('rpt-brand')?.value   || ''
+  const market_id  = document.getElementById('rpt-market')?.value  || ''
+  const outlet_id  = document.getElementById('rpt-outlet')?.value  || ''
 
   const params = new URLSearchParams({ from, to })
-  if (country)   params.set('country',   country)
   if (brand_id)  params.set('brand_id',  brand_id)
+  if (market_id) params.set('market_id', market_id)
   if (outlet_id) params.set('outlet_id', outlet_id)
 
   const cur = outlet_id
@@ -4776,12 +5054,8 @@ function downloadCSV (csv, filename) {
 
 // ─── REPORT TABS ──────────────────────────────────────────────────
 function switchRptTab (tab, btn) {
-  ;['sales','ops','inventory','security'].forEach(t => {
-    const el = document.getElementById('rpt-pane-' + t)
-    if (el) el.style.display = t === tab ? 'block' : 'none'
-  })
-  document.querySelectorAll('.rpt-tab').forEach(b => b.classList.remove('active'))
-  if (btn) btn.classList.add('active')
+  const MAP = { ops: 'consumption', inventory: 'inventory' }
+  showRptTab(MAP[tab] || tab)
 }
 
 function rptDateRange (fromId, toId) {
@@ -5846,7 +6120,7 @@ function showCfgTab (tab) {
   if (sub) sub.classList.add('active')
   // Load data for the tab
   const loaders = {
-    brand: cfgLoadBrands, outlet: cfgLoadOutlets,
+    brand: cfgLoadBrands, markets: cfgLoadMarkets, outlet: cfgLoadOutlets,
     tables: cfgLoadTables, 'order-types': cfgLoadOrderTypes,
     payment: cfgLoadPayment, delivery: cfgLoadDelivery,
     kitchens: cfgLoadKitchens, designations: cfgLoadDesignations, tax: cfgLoadTax,
@@ -5969,6 +6243,83 @@ async function cfgDeleteBrand (id, name) {
   } catch (e) { showToast(friendlyError(e.message), 'error') }
 }
 
+// ─── MARKETS ─────────────────────────────────────────────────────────────────
+let _marketsCache = []
+
+async function cfgLoadMarkets () {
+  try {
+    if (!_brandsCache.length) await cfgLoadBrands()
+    const { rows } = await apiFetch('GET', '/config/markets')
+    _marketsCache = rows
+    const list = document.getElementById('cfg-markets-list')
+    if (!list) return
+    if (!rows.length) {
+      list.innerHTML = `<div class="empty-state" style="padding:40px;text-align:center;color:var(--muted)">
+        <p style="margin-bottom:12px">No markets yet. Add a market to group outlets by location.</p>
+        <button class="btn" onclick="cfgOpenMarketModal(null)">+ Add Market</button></div>`
+      return
+    }
+    list.innerHTML = rows.map(r => `
+      <div class="cfg-list-item">
+        <div style="height:40px;width:40px;border-radius:8px;background:var(--primary-light,#eff6ff);display:flex;align-items:center;justify-content:center;flex-shrink:0">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10z"/></svg>
+        </div>
+        <div style="flex:1;min-width:0">
+          <div class="cfg-list-item-name">${esc(r.name)}</div>
+          <div class="cfg-list-item-sub">${[r.brand_name, r.country, r.currency_code ? r.currency_symbol + ' ' + r.currency_code : ''].filter(Boolean).join(' · ')}</div>
+        </div>
+        <button class="btn btn-sm" onclick="cfgOpenMarketModal(${JSON.stringify(r).replace(/"/g,'&quot;')})">Edit</button>
+        <button class="btn btn-sm btn-danger" style="margin-left:4px" onclick="cfgDeleteMarket('${r.id}','${esc(r.name)}')">Delete</button>
+      </div>`).join('')
+  } catch (e) { showToast(friendlyError(e.message), 'error') }
+}
+
+function cfgOpenMarketModal (market) {
+  document.getElementById('mkt-id').value      = market?.id || ''
+  document.getElementById('market-modal-title').textContent = market ? 'Edit Market' : 'Add Market'
+  document.getElementById('mkt-name').value    = market?.name || ''
+  document.getElementById('mkt-country').value = market?.country || ''
+  document.getElementById('mkt-ccode').value   = market?.currency_code || ''
+  document.getElementById('mkt-csym').value    = market?.currency_symbol || ''
+  const bSel = document.getElementById('mkt-brand')
+  bSel.innerHTML = '<option value="">-- Select Brand --</option>' +
+    _brandsCache.map(b=>`<option value="${b.id}"${b.id===market?.brand_id?' selected':''}>${esc(b.name)}</option>`).join('')
+  showModal('modal-market')
+  setTimeout(() => document.getElementById('mkt-name').focus(), 100)
+}
+
+async function cfgSaveMarketModal () {
+  const id      = document.getElementById('mkt-id').value
+  const name    = document.getElementById('mkt-name').value.trim()
+  const brand_id= document.getElementById('mkt-brand').value
+  if (!name)    { showToast('Market name is required', 'error'); return }
+  if (!brand_id){ showToast('Brand is required', 'error'); return }
+  const body = {
+    name, brand_id,
+    country:         document.getElementById('mkt-country').value.trim() || null,
+    currency_code:   document.getElementById('mkt-ccode').value.trim() || null,
+    currency_symbol: document.getElementById('mkt-csym').value.trim() || null,
+  }
+  try {
+    if (id) await apiFetch('PATCH', `/config/markets/${id}`, body)
+    else    await apiFetch('POST',  '/config/markets', body)
+    closeModal('modal-market')
+    cfgLoadMarkets()
+    await loadRptFilterOptions()
+    showToast(id ? 'Market updated' : 'Market added')
+  } catch (e) { showToast(friendlyError(e.message), 'error') }
+}
+
+async function cfgDeleteMarket (id, name) {
+  if (!confirm(`Delete market "${name}"? This cannot be undone.`)) return
+  try {
+    await apiFetch('DELETE', `/config/markets/${id}`)
+    cfgLoadMarkets()
+    await loadRptFilterOptions()
+    showToast('Market deleted')
+  } catch (e) { showToast(friendlyError(e.message), 'error') }
+}
+
 // ─── OUTLETS ─────────────────────────────────────────────────────────────────
 async function cfgLoadOutlets () {
   try {
@@ -5986,7 +6337,7 @@ async function cfgLoadOutlets () {
           <div style="height:40px;width:40px;border-radius:8px;background:var(--primary-light,#eff6ff);display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0">🏪</div>
           <div style="flex:1;min-width:0">
             <div class="cfg-list-item-name">${r.name}</div>
-            <div class="cfg-list-item-sub">${r.brand_name ? '🏷️ ' + r.brand_name + ' · ' : ''}${[r.phone, r.currency].filter(Boolean).join(' · ')}${r.address ? ' · ' + r.address.split('\n')[0] : ''}</div>
+            <div class="cfg-list-item-sub">${r.market_name ? '📍 ' + r.market_name + (r.brand_name ? ' · ' + r.brand_name : '') + ' · ' : (r.brand_name ? '🏷️ ' + r.brand_name + ' · ' : '')}${[r.phone, r.currency_code].filter(Boolean).join(' · ')}${r.address ? ' · ' + r.address.split('\n')[0] : ''}</div>
           </div>
           <button class="btn btn-sm" onclick="event.stopPropagation();cfgOpenOutletModal(${JSON.stringify(r).replace(/"/g,'&quot;')})">Edit</button>
           <button class="btn btn-sm btn-danger" style="margin-left:4px" onclick="event.stopPropagation();cfgDeleteOutlet('${r.id}','${r.name}')">Delete</button>
@@ -6001,33 +6352,53 @@ async function cfgLoadOutlets () {
 }
 
 async function cfgOpenOutletModal (outlet) {
-  // populate brand dropdown fresh each time
-  const sel = document.getElementById('outlet-brand-id')
-  sel.innerHTML = '<option value="">-- No Brand --</option>'
+  const mSel = document.getElementById('outlet-market-id')
+  const bSel = document.getElementById('outlet-brand-id')
+  mSel.innerHTML = '<option value="">-- Select Market --</option>'
+  bSel.innerHTML = '<option value="">-- No Brand --</option>'
   try {
-    const { rows } = await apiFetch('GET', '/config/brands')
-    rows.forEach(b => {
+    const [{ rows: brands }, { rows: markets }] = await Promise.all([
+      apiFetch('GET', '/config/brands'),
+      apiFetch('GET', '/config/markets'),
+    ])
+    markets.forEach(m => {
+      const opt = document.createElement('option')
+      opt.value = m.id; opt.textContent = m.name + (m.brand_name ? ' (' + m.brand_name + ')' : '')
+      if (outlet?.market_id === m.id) opt.selected = true
+      mSel.appendChild(opt)
+    })
+    brands.forEach(b => {
       const opt = document.createElement('option')
       opt.value = b.id; opt.textContent = b.name
       if (outlet?.brand_id === b.id) opt.selected = true
-      sel.appendChild(opt)
+      bSel.appendChild(opt)
     })
   } catch (_) {}
-  const CURRENCY_SYMBOLS = { MYR:'RM', SGD:'S$', IDR:'Rp', THB:'฿', PHP:'₱', AED:'د.إ', SAR:'﷼', PKR:'₨', INR:'₹', GBP:'£', USD:'$', EUR:'€' }
-  const COUNTRY_CURRENCY = { MY:'MYR', AE:'AED', SG:'SGD', ID:'IDR', TH:'THB', PH:'PHP', SA:'SAR', PK:'PKR', IN:'INR', GB:'GBP', US:'USD', EU:'EUR' }
-  document.getElementById('outlet-id').value     = outlet?.id || ''
+  document.getElementById('outlet-id').value      = outlet?.id || ''
   document.getElementById('outlet-modal-title').textContent = outlet ? 'Edit Outlet' : 'Add Outlet'
-  document.getElementById('outlet-name').value   = outlet?.name || ''
-  document.getElementById('outlet-phone').value  = outlet?.phone || ''
-  document.getElementById('outlet-email').value  = outlet?.email || ''
+  document.getElementById('outlet-name').value    = outlet?.name || ''
+  document.getElementById('outlet-phone').value   = outlet?.phone || ''
+  document.getElementById('outlet-email').value   = outlet?.email || ''
   document.getElementById('outlet-address').value = outlet?.address || ''
-  document.getElementById('outlet-open').value   = outlet?.opening_time || '09:00'
-  document.getElementById('outlet-close').value  = outlet?.closing_time || '22:00'
-  document.getElementById('outlet-country').value = outlet?.country || 'MY'
-  document.getElementById('outlet-currency').value = outlet?.currency_code || outlet?.currency || 'MYR'
-  document.getElementById('outlet-currency-symbol').value = outlet?.currency_symbol || CURRENCY_SYMBOLS[outlet?.currency_code || outlet?.currency || 'MYR'] || ''
+  document.getElementById('outlet-open').value    = outlet?.opening_time || '09:00'
+  document.getElementById('outlet-close').value   = outlet?.closing_time || '22:00'
+  document.getElementById('outlet-country').value = outlet?.country || ''
+  document.getElementById('outlet-currency').value = outlet?.currency_code || outlet?.currency || ''
+  document.getElementById('outlet-currency-symbol').value = outlet?.currency_symbol || ''
   showModal('modal-outlet')
   setTimeout(() => document.getElementById('outlet-name').focus(), 100)
+}
+
+function outletMarketChange () {
+  const marketId = document.getElementById('outlet-market-id')?.value
+  const market = _marketsCache.find(m => m.id === marketId)
+  if (market) {
+    if (market.country)         document.getElementById('outlet-country').value = market.country
+    if (market.currency_code)   document.getElementById('outlet-currency').value = market.currency_code
+    if (market.currency_symbol) document.getElementById('outlet-currency-symbol').value = market.currency_symbol
+    const bSel = document.getElementById('outlet-brand-id')
+    if (bSel && market.brand_id) bSel.value = market.brand_id
+  }
 }
 
 function outletCurrencyAutofill () {
@@ -6046,12 +6417,14 @@ function outletCurrencyAutofill () {
 }
 
 async function cfgSaveOutletModal () {
-  const id   = document.getElementById('outlet-id').value
-  const name = document.getElementById('outlet-name').value.trim()
-  if (!name) { showToast('Outlet name is required', 'error'); return }
+  const id        = document.getElementById('outlet-id').value
+  const name      = document.getElementById('outlet-name').value.trim()
+  const market_id = document.getElementById('outlet-market-id').value
+  if (!name)      { showToast('Outlet name is required', 'error'); return }
+  if (!market_id) { showToast('Market is required', 'error'); return }
   const currency_code = document.getElementById('outlet-currency').value
   const body = {
-    name,
+    name, market_id,
     brand_id:        document.getElementById('outlet-brand-id').value || null,
     phone:           document.getElementById('outlet-phone').value.trim(),
     email:           document.getElementById('outlet-email').value.trim(),
@@ -6061,7 +6434,7 @@ async function cfgSaveOutletModal () {
     country:         document.getElementById('outlet-country').value,
     currency:        currency_code,
     currency_code,
-    currency_symbol: document.getElementById('outlet-currency-symbol').value.trim() || 'RM',
+    currency_symbol: document.getElementById('outlet-currency-symbol').value.trim() || '$',
   }
   try {
     id ? await apiFetch('PATCH', '/config/outlets/' + id, body)
