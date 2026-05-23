@@ -3296,7 +3296,9 @@ async function loadReport () {
   if (brand_id)  params.set('brand_id',  brand_id)
   if (outlet_id) params.set('outlet_id', outlet_id)
 
-  const cur = boSettings.currency
+  const cur = outlet_id
+    ? (_rptFilterData?.outlets?.find(o => o.id === outlet_id)?.currency_symbol || boSettings.currency)
+    : boSettings.currency
   try {
     const { orders, expenses: exps } = await apiFetch('GET', `/reports?${params}`)
 
