@@ -61,12 +61,12 @@ module.exports = function signupRouter (sql) {
           ${boUsername}, ${boPassEnc}
         )`
 
-      // Create bo_users entry so owner can login to Back Office
+      // Create bo_users entry — account creator is always 'owner' (role-protected)
       const boUserId = id.toLowerCase() + '-bo'
       await sql`
         INSERT INTO bo_users (id, username, password, role, restaurant_id)
-        VALUES (${boUserId}, ${boUsername}, ${boPassHash}, 'admin', ${id})
-        ON CONFLICT (username) DO UPDATE SET restaurant_id = EXCLUDED.restaurant_id`
+        VALUES (${boUserId}, ${boUsername}, ${boPassHash}, 'owner', ${id})
+        ON CONFLICT (username) DO UPDATE SET restaurant_id = EXCLUDED.restaurant_id, role = 'owner'`
 
       res.json({
         ok: true,

@@ -177,9 +177,9 @@ module.exports = function authRouter (sql) {
 
       await sql`
         INSERT INTO bo_users (id, restaurant_id, username, password, email, role)
-        VALUES (${uid}, ${id}, ${username}, ${hash}, ${email.toLowerCase()}, 'admin')`
+        VALUES (${uid}, ${id}, ${username}, ${hash}, ${email.toLowerCase()}, 'owner')`
 
-      const token = sign({ id: uid, username, role: 'admin', restaurant_id: id, email: email.toLowerCase() })
+      const token = sign({ id: uid, username, role: 'owner', restaurant_id: id, email: email.toLowerCase() })
       let owner_name = null
       if (id) {
         try {
@@ -187,7 +187,7 @@ module.exports = function authRouter (sql) {
           owner_name = r?.owner_name || null
         } catch (_) {}
       }
-      res.json({ ok: true, token, user: { id: uid, username, role: 'admin', restaurant_id: id, email: email.toLowerCase(), owner_name }, trialEndsAt: trialEnds })
+      res.json({ ok: true, token, user: { id: uid, username, role: 'owner', restaurant_id: id, email: email.toLowerCase(), owner_name }, trialEndsAt: trialEnds })
     } catch (e) {
       res.status(500).json({ error: e.message })
     }
@@ -247,9 +247,9 @@ module.exports = function authRouter (sql) {
 
       await sql`
         INSERT INTO bo_users (id, restaurant_id, username, password, email, google_id, role)
-        VALUES (${uid}, ${id}, ${username}, '', ${email}, ${googleId}, 'admin')`
+        VALUES (${uid}, ${id}, ${username}, '', ${email}, ${googleId}, 'owner')`
 
-      const token = sign({ id: uid, username, role: 'admin', restaurant_id: id, email })
+      const token = sign({ id: uid, username, role: 'owner', restaurant_id: id, email })
       let owner_name = null
       if (id) {
         try {
@@ -257,7 +257,7 @@ module.exports = function authRouter (sql) {
           owner_name = r?.owner_name || null
         } catch (_) {}
       }
-      res.json({ ok: true, token, user: { id: uid, username, role: 'admin', restaurant_id: id, email, owner_name }, trialEndsAt: trialEnds })
+      res.json({ ok: true, token, user: { id: uid, username, role: 'owner', restaurant_id: id, email, owner_name }, trialEndsAt: trialEnds })
     } catch (e) {
       res.status(500).json({ error: e.message })
     }

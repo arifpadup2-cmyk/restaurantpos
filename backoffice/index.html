@@ -392,6 +392,7 @@ input:checked+.toggle-slider:before{transform:translateX(17px)}
 .cfg-list-item-sub{font-size:11px;color:var(--muted)}
 .cfg-badge{padding:2px 8px;border-radius:10px;font-size:11px;font-weight:600}
 .cfg-badge-green{background:#dcfce7;color:#16a34a}
+.cfg-badge-blue{background:#eff6ff;color:#1d4ed8}
 .cfg-badge-gray{background:#f1f5f9;color:#94a3b8}
 /* Toggle switch */
 .cfg-toggle{position:relative;width:38px;height:22px;flex-shrink:0}
@@ -405,6 +406,20 @@ input:checked+.toggle-slider:before{transform:translateX(17px)}
 .perm-item{display:flex;align-items:center;gap:8px;padding:8px 10px;border:1px solid var(--border);border-radius:8px;font-size:12px;font-weight:500;color:var(--text);cursor:pointer;transition:.12s}
 .perm-item:hover{border-color:var(--primary);background:#fafbff}
 .perm-item input{accent-color:var(--primary);width:15px;height:15px;cursor:pointer;flex-shrink:0}
+/* Designation permission modal */
+.des-perm-sec{padding:12px 16px 10px;border-bottom:1px solid var(--border)}
+.des-perm-sec:last-child{border-bottom:none}
+.des-perm-sec-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
+.des-perm-sec-title{font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.5px;color:var(--muted)}
+.des-perm-sec-all{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--muted);cursor:pointer}
+.des-perm-sec-all input{accent-color:var(--primary);cursor:pointer}
+.des-perm-grid{display:grid;grid-template-columns:1fr 1fr;gap:5px}
+.des-perm-row{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:8px 10px;border-radius:8px;border:1.5px solid var(--border);background:#fff;transition:.12s}
+.des-perm-row:hover{border-color:var(--primary);background:#fff8f3}
+.des-perm-lbl{font-size:12px;font-weight:600;color:var(--text)}
+.des-perm-hint{font-size:10px;color:var(--muted);margin-top:1px;line-height:1.3}
+.des-owner-badge{display:inline-flex;align-items:center;gap:5px;background:#fef3c7;color:#92400e;border:1px solid #fde68a;border-radius:20px;padding:2px 10px;font-size:11px;font-weight:700}
+@media(max-width:600px){.des-perm-grid{grid-template-columns:1fr}}
 /* Color dot */
 .cfg-color-dot{width:16px;height:16px;border-radius:50%;flex-shrink:0;border:2px solid rgba(0,0,0,.1)}
 /* ─── TOAST ──────────────────────────────────────── */
@@ -1993,6 +2008,38 @@ input:checked+.toggle-slider:before{transform:translateX(17px)}
   </div>
 </div>
 
+<!-- Designation Modal -->
+<div class="modal-overlay" id="modal-designation">
+  <div class="modal" style="min-width:580px;max-width:680px;max-height:90vh;display:flex;flex-direction:column;padding:22px 22px 18px">
+    <h3 id="des-modal-title" style="margin-bottom:14px">Add Designation</h3>
+    <input type="hidden" id="des-id">
+    <div style="display:flex;gap:12px;margin-bottom:12px">
+      <div class="form-group" style="flex:1;margin:0">
+        <label>Designation Name *</label>
+        <input id="des-name" type="text" placeholder="e.g. Cashier, Supervisor, Manager">
+      </div>
+      <div class="form-group" style="width:175px;margin:0">
+        <label>Access Level</label>
+        <select id="des-level">
+          <option value="1">1 — Basic</option>
+          <option value="2">2 — Supervisor</option>
+          <option value="3">3 — Manager</option>
+          <option value="4">4 — Admin</option>
+        </select>
+      </div>
+    </div>
+    <div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;margin-bottom:6px">Permissions</div>
+    <div id="des-perm-body" style="overflow-y:auto;flex:1;border:1.5px solid var(--border);border-radius:10px;min-height:0"></div>
+    <div class="modal-footer" style="padding-top:14px;margin-top:0">
+      <button class="btn btn-outline" onclick="closeModal('modal-designation')">Cancel</button>
+      <button class="btn btn-primary" onclick="cfgSaveDesignation()">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+        Save Designation
+      </button>
+    </div>
+  </div>
+</div>
+
 <!-- Delivery Partner Modal -->
 <div class="modal-overlay" id="modal-delivery">
   <div class="modal" style="min-width:400px;max-width:480px">
@@ -2559,7 +2606,8 @@ function updateSidebarUser () {
   const displayEl = document.getElementById('hdr-user-display')
   const initial   = displayName[0]?.toUpperCase() || 'A'
   if (nameEl)    nameEl.textContent    = displayName
-  if (roleEl)    roleEl.textContent    = currentUser.role || 'staff'
+  const roleMap = { owner: 'Owner', admin: 'Admin', manager: 'Manager', staff: 'Staff' }
+  if (roleEl)    roleEl.textContent    = roleMap[currentUser.role] || currentUser.role || 'Staff'
   if (avatarEl)  avatarEl.textContent  = initial
   if (avatarSm)  avatarSm.textContent  = initial
   if (displayEl) displayEl.textContent = displayName
@@ -4403,18 +4451,51 @@ function stopLiveRefresh () {
 }
 
 // ─── CONFIGURATION ───────────────────────────────────────────────────────────
-const PERM_LABELS = {
-  can_void_order:          'Void Order',
-  can_apply_discount:      'Apply Discount',
-  can_close_shift:         'Close Shift',
-  can_view_reports:        'View Reports',
-  can_manage_tables:       'Manage Tables',
-  can_process_refund:      'Process Refund',
-  can_override_price:      'Override Price',
-  can_delete_order_item:   'Delete Order Item',
-  can_access_cashier_report:'Cashier Report',
-  can_open_cash_drawer:    'Open Cash Drawer',
-}
+const PERM_SECTIONS = [
+  { s: 'Order Management', items: [
+    { key: 'can_void_order',            label: 'Void Order',              hint: 'Void a completed or active order' },
+    { key: 'can_cancel_order',          label: 'Cancel Order',            hint: 'Cancel an order before payment' },
+    { key: 'can_delete_order_item',     label: 'Delete Order Item',       hint: 'Remove items from an active order' },
+    { key: 'can_comp_item',             label: 'Complimentary Item',      hint: 'Mark items as free / comp' },
+    { key: 'can_hold_order',            label: 'Hold Order',              hint: 'Save an order to recall later' },
+    { key: 'can_recall_order',          label: 'Recall Order',            hint: 'Reopen held / saved orders' },
+    { key: 'can_edit_order_note',       label: 'Edit Order Note',         hint: 'Add or change order instructions' },
+  ]},
+  { s: 'Pricing & Discounts', items: [
+    { key: 'can_apply_discount',        label: 'Apply Discount',          hint: 'Apply discounts to orders' },
+    { key: 'can_override_price',        label: 'Override Item Price',     hint: 'Change the price of individual items' },
+    { key: 'can_modify_service_charge', label: 'Modify Service Charge',   hint: 'Change the service charge rate' },
+  ]},
+  { s: 'Payments & Cash', items: [
+    { key: 'can_open_cash_drawer',      label: 'Open Cash Drawer',        hint: 'Open the cash drawer manually' },
+    { key: 'can_process_refund',        label: 'Process Refund',          hint: 'Issue refunds to customers' },
+    { key: 'can_split_payment',         label: 'Split Payment',           hint: 'Split bill across two methods' },
+    { key: 'can_no_sale',               label: 'No Sale',                 hint: 'Open cash drawer without a transaction' },
+  ]},
+  { s: 'Tables & Operations', items: [
+    { key: 'can_manage_tables',         label: 'Manage Tables',           hint: 'Assign and manage tables for orders' },
+    { key: 'can_transfer_table',        label: 'Transfer Table',          hint: 'Move an order to a different table' },
+    { key: 'can_assign_waiter',         label: 'Assign Waiter / Captain', hint: 'Assign a waiter or captain to an order' },
+  ]},
+  { s: 'Shift & Day Closing', items: [
+    { key: 'can_close_shift',           label: 'Close Shift',             hint: 'End the current cashier shift' },
+    { key: 'can_close_day',             label: 'Day Closing',             hint: 'Perform end-of-day closing' },
+    { key: 'can_record_expense',        label: 'Record Expense',          hint: 'Log business expenses in the system' },
+  ]},
+  { s: 'Reports & Audit', items: [
+    { key: 'can_view_reports',          label: 'View Reports',            hint: 'View sales and analytics reports' },
+    { key: 'can_access_cashier_report', label: 'Cashier Performance',     hint: 'View individual cashier reports' },
+    { key: 'can_view_audit_log',        label: 'View Audit Log',          hint: 'Access audit and activity logs' },
+    { key: 'can_view_void_report',      label: 'Void / Discount Report',  hint: 'View void and discount history' },
+  ]},
+  { s: 'Staff & Administration', items: [
+    { key: 'can_manage_staff',          label: 'Manage Staff',            hint: 'Add, edit, and remove staff members' },
+    { key: 'can_manage_menu',           label: 'Manage Menu',             hint: 'Add/edit menu items and categories' },
+    { key: 'can_manage_config',         label: 'Manage Configuration',    hint: 'Change restaurant settings and config' },
+    { key: 'can_access_back_office',    label: 'Back Office Access',      hint: 'Login and use the back office' },
+  ]},
+]
+const PERM_LABELS = Object.fromEntries(PERM_SECTIONS.flatMap(s => s.items.map(p => [p.key, p.label])))
 
 function showCfgTab (tab) {
   document.querySelectorAll('.cfg-section').forEach(s => s.classList.remove('active'))
@@ -4961,58 +5042,120 @@ function cfgEditKitchen (id, name, color) {
 }
 
 // ─── DESIGNATIONS ─────────────────────────────────────────────────────────────
-const PERM_KEYS = Object.keys(PERM_LABELS)
+const LEVEL_NAMES = { 1: 'Basic', 2: 'Supervisor', 3: 'Manager', 4: 'Admin' }
+
+function renderDesPermBody (perms) {
+  return PERM_SECTIONS.map(sec => {
+    const allChecked = sec.items.every(p => perms[p.key])
+    const rows = sec.items.map(p => `
+      <div class="des-perm-row">
+        <div>
+          <div class="des-perm-lbl">${p.label}</div>
+          <div class="des-perm-hint">${p.hint}</div>
+        </div>
+        <label class="cfg-toggle" title="${p.hint}">
+          <input type="checkbox" data-pkey="${p.key}" ${perms[p.key] ? 'checked' : ''}>
+          <span class="cfg-toggle-slider"></span>
+        </label>
+      </div>`).join('')
+    return `<div class="des-perm-sec">
+      <div class="des-perm-sec-hdr">
+        <span class="des-perm-sec-title">${sec.s}</span>
+        <label class="des-perm-sec-all">
+          <input type="checkbox" ${allChecked ? 'checked' : ''} onchange="desToggleSection('${sec.s}',this.checked)">
+          Select All
+        </label>
+      </div>
+      <div class="des-perm-grid">${rows}</div>
+    </div>`
+  }).join('')
+}
+
+function desToggleSection (sName, checked) {
+  const sec = PERM_SECTIONS.find(s => s.s === sName)
+  if (!sec) return
+  const body = document.getElementById('des-perm-body')
+  sec.items.forEach(p => {
+    const cb = body.querySelector(`input[data-pkey="${p.key}"]`)
+    if (cb) cb.checked = checked
+  })
+}
 
 async function cfgLoadDesignations () {
   try {
     const { rows } = await apiFetch('GET', '/config/designations')
-    const levels = { 1: 'Basic', 2: 'Supervisor', 3: 'Manager', 4: 'Admin' }
+    const totalPerms = PERM_SECTIONS.reduce((a, s) => a + s.items.length, 0)
     document.getElementById('cfg-des-list').innerHTML = rows.map(r => {
       const perms = r.permissions || {}
-      const activePerms = PERM_KEYS.filter(k => perms[k]).map(k => PERM_LABELS[k])
+      const enabled = Object.keys(perms).filter(k => perms[k])
+      const secSummary = PERM_SECTIONS.map(s => {
+        const n = s.items.filter(p => perms[p.key]).length
+        return n ? `<span class="cfg-badge cfg-badge-blue" style="font-size:10px">${s.s.split(' ')[0]}: ${n}</span>` : ''
+      }).filter(Boolean).join('')
+      const isOwner = r.access_level >= 99
       return `
       <div class="cfg-card" style="margin-bottom:12px">
         <div class="cfg-card-hdr">
-          <div>
-            <div class="cfg-card-title">${r.name}</div>
-            <div class="cfg-card-sub">Level ${r.access_level} — ${levels[r.access_level]||'Custom'}</div>
+          <div style="display:flex;align-items:center;gap:10px">
+            <div>
+              <div class="cfg-card-title" style="display:flex;align-items:center;gap:8px">
+                ${r.name}
+                ${isOwner ? '<span class="des-owner-badge">⭐ Owner</span>' : `<span class="cfg-badge" style="background:#eff6ff;color:#1d4ed8;font-size:10px">Level ${r.access_level} — ${LEVEL_NAMES[r.access_level]||'Custom'}</span>`}
+              </div>
+              <div class="cfg-card-sub" style="margin-top:3px">${enabled.length} of ${totalPerms} permissions active</div>
+            </div>
           </div>
           <div style="display:flex;gap:8px">
-            <button class="btn btn-sm" onclick="cfgEditDesignation('${r.id}','${r.name}',${r.access_level},${JSON.stringify(r.permissions||{}).replace(/"/g,'&quot;')})">Edit Permissions</button>
-            <button class="btn btn-sm btn-danger" onclick="cfgDeleteItem('/config/designations','${r.id}',cfgLoadDesignations)">Delete</button>
+            ${isOwner ? '<span style="font-size:12px;color:var(--muted)">Protected</span>' : `
+            <button class="btn btn-sm" onclick="cfgEditDesignation('${r.id}','${r.name}',${r.access_level},${JSON.stringify(r.permissions||{}).replace(/"/g,'&quot;')})">Edit</button>
+            <button class="btn btn-sm btn-danger" onclick="cfgDeleteItem('/config/designations','${r.id}',cfgLoadDesignations)">✕</button>`}
           </div>
         </div>
-        <div class="cfg-card-body">
-          <div style="display:flex;flex-wrap:wrap;gap:6px">
-            ${activePerms.length ? activePerms.map(p => `<span class="cfg-badge cfg-badge-green">${p}</span>`).join('') : '<span style="font-size:12px;color:var(--muted)">No special permissions</span>'}
-          </div>
-        </div>
+        ${enabled.length ? `<div class="cfg-card-body" style="padding-top:6px;display:flex;flex-wrap:wrap;gap:5px">${secSummary}</div>` : ''}
       </div>`
-    }).join('') || '<div class="empty-state"><p>No designations. Click + Add Designation.</p></div>'
+    }).join('') || '<div class="empty-state"><p>No designations yet. Click + Add Designation.</p></div>'
   } catch (e) { showToast(friendlyError(e.message), 'error') }
 }
 
 function cfgAddDesignation () {
-  const name = prompt('Designation name (e.g. Cashier, Supervisor):')
-  if (!name) return
-  const level = prompt('Access level (1=Basic, 2=Supervisor, 3=Manager, 4=Admin):') || '1'
-  apiFetch('POST', '/config/designations', { name, access_level: parseInt(level), permissions: {} })
-    .then(() => { showToast('Added', 'success'); cfgLoadDesignations() })
-    .catch(e => showToast(friendlyError(e.message), 'error'))
+  document.getElementById('des-id').value   = ''
+  document.getElementById('des-name').value = ''
+  document.getElementById('des-level').value = '1'
+  document.getElementById('des-perm-body').innerHTML = renderDesPermBody({})
+  document.getElementById('des-modal-title').textContent = 'Add Designation'
+  showModal('modal-designation')
 }
 
 function cfgEditDesignation (id, name, level, permsJson) {
   let perms = {}
   try { perms = typeof permsJson === 'string' ? JSON.parse(permsJson) : permsJson } catch {}
-  // Build permission editor modal via prompt (simple approach)
-  const lines = PERM_KEYS.map(k => `${perms[k] ? '[x]' : '[ ]'} ${PERM_LABELS[k]} (${k})`).join('\n')
-  const input = prompt(`Permissions for "${name}"\nType comma-separated keys to ENABLE (clear to disable all):\n\nAvailable:\n${lines}\n\nCurrently enabled: ${PERM_KEYS.filter(k=>perms[k]).join(', ')||'none'}`)
-  if (input === null) return
-  const newPerms = {}
-  input.split(',').map(s => s.trim()).filter(Boolean).forEach(k => { if (PERM_LABELS[k]) newPerms[k] = true })
-  apiFetch('PATCH', '/config/designations/' + id, { permissions: newPerms })
-    .then(() => { showToast('Permissions saved', 'success'); cfgLoadDesignations() })
-    .catch(e => showToast(friendlyError(e.message), 'error'))
+  document.getElementById('des-id').value    = id
+  document.getElementById('des-name').value  = name
+  document.getElementById('des-level').value = String(level)
+  document.getElementById('des-perm-body').innerHTML = renderDesPermBody(perms)
+  document.getElementById('des-modal-title').textContent = `Edit — ${name}`
+  showModal('modal-designation')
+}
+
+async function cfgSaveDesignation () {
+  const id    = document.getElementById('des-id').value.trim()
+  const name  = document.getElementById('des-name').value.trim()
+  const level = parseInt(document.getElementById('des-level').value) || 1
+  if (!name) { showToast('Designation name is required', 'error'); return }
+  const perms = {}
+  document.querySelectorAll('#des-perm-body input[data-pkey]').forEach(cb => {
+    if (cb.checked) perms[cb.dataset.pkey] = true
+  })
+  try {
+    if (id) {
+      await apiFetch('PATCH', '/config/designations/' + id, { name, access_level: level, permissions: perms })
+    } else {
+      await apiFetch('POST', '/config/designations', { name, access_level: level, permissions: perms })
+    }
+    closeModal('modal-designation')
+    showToast(id ? 'Designation updated' : 'Designation added', 'success')
+    cfgLoadDesignations()
+  } catch (e) { showToast(friendlyError(e.message), 'error') }
 }
 
 // ─── TAX GROUPS ──────────────────────────────────────────────────────────────
