@@ -524,6 +524,41 @@ input:checked+.toggle-slider:before{transform:translateX(17px)}
 .recent-amt{font-size:11px;font-weight:700;color:#4ade80}
 .live-footer{padding:7px 14px;background:#0a1020;display:flex;align-items:center;gap:8px;font-size:10px;color:#334155;flex-shrink:0;border-top:1px solid rgba(255,255,255,.05)}
 
+/* ─── KITCHEN KDS VIEW ──────────────────────────────────── */
+#v-kds{padding:0;background:#0f172a;min-height:calc(100vh - var(--hdr-h));max-width:none!important}
+#v-kds.active{display:block}
+.kds-wrap{display:flex;flex-direction:column;height:calc(100vh - var(--hdr-h));overflow:hidden}
+.kds-topbar{display:flex;align-items:center;gap:10px;padding:10px 16px;background:#1e293b;border-bottom:1px solid rgba(255,255,255,.07);flex-shrink:0;overflow-x:auto}
+.kds-badge{font-size:9px;font-weight:700;padding:2px 8px;border-radius:5px;background:rgba(239,68,68,.15);color:#f87171;letter-spacing:.4px;text-transform:uppercase}
+.kds-grid{flex:1;overflow-y:auto;padding:12px;display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:10px;align-content:start}
+.kds-grid::-webkit-scrollbar{width:6px}.kds-grid::-webkit-scrollbar-track{background:transparent}.kds-grid::-webkit-scrollbar-thumb{background:rgba(255,255,255,.1);border-radius:4px}
+.kds-card{background:#1e293b;border:1.5px solid rgba(255,255,255,.07);border-radius:12px;padding:12px 14px;position:relative}
+.kds-card.kds-urgent{border-color:rgba(239,68,68,.5);background:#1f1215}
+.kds-card.kds-warn{border-color:rgba(251,191,36,.4);background:#1a1a0f}
+.kds-card-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
+.kds-order-num{font-size:13px;font-weight:800;color:#f97316}
+.kds-delay-badge{font-size:9px;font-weight:700;padding:2px 8px;border-radius:5px;text-transform:uppercase;letter-spacing:.3px}
+.kds-delay-red{background:rgba(239,68,68,.2);color:#f87171}
+.kds-delay-yellow{background:rgba(251,191,36,.15);color:#fbbf24}
+.kds-card-meta{display:flex;align-items:center;gap:6px;margin-bottom:10px;flex-wrap:wrap}
+.kds-staff{font-size:10px;color:#475569;display:flex;align-items:center;gap:3px;margin-bottom:6px}
+.kds-items-hdr{display:flex;align-items:center;justify-content:space-between;font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:#334155;margin-bottom:6px;padding-bottom:4px;border-bottom:1px solid rgba(255,255,255,.05)}
+.kds-item{display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:1px solid rgba(255,255,255,.03)}
+.kds-item:last-child{border-bottom:none}
+.kds-item-qty{font-size:12px;font-weight:700;color:#e2e8f0;min-width:20px;text-align:center}
+.kds-item-name{flex:1;font-size:12px;color:#94a3b8}
+.kds-item-done .kds-item-name{text-decoration:line-through;opacity:.4}
+.kds-item-status{width:16px;height:16px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center}
+.kds-item-status.done{background:rgba(34,197,94,.2)}
+.kds-item-status.pending{background:rgba(100,116,139,.15)}
+.kds-item-notes{font-size:10px;color:#f97316;padding:2px 0 4px 28px;font-style:italic}
+.kds-card-foot{display:flex;align-items:center;justify-content:space-between;margin-top:8px;padding-top:6px;border-top:1px solid rgba(255,255,255,.05)}
+.kds-progress{height:4px;background:rgba(255,255,255,.06);border-radius:4px;overflow:hidden;flex:1;margin:0 10px}
+.kds-progress-fill{height:100%;border-radius:4px;transition:width .4s ease}
+.kds-done-lbl{font-size:10px;color:#475569;white-space:nowrap}
+.kds-footer{padding:7px 16px;background:#0a1020;display:flex;align-items:center;gap:8px;font-size:10px;color:#334155;flex-shrink:0;border-top:1px solid rgba(255,255,255,.05)}
+.kds-empty{display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;gap:12px;color:#334155}
+.kds-empty svg{opacity:.3}
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms !important;transition-duration:.01ms !important}}
 @media print{#sidebar,#top-header,.page-header button,.filter-bar,.btn{display:none !important}#main-wrap{margin-left:0 !important}.card{border:1px solid #ccc;box-shadow:none}}
 
@@ -737,6 +772,10 @@ input:checked+.toggle-slider:before{transform:translateX(17px)}
       <div class="nav-item" id="nav-live" onclick="showView('live')" role="button" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' ')showView('live')">
         <svg class="ni-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="9" rx="1"/><rect x="14" y="3" width="7" height="5" rx="1"/><rect x="14" y="12" width="7" height="9" rx="1"/><rect x="3" y="16" width="7" height="5" rx="1"/></svg>
         <span>Live Orders</span>
+      </div>
+      <div class="nav-item" id="nav-kds" onclick="showView('kds')" role="button" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' ')showView('kds')">
+        <svg class="ni-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+        <span>Kitchen View</span>
       </div>
       <div class="nav-item" id="nav-orders" onclick="showView('orders')" role="button" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' ')showView('orders')">
         <svg class="ni-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
@@ -1454,9 +1493,19 @@ input:checked+.toggle-slider:before{transform:translateX(17px)}
           All data lives in PostgreSQL on this server PC. POS terminals are just clients — if a terminal breaks, install on a new PC and connect.<br><br>
           <b>If the server PC is damaged:</b> restore PostgreSQL on a new PC, then restore from backup below. All data recovered instantly.
         </p>
-        <div style="display:flex;gap:12px;flex-wrap:wrap">
-          <button class="btn btn-primary" onclick="downloadBackup()"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> Download Full Backup (.json)</button>
+        <div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:14px">
+          <button class="btn btn-primary" onclick="downloadBackup()"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> Download Full System Backup</button>
           <button class="btn btn-outline" id="btn-schedule-backup" onclick="toggleScheduledBackup()"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> Auto Backup: <span id="auto-backup-status">OFF</span></button>
+        </div>
+        <div style="padding:12px;background:#f8fafc;border-radius:8px;border:1px solid #e2e8f0">
+          <div style="font-size:12px;font-weight:700;color:#374151;margin-bottom:8px">Per-Outlet Backup</div>
+          <p style="font-size:12px;color:#64748b;margin-bottom:10px">Download backup scoped to a single outlet — includes only that outlet's orders &amp; items. Shared data (menu, staff, settings) included for context.</p>
+          <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+            <select id="backup-outlet-sel" style="padding:6px 10px;border:1.5px solid #d1d5db;border-radius:7px;font-size:12px;color:#374151;background:#fff;min-width:180px">
+              <option value="">— Select Outlet —</option>
+            </select>
+            <button class="btn btn-outline btn-sm" onclick="downloadOutletBackup()"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> Download Outlet Backup</button>
+          </div>
         </div>
         <div style="margin-top:12px;font-size:12px;color:#94a3b8" id="last-backup-info"></div>
         <div style="margin-top:16px;padding:14px;background:#fef3c7;border-radius:8px;font-size:12px;color:#92400e">
@@ -1679,6 +1728,54 @@ input:checked+.toggle-slider:before{transform:translateX(17px)}
             <span>Auto-refresh every 30s</span>
           </div>
         </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── KITCHEN KDS VIEW (read-only) ── -->
+  <div class="view" id="v-kds" style="padding:0;max-width:none">
+    <div class="kds-wrap">
+      <!-- Stats bar -->
+      <div class="kds-topbar">
+        <div class="ls-chip">
+          <div class="ls-chip-icon" style="background:rgba(59,130,246,.2)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#60a5fa" stroke-width="2.5"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></div>
+          <div><div class="ls-chip-val" id="kds-total-orders">0</div><div class="ls-chip-lbl">Orders in Kitchen</div></div>
+        </div>
+        <div class="ls-chip">
+          <div class="ls-chip-icon" style="background:rgba(249,115,22,.2)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fb923c" stroke-width="2.5"><path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 002-2V2"/><path d="M7 2v20"/><path d="M21 15V2a5 5 0 00-5 5v6c0 1.1.9 2 2 2h3zm0 0v7"/></svg></div>
+          <div><div class="ls-chip-val" id="kds-total-items">0</div><div class="ls-chip-lbl">Total Items</div></div>
+        </div>
+        <div class="ls-chip">
+          <div class="ls-chip-icon" style="background:rgba(34,197,94,.2)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#4ade80" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg></div>
+          <div><div class="ls-chip-val" id="kds-done-items">0</div><div class="ls-chip-lbl">Items Done</div></div>
+        </div>
+        <div class="ls-chip">
+          <div class="ls-chip-icon" style="background:rgba(251,191,36,.2)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fbbf24" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div>
+          <div><div class="ls-chip-val" id="kds-warn-count" style="color:#fbbf24">0</div><div class="ls-chip-lbl">Delayed &gt;10m</div></div>
+        </div>
+        <div class="ls-chip">
+          <div class="ls-chip-icon" style="background:rgba(239,68,68,.2)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#f87171" stroke-width="2.5"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></div>
+          <div><div class="ls-chip-val" id="kds-urgent-count" style="color:#f87171">0</div><div class="ls-chip-lbl">Urgent &gt;20m</div></div>
+        </div>
+        <div class="ls-chip">
+          <div class="ls-chip-icon" style="background:rgba(100,116,139,.2)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2.5"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg></div>
+          <div><div class="ls-chip-val" id="kds-completion-pct">0%</div><div class="ls-chip-lbl">Completion</div></div>
+        </div>
+        <div class="ls-spacer"></div>
+        <span class="kds-badge">View Only</span>
+        <div class="ls-refresh-chip">
+          <div class="ls-pulse" id="kds-pulse-dot"></div>
+          <span id="kds-last-update">—</span>
+        </div>
+        <button class="btn btn-outline btn-sm" style="background:rgba(255,255,255,.06);border-color:rgba(255,255,255,.1);color:#94a3b8" onclick="loadKdsView()">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 11-2.12-9.36L23 10"/></svg> Refresh
+        </button>
+      </div>
+      <!-- Order grid -->
+      <div class="kds-grid" id="kds-grid"></div>
+      <div class="kds-footer">
+        <div class="ls-pulse" style="width:6px;height:6px;border-radius:50%;background:#22c55e;animation:ls-pulse 2s infinite"></div>
+        <span>Auto-refresh every 30s &nbsp;·&nbsp; Read-only kitchen performance view</span>
       </div>
     </div>
   </div>
@@ -2654,6 +2751,7 @@ async function initApp () {
 const GSEARCH_INDEX = [
   { label:'Dashboard',         section:'Main',          icon:'📊', action:()=>showView('dashboard') },
   { label:'Live Orders',       section:'Main',          icon:'🔴', action:()=>showView('live') },
+  { label:'Kitchen View',      section:'Main',          icon:'📺', action:()=>showView('kds') },
   { label:'Orders History',    section:'Main',          icon:'📋', action:()=>showView('orders') },
   { label:'Menu',              section:'Main',          icon:'🍽️', action:()=>showView('menu') },
   { label:'Reports',           section:'Main',          icon:'📈', action:()=>showView('reports') },
@@ -2811,8 +2909,8 @@ function showView (id) {
   if (id === 'audit')     loadAuditLog()
   if (id === 'downloads') loadDownloadsPage()
   if (id === 'config')  { document.getElementById('navg-config').classList.add('open'); showCfgTab('brand'); cfgLoadBrands() }
-  if (id === 'live')      { loadLiveOrders(); startLiveRefresh() }
-  else                      stopLiveRefresh()
+  if (id === 'live') { loadLiveOrders(); startLiveRefresh() } else stopLiveRefresh()
+  if (id === 'kds')  { loadKdsView();   startKdsRefresh()  } else stopKdsRefresh()
 }
 
 function toggleNavGroup (id) {
@@ -3906,14 +4004,41 @@ async function clearTransactionData () {
 async function loadDownloadsPage () {
   loadServerInfo()
   loadInstallerFiles()
-  // Set web app links using current origin
+  loadBackupOutlets()
   const base = window.location.origin
   document.getElementById('link-waiter').href = base + '/waiter-app/'
   document.getElementById('link-kds').href    = base + '/kds/'
   document.getElementById('link-bo').href     = base + '/backoffice/'
-  // Check last backup from localStorage
   const last = localStorage.getItem('pos_last_backup')
   if (last) document.getElementById('last-backup-info').textContent = 'Last backup: ' + new Date(last).toLocaleString()
+}
+
+async function loadBackupOutlets () {
+  try {
+    const { outlets } = await apiFetch('GET', '/config/outlets')
+    const sel = document.getElementById('backup-outlet-sel')
+    if (!sel) return
+    sel.innerHTML = '<option value="">— Select Outlet —</option>' +
+      (outlets || []).map(o => `<option value="${o.id}">${o.name}${o.brand_name ? ' ('+o.brand_name+')' : ''}</option>`).join('')
+  } catch (_) {}
+}
+
+async function downloadOutletBackup () {
+  const sel = document.getElementById('backup-outlet-sel')
+  const outlet_id = sel?.value
+  if (!outlet_id) { showToast('Select an outlet first','warning'); return }
+  try {
+    const tkn  = localStorage.getItem('bo_token')
+    const resp = await fetch('/downloads/backup?outlet_id=' + encodeURIComponent(outlet_id), { headers: { Authorization: 'Bearer ' + tkn } })
+    if (!resp.ok) { const e = await resp.json(); throw new Error(e.error || resp.statusText) }
+    const blob     = await resp.blob()
+    const filename = resp.headers.get('content-disposition')?.match(/filename="(.+)"/)?.[1] || 'outlet-backup.json'
+    const url      = URL.createObjectURL(blob)
+    const a        = document.createElement('a')
+    a.href = url; a.download = filename; a.click()
+    URL.revokeObjectURL(url)
+    showToast('Outlet backup downloaded','success')
+  } catch (e) { showToast('Backup failed: ' + e.message,'error') }
 }
 
 async function loadServerInfo () {
@@ -4366,14 +4491,14 @@ function renderOrderCard (order, status) {
       ${tableInfo}
       ${order.customer_name ? `<span class="lo-table">${order.customer_name}</span>` : ''}
     </div>
+    ${order.cashier_name ? `<div style="font-size:10px;color:#475569;margin-bottom:5px;display:flex;align-items:center;gap:4px"><svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="#64748b" stroke-width="2.5"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>${order.cashier_name}</div>` : ''}
     <div class="lo-items">
-      ${items.slice(0,4).map(it => `
+      ${items.map(it => `
         <div class="lo-item ${it.done ? 'lo-item-done' : ''}">
           <span class="lo-item-qty">${it.quantity}×</span>
           <span class="lo-item-name">${it.item_name}</span>
           ${it.done ? '<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#4ade80" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>' : ''}
         </div>`).join('')}
-      ${items.length > 4 ? `<div class="lo-item"><span class="lo-item-name" style="color:#475569">+${items.length-4} more…</span></div>` : ''}
     </div>
     <div class="lo-progress"><div class="lo-progress-fill" style="width:${pct}%;background:${progressColor}"></div></div>
     <div class="lo-foot">
@@ -4450,6 +4575,113 @@ function startLiveRefresh () {
 
 function stopLiveRefresh () {
   if (_liveTimer) { clearInterval(_liveTimer); _liveTimer = null }
+}
+
+// ─── KITCHEN KDS VIEW ────────────────────────────────────────────────────────
+let _kdsTimer = null
+let _kdsOrders = []
+
+async function loadKdsView () {
+  try {
+    const { orders } = await apiFetch('GET', '/kitchen/orders')
+    _kdsOrders = orders || []
+    renderKdsBoard()
+    document.getElementById('kds-last-update').textContent = new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit',second:'2-digit'})
+  } catch (e) {
+    console.warn('KDS fetch failed', e.message)
+  }
+}
+
+function renderKdsBoard () {
+  const grid = document.getElementById('kds-grid')
+  if (!grid) return
+
+  let totalItems = 0, doneItems = 0, warnCount = 0, urgentCount = 0
+
+  _kdsOrders.forEach(o => {
+    const items = o.items || []
+    totalItems += items.length
+    doneItems  += items.filter(i => i.done).length
+    const age = Math.floor((Date.now() - new Date(+o.created_at).getTime()) / 60000)
+    if (age >= 20) urgentCount++
+    else if (age >= 10) warnCount++
+  })
+
+  document.getElementById('kds-total-orders').textContent   = _kdsOrders.length
+  document.getElementById('kds-total-items').textContent    = totalItems
+  document.getElementById('kds-done-items').textContent     = doneItems
+  document.getElementById('kds-warn-count').textContent     = warnCount
+  document.getElementById('kds-urgent-count').textContent   = urgentCount
+  document.getElementById('kds-completion-pct').textContent = totalItems ? Math.round((doneItems/totalItems)*100) + '%' : '0%'
+
+  if (!_kdsOrders.length) {
+    grid.innerHTML = `<div class="kds-empty" style="grid-column:1/-1">
+      <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 002-2V2"/><path d="M7 2v20"/><path d="M21 15V2a5 5 0 00-5 5v6c0 1.1.9 2 2 2h3zm0 0v7"/></svg>
+      <div style="font-size:13px">No active orders in kitchen</div>
+    </div>`
+    return
+  }
+
+  grid.innerHTML = _kdsOrders.map(o => renderKdsCard(o)).join('')
+}
+
+function renderKdsCard (order) {
+  const items   = order.items || []
+  const done    = items.filter(i => i.done).length
+  const pct     = items.length ? Math.round((done / items.length) * 100) : 0
+  const elapsed = elapsedStr(order.created_at)
+  const age     = Math.floor((Date.now() - new Date(+order.created_at).getTime()) / 60000)
+  const typeLbl = (order.order_type || 'Dine-in').replace(/-/g,' ').replace(/\b\w/g,c=>c.toUpperCase())
+
+  const urgency  = age >= 20 ? 'kds-urgent' : age >= 10 ? 'kds-warn' : ''
+  const delayBdg = age >= 20
+    ? `<span class="kds-delay-badge kds-delay-red">⚠ ${age}m URGENT</span>`
+    : age >= 10
+    ? `<span class="kds-delay-badge kds-delay-yellow">⏱ ${age}m Delayed</span>`
+    : ''
+
+  const progressColor = pct === 100 ? '#22c55e' : pct > 0 ? '#f97316' : '#3b82f6'
+
+  return `<div class="kds-card ${urgency}">
+    <div class="kds-card-hdr">
+      <span class="kds-order-num">#${order.order_number || order.id}</span>
+      <span class="lo-timer ${elapsed.cls}">${elapsed.text}</span>
+    </div>
+    <div class="kds-card-meta">
+      <span class="lo-type ${orderTypeCls(order.order_type)}">${typeLbl}</span>
+      ${order.table_name ? `<span class="lo-table">${order.table_name}</span>` : ''}
+      ${order.customer_name ? `<span class="lo-table">${order.customer_name}</span>` : ''}
+      ${delayBdg}
+    </div>
+    ${order.cashier_name ? `<div class="kds-staff"><svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="#64748b" stroke-width="2.5"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>${order.cashier_name}</div>` : ''}
+    <div class="kds-items-hdr">
+      <span>Items (${items.length})</span>
+      <span>${done}/${items.length} done</span>
+    </div>
+    ${items.map(it => `
+      <div class="kds-item ${it.done ? 'kds-item-done' : ''}">
+        <span class="kds-item-qty">${it.quantity}×</span>
+        <span class="kds-item-name">${it.item_name}</span>
+        <div class="kds-item-status ${it.done ? 'done' : 'pending'}">
+          ${it.done ? '<svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="#4ade80" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>' : ''}
+        </div>
+      </div>
+      ${it.notes ? `<div class="kds-item-notes">Note: ${it.notes}</div>` : ''}`).join('')}
+    <div class="kds-card-foot">
+      <span class="kds-done-lbl">${pct}%</span>
+      <div class="kds-progress"><div class="kds-progress-fill" style="width:${pct}%;background:${progressColor}"></div></div>
+      <span class="kds-done-lbl">${done}/${items.length}</span>
+    </div>
+  </div>`
+}
+
+function startKdsRefresh () {
+  stopKdsRefresh()
+  _kdsTimer = setInterval(loadKdsView, 30000)
+}
+
+function stopKdsRefresh () {
+  if (_kdsTimer) { clearInterval(_kdsTimer); _kdsTimer = null }
 }
 
 // ─── CONFIGURATION ───────────────────────────────────────────────────────────

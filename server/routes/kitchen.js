@@ -10,7 +10,7 @@ module.exports = function kitchenRouter (sql) {
     try {
       const orders = await sql`
         SELECT o.id, o.order_number, o.order_type, o.table_name, o.customer_name,
-               o.status, o.created_at, o.terminal_id,
+               o.status, o.created_at, o.terminal_id, o.cashier_name,
                json_agg(
                  json_build_object(
                    'id',         oi.id,

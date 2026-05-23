@@ -87,21 +87,32 @@ module.exports = function downloadsRouter (sql) {
     } catch (e) { res.status(500).json({ error: e.message }) }
   })
 
-  // GET /downloads/backup — full JSON export of all data (for disaster recovery)
+  // GET /downloads/backup — full JSON export; ?outlet_id=X scopes to one outlet
   router.get('/backup', jwtAuth, async (req, res) => {
     try {
+      const { outlet_id } = req.query
+      const rid = req.user.restaurant_id || ''
+
+      let orders, order_items, outlet_name = null
+      if (outlet_id) {
+        const [ol] = await sql`SELECT name FROM outlets WHERE id = ${outlet_id} AND restaurant_id = ${rid}`
+        outlet_name = ol?.name || outlet_id
+        orders      = await sql`SELECT * FROM orders       WHERE outlet_id = ${outlet_id} ORDER BY created_at`
+        order_items = await sql`SELECT oi.* FROM order_items oi JOIN orders o ON oi.order_id = o.id WHERE o.outlet_id = ${outlet_id}`
+      } else {
+        orders      = await sql`SELECT * FROM orders ORDER BY created_at`
+        order_items = await sql`SELECT * FROM order_items`
+      }
+
       const [
         settings, cashiers, categories, menu_items, customers,
-        orders, order_items, shifts, expenses, day_closings,
-        audit_log, no_sale_log, tables_layout, printers,
+        shifts, expenses, day_closings, audit_log, no_sale_log, tables_layout, printers,
       ] = await Promise.all([
-        sql`SELECT * FROM settings WHERE restaurant_id = ${req.user.restaurant_id || ''}`,
+        sql`SELECT * FROM settings WHERE restaurant_id = ${rid}`,
         sql`SELECT * FROM cashiers`,
         sql`SELECT * FROM categories`,
         sql`SELECT * FROM menu_items`,
         sql`SELECT * FROM customers`,
-        sql`SELECT * FROM orders       ORDER BY created_at`,
-        sql`SELECT * FROM order_items`,
         sql`SELECT * FROM shifts       ORDER BY opened_at`,
         sql`SELECT * FROM expenses     ORDER BY created_at`,
         sql`SELECT * FROM day_closings ORDER BY date`,
@@ -113,16 +124,18 @@ module.exports = function downloadsRouter (sql) {
 
       const backup = {
         meta: {
-          version:     '2.0.0',
+          version:     '2.1.0',
           exported_at: new Date().toISOString(),
           db:          process.env.DB_NAME || 'restaurant_pos_central',
+          ...(outlet_id ? { outlet_id, outlet_name, scope: 'outlet' } : { scope: 'full' }),
         },
         settings, cashiers, categories, menu_items, customers,
         orders, order_items, shifts, expenses, day_closings,
         audit_log, no_sale_log, tables_layout, printers,
       }
 
-      const filename = `pos-backup-${new Date().toISOString().slice(0, 10)}.json`
+      const suffix  = outlet_id ? `-outlet-${(outlet_name||outlet_id).replace(/[^a-z0-9]/gi,'-').toLowerCase()}` : ''
+      const filename = `pos-backup${suffix}-${new Date().toISOString().slice(0, 10)}.json`
       res.setHeader('Content-Type', 'application/json')
       res.setHeader('Content-Disposition', `attachment; filename="${filename}"`)
       res.send(JSON.stringify(backup, null, 2))
