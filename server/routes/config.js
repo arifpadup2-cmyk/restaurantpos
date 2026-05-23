@@ -128,6 +128,7 @@ module.exports = function configRouter (sql) {
   router.post('/brands', async (req, res) => {
     const { name, logo_url, business_type, country, owner_name } = req.body || {}
     const rid = req.user.restaurant_id
+    if (!rid) return res.status(400).json({ error: 'No restaurant account linked to this user.' })
     if (!name?.trim()) return res.status(400).json({ error: 'Brand name is required' })
     try {
       const [row] = await sql`
@@ -184,6 +185,7 @@ module.exports = function configRouter (sql) {
   router.post('/outlets', async (req, res) => {
     const { name, brand_id, phone, email, address, opening_time, closing_time, currency } = req.body || {}
     const rid = req.user.restaurant_id
+    if (!rid) return res.status(400).json({ error: 'No restaurant account linked to this user.' })
     if (!name?.trim()) return res.status(400).json({ error: 'Outlet name is required' })
     try {
       const [row] = await sql`

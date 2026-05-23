@@ -4288,6 +4288,7 @@ async function cfgDeleteOutlet (id, name) {
     showToast('Outlet deleted', 'success')
     cfgLoadOutlets()
   } catch (e) { showToast(friendlyError(e.message), 'error') }
+}
 
 // ─── TABLES ──────────────────────────────────────────────────────────────────
 async function cfgLoadTables () {
