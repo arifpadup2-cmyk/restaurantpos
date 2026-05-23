@@ -13,18 +13,28 @@ module.exports = function reportsRouter (sql) {
     return { start, end }
   }
 
-  // GET /reports/dashboard?date=YYYY-MM-DD
+  // GET /reports/dashboard?date=YYYY-MM-DD&outlet_id=&brand_id=&country=
   router.get('/dashboard', async (req, res) => {
-    const date  = req.query.date || new Date().toISOString().split('T')[0]
-    const { start, end } = dateRange(date, date)
+    const { date, outlet_id, brand_id, country } = req.query
+    const d = date || new Date().toISOString().split('T')[0]
+    const { start, end } = dateRange(d, d)
     try {
+      let outletIds = null
+      if (outlet_id) {
+        outletIds = [outlet_id]
+      } else if (brand_id || country) {
+        const outlets = await sql`
+          SELECT id FROM outlets
+          WHERE restaurant_id = ${req.user.restaurant_id}
+          ${brand_id ? sql`AND brand_id = ${brand_id}` : sql``}
+          ${country  ? sql`AND country  = ${country}`  : sql``}`
+        outletIds = outlets.map(o => o.id)
+        if (outletIds.length === 0) return res.json({ orders: [], expenses: [] })
+      }
       const [orders, exps] = await Promise.all([
-        sql`SELECT o.*, json_agg(oi ORDER BY oi.id) AS items
-            FROM orders o
-            LEFT JOIN order_items oi ON oi.order_id = o.id
-            WHERE o.created_at >= ${start} AND o.created_at < ${end} AND o.status = 'paid'
-            GROUP BY o.id
-            ORDER BY o.created_at DESC`,
+        outletIds
+          ? sql`SELECT o.*, json_agg(oi ORDER BY oi.id) AS items FROM orders o LEFT JOIN order_items oi ON oi.order_id = o.id WHERE o.created_at >= ${start} AND o.created_at < ${end} AND o.status = 'paid' AND o.outlet_id = ANY(${outletIds}) GROUP BY o.id ORDER BY o.created_at DESC`
+          : sql`SELECT o.*, json_agg(oi ORDER BY oi.id) AS items FROM orders o LEFT JOIN order_items oi ON oi.order_id = o.id WHERE o.created_at >= ${start} AND o.created_at < ${end} AND o.status = 'paid' GROUP BY o.id ORDER BY o.created_at DESC`,
         sql`SELECT * FROM expenses WHERE created_at >= ${start} AND created_at < ${end}`,
       ])
       res.json({ orders, expenses: exps })

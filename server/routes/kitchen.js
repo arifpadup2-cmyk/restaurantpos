@@ -5,8 +5,9 @@ const express = require('express')
 module.exports = function kitchenRouter (sql) {
   const router = express.Router()
 
-  // GET /kitchen/orders — all active orders with items for KDS
-  router.get('/orders', async (_req, res) => {
+  // GET /kitchen/orders?outlet_id= — all active orders with items for KDS
+  router.get('/orders', async (req, res) => {
+    const { outlet_id } = req.query
     try {
       const orders = await sql`
         SELECT o.id, o.order_number, o.order_type, o.table_name, o.customer_name,
@@ -23,6 +24,7 @@ module.exports = function kitchenRouter (sql) {
         FROM orders o
         JOIN order_items oi ON oi.order_id = o.id
         WHERE o.status = 'active'
+        ${outlet_id ? sql`AND o.outlet_id = ${outlet_id}` : sql``}
         GROUP BY o.id
         ORDER BY o.created_at ASC`
       res.json({ orders })

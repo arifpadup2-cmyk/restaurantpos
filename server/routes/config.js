@@ -32,10 +32,11 @@ const DEFAULT_DELIVERY_PARTNERS = [
 ]
 
 const DEFAULT_ORDER_TYPES = [
-  { name: 'Dine In',    icon: 'dine',     sort_order: 0 },
-  { name: 'Takeaway',   icon: 'takeaway', sort_order: 1 },
-  { name: 'Delivery',   icon: 'delivery', sort_order: 2 },
-  { name: 'Drive Thru', icon: 'drive',    sort_order: 3 },
+  { name: 'Dine In',        icon: 'dine',     sort_order: 0 },
+  { name: 'Takeaway',       icon: 'takeaway', sort_order: 1 },
+  { name: 'Delivery',       icon: 'delivery', sort_order: 2 },
+  { name: 'Drive Thru',     icon: 'drive',    sort_order: 3 },
+  { name: 'Vehicle Order',  icon: 'vehicle',  sort_order: 4 },
 ]
 
 const DEFAULT_DESIGNATIONS = [
@@ -511,13 +512,13 @@ module.exports = function configRouter (sql) {
   })
 
   router.post('/order-types', async (req, res) => {
-    const { name, icon } = req.body || {}
+    const { name, icon, logo_url } = req.body || {}
     const rid = req.user.restaurant_id
     if (!name) return res.status(400).json({ error: 'name required' })
     try {
       const [row] = await sql`
-        INSERT INTO order_types (id, restaurant_id, name, enabled, icon, sort_order)
-        VALUES (${newId()}, ${rid}, ${name.trim()}, true, ${icon || ''},
+        INSERT INTO order_types (id, restaurant_id, name, enabled, icon, logo_url, sort_order)
+        VALUES (${newId()}, ${rid}, ${name.trim()}, true, ${icon || ''}, ${logo_url || null},
           (SELECT COALESCE(MAX(sort_order),0)+1 FROM order_types WHERE restaurant_id = ${rid}))
         RETURNING *`
       res.json(row)
@@ -525,13 +526,14 @@ module.exports = function configRouter (sql) {
   })
 
   router.patch('/order-types/:id', async (req, res) => {
-    const { name, enabled } = req.body || {}
+    const { name, enabled, logo_url } = req.body || {}
     const rid = req.user.restaurant_id
     try {
       const [row] = await sql`
         UPDATE order_types SET
-          name    = COALESCE(NULLIF(${(name || '').trim()}, ''), name),
-          enabled = COALESCE(${enabled !== undefined ? !!enabled : null}, enabled)
+          name     = COALESCE(NULLIF(${(name || '').trim()}, ''), name),
+          enabled  = COALESCE(${enabled !== undefined ? !!enabled : null}, enabled),
+          logo_url = CASE WHEN ${logo_url !== undefined} THEN ${logo_url ?? null} ELSE logo_url END
         WHERE id = ${req.params.id} AND restaurant_id = ${rid}
         RETURNING *`
       if (!row) return res.status(404).json({ error: 'not found' })

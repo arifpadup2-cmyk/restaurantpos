@@ -843,9 +843,15 @@ input:checked+.toggle-slider:before{transform:translateX(17px)}
         <svg class="ni-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 002-2V2"/><path d="M7 2v20"/><path d="M21 15V2a5 5 0 00-5 5v6c0 1.1.9 2 2 2h3zm0 0v7"/></svg>
         <span>Menu</span>
       </div>
-      <div class="nav-item" id="nav-reports" onclick="showView('reports')" role="button" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' ')showView('reports')">
+      <div class="nav-item nav-group-header" id="nav-reports" onclick="showView('reports');showRptTab('sales')" role="button" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' '){showView('reports');showRptTab('sales')}">
         <svg class="ni-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
         <span>Reports</span>
+      </div>
+      <div class="nav-sub-group" id="navg-reports">
+        <div class="nav-sub" id="navsub-rpt-sales"       onclick="showView('reports');showRptTab('sales')"     role="button" tabindex="0">💰 Sales</div>
+        <div class="nav-sub" id="navsub-rpt-ops"         onclick="showView('reports');showRptTab('ops')"       role="button" tabindex="0">🍽️ Operations</div>
+        <div class="nav-sub" id="navsub-rpt-inventory"   onclick="showView('reports');showRptTab('inventory')" role="button" tabindex="0">📦 Inventory</div>
+        <div class="nav-sub" id="navsub-rpt-security"    onclick="showView('reports');showRptTab('security')"  role="button" tabindex="0">🔒 Audit &amp; Security</div>
       </div>
       <div class="sb-section">Manage</div>
       <div class="nav-item" id="nav-staff" onclick="showView('staff')" role="button" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' ')showView('staff')">
@@ -957,7 +963,10 @@ input:checked+.toggle-slider:before{transform:translateX(17px)}
         <h2 style="font-size:18px;font-weight:800">Dashboard</h2>
         <p style="font-size:12px;color:var(--muted)" id="dash-subtitle">Here's what's happening today</p>
       </div>
-      <div class="date-filter">
+      <div class="date-filter" style="flex-wrap:wrap;gap:6px">
+        <select id="dash-country" onchange="cascadeDashFilters()" style="font-size:12px;padding:6px 8px;border:1.5px solid var(--border);border-radius:6px;color:var(--text);background:var(--card)"><option value="">All Countries</option></select>
+        <select id="dash-brand" onchange="cascadeDashFilters()" style="font-size:12px;padding:6px 8px;border:1.5px solid var(--border);border-radius:6px;color:var(--text);background:var(--card)"><option value="">All Brands</option></select>
+        <select id="dash-outlet" style="font-size:12px;padding:6px 8px;border:1.5px solid var(--border);border-radius:6px;color:var(--text);background:var(--card)"><option value="">All Outlets</option></select>
         <input type="date" id="dash-date" onchange="loadDashboard()">
         <button class="btn btn-outline btn-sm" onclick="setDashDate('today');loadDashboard()">Today</button>
         <button class="btn btn-outline btn-sm" onclick="setDashDate('yesterday');loadDashboard()">Yesterday</button>
@@ -1108,7 +1117,8 @@ input:checked+.toggle-slider:before{transform:translateX(17px)}
   <div class="view" id="v-orders">
     <div class="page-header">
       <h2>Orders</h2>
-      <div class="date-filter">
+      <div class="date-filter" style="flex-wrap:wrap;gap:6px">
+        <select id="orders-outlet" onchange="loadOrders()" style="font-size:12px;padding:6px 8px;border:1.5px solid var(--border);border-radius:6px;color:var(--text);background:var(--card)"><option value="">All Outlets</option></select>
         <input type="date" id="orders-date" onchange="loadOrders()">
         <button class="btn btn-outline btn-sm" onclick="setOrdersDate('today');loadOrders()">Today</button>
       </div>
@@ -1119,6 +1129,7 @@ input:checked+.toggle-slider:before{transform:translateX(17px)}
       <button class="filter-chip" onclick="filterOrdersView('takeaway',this)">🥡 Takeaway</button>
       <button class="filter-chip" onclick="filterOrdersView('delivery',this)">🛵 Delivery</button>
       <button class="filter-chip" onclick="filterOrdersView('online',this)">📱 Online</button>
+      <button class="filter-chip" onclick="filterOrdersView('vehicle',this)">🚗 Vehicle</button>
     </div>
     <div class="card">
       <div class="table-wrap">
@@ -1618,6 +1629,25 @@ input:checked+.toggle-slider:before{transform:translateX(17px)}
             <input id="bos-tax" type="number" min="0" step="0.1">
           </div>
         </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label for="bos-tax-system">Tax System</label>
+            <select id="bos-tax-system">
+              <option value="GST">GST — Goods &amp; Services Tax</option>
+              <option value="VAT">VAT — Value Added Tax</option>
+              <option value="SST">SST — Sales &amp; Service Tax</option>
+              <option value="Sales">Sales Tax</option>
+              <option value="Custom">Custom (use tax rate label)</option>
+              <option value="None">None (no tax)</option>
+            </select>
+            <div class="form-hint">Used for receipt labels and reports. Qatar, UAE (pre-2018), Bahrain → None.</div>
+          </div>
+          <div class="form-group">
+            <label for="bos-tax-label">Tax Label <span style="color:var(--muted);font-size:12px">(optional override)</span></label>
+            <input id="bos-tax-label" type="text" placeholder="e.g. VAT, GST, Tax">
+            <div class="form-hint">Overrides system label on receipts if filled</div>
+          </div>
+        </div>
         <div class="settings-section-divider">Charges &amp; Approvals</div>
         <div class="form-row">
           <div class="form-group">
@@ -1844,6 +1874,7 @@ input:checked+.toggle-slider:before{transform:translateX(17px)}
           <div><div class="ls-chip-val" id="kds-completion-pct">0%</div><div class="ls-chip-lbl">Completion</div></div>
         </div>
         <div class="ls-spacer"></div>
+        <select id="kds-outlet-filter" onchange="loadKdsView()" style="font-size:12px;padding:5px 8px;border:1.5px solid rgba(255,255,255,.12);border-radius:6px;color:#94a3b8;background:rgba(255,255,255,.06)"><option value="">All Outlets</option></select>
         <span class="kds-badge">View Only</span>
         <div class="ls-refresh-chip">
           <div class="ls-pulse" id="kds-pulse-dot"></div>
@@ -1900,7 +1931,7 @@ input:checked+.toggle-slider:before{transform:translateX(17px)}
 
       <!-- ORDER TYPES -->
       <div id="cfg-order-types" class="cfg-section">
-        <div class="page-header"><h2>Order Types</h2><button class="btn" onclick="cfgAddOrderType()">+ Add Type</button></div>
+        <div class="page-header"><h2>Order Types</h2><button class="btn" onclick="cfgOpenOrderTypeModal(null)">+ Add Type</button></div>
         <div class="cfg-card"><div class="cfg-card-body"><div id="cfg-ot-list"></div></div></div>
       </div>
 
@@ -2314,9 +2345,9 @@ input:checked+.toggle-slider:before{transform:translateX(17px)}
       <label>Logo URL <span style="color:var(--muted);font-size:12px">(optional)</span></label>
       <div class="img-input-wrap">
         <input id="brand-logo" type="url" placeholder="https://...">
-        <button type="button" class="btn-pick-img" onclick="openImagePicker(url=>{document.getElementById('brand-logo').value=url;const p=document.getElementById('brand-logo-preview');const i=document.getElementById('brand-logo-img');i.src=url;p.style.display='block'}, document.getElementById('brand-name').value||'logo')">
-          🖼 Pick
-        </button>
+        <input type="file" id="brand-logo-file" accept="image/*" style="display:none" onchange="brandLogoFileSelected(this)">
+        <button type="button" class="btn-pick-img" onclick="document.getElementById('brand-logo-file').click()">📁 Upload</button>
+        <button type="button" class="btn-pick-img" onclick="openImagePicker(url=>{document.getElementById('brand-logo').value=url;const p=document.getElementById('brand-logo-preview');const i=document.getElementById('brand-logo-img');i.src=url;p.style.display='block'}, document.getElementById('brand-name').value||'logo')">🖼 Pick</button>
       </div>
       <div id="brand-logo-preview" style="margin-top:8px;display:none">
         <img id="brand-logo-img" src="" alt="logo" style="height:40px;object-fit:contain;border:1px solid var(--border);border-radius:6px;padding:4px;background:#fff">
@@ -2456,6 +2487,34 @@ input:checked+.toggle-slider:before{transform:translateX(17px)}
     <div class="modal-footer">
       <button class="btn btn-outline" onclick="closeModal('modal-table-section')">Cancel</button>
       <button class="btn btn-primary" onclick="cfgSaveSectionModal()"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg> Save Section</button>
+    </div>
+  </div>
+</div>
+
+<!-- Order Type Modal -->
+<div class="modal-overlay" id="modal-order-type">
+  <div class="modal" style="min-width:360px;max-width:440px">
+    <h3 id="ot-modal-title">Add Order Type</h3>
+    <input type="hidden" id="ot-modal-id">
+    <div class="form-group">
+      <label>Name *</label>
+      <input id="ot-modal-name" type="text" placeholder="e.g. Drive Thru, Kiosk, Vehicle Order">
+    </div>
+    <div class="form-group">
+      <label>Logo / Icon <span style="color:var(--muted);font-size:12px">(optional)</span></label>
+      <div class="img-input-wrap">
+        <input id="ot-modal-logo" type="url" placeholder="https://...">
+        <input type="file" id="ot-modal-logo-file" accept="image/*" style="display:none" onchange="otLogoFileSelected(this)">
+        <button type="button" class="btn-pick-img" onclick="document.getElementById('ot-modal-logo-file').click()">📁 Upload</button>
+        <button type="button" class="btn-pick-img" onclick="openImagePicker(url=>{document.getElementById('ot-modal-logo').value=url;otUpdateLogoPreview(url)},document.getElementById('ot-modal-name').value||'order type')">🖼 Pick</button>
+      </div>
+      <div id="ot-logo-preview" style="margin-top:8px;display:none">
+        <img id="ot-logo-img" src="" alt="logo" style="height:36px;object-fit:contain;border:1px solid var(--border);border-radius:6px;padding:4px;background:#fff">
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('modal-order-type')">Cancel</button>
+      <button class="btn btn-primary" onclick="cfgSaveOrderTypeModal()"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg> Save</button>
     </div>
   </div>
 </div>
@@ -3231,6 +3290,8 @@ async function loadBOSettings () {
   const mgrEl = document.getElementById('bos-mgr-threshold'); if (mgrEl) mgrEl.value = boSettings.mgr_discount_threshold
   const vrEl  = document.getElementById('bos-void-reason'); if (vrEl) vrEl.value = boSettings.require_void_reason
   const ukEl  = document.getElementById('bos-unsplash-key'); if (ukEl) { const k = localStorage.getItem('unsplash_key') || ''; ukEl.value = k; const st = document.getElementById('unsplash-key-status'); if (st) st.textContent = k ? '✓ Key saved to browser.' : '' }
+  const txSys = document.getElementById('bos-tax-system'); if (txSys) txSys.value = boSettings.tax_system || 'GST'
+  const txLbl = document.getElementById('bos-tax-label');  if (txLbl) txLbl.value = boSettings.tax_label  || ''
 }
 
 async function saveBOSettings () {
@@ -3243,12 +3304,119 @@ async function saveBOSettings () {
   const scLEl = document.getElementById('bos-sc-label'); if (scLEl) boSettings.service_charge_label = scLEl.value.trim() || 'Service Charge'
   const mgrEl = document.getElementById('bos-mgr-threshold'); if (mgrEl) boSettings.mgr_discount_threshold = parseFloat(mgrEl.value) || 10
   const vrEl  = document.getElementById('bos-void-reason'); if (vrEl) boSettings.require_void_reason = parseInt(vrEl.value)
+  const txSys = document.getElementById('bos-tax-system'); if (txSys) boSettings.tax_system = txSys.value
+  const txLbl = document.getElementById('bos-tax-label');  if (txLbl) boSettings.tax_label  = txLbl.value.trim()
   try {
     await apiFetch('PUT', '/settings', boSettings)
     document.getElementById('hdr-name').textContent = boSettings.restaurant_name
     const sbBr = document.getElementById('sb-branch'); if (sbBr) sbBr.textContent = boSettings.branch_name || 'Back Office'
     showToast('Settings saved!','success')
   } catch (e) { showToast('Error: ' + e.message,'error') }
+}
+
+// ─── DASHBOARD FILTERS ───────────────────────────────────────────
+function cascadeDashFilters () {
+  const country = document.getElementById('dash-country').value
+  const brand   = document.getElementById('dash-brand').value
+  let outlets   = (_rptFilterData.outlets || []).filter(o =>
+    (!country || o.country === country) && (!brand || o.brand_id === brand))
+  const sel = document.getElementById('dash-outlet')
+  const cur = sel.value
+  sel.innerHTML = '<option value="">All Outlets</option>' + outlets.map(o => `<option value="${o.id}"${o.id===cur?' selected':''}>${o.name}</option>`).join('')
+}
+
+function populateDashFilters () {
+  const countries = [...new Set((_rptFilterData.outlets||[]).map(o=>o.country).filter(Boolean))]
+  const brands    = _rptFilterData.brands || []
+  const cSel = document.getElementById('dash-country')
+  const bSel = document.getElementById('dash-brand')
+  if (!cSel || !bSel) return
+  const cv = cSel.value, bv = bSel.value
+  cSel.innerHTML = '<option value="">All Countries</option>' + countries.map(c=>`<option value="${c}"${c===cv?' selected':''}>${c}</option>`).join('')
+  bSel.innerHTML = '<option value="">All Brands</option>' + brands.map(b=>`<option value="${b.id}"${b.id===bv?' selected':''}>${b.name}</option>`).join('')
+  cascadeDashFilters()
+}
+
+function populateOutletSelectors () {
+  const outlets = _rptFilterData.outlets || []
+  const selectors = ['orders-outlet','kds-outlet-filter']
+  selectors.forEach(id => {
+    const sel = document.getElementById(id); if (!sel) return
+    const cur = sel.value
+    sel.innerHTML = '<option value="">All Outlets</option>' + outlets.map(o=>`<option value="${o.id}"${o.id===cur?' selected':''}>${o.name}</option>`).join('')
+  })
+  populateDashFilters()
+}
+
+// ─── REPORTS SUB-NAV ─────────────────────────────────────────────
+function showRptTab (tab) {
+  document.querySelectorAll('.rpt-tab').forEach(t => t.classList.remove('active'))
+  document.querySelectorAll('[id^="rpt-pane-"]').forEach(p => p.style.display = 'none')
+  const tabEl = document.querySelector(`.rpt-tab[onclick*="'${tab}'"]`)
+  if (tabEl) tabEl.classList.add('active')
+  const pane = document.getElementById('rpt-pane-' + tab)
+  if (pane) pane.style.display = ''
+  document.querySelectorAll('.nav-sub[id^="navsub-rpt-"]').forEach(s => s.classList.remove('active'))
+  const subEl = document.getElementById('navsub-rpt-' + tab)
+  if (subEl) subEl.classList.add('active')
+  if (tab === 'sales')     loadReport()
+  if (tab === 'ops')       loadExpReport()
+  if (tab === 'inventory') { if (typeof loadItemConsumption === 'function') loadItemConsumption() }
+  if (tab === 'security')  loadAuditLogForReport()
+}
+
+// ─── BRAND LOGO FILE UPLOAD ───────────────────────────────────────
+function brandLogoFileSelected (input) {
+  const file = input.files[0]; if (!file) return
+  const reader = new FileReader()
+  reader.onload = e => {
+    const url = e.target.result
+    document.getElementById('brand-logo').value = url
+    const prev = document.getElementById('brand-logo-preview')
+    const img  = document.getElementById('brand-logo-img')
+    img.src = url; prev.style.display = 'block'
+  }
+  reader.readAsDataURL(file)
+}
+
+// ─── ORDER TYPE MODAL ─────────────────────────────────────────────
+function otUpdateLogoPreview (url) {
+  const prev = document.getElementById('ot-logo-preview')
+  const img  = document.getElementById('ot-logo-img')
+  if (url) { img.src = url; prev.style.display = '' } else { prev.style.display = 'none' }
+}
+
+function otLogoFileSelected (input) {
+  const file = input.files[0]; if (!file) return
+  const reader = new FileReader()
+  reader.onload = e => { document.getElementById('ot-modal-logo').value = e.target.result; otUpdateLogoPreview(e.target.result) }
+  reader.readAsDataURL(file)
+}
+
+function cfgOpenOrderTypeModal (row) {
+  document.getElementById('ot-modal-title').textContent = row ? 'Edit Order Type' : 'Add Order Type'
+  document.getElementById('ot-modal-id').value   = row?.id   || ''
+  document.getElementById('ot-modal-name').value = row?.name || ''
+  document.getElementById('ot-modal-logo').value = row?.logo_url || ''
+  otUpdateLogoPreview(row?.logo_url || '')
+  showModal('modal-order-type')
+}
+
+async function cfgSaveOrderTypeModal () {
+  const id      = document.getElementById('ot-modal-id').value
+  const name    = document.getElementById('ot-modal-name').value.trim()
+  const logo_url= document.getElementById('ot-modal-logo').value.trim() || null
+  if (!name) return showToast('Name required', 'error')
+  try {
+    if (id) {
+      await apiFetch('PATCH', `/config/order-types/${id}`, { name, logo_url })
+    } else {
+      await apiFetch('POST', '/config/order-types', { name, logo_url })
+    }
+    closeModal('modal-order-type')
+    cfgLoadOrderTypes()
+    showToast(id ? 'Order type updated.' : 'Order type added.', 'success')
+  } catch (e) { showToast(friendlyError(e.message), 'error') }
 }
 
 // ─── NAVIGATION ──────────────────────────────────────────────────
@@ -3261,10 +3429,10 @@ function showView (id) {
   if (navEl) navEl.classList.add('active')
   if (id === 'menu')         loadMenu()
   if (id === 'item-editor')  {} // loaded by showItemEditor()
-  if (id === 'orders')       { setOrdersDate('today'); loadOrders() }
+  if (id === 'orders')       { setOrdersDate('today'); populateOutletSelectors(); loadOrders() }
   if (id === 'staff')        loadStaff()
-  if (id === 'dashboard')    loadDashboard()
-  if (id === 'reports')   { loadRptFilterOptions(); setRptPreset('today', document.querySelector('.rpt-preset-btn')); loadReport(); loadExpReport(); }
+  if (id === 'dashboard')    { populateOutletSelectors(); loadDashboard() }
+  if (id === 'reports')   { document.getElementById('navg-reports')?.classList.add('open'); loadRptFilterOptions(); setRptPreset('today', document.querySelector('.rpt-preset-btn')); loadReport(); loadExpReport(); showRptTab('sales') }
   if (id === 'audit')     loadAuditLog()
   if (id === 'downloads') loadDownloadsPage()
   if (id === 'config')  { document.getElementById('navg-config').classList.add('open'); showCfgTab('brand'); cfgLoadBrands() }
@@ -3293,10 +3461,17 @@ function setDashDate (which) {
 }
 
 async function loadDashboard () {
-  const date = document.getElementById('dash-date').value || todayStr()
+  const date    = document.getElementById('dash-date').value || todayStr()
+  const outlet  = document.getElementById('dash-outlet')?.value  || ''
+  const brand   = document.getElementById('dash-brand')?.value   || ''
+  const country = document.getElementById('dash-country')?.value || ''
   const cur  = boSettings.currency
   try {
-    const { orders, expenses: exps } = await apiFetch('GET', '/reports/dashboard?date=' + date)
+    let qs = '/reports/dashboard?date=' + date
+    if (outlet)  qs += '&outlet_id=' + encodeURIComponent(outlet)
+    if (brand)   qs += '&brand_id='  + encodeURIComponent(brand)
+    if (country) qs += '&country='   + encodeURIComponent(country)
+    const { orders, expenses: exps } = await apiFetch('GET', qs)
 
     const sales    = orders.reduce((s, o) => s + (parseFloat(o.total) || 0), 0)
     const expTotal = exps.reduce((s, e) => s + (parseFloat(e.amount) || 0), 0)
@@ -4185,9 +4360,12 @@ function setOrdersDate (which) {
 }
 
 async function loadOrders () {
-  const date = document.getElementById('orders-date').value || todayStr()
+  const date   = document.getElementById('orders-date').value || todayStr()
+  const outlet = document.getElementById('orders-outlet')?.value || ''
   try {
-    const { orders } = await apiFetch('GET', '/orders?date=' + date)
+    let qs = '/orders?date=' + date
+    if (outlet) qs += '&outlet_id=' + encodeURIComponent(outlet)
+    const { orders } = await apiFetch('GET', qs)
     allOrders = orders
     renderOrdersView()
   } catch (e) { console.error(e) }
@@ -4241,6 +4419,7 @@ async function loadRptFilterOptions () {
         d.brands.map(b => `<option value="${b.id}"${b.id===prev?' selected':''}>${b.name}</option>`).join('')
     }
     cascadeRptFilters()
+    populateOutletSelectors()
   } catch (_) {}
 }
 
@@ -5512,7 +5691,9 @@ let _kdsOrders = []
 
 async function loadKdsView () {
   try {
-    const { orders } = await apiFetch('GET', '/kitchen/orders')
+    const outlet = document.getElementById('kds-outlet-filter')?.value || ''
+    const qs     = outlet ? '/kitchen/orders?outlet_id=' + encodeURIComponent(outlet) : '/kitchen/orders'
+    const { orders } = await apiFetch('GET', qs)
     _kdsOrders = orders || []
     renderKdsBoard()
     document.getElementById('kds-last-update').textContent = new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit',second:'2-digit'})
@@ -6051,21 +6232,15 @@ async function cfgLoadOrderTypes () {
     const { rows } = await apiFetch('GET', '/config/order-types')
     document.getElementById('cfg-ot-list').innerHTML = rows.map(r => `
       <div class="cfg-list-item">
+        ${r.logo_url ? `<img src="${r.logo_url}" alt="" style="height:28px;width:28px;object-fit:contain;border-radius:4px;border:1px solid var(--border);background:#fff;flex-shrink:0;margin-right:4px">` : `<span style="font-size:20px;flex-shrink:0;margin-right:4px">🧾</span>`}
         <div style="flex:1">
           <div class="cfg-list-item-name">${r.name}</div>
         </div>
         <label class="cfg-toggle"><input type="checkbox" ${r.enabled ? 'checked' : ''} onchange="cfgToggleItem('/config/order-types','${r.id}',this.checked)"><span class="cfg-toggle-slider"></span></label>
-        <button class="btn btn-sm btn-danger" style="margin-left:8px" onclick="cfgDeleteItem('/config/order-types','${r.id}',cfgLoadOrderTypes)">✕</button>
+        <button class="btn btn-sm btn-outline" style="margin-left:8px" onclick="cfgOpenOrderTypeModal(${JSON.stringify(r).replace(/"/g,'&quot;')})">Edit</button>
+        <button class="btn btn-sm btn-danger" style="margin-left:4px" onclick="cfgDeleteItem('/config/order-types','${r.id}',cfgLoadOrderTypes)">✕</button>
       </div>`).join('') || '<p style="color:var(--muted);font-size:13px">No order types.</p>'
   } catch (e) { showToast(friendlyError(e.message), 'error') }
-}
-
-function cfgAddOrderType () {
-  const name = prompt('Order type name (e.g. Dine In):')
-  if (!name) return
-  apiFetch('POST', '/config/order-types', { name })
-    .then(() => { showToast('Added', 'success'); cfgLoadOrderTypes() })
-    .catch(e => showToast(friendlyError(e.message), 'error'))
 }
 
 // ─── PAYMENT METHODS ─────────────────────────────────────────────────────────
