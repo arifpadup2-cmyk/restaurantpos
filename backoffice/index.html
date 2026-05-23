@@ -3613,7 +3613,6 @@ async function loadMenu () {
     renderCategories()
     renderItems()
     buildMenuCatFilter()
-    populateCatSelect()
   } catch (e) { console.error(e) }
 }
 
@@ -3674,10 +3673,6 @@ function setActiveFilter (btn) {
   btn.classList.add('active')
 }
 
-function populateCatSelect () {
-  document.getElementById('item-cat').innerHTML = `<option value="">Select category...</option>` +
-    allCategories.map(c => `<option value="${c.id}">${esc(c.name)}</option>`).join('')
-}
 
 function showCatModal (cat) {
   document.getElementById('cat-modal-title').textContent = cat ? 'Edit Category' : 'Add Category'
