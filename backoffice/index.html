@@ -437,6 +437,18 @@ input:checked+.toggle-slider:before{transform:translateX(17px)}
 .cfg-color-dot{width:16px;height:16px;border-radius:50%;flex-shrink:0;border:2px solid rgba(0,0,0,.1)}
 /* ─── TOAST ──────────────────────────────────────── */
 #toast-region{position:fixed;bottom:22px;right:22px;z-index:9999;display:flex;flex-direction:column;gap:7px;pointer-events:none}
+/* ─── MOBILE BOTTOM NAV ─────────────────────────── */
+#mob-nav-bar{position:fixed;bottom:0;left:0;right:0;height:56px;background:var(--sb-bg);border-top:1px solid rgba(255,255,255,.07);z-index:300;display:none;align-items:stretch}
+.mob-tab{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;background:none;border:none;color:#475569;font-size:9.5px;font-weight:700;cursor:pointer;padding:4px 2px;-webkit-tap-highlight-color:transparent;transition:color .12s;letter-spacing:.03em;text-transform:uppercase;min-height:48px}
+.mob-tab svg{transition:transform .15s ease,opacity .15s}
+.mob-tab.active{color:var(--primary)}
+.mob-tab.active svg{transform:scale(1.15);opacity:1}
+.mob-tab:not(.active) svg{opacity:.55}
+.mob-tab:active{opacity:.6}
+/* Mobile sidebar backdrop */
+#mob-sb-overlay{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:255;display:none;-webkit-tap-highlight-color:transparent}
+#app.mob-sb-open #mob-sb-overlay{display:block}
+#app.mob-sb-open #sidebar{transform:translateX(0) !important}
 .toast{background:#1e293b;color:#fff;padding:11px 16px;border-radius:10px;font-size:13px;font-weight:600;box-shadow:0 4px 20px rgba(0,0,0,.25);pointer-events:auto;animation:toast-in .2s ease;max-width:300px;display:flex;align-items:center;gap:8px}
 .toast-success{border-left:4px solid #22c55e}.toast-error{border-left:4px solid var(--danger)}.toast-info{border-left:4px solid var(--info)}
 @keyframes toast-in{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
@@ -457,12 +469,70 @@ input:checked+.toggle-slider:before{transform:translateX(17px)}
 }
 @media(max-width:768px){
   :root{--sb-w:0px}
-  #sidebar{display:none}
-  .kpi-grid{grid-template-columns:repeat(2,1fr)}
+  /* Sidebar: off-screen, slides in as overlay */
+  #sidebar{transform:translateX(-100%);transition:transform .25s cubic-bezier(.4,0,.2,1);display:flex !important;width:260px;z-index:260;box-shadow:6px 0 28px rgba(0,0,0,.4)}
+  /* Restore sidebar text hidden by 1100px rule */
+  .sb-logo-text,.nav-item span,.sb-section,.nav-group-body,.nav-chev,.nav-group-hdr span,.sb-user-info,.sb-logout-btn span,.sb-user-name,.sb-user-role,.sb-user-label{display:revert}
+  .nav-item{justify-content:flex-start;padding:10px 14px}
+  .nav-group-hdr{justify-content:flex-start;padding:10px 14px}
+  .sb-logo{justify-content:flex-start;padding:16px}
+  .sb-user-row{justify-content:flex-start}
+  .sb-logout-btn{justify-content:flex-start;padding:8px 10px}
+  .sb-user-info{display:flex}
+  /* Main: no sidebar gap, pad bottom for nav bar */
+  #main-wrap{margin-left:0;padding-bottom:calc(58px + env(safe-area-inset-bottom,0px))}
+  /* Bottom nav: show */
+  #mob-nav-bar{display:flex;padding-bottom:env(safe-area-inset-bottom,0px);height:calc(56px + env(safe-area-inset-bottom,0px))}
+  /* Header: compact */
+  #top-header{padding:0 12px;gap:8px;padding-left:max(12px,env(safe-area-inset-left,0px));padding-right:max(12px,env(safe-area-inset-right,0px))}
+  .hdr-search{display:none}
+  .hdr-left p{display:none}
+  .hdr-date{display:none}
+  .hdr-user-name{display:none}
+  /* View padding */
+  .view{padding:12px 12px}
+  /* KPI: 2-col responsive */
+  .kpi-grid{grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px}
+  .kpi-card{padding:12px;gap:5px}
+  .kpi-value{font-size:17px}
+  /* Dashboard header + filters */
+  #v-dashboard>div:first-child{flex-direction:column;align-items:flex-start;gap:8px;margin-bottom:12px}
+  .date-filter{overflow-x:auto;flex-wrap:nowrap !important;padding-bottom:4px;-ms-overflow-style:none;scrollbar-width:none;width:100%;max-width:100%}
+  .date-filter::-webkit-scrollbar{display:none}
+  .dash-preset{flex-shrink:0;font-size:11px;padding:5px 10px}
+  /* Dash content: single col */
   .dash-row-2,.dash-row-3{grid-template-columns:1fr}
+  /* Forms */
   .form-row{flex-direction:column;gap:0}
-  .modal{min-width:unset;width:96vw;padding:18px}
-  #main-wrap{margin-left:0}
+  /* Page headers: allow wrap */
+  .page-header{flex-wrap:wrap;gap:8px}
+  .page-header h2{font-size:17px;flex:1 0 100%}
+  /* Modals: bottom sheet */
+  .modal-wrap{align-items:flex-end;padding:0}
+  .modal{min-width:unset !important;width:100% !important;max-height:92dvh;max-height:92vh;border-radius:20px 20px 0 0 !important;padding:24px 16px 20px;overflow-y:auto}
+  .modal::before{content:'';display:block;width:40px;height:4px;background:#d1d5db;border-radius:2px;margin:-10px auto 18px}
+  /* Outlet ctx bar */
+  #outlet-ctx-bar{padding:7px 12px}
+  .outlet-ctx-inner{flex-wrap:nowrap;overflow-x:auto;gap:7px;scrollbar-width:none}
+  .outlet-ctx-inner::-webkit-scrollbar{display:none}
+  .outlet-ctx-label{font-size:10px}
+  /* Toast: above bottom nav */
+  #toast-region{bottom:calc(62px + env(safe-area-inset-bottom,0px));right:10px;left:10px;align-items:center}
+  .toast{max-width:100%;justify-content:center}
+  /* Tabs: horizontal scroll */
+  .rpt-tabs,.cfg-tabs,.menu-tabs{overflow-x:auto;flex-wrap:nowrap;scrollbar-width:none}
+  .rpt-tabs::-webkit-scrollbar,.cfg-tabs::-webkit-scrollbar,.menu-tabs::-webkit-scrollbar{display:none}
+  .rpt-tab,.cfg-tab,.menu-tab{flex-shrink:0;font-size:11px;padding:6px 12px}
+  /* Touch targets */
+  .btn{min-height:40px}
+  .hdr-btn{min-height:36px;min-width:36px}
+  input:not([type=checkbox]):not([type=radio]):not([type=color]):not([type=range]),select,textarea{min-height:40px}
+  /* Cards */
+  .card-body{padding:10px 12px}
+  /* Filter bar: scroll */
+  .filter-bar{overflow-x:auto;flex-wrap:nowrap;scrollbar-width:none;padding-bottom:2px}
+  .filter-bar::-webkit-scrollbar{display:none}
+  .filter-chip{flex-shrink:0}
 }
 /* ─── REPORT TABS ───────────────────────────────────────── */
 .rpt-tabs{display:flex;gap:3px;border-bottom:2px solid var(--border);margin-bottom:18px;padding-bottom:0}
@@ -2137,6 +2207,33 @@ input:checked+.toggle-slider:before{transform:translateX(17px)}
     </div><!-- end view-container -->
   </div><!-- end main-wrap -->
 
+  <!-- Mobile: sidebar backdrop -->
+  <div id="mob-sb-overlay" onclick="mobCloseSidebar()"></div>
+
+  <!-- Mobile: bottom navigation bar -->
+  <nav id="mob-nav-bar" aria-label="Main navigation">
+    <button class="mob-tab active" id="mobt-dashboard" onclick="showView('dashboard');mobSetTab('dashboard')">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+      <span>Home</span>
+    </button>
+    <button class="mob-tab" id="mobt-live" onclick="showView('live');mobSetTab('live')">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="9" rx="1"/><rect x="14" y="3" width="7" height="5" rx="1"/><rect x="14" y="12" width="7" height="9" rx="1"/><rect x="3" y="16" width="7" height="5" rx="1"/></svg>
+      <span>Live</span>
+    </button>
+    <button class="mob-tab" id="mobt-orders" onclick="showView('orders');mobSetTab('orders')">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+      <span>Orders</span>
+    </button>
+    <button class="mob-tab" id="mobt-reports" onclick="showView('reports');mobSetTab('reports')">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+      <span>Reports</span>
+    </button>
+    <button class="mob-tab" id="mobt-more" onclick="mobToggleSidebar()">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+      <span>More</span>
+    </button>
+  </nav>
+
 </div><!-- end app -->
 
 <!-- ═══ MODALS ═══ -->
@@ -3665,7 +3762,19 @@ async function cfgSaveOrderTypeModal () {
 
 // ─── NAVIGATION ──────────────────────────────────────────────────
 const OUTLET_SCOPED_VIEWS = new Set(['menu','staff','config'])
+function mobCloseSidebar () { document.getElementById('app').classList.remove('mob-sb-open') }
+function mobToggleSidebar () { document.getElementById('app').classList.toggle('mob-sb-open') }
+function mobSetTab (id) {
+  document.querySelectorAll('.mob-tab').forEach(t => t.classList.remove('active'))
+  const el = document.getElementById('mobt-' + id)
+  if (el) el.classList.add('active')
+}
+
+const MOB_TAB_MAP = {dashboard:'dashboard',live:'live',orders:'orders',reports:'reports',menu:'orders',kds:'live',staff:'more',config:'more','bo-settings':'more',audit:'more',downloads:'more'}
 function showView (id) {
+  mobCloseSidebar()
+  const tabId = MOB_TAB_MAP[id] || id
+  mobSetTab(tabId)
   document.querySelectorAll('.view').forEach(v => v.classList.remove('active'))
   document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'))
   document.querySelectorAll('.nav-sub').forEach(s => s.classList.remove('active'))
@@ -3694,6 +3803,8 @@ function toggleNavGroup (id) {
 
 const OUTLET_SCOPED_CFG_TABS = new Set(['tables','order-types','payment','kitchens','designations','tax','modifier-groups','pos-layout'])
 function showConfigTab (tab) {
+  mobCloseSidebar()
+  mobSetTab('more')
   document.querySelectorAll('.view').forEach(v => v.classList.remove('active'))
   document.getElementById('v-config').classList.add('active')
   document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'))
