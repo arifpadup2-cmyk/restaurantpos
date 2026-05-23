@@ -410,5 +410,95 @@ module.exports = function setupRouter (sql) {
     } catch (e) { res.status(500).json({ error: e.message }) }
   })
 
+  // ── Global payment methods (super admin CRUD) ─────────────────────────────
+  router.get('/global-payment-methods', jwtAuth, async (_req, res) => {
+    try {
+      const rows = await sql`SELECT * FROM global_payment_methods ORDER BY sort_order, name`
+      res.json({ ok: true, rows })
+    } catch (e) { res.status(500).json({ error: e.message }) }
+  })
+
+  router.post('/global-payment-methods', jwtAuth, async (req, res) => {
+    const { name, icon, type } = req.body || {}
+    if (!name?.trim()) return res.status(400).json({ error: 'name required' })
+    try {
+      const id = 'gpm-' + Date.now().toString(36) + Math.random().toString(36).slice(2,5)
+      const [row] = await sql`
+        INSERT INTO global_payment_methods (id, name, icon, type, sort_order)
+        VALUES (${id}, ${name.trim()}, ${icon||'💳'}, ${type||'other'},
+          (SELECT COALESCE(MAX(sort_order),0)+1 FROM global_payment_methods))
+        RETURNING *`
+      res.json({ ok: true, row })
+    } catch (e) { res.status(500).json({ error: e.message }) }
+  })
+
+  router.patch('/global-payment-methods/:id', jwtAuth, async (req, res) => {
+    const { name, icon, type, active } = req.body || {}
+    try {
+      const [row] = await sql`
+        UPDATE global_payment_methods SET
+          name   = COALESCE(NULLIF(${(name||'').trim()},''), name),
+          icon   = COALESCE(NULLIF(${icon||''},''), icon),
+          type   = COALESCE(NULLIF(${type||''},''), type),
+          active = COALESCE(${active !== undefined ? !!active : null}, active)
+        WHERE id = ${req.params.id} RETURNING *`
+      if (!row) return res.status(404).json({ error: 'Not found' })
+      res.json({ ok: true, row })
+    } catch (e) { res.status(500).json({ error: e.message }) }
+  })
+
+  router.delete('/global-payment-methods/:id', jwtAuth, async (req, res) => {
+    try {
+      await sql`DELETE FROM outlet_hidden_payments WHERE method_id = ${req.params.id}`
+      await sql`DELETE FROM global_payment_methods WHERE id = ${req.params.id}`
+      res.json({ ok: true })
+    } catch (e) { res.status(500).json({ error: e.message }) }
+  })
+
+  // ── Global delivery partners (super admin CRUD) ───────────────────────────
+  router.get('/global-delivery-partners', jwtAuth, async (_req, res) => {
+    try {
+      const rows = await sql`SELECT * FROM global_delivery_partners ORDER BY sort_order, name`
+      res.json({ ok: true, rows })
+    } catch (e) { res.status(500).json({ error: e.message }) }
+  })
+
+  router.post('/global-delivery-partners', jwtAuth, async (req, res) => {
+    const { name, logo_url, commission_pct } = req.body || {}
+    if (!name?.trim()) return res.status(400).json({ error: 'name required' })
+    try {
+      const id = 'gdp-' + Date.now().toString(36) + Math.random().toString(36).slice(2,5)
+      const [row] = await sql`
+        INSERT INTO global_delivery_partners (id, name, logo_url, commission_pct, sort_order)
+        VALUES (${id}, ${name.trim()}, ${logo_url||null}, ${parseFloat(commission_pct)||0},
+          (SELECT COALESCE(MAX(sort_order),0)+1 FROM global_delivery_partners))
+        RETURNING *`
+      res.json({ ok: true, row })
+    } catch (e) { res.status(500).json({ error: e.message }) }
+  })
+
+  router.patch('/global-delivery-partners/:id', jwtAuth, async (req, res) => {
+    const { name, logo_url, commission_pct, active } = req.body || {}
+    try {
+      const [row] = await sql`
+        UPDATE global_delivery_partners SET
+          name           = COALESCE(NULLIF(${(name||'').trim()},''), name),
+          logo_url       = COALESCE(NULLIF(${logo_url||''},''), logo_url),
+          commission_pct = COALESCE(${commission_pct !== undefined ? parseFloat(commission_pct) : null}, commission_pct),
+          active         = COALESCE(${active !== undefined ? !!active : null}, active)
+        WHERE id = ${req.params.id} RETURNING *`
+      if (!row) return res.status(404).json({ error: 'Not found' })
+      res.json({ ok: true, row })
+    } catch (e) { res.status(500).json({ error: e.message }) }
+  })
+
+  router.delete('/global-delivery-partners/:id', jwtAuth, async (req, res) => {
+    try {
+      await sql`DELETE FROM outlet_hidden_partners WHERE partner_id = ${req.params.id}`
+      await sql`DELETE FROM global_delivery_partners WHERE id = ${req.params.id}`
+      res.json({ ok: true })
+    } catch (e) { res.status(500).json({ error: e.message }) }
+  })
+
   return router
 }

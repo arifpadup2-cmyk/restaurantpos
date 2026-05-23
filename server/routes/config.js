@@ -7,6 +7,13 @@ function newId () {
   return Date.now().toString(36) + Math.random().toString(36).slice(2, 7)
 }
 
+function outletId () {
+  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'
+  let id = ''
+  for (let i = 0; i < 10; i++) id += chars[Math.floor(Math.random() * chars.length)]
+  return id
+}
+
 const DEFAULT_PAYMENT_METHODS = [
   { name: 'Cash',                type: 'cash',    sort_order: 0 },
   { name: 'Credit / Debit Card', type: 'card',    sort_order: 1 },
@@ -190,7 +197,7 @@ module.exports = function configRouter (sql) {
     try {
       const [row] = await sql`
         INSERT INTO outlets (id, restaurant_id, brand_id, name, phone, email, address, opening_time, closing_time, currency, created_at)
-        VALUES (${newId()}, ${rid}, ${brand_id||null}, ${name.trim()},
+        VALUES (${outletId()}, ${rid}, ${brand_id||null}, ${name.trim()},
                 ${phone||null}, ${email||null}, ${address||null},
                 ${opening_time||'09:00'}, ${closing_time||'22:00'}, ${currency||'MYR'}, ${Date.now()})
         RETURNING *`
@@ -275,130 +282,63 @@ module.exports = function configRouter (sql) {
     } catch (e) { res.status(500).json({ error: e.message }) }
   })
 
-  // ── PAYMENT METHODS ────────────────────────────────────────────────────────
+  // ── PAYMENT METHODS (global — outlet toggle only) ─────────────────────────
   router.get('/payment-methods', async (req, res) => {
     const rid = req.user.restaurant_id
     try {
-      let rows = await sql`SELECT * FROM payment_methods WHERE restaurant_id = ${rid} ORDER BY sort_order, name`
-      if (!rows.length) {
-        for (const d of DEFAULT_PAYMENT_METHODS) {
-          await sql`INSERT INTO payment_methods (id, restaurant_id, name, type, enabled, sort_order)
-            VALUES (${newId()}, ${rid}, ${d.name}, ${d.type}, true, ${d.sort_order})`
-        }
-        rows = await sql`SELECT * FROM payment_methods WHERE restaurant_id = ${rid} ORDER BY sort_order, name`
-      }
+      const rows = await sql`
+        SELECT g.*, (ohp.method_id IS NOT NULL) AS hidden
+        FROM global_payment_methods g
+        LEFT JOIN outlet_hidden_payments ohp
+          ON ohp.method_id = g.id AND ohp.restaurant_id = ${rid}
+        WHERE g.active = true
+        ORDER BY g.sort_order, g.name`
       res.json({ rows })
     } catch (e) { res.status(500).json({ error: e.message }) }
   })
 
-  router.post('/payment-methods', async (req, res) => {
-    const { name, type } = req.body || {}
-    const rid = req.user.restaurant_id
-    if (!name) return res.status(400).json({ error: 'name required' })
-    try {
-      const [row] = await sql`
-        INSERT INTO payment_methods (id, restaurant_id, name, type, enabled, sort_order)
-        VALUES (${newId()}, ${rid}, ${name.trim()}, ${type || 'other'}, true,
-          (SELECT COALESCE(MAX(sort_order),0)+1 FROM payment_methods WHERE restaurant_id = ${rid}))
-        RETURNING *`
-      res.json(row)
-    } catch (e) { res.status(500).json({ error: e.message }) }
-  })
-
+  // Toggle visibility: hidden=true → hide from this outlet, hidden=false → show
   router.patch('/payment-methods/:id', async (req, res) => {
-    const { name, enabled } = req.body || {}
+    const { hidden } = req.body || {}
     const rid = req.user.restaurant_id
+    if (!rid) return res.status(400).json({ error: 'No restaurant linked' })
     try {
-      const [row] = await sql`
-        UPDATE payment_methods SET
-          name    = COALESCE(NULLIF(${(name || '').trim()}, ''), name),
-          enabled = COALESCE(${enabled !== undefined ? !!enabled : null}, enabled)
-        WHERE id = ${req.params.id} AND restaurant_id = ${rid}
-        RETURNING *`
-      if (!row) return res.status(404).json({ error: 'not found' })
-      res.json(row)
-    } catch (e) { res.status(500).json({ error: e.message }) }
-  })
-
-  router.delete('/payment-methods/:id', async (req, res) => {
-    const rid = req.user.restaurant_id
-    try {
-      await sql`DELETE FROM payment_methods WHERE id = ${req.params.id} AND restaurant_id = ${rid}`
+      if (hidden) {
+        await sql`INSERT INTO outlet_hidden_payments (restaurant_id, method_id)
+                  VALUES (${rid}, ${req.params.id}) ON CONFLICT DO NOTHING`
+      } else {
+        await sql`DELETE FROM outlet_hidden_payments WHERE restaurant_id = ${rid} AND method_id = ${req.params.id}`
+      }
       res.json({ ok: true })
     } catch (e) { res.status(500).json({ error: e.message }) }
   })
 
-  // ── DELIVERY PARTNERS ──────────────────────────────────────────────────────
+  // ── DELIVERY PARTNERS (global — outlet toggle only) ────────────────────────
   router.get('/delivery-partners', async (req, res) => {
     const rid = req.user.restaurant_id
     try {
-      let rows = await sql`SELECT * FROM delivery_partners WHERE restaurant_id = ${rid} ORDER BY name`
-      if (!rows.length) {
-        for (const d of DEFAULT_DELIVERY_PARTNERS) {
-          await sql`INSERT INTO delivery_partners (id, restaurant_id, name, enabled, commission_rate)
-            VALUES (${newId()}, ${rid}, ${d.name}, false, 0)`
-        }
-        rows = await sql`SELECT * FROM delivery_partners WHERE restaurant_id = ${rid} ORDER BY name`
-      }
-      // attach has_orders flag so frontend knows if delete is allowed
-      const withFlags = await Promise.all(rows.map(async r => {
-        let hasOrders = false
-        try {
-          const [cnt] = await sql`SELECT COUNT(*)::int AS n FROM orders WHERE delivery_partner_id = ${r.id}`
-          hasOrders = (cnt?.n || 0) > 0
-        } catch (_) {}
-        return { ...r, has_orders: hasOrders }
-      }))
-      res.json({ rows: withFlags })
-    } catch (e) { res.status(500).json({ error: e.message }) }
-  })
-
-  router.post('/delivery-partners', async (req, res) => {
-    const { name, commission_rate, logo_url } = req.body || {}
-    const rid = req.user.restaurant_id
-    if (!name) return res.status(400).json({ error: 'name required' })
-    try {
-      const [row] = await sql`
-        INSERT INTO delivery_partners (id, restaurant_id, name, enabled, commission_rate, logo_url)
-        VALUES (${newId()}, ${rid}, ${name.trim()}, true, ${parseFloat(commission_rate) || 0}, ${logo_url || null})
-        RETURNING *`
-      res.json({ ...row, has_orders: false })
+      const rows = await sql`
+        SELECT g.*, (ohp.partner_id IS NOT NULL) AS hidden
+        FROM global_delivery_partners g
+        LEFT JOIN outlet_hidden_partners ohp
+          ON ohp.partner_id = g.id AND ohp.restaurant_id = ${rid}
+        WHERE g.active = true
+        ORDER BY g.sort_order, g.name`
+      res.json({ rows })
     } catch (e) { res.status(500).json({ error: e.message }) }
   })
 
   router.patch('/delivery-partners/:id', async (req, res) => {
-    const { name, enabled, commission_rate, logo_url } = req.body || {}
+    const { hidden } = req.body || {}
     const rid = req.user.restaurant_id
+    if (!rid) return res.status(400).json({ error: 'No restaurant linked' })
     try {
-      const [row] = await sql`
-        UPDATE delivery_partners SET
-          name            = COALESCE(NULLIF(${(name || '').trim()}, ''), name),
-          enabled         = COALESCE(${enabled !== undefined ? !!enabled : null}, enabled),
-          commission_rate = COALESCE(${commission_rate !== undefined ? parseFloat(commission_rate) : null}, commission_rate),
-          logo_url        = COALESCE(NULLIF(${logo_url !== undefined ? (logo_url || '') : ''}, ''), logo_url)
-        WHERE id = ${req.params.id} AND restaurant_id = ${rid}
-        RETURNING *`
-      if (!row) return res.status(404).json({ error: 'not found' })
-      let hasOrders = false
-      try {
-        const [cnt] = await sql`SELECT COUNT(*)::int AS n FROM orders WHERE delivery_partner_id = ${req.params.id}`
-        hasOrders = (cnt?.n || 0) > 0
-      } catch (_) {}
-      res.json({ ...row, has_orders: hasOrders })
-    } catch (e) { res.status(500).json({ error: e.message }) }
-  })
-
-  router.delete('/delivery-partners/:id', async (req, res) => {
-    const rid = req.user.restaurant_id
-    try {
-      let hasOrders = false
-      try {
-        const [cnt] = await sql`SELECT COUNT(*)::int AS n FROM orders WHERE delivery_partner_id = ${req.params.id}`
-        hasOrders = (cnt?.n || 0) > 0
-      } catch (_) {}
-      if (hasOrders)
-        return res.status(409).json({ error: 'Cannot delete — orders exist for this partner. Disable it instead.' })
-      await sql`DELETE FROM delivery_partners WHERE id = ${req.params.id} AND restaurant_id = ${rid}`
+      if (hidden) {
+        await sql`INSERT INTO outlet_hidden_partners (restaurant_id, partner_id)
+                  VALUES (${rid}, ${req.params.id}) ON CONFLICT DO NOTHING`
+      } else {
+        await sql`DELETE FROM outlet_hidden_partners WHERE restaurant_id = ${rid} AND partner_id = ${req.params.id}`
+      }
       res.json({ ok: true })
     } catch (e) { res.status(500).json({ error: e.message }) }
   })

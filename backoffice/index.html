@@ -1643,13 +1643,15 @@ input:checked+.toggle-slider:before{transform:translateX(17px)}
 
       <!-- PAYMENT METHODS -->
       <div id="cfg-payment" class="cfg-section">
-        <div class="page-header"><h2>Payment Methods</h2><button class="btn" onclick="cfgAddPayment()">+ Add Method</button></div>
+        <div class="page-header"><h2>Payment Methods</h2></div>
+        <p style="font-size:13px;color:var(--muted);margin-bottom:14px">Payment methods are managed by your provider. Toggle to show or hide each method in your POS.</p>
         <div class="cfg-card"><div class="cfg-card-body"><div id="cfg-pm-list"></div></div></div>
       </div>
 
       <!-- DELIVERY PARTNERS -->
       <div id="cfg-delivery" class="cfg-section">
-        <div class="page-header"><h2>Delivery Partners</h2><button class="btn" onclick="cfgAddDelivery()">+ Add Partner</button></div>
+        <div class="page-header"><h2>Delivery Partners</h2></div>
+        <p style="font-size:13px;color:var(--muted);margin-bottom:14px">Delivery partners are managed by your provider. Toggle to show or hide each partner in your POS.</p>
         <div class="cfg-card"><div class="cfg-card-body"><div id="cfg-dp-list"></div></div></div>
       </div>
 
@@ -4372,25 +4374,24 @@ function cfgAddOrderType () {
 async function cfgLoadPayment () {
   try {
     const { rows } = await apiFetch('GET', '/config/payment-methods')
-    const icons = { cash:'💵', card:'💳', ewallet:'📱', qr:'📲', bank:'🏦', voucher:'🎟', other:'💰' }
+    const icons = { cash:'💵', card:'💳', ewallet:'📱', qr:'📲', bank:'🏦', voucher:'🎟️', other:'💰' }
     document.getElementById('cfg-pm-list').innerHTML = rows.map(r => `
       <div class="cfg-list-item">
-        <span style="font-size:18px">${icons[r.type]||'💰'}</span>
-        <div style="flex:1"><div class="cfg-list-item-name">${r.name}</div><div class="cfg-list-item-sub">${r.type}</div></div>
-        <label class="cfg-toggle"><input type="checkbox" ${r.enabled ? 'checked' : ''} onchange="cfgToggleItem('/config/payment-methods','${r.id}',this.checked)"><span class="cfg-toggle-slider"></span></label>
-        <button class="btn btn-sm btn-danger" style="margin-left:8px" onclick="cfgDeleteItem('/config/payment-methods','${r.id}',cfgLoadPayment)">✕</button>
-      </div>`).join('') || '<p style="color:var(--muted);font-size:13px">No payment methods.</p>'
+        <span style="font-size:20px;flex-shrink:0">${r.icon || icons[r.type] || '💰'}</span>
+        <div style="flex:1"><div class="cfg-list-item-name">${r.name}</div><div class="cfg-list-item-sub">${r.hidden ? 'Hidden from your POS' : 'Visible in your POS'}</div></div>
+        <label class="cfg-toggle" title="${r.hidden ? 'Click to show' : 'Click to hide'}">
+          <input type="checkbox" ${!r.hidden ? 'checked' : ''} onchange="cfgTogglePayment('${r.id}',!this.checked)">
+          <span class="cfg-toggle-slider"></span>
+        </label>
+      </div>`).join('') || '<p style="color:var(--muted);font-size:13px">No payment methods configured by your provider.</p>'
   } catch (e) { showToast(friendlyError(e.message), 'error') }
 }
 
-function cfgAddPayment () {
-  const name = prompt('Payment method name (e.g. Touch\'n\'Go):')
-  if (!name) return
-  const types = ['cash','card','ewallet','qr','bank','voucher','other']
-  const type  = prompt('Type (' + types.join(', ') + '):') || 'other'
-  apiFetch('POST', '/config/payment-methods', { name, type })
-    .then(() => { showToast('Added', 'success'); cfgLoadPayment() })
-    .catch(e => showToast(friendlyError(e.message), 'error'))
+async function cfgTogglePayment (id, hidden) {
+  try {
+    await apiFetch('PATCH', '/config/payment-methods/' + id, { hidden })
+    cfgLoadPayment()
+  } catch (e) { showToast(friendlyError(e.message), 'error') }
 }
 
 // ─── DELIVERY PARTNERS ────────────────────────────────────────────────────────
@@ -4399,48 +4400,29 @@ async function cfgLoadDelivery () {
     const { rows } = await apiFetch('GET', '/config/delivery-partners')
     document.getElementById('cfg-dp-list').innerHTML = rows.map(r => {
       const logoHtml = r.logo_url
-        ? `<img src="${r.logo_url}" alt="${r.name}" style="height:36px;width:36px;object-fit:contain;border-radius:6px;border:1px solid var(--border);padding:3px;background:#fff;margin-right:10px" onerror="this.style.display='none'">`
-        : `<div style="height:36px;width:36px;border-radius:6px;background:var(--surface-alt);display:flex;align-items:center;justify-content:center;margin-right:10px;font-size:18px">🚗</div>`
-      const deleteOrDisable = r.has_orders
-        ? `<button class="btn btn-sm btn-outline" style="margin-left:4px;color:var(--warning,#f59e0b)" title="Has orders — disable only" onclick="cfgToggleItem('/config/delivery-partners','${r.id}',false).then(cfgLoadDelivery)">Disable</button>`
-        : `<button class="btn btn-sm btn-danger" style="margin-left:4px" onclick="cfgDeleteDelivery('${r.id}','${r.name}')">✕</button>`
+        ? `<img src="${r.logo_url}" alt="${r.name}" style="height:36px;width:36px;object-fit:contain;border-radius:6px;border:1px solid var(--border);padding:3px;background:#fff;flex-shrink:0" onerror="this.style.display='none'">`
+        : `<div style="height:36px;width:36px;border-radius:6px;background:var(--surface-alt);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:18px">🚗</div>`
       return `
       <div class="cfg-list-item">
         ${logoHtml}
-        <div style="flex:1">
+        <div style="flex:1;margin-left:10px">
           <div class="cfg-list-item-name">${r.name}</div>
-          <div class="cfg-list-item-sub">Commission: ${r.commission_rate || 0}%${r.has_orders ? ' · <span style="color:var(--warning,#f59e0b)">has orders</span>' : ''}</div>
+          <div class="cfg-list-item-sub">Commission: ${r.commission_pct || 0}% · ${r.hidden ? 'Hidden from your POS' : 'Visible in your POS'}</div>
         </div>
-        <label class="cfg-toggle"><input type="checkbox" ${r.enabled ? 'checked' : ''} onchange="cfgToggleItem('/config/delivery-partners','${r.id}',this.checked).then(()=>cfgLoadDelivery())"><span class="cfg-toggle-slider"></span></label>
-        <button class="btn btn-sm" style="margin-left:8px" onclick="cfgOpenDeliveryModal(${JSON.stringify(r).replace(/"/g,'&quot;')})">Edit</button>
-        ${deleteOrDisable}
+        <label class="cfg-toggle" title="${r.hidden ? 'Click to show' : 'Click to hide'}">
+          <input type="checkbox" ${!r.hidden ? 'checked' : ''} onchange="cfgToggleDelivery('${r.id}',!this.checked)">
+          <span class="cfg-toggle-slider"></span>
+        </label>
       </div>`
-    }).join('') || '<p style="color:var(--muted);font-size:13px">No partners.</p>'
+    }).join('') || '<p style="color:var(--muted);font-size:13px">No delivery partners configured by your provider.</p>'
   } catch (e) { showToast(friendlyError(e.message), 'error') }
 }
 
-function cfgAddDelivery () {
-  document.getElementById('dp-id').value = ''
-  document.getElementById('dp-modal-title').textContent = 'Add Delivery Partner'
-  document.getElementById('dp-name').value = ''
-  document.getElementById('dp-commission').value = ''
-  document.getElementById('dp-logo').value = ''
-  document.getElementById('dp-logo-preview').style.display = 'none'
-  showModal('modal-delivery')
-  setTimeout(() => document.getElementById('dp-name').focus(), 100)
-}
-
-function cfgOpenDeliveryModal (r) {
-  document.getElementById('dp-id').value = r.id
-  document.getElementById('dp-modal-title').textContent = 'Edit Delivery Partner'
-  document.getElementById('dp-name').value = r.name || ''
-  document.getElementById('dp-commission').value = r.commission_rate || 0
-  document.getElementById('dp-logo').value = r.logo_url || ''
-  const prev = document.getElementById('dp-logo-preview')
-  const img  = document.getElementById('dp-logo-img')
-  if (r.logo_url) { img.src = r.logo_url; prev.style.display = 'block' }
-  else            { prev.style.display = 'none' }
-  showModal('modal-delivery')
+async function cfgToggleDelivery (id, hidden) {
+  try {
+    await apiFetch('PATCH', '/config/delivery-partners/' + id, { hidden })
+    cfgLoadDelivery()
+  } catch (e) { showToast(friendlyError(e.message), 'error') }
 }
 
 // live logo preview

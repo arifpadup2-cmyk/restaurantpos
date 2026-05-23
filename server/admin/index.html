@@ -271,6 +271,9 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
       <div class="ni active" onclick="nav('dashboard')" id="nav-dashboard"><span class="ic">📊</span>Dashboard</div>
       <div class="ni" onclick="nav('restaurants')" id="nav-restaurants"><span class="ic">🏪</span>Restaurants</div>
       <div class="ni" onclick="nav('outlets')" id="nav-outlets"><span class="ic">🏬</span>Outlets</div>
+      <div class="sec">Global Config</div>
+      <div class="ni" onclick="nav('gpm')" id="nav-gpm"><span class="ic">💳</span>Payment Methods</div>
+      <div class="ni" onclick="nav('gdp')" id="nav-gdp"><span class="ic">🚗</span>Delivery Partners</div>
       <div class="sec">Tools</div>
       <div class="ni" onclick="nav('performance')" id="nav-performance"><span class="ic">📈</span>Performance</div>
       <div class="ni" onclick="nav('install')" id="nav-install"><span class="ic">📋</span>Install Guide</div>
@@ -353,6 +356,38 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
                 </tr>
               </thead>
               <tbody id="o-tbody"><tr><td colspan="7" style="text-align:center;padding:20px;color:#475569">Loading…</td></tr></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- GLOBAL PAYMENT METHODS -->
+      <div class="view" id="v-gpm">
+        <div class="ph">
+          <div><h2>Payment Methods</h2><p>Global list shown to all outlets — outlets can hide individual methods</p></div>
+          <button class="btn btn-p" onclick="showGpmModal(null)">+ Add Method</button>
+        </div>
+        <div class="card" style="overflow:hidden">
+          <div style="overflow-x:auto">
+            <table class="dt">
+              <thead><tr><th>Icon</th><th>Name</th><th>Type</th><th>Status</th><th>Actions</th></tr></thead>
+              <tbody id="gpm-tbody"><tr><td colspan="5" style="text-align:center;padding:20px;color:#475569">Loading…</td></tr></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- GLOBAL DELIVERY PARTNERS -->
+      <div class="view" id="v-gdp">
+        <div class="ph">
+          <div><h2>Delivery Partners</h2><p>Global list shown to all outlets — outlets can hide individual partners</p></div>
+          <button class="btn btn-p" onclick="showGdpModal(null)">+ Add Partner</button>
+        </div>
+        <div class="card" style="overflow:hidden">
+          <div style="overflow-x:auto">
+            <table class="dt">
+              <thead><tr><th>Name</th><th>Commission</th><th>Status</th><th>Actions</th></tr></thead>
+              <tbody id="gdp-tbody"><tr><td colspan="4" style="text-align:center;padding:20px;color:#475569">Loading…</td></tr></tbody>
             </table>
           </div>
         </div>
@@ -968,6 +1003,8 @@ function nav (id) {
   if (id==='dashboard')   loadDashboard()
   if (id==='restaurants') loadRestaurants()
   if (id==='outlets')     loadOutlets()
+  if (id==='gpm')         loadGpm()
+  if (id==='gdp')         loadGdp()
   if (id==='performance') loadPerformance()
   if (id==='install')     { loadInstallFiles(); populateCredSelect() }
   if (id==='system')      loadHealth()
@@ -1137,6 +1174,157 @@ async function saveOutletLicense (id, btn) {
     btn.closest('.mo').remove()
     loadOutlets()
   } catch(e) { alert('Error: '+e.message); btn.disabled=false; btn.textContent='Save' }
+}
+
+// ── Global Payment Methods ─────────────────────────────────────────────────
+let _gpm = []
+async function loadGpm () {
+  document.getElementById('gpm-tbody').innerHTML = `<tr><td colspan="5" style="text-align:center;padding:20px;color:#475569">Loading…</td></tr>`
+  try {
+    const { rows } = await api('GET', '/setup/global-payment-methods')
+    _gpm = rows
+    renderGpm()
+  } catch(e) {
+    document.getElementById('gpm-tbody').innerHTML = `<tr><td colspan="5" style="text-align:center;padding:20px;color:#f87171">${e.message}</td></tr>`
+  }
+}
+
+function renderGpm () {
+  document.getElementById('gpm-tbody').innerHTML = _gpm.map(r => `<tr>
+    <td style="font-size:20px;text-align:center">${esc(r.icon||'💳')}</td>
+    <td><div class="strong">${esc(r.name)}</div></td>
+    <td style="color:#94a3b8;font-size:12px">${esc(r.type||'other')}</td>
+    <td>${r.active ? '<span class="badge b-active">Active</span>' : '<span class="badge b-suspended">Inactive</span>'}</td>
+    <td>
+      <div style="display:flex;gap:4px">
+        <button class="bsm b" onclick="showGpmModal(${JSON.stringify(r).replace(/"/g,'&quot;')})">Edit</button>
+        <button class="bsm ${r.active?'y':'g'}" onclick="toggleGpm('${r.id}',${!r.active})">${r.active?'Disable':'Enable'}</button>
+        <button class="bsm r" onclick="deleteGpm('${r.id}','${esc(r.name)}')">Delete</button>
+      </div>
+    </td>
+  </tr>`).join('') || `<tr><td colspan="5" style="text-align:center;padding:20px;color:#475569">No methods yet</td></tr>`
+}
+
+function showGpmModal (r) {
+  const el = document.createElement('div')
+  el.className = 'mo'; el.style.display = 'flex'
+  el.innerHTML = `
+    <div class="mb" style="max-width:420px">
+      <h3>${r ? 'Edit' : 'Add'} Payment Method</h3>
+      <div class="mf" style="margin-top:14px">
+        <label>Name *</label><input id="gpm-name" type="text" value="${esc(r?.name||'')}" placeholder="e.g. Touch n Go">
+        <label>Icon (emoji)</label><input id="gpm-icon" type="text" value="${esc(r?.icon||'💳')}" placeholder="💳">
+        <label>Type</label>
+        <select id="gpm-type">
+          ${['cash','card','ewallet','qr','bank','voucher','other'].map(t=>`<option value="${t}" ${(r?.type||'other')===t?'selected':''}>${t}</option>`).join('')}
+        </select>
+      </div>
+      <div class="ma">
+        <button class="btn btn-o" onclick="this.closest('.mo').remove()">Cancel</button>
+        <button class="btn btn-p" onclick="saveGpm('${r?.id||''}',this)">Save</button>
+      </div>
+    </div>`
+  el.addEventListener('click', e => { if(e.target===el) el.remove() })
+  document.body.appendChild(el)
+}
+
+async function saveGpm (id, btn) {
+  const name = document.getElementById('gpm-name').value.trim()
+  if (!name) { alert('Name required'); return }
+  btn.disabled=true; btn.textContent='Saving…'
+  try {
+    const body = { name, icon: document.getElementById('gpm-icon').value.trim()||'💳', type: document.getElementById('gpm-type').value }
+    if (id) await api('PATCH', `/setup/global-payment-methods/${id}`, body)
+    else    await api('POST',  '/setup/global-payment-methods', body)
+    btn.closest('.mo').remove()
+    loadGpm()
+  } catch(e) { alert('Error: '+e.message); btn.disabled=false; btn.textContent='Save' }
+}
+
+async function toggleGpm (id, active) {
+  try { await api('PATCH', `/setup/global-payment-methods/${id}`, { active }); loadGpm() }
+  catch(e) { alert('Error: '+e.message) }
+}
+
+async function deleteGpm (id, name) {
+  if (!confirm(`Delete "${name}"? This removes it from all outlets.`)) return
+  try { await api('DELETE', `/setup/global-payment-methods/${id}`); loadGpm() }
+  catch(e) { alert('Error: '+e.message) }
+}
+
+// ── Global Delivery Partners ───────────────────────────────────────────────
+let _gdp = []
+async function loadGdp () {
+  document.getElementById('gdp-tbody').innerHTML = `<tr><td colspan="4" style="text-align:center;padding:20px;color:#475569">Loading…</td></tr>`
+  try {
+    const { rows } = await api('GET', '/setup/global-delivery-partners')
+    _gdp = rows
+    renderGdp()
+  } catch(e) {
+    document.getElementById('gdp-tbody').innerHTML = `<tr><td colspan="4" style="text-align:center;padding:20px;color:#f87171">${e.message}</td></tr>`
+  }
+}
+
+function renderGdp () {
+  document.getElementById('gdp-tbody').innerHTML = _gdp.map(r => `<tr>
+    <td>
+      ${r.logo_url ? `<img src="${esc(r.logo_url)}" style="height:28px;width:28px;object-fit:contain;border-radius:5px;vertical-align:middle;margin-right:8px" onerror="this.style.display='none'">` : ''}
+      <span class="strong">${esc(r.name)}</span>
+    </td>
+    <td style="color:#94a3b8;font-size:12px">${r.commission_pct||0}%</td>
+    <td>${r.active ? '<span class="badge b-active">Active</span>' : '<span class="badge b-suspended">Inactive</span>'}</td>
+    <td>
+      <div style="display:flex;gap:4px">
+        <button class="bsm b" onclick="showGdpModal(${JSON.stringify(r).replace(/"/g,'&quot;')})">Edit</button>
+        <button class="bsm ${r.active?'y':'g'}" onclick="toggleGdp('${r.id}',${!r.active})">${r.active?'Disable':'Enable'}</button>
+        <button class="bsm r" onclick="deleteGdp('${r.id}','${esc(r.name)}')">Delete</button>
+      </div>
+    </td>
+  </tr>`).join('') || `<tr><td colspan="4" style="text-align:center;padding:20px;color:#475569">No partners yet</td></tr>`
+}
+
+function showGdpModal (r) {
+  const el = document.createElement('div')
+  el.className = 'mo'; el.style.display = 'flex'
+  el.innerHTML = `
+    <div class="mb" style="max-width:420px">
+      <h3>${r ? 'Edit' : 'Add'} Delivery Partner</h3>
+      <div class="mf" style="margin-top:14px">
+        <label>Name *</label><input id="gdp-name" type="text" value="${esc(r?.name||'')}" placeholder="e.g. GrabFood">
+        <label>Commission Rate (%)</label><input id="gdp-comm" type="number" value="${r?.commission_pct||0}" min="0" max="100" step="0.5">
+        <label>Logo URL</label><input id="gdp-logo" type="url" value="${esc(r?.logo_url||'')}" placeholder="https://…">
+      </div>
+      <div class="ma">
+        <button class="btn btn-o" onclick="this.closest('.mo').remove()">Cancel</button>
+        <button class="btn btn-p" onclick="saveGdp('${r?.id||''}',this)">Save</button>
+      </div>
+    </div>`
+  el.addEventListener('click', e => { if(e.target===el) el.remove() })
+  document.body.appendChild(el)
+}
+
+async function saveGdp (id, btn) {
+  const name = document.getElementById('gdp-name').value.trim()
+  if (!name) { alert('Name required'); return }
+  btn.disabled=true; btn.textContent='Saving…'
+  try {
+    const body = { name, commission_pct: parseFloat(document.getElementById('gdp-comm').value)||0, logo_url: document.getElementById('gdp-logo').value.trim()||null }
+    if (id) await api('PATCH', `/setup/global-delivery-partners/${id}`, body)
+    else    await api('POST',  '/setup/global-delivery-partners', body)
+    btn.closest('.mo').remove()
+    loadGdp()
+  } catch(e) { alert('Error: '+e.message); btn.disabled=false; btn.textContent='Save' }
+}
+
+async function toggleGdp (id, active) {
+  try { await api('PATCH', `/setup/global-delivery-partners/${id}`, { active }); loadGdp() }
+  catch(e) { alert('Error: '+e.message) }
+}
+
+async function deleteGdp (id, name) {
+  if (!confirm(`Delete "${name}"? This removes it from all outlets.`)) return
+  try { await api('DELETE', `/setup/global-delivery-partners/${id}`); loadGdp() }
+  catch(e) { alert('Error: '+e.message) }
 }
 
 function populateFilters (data) {
