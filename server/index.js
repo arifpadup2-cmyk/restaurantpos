@@ -39,25 +39,29 @@ const DATA_DIR = process.env.DATA_DIR || path.join(__dirname)
 // ── Database ──────────────────────────────────────────────────────────────────
 // Railway sets DATABASE_URL automatically; individual DB_* vars used otherwise.
 
-const sql = process.env.DATABASE_URL
-  ? postgres(process.env.DATABASE_URL, {
-      ssl:             { rejectUnauthorized: false },
-      max:             20,
-      idle_timeout:    30,
-      connect_timeout: 10,
-      onnotice:        () => {},
-    })
-  : postgres({
-      host:            process.env.DB_HOST     || '127.0.0.1',
-      port:            parseInt(process.env.DB_PORT || '5432', 10),
-      database:        process.env.DB_NAME     || 'restaurant_pos_central',
-      user:            process.env.DB_USER     || 'pos_central_user',
-      password:        process.env.DB_PASS     || '',
-      max:             20,
-      idle_timeout:    30,
-      connect_timeout: 10,
-      onnotice:        () => {},
-    })
+function makeSql () {
+  return process.env.DATABASE_URL
+    ? postgres(process.env.DATABASE_URL, {
+        ssl:             { rejectUnauthorized: false },
+        max:             20,
+        idle_timeout:    30,
+        connect_timeout: 10,
+        onnotice:        () => {},
+      })
+    : postgres({
+        host:            process.env.DB_HOST     || '127.0.0.1',
+        port:            parseInt(process.env.DB_PORT || '5432', 10),
+        database:        process.env.DB_NAME     || 'restaurant_pos_central',
+        user:            process.env.DB_USER     || 'pos_central_user',
+        password:        process.env.DB_PASS     || '',
+        max:             20,
+        idle_timeout:    30,
+        connect_timeout: 10,
+        onnotice:        () => {},
+      })
+}
+
+let sql = makeSql()
 
 // ── Migrations on startup ─────────────────────────────────────────────────────
 
@@ -413,6 +417,9 @@ async function start () {
   }
 
   await runMigrations()
+  // Fresh pool after migrations — clears postgres.js prepared-statement cache
+  await sql.end({ timeout: 5 }).catch(() => {})
+  sql = makeSql()
   await seedAdminUser()
   await migratePinHashes()
 
