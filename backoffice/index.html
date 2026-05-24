@@ -236,6 +236,8 @@ button,.nav-item,.filter-chip,.btn,[role="button"]{touch-action:manipulation}
 .btn-success{background:#16a34a;color:#fff}.btn-success:hover{background:#14532d;box-shadow:0 4px 12px rgba(22,163,74,.2)}
 .btn-danger{background:var(--danger);color:#fff}.btn-danger:hover{background:#991b1b}
 .btn-outline{background:#fff;border:1.5px solid var(--border);color:var(--text)}.btn-outline:hover{border-color:var(--primary);color:var(--primary);background:#fff9f5}
+.dash-preset.active{background:var(--primary);color:#fff;border-color:var(--primary)}
+.dash-presets-row{display:flex;gap:6px;flex-wrap:wrap}
 .btn-sm{padding:5px 11px;font-size:12px;min-height:30px}
 .btn-icon{width:36px;height:36px;min-width:36px;border-radius:7px;display:inline-flex;align-items:center;justify-content:center}
 .btn-icon-sm{width:30px;height:30px;min-width:30px;border-radius:6px;display:inline-flex;align-items:center;justify-content:center}
@@ -505,10 +507,14 @@ input:checked+.toggle-slider:before{transform:translateX(17px)}
   .kpi-value{font-size:17px}
   /* Dashboard header + filters */
   #v-dashboard .dash-header{flex-direction:column;align-items:flex-start;gap:8px;margin-bottom:12px}
-  .date-filter{overflow-x:auto;flex-wrap:nowrap !important;padding-bottom:4px;-ms-overflow-style:none;scrollbar-width:none;width:100%;max-width:100%}
-  .date-filter::-webkit-scrollbar{display:none}
-  .date-filter select,.date-filter input[type=date]{flex-shrink:0}
+  .date-filter{flex-wrap:wrap !important;padding-bottom:2px;width:100%;max-width:100%}
+  .date-filter select,.date-filter input[type=date]{flex:1 1 auto;min-width:90px;flex-shrink:0}
+  /* Date presets: own scrollable row on mobile */
+  .dash-presets-row{overflow-x:auto;flex-wrap:nowrap !important;width:100%;padding-bottom:2px;scrollbar-width:none}
+  .dash-presets-row::-webkit-scrollbar{display:none}
   .dash-preset{flex-shrink:0;font-size:11px;padding:5px 10px}
+  /* 5th KPI card: span full width when orphaned */
+  #v-dashboard .kpi-grid>:last-child:nth-child(odd){grid-column:span 2}
   /* Reports date presets: horizontal scroll on mobile */
   .rpt-preset-bar{overflow-x:auto !important;flex-wrap:nowrap !important;padding-bottom:4px;scrollbar-width:none}
   .rpt-preset-bar::-webkit-scrollbar{display:none}
@@ -1272,11 +1278,13 @@ input:checked+.toggle-slider:before{transform:translateX(17px)}
         <input type="date" id="dash-from" onchange="loadDashboard()" style="display:none">
         <input type="date" id="dash-to" onchange="loadDashboard()" style="display:none">
         <input type="date" id="dash-date" onchange="setDashPreset('custom-date');loadDashboard()" style="display:none">
-        <button class="btn btn-outline btn-sm dash-preset active" onclick="setDashPreset('today',this)">Today</button>
-        <button class="btn btn-outline btn-sm dash-preset" onclick="setDashPreset('yesterday',this)">Yesterday</button>
-        <button class="btn btn-outline btn-sm dash-preset" onclick="setDashPreset('this-week',this)">This Week</button>
-        <button class="btn btn-outline btn-sm dash-preset" onclick="setDashPreset('this-month',this)">This Month</button>
-        <button class="btn btn-outline btn-sm dash-preset" onclick="setDashPreset('last-month',this)">Last Month</button>
+        <div class="dash-presets-row">
+          <button class="btn btn-outline btn-sm dash-preset active" onclick="setDashPreset('today',this)">Today</button>
+          <button class="btn btn-outline btn-sm dash-preset" onclick="setDashPreset('yesterday',this)">Yesterday</button>
+          <button class="btn btn-outline btn-sm dash-preset" onclick="setDashPreset('this-week',this)">This Week</button>
+          <button class="btn btn-outline btn-sm dash-preset" onclick="setDashPreset('this-month',this)">This Month</button>
+          <button class="btn btn-outline btn-sm dash-preset" onclick="setDashPreset('last-month',this)">Last Month</button>
+        </div>
       </div>
     </div>
 
