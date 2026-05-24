@@ -428,14 +428,14 @@ module.exports = function setupRouter (sql) {
         const catId = 'cat-' + uid()
         await sql`
           INSERT INTO categories (id, brand_id, outlet_id, name, color, sort_order, active)
-          VALUES (${catId}, ${bid}, ${outletId}, ${cat.name}, ${cat.color}, ${ci}, true)
+          VALUES (${catId}, ${bid}, ${outletId}, ${cat.name}, ${cat.color}, ${ci}, 1)
           ON CONFLICT DO NOTHING`
         for (let ii = 0; ii < cat.items.length; ii++) {
           const itemId = 'itm-' + uid()
           const price  = parseFloat((Math.random() * 15 + 5).toFixed(2))
           await sql`
             INSERT INTO menu_items (id, brand_id, outlet_id, category_id, name, price, active)
-            VALUES (${itemId}, ${bid}, ${outletId}, ${catId}, ${cat.items[ii]}, ${price}, true)
+            VALUES (${itemId}, ${bid}, ${outletId}, ${catId}, ${cat.items[ii]}, ${price}, 1)
             ON CONFLICT DO NOTHING`
         }
       }
