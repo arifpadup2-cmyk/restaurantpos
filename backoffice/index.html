@@ -3481,8 +3481,6 @@ async function ssSubmit () {
     boSettings.branch_name          = outletName
     boSettings.currency             = currency
     boSettings.tax_rate             = tax
-    boSettings.service_charge_rate  = sc
-    boSettings.receipt_footer       = footer
     document.getElementById('hdr-name').textContent = brandName
     const sbBranch = document.getElementById('sb-branch')
     if (sbBranch) sbBranch.textContent = outletName || 'Back Office'
