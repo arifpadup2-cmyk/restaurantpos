@@ -8280,7 +8280,7 @@ function _renderBoUserModal (u, outlets) {
   const perms = u?.permissions || {}
   const uOutlets = u?.outlet_ids || []
   return `
-  <div class="modal-overlay" id="modal-bo-user" onclick="if(event.target===this)closeModal('modal-bo-user')">
+  <div class="modal-overlay show" id="modal-bo-user" onclick="if(event.target===this)closeModal('modal-bo-user')">
     <div class="modal-box" style="max-width:520px">
       <div class="modal-hdr"><h3 id="bo-user-modal-title">${u ? 'Edit User' : 'Add User'}</h3><button class="modal-close" onclick="closeModal('modal-bo-user')">✕</button></div>
       <div class="modal-body" style="max-height:70vh;overflow-y:auto">
