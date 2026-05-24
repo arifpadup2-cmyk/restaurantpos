@@ -7920,11 +7920,11 @@ const _origShowView = showView
           <div class="ss-row">
             <div class="ss-field">
               <label>First Name <span style="color:#ef4444">*</span></label>
-              <input id="ss-first-name" type="text" placeholder="Ahmad" autocomplete="given-name">
+              <input id="ss-first-name" type="text" placeholder="John" autocomplete="given-name">
             </div>
             <div class="ss-field">
               <label>Last Name <span style="color:#ef4444">*</span></label>
-              <input id="ss-last-name" type="text" placeholder="bin Ali" autocomplete="family-name">
+              <input id="ss-last-name" type="text" placeholder="Smith" autocomplete="family-name">
             </div>
           </div>
           <div class="ss-row">
@@ -7932,14 +7932,16 @@ const _origShowView = showView
               <label>Owner Mobile Number <span style="color:#ef4444">*</span></label>
               <div class="ss-phone-row">
                 <select id="ss-phone-code">
+                  <option value="+1" selected>+1 US</option>
+                  <option value="+44">+44 GB</option>
+                  <option value="+61">+61 AU</option>
                   <option value="+60">+60 MY</option><option value="+65">+65 SG</option>
                   <option value="+62">+62 ID</option><option value="+66">+66 TH</option>
                   <option value="+63">+63 PH</option><option value="+971">+971 AE</option>
                   <option value="+966">+966 SA</option><option value="+92">+92 PK</option>
-                  <option value="+91">+91 IN</option><option value="+44">+44 GB</option>
-                  <option value="+1">+1 US</option>
+                  <option value="+91">+91 IN</option>
                 </select>
-                <input id="ss-phone" type="tel" placeholder="11 2345 6789">
+                <input id="ss-phone" type="tel" placeholder="555 123 4567">
               </div>
             </div>
             <div class="ss-field">
@@ -7960,7 +7962,7 @@ const _origShowView = showView
           <div class="ss-row">
             <div class="ss-field">
               <label>Brand Name <span style="color:#ef4444">*</span></label>
-              <input id="ss-brand-name" type="text" placeholder="e.g. Mama's Kitchen" autocomplete="organization">
+              <input id="ss-brand-name" type="text" placeholder="e.g. Joe's Diner" autocomplete="organization">
             </div>
             <div class="ss-field">
               <label>Brand Logo <span style="color:#64748b;font-weight:400">(optional)</span></label>
@@ -7996,7 +7998,7 @@ const _origShowView = showView
           <div class="ss-row">
             <div class="ss-field">
               <label>Market Name <span style="color:#ef4444">*</span></label>
-              <input id="ss-market-name" type="text" placeholder="e.g. Kuala Lumpur, Penang, Main City">
+              <input id="ss-market-name" type="text" placeholder="e.g. New York, Los Angeles, Chicago">
               <span style="font-size:11px;color:#64748b;margin-top:2px">A market groups your outlets geographically. You can add more markets later.</span>
             </div>
           </div>
@@ -8013,17 +8015,18 @@ const _origShowView = showView
           <div class="ss-row">
             <div class="ss-field">
               <label>Outlet Name <span style="color:#ef4444">*</span></label>
-              <input id="ss-outlet-name" type="text" placeholder="e.g. Main Branch, Outlet KL">
+              <input id="ss-outlet-name" type="text" placeholder="e.g. Downtown Branch, Main St">
             </div>
             <div class="ss-field">
               <label>Outlet Phone Number</label>
-              <input id="ss-outlet-phone" type="tel" placeholder="+60 3 1234 5678">
+              <input id="ss-outlet-phone" type="tel" placeholder="+1 212 555 0100">
             </div>
           </div>
           <div class="ss-row">
             <div class="ss-field">
               <label>Outlet Country <span style="color:#ef4444">*</span></label>
               <select id="ss-country" onchange="ssCountryChange(this.value)">
+                <option value="US" selected>United States</option>
                 <option value="MY">Malaysia</option>
                 <option value="SG">Singapore</option>
                 <option value="ID">Indonesia</option>
@@ -8066,6 +8069,7 @@ const _origShowView = showView
             <div class="ss-field">
               <label>Currency <span style="color:#ef4444">*</span></label>
               <select id="ss-currency">
+                <option value="USD" selected>USD — US Dollar</option>
                 <option value="MYR">MYR — Malaysian Ringgit</option>
                 <option value="SGD">SGD — Singapore Dollar</option>
                 <option value="IDR">IDR — Indonesian Rupiah</option>
@@ -8119,12 +8123,12 @@ const _origShowView = showView
           <div class="ss-row">
             <div class="ss-field">
               <label>Outlet Email Address</label>
-              <input id="ss-outlet-email" type="email" placeholder="outlet@yourbrand.com">
+              <input id="ss-outlet-email" type="email" placeholder="downtown@joesdiner.com">
             </div>
           </div>
           <div class="ss-field">
             <label>Address</label>
-            <textarea id="ss-address" rows="2" placeholder="e.g. No. 12, Jalan ABC, 50480 Kuala Lumpur"></textarea>
+            <textarea id="ss-address" rows="2" placeholder="e.g. 123 Main Street, New York, NY 10001"></textarea>
           </div>
           <div class="ss-row" style="align-items:flex-end">
             <div style="display:flex;flex-direction:column;gap:10px">
