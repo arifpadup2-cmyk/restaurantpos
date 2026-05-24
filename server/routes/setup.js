@@ -539,7 +539,7 @@ module.exports = function setupRouter (sql) {
       }
 
       res.json({ ok: true, message: `Seeded ${totalOrders} orders for outlet: ${outlet.name}`, total_orders: totalOrders })
-    } catch (e) { serverError(res, e) }
+    } catch (e) { res.status(500).json({ error: e.message || String(e) }) }
   })
 
   // ── Public: POS terminal connects ────────────────────────────────────────
