@@ -192,7 +192,7 @@ module.exports = function reportsRouter (sql) {
     const rid = req.user.brand_id
     try {
       const [brands, markets, outlets] = await Promise.all([
-        sql`SELECT id, name FROM brands WHERE brand_id = ${rid} ORDER BY name`,
+        sql`SELECT id, name FROM brands WHERE id = ${rid} ORDER BY name`,
         sql`SELECT id, name, brand_id, country, currency_code, currency_symbol FROM markets WHERE brand_id = ${rid} ORDER BY name`,
         sql`SELECT id, name, brand_id, market_id, country, currency_code, currency_symbol FROM outlets WHERE brand_id = ${rid} ORDER BY name`,
       ])
