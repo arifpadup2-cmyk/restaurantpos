@@ -3523,7 +3523,8 @@ function ssUpdateProgress () {
   const outlet = (document.getElementById('ss-outlet-name')?.value || '').trim()
 
   const s1done = !!(first && last && phone)
-  const s2done = !!brand
+  const bizType = (document.getElementById('ss-biz-type')?.value || '').trim()
+  const s2done = !!(brand && bizType)
   const s3done = !!market
   const s4done = !!outlet
 
@@ -3560,6 +3561,8 @@ function ssWatchInputs () {
     const el = document.getElementById(id)
     if (el) el.addEventListener('input', ssUpdateProgress)
   })
+  const bizSel = document.getElementById('ss-biz-type')
+  if (bizSel) bizSel.addEventListener('change', ssUpdateProgress)
 }
 
 function ssTaxSystemChange (val) {
@@ -3593,6 +3596,7 @@ async function ssSubmit () {
   if (!lastName)   { showToast('Last name is required', 'error'); return }
   if (!phoneNum)   { showToast('Mobile number is required', 'error'); return }
   if (!marketName) { showToast('Market name is required', 'error'); return }
+  if (!bizType)    { showToast('Business type is required', 'error'); return }
   if (!outletName) { showToast('Outlet name is required', 'error'); return }
 
   const btn = document.getElementById('ss-submit-btn')
@@ -7976,7 +7980,7 @@ const _origShowView = showView
           </div>
           <div class="ss-row">
             <div class="ss-field">
-              <label>Business Type</label>
+              <label>Business Type <span style="color:#ef4444">*</span></label>
               <select id="ss-biz-type">
                 <option value="">-- Select --</option>
                 <option>Restaurant</option><option>Cafe</option><option>Fast Food</option>
