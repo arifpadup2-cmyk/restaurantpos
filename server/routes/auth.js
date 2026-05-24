@@ -101,7 +101,9 @@ module.exports = function authRouter (sql) {
           return res.status(403).json({ error: 'Email not verified. Check your inbox for the verification link.', code: 'EMAIL_NOT_VERIFIED' })
       }
 
-      const token = sign({ id: user.id, username: user.username, role: user.role, brand_id: user.brand_id || null })
+      const outlet_ids  = user.outlet_ids  || null
+      const permissions = user.permissions || {}
+      const token = sign({ id: user.id, username: user.username, role: user.role, brand_id: user.brand_id || null, outlet_ids, permissions })
       const refresh = await issueRefreshToken(sql, user, req)
       let owner_name = null
       if (user.brand_id) {
@@ -110,7 +112,7 @@ module.exports = function authRouter (sql) {
           owner_name = b?.owner_name || null
         } catch (_) {}
       }
-      res.json({ ok: true, token, refresh, user: { id: user.id, username: user.username, role: user.role, brand_id: user.brand_id || null, owner_name } })
+      res.json({ ok: true, token, refresh, user: { id: user.id, name: user.name || null, username: user.username, role: user.role, brand_id: user.brand_id || null, owner_name, outlet_ids, permissions } })
     } catch (e) {
       serverError(res, e)
     }
@@ -134,10 +136,12 @@ module.exports = function authRouter (sql) {
       if (row.active === false)
         return res.status(401).json({ error: 'Account disabled' })
 
-      // Rotate: revoke old, issue new
+      // Rotate: revoke old, issue new — re-fetch user to get latest outlet_ids/permissions
+      const [freshUser] = await sql`SELECT outlet_ids, permissions FROM bo_users WHERE id = ${row.uid}`
       await sql`UPDATE refresh_tokens SET revoked_at = now() WHERE id = ${row.id}`
       const newRefresh = await issueRefreshToken(sql, { id: row.uid, brand_id: row.brand_id }, req)
-      const newAccess  = sign({ id: row.uid, username: row.username, role: row.role, brand_id: row.brand_id || null })
+      const newAccess  = sign({ id: row.uid, username: row.username, role: row.role, brand_id: row.brand_id || null,
+        outlet_ids: freshUser?.outlet_ids || null, permissions: freshUser?.permissions || {} })
       res.json({ ok: true, token: newAccess, refresh: newRefresh })
     } catch (e) { serverError(res, e) }
   })
@@ -214,7 +218,9 @@ module.exports = function authRouter (sql) {
       if (user.active === false)
         return res.status(401).json({ error: 'Account disabled. Contact your administrator.' })
 
-      const token = sign({ id: user.id, username: user.username, role: user.role, brand_id: user.brand_id || null })
+      const outlet_ids2  = user.outlet_ids  || null
+      const permissions2 = user.permissions || {}
+      const token = sign({ id: user.id, username: user.username, role: user.role, brand_id: user.brand_id || null, outlet_ids: outlet_ids2, permissions: permissions2 })
       let owner_name = null
       if (user.brand_id) {
         try {
@@ -222,7 +228,7 @@ module.exports = function authRouter (sql) {
           owner_name = b?.owner_name || null
         } catch (_) {}
       }
-      res.json({ ok: true, token, user: { id: user.id, username: user.username, role: user.role, brand_id: user.brand_id || null, owner_name } })
+      res.json({ ok: true, token, user: { id: user.id, name: user.name || null, username: user.username, role: user.role, brand_id: user.brand_id || null, owner_name, outlet_ids: outlet_ids2, permissions: permissions2 } })
     } catch (e) { serverError(res, e) }
   })
 

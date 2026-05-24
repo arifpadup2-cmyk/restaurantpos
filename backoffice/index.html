@@ -1241,6 +1241,9 @@ input:checked+.toggle-slider:before{transform:translateX(17px)}
           <div class="nav-sub" id="navsub-pos-layout" onclick="showConfigTab('pos-layout')" role="button" tabindex="0">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg><span>POS Layout</span>
           </div>
+          <div class="nav-sub" id="navsub-bo-users" onclick="showConfigTab('bo-users')" role="button" tabindex="0">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg><span>BO Users</span>
+          </div>
         </div>
       </div>
       <div class="nav-item" id="nav-bo-settings" onclick="showView('bo-settings')" role="button" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' ')showView('bo-settings')">
@@ -2760,6 +2763,13 @@ input:checked+.toggle-slider:before{transform:translateX(17px)}
         </div>
       </div>
 
+      <!-- BO USERS -->
+      <div id="cfg-bo-users" class="cfg-section">
+        <div class="page-header"><h2>Backoffice Users</h2><button class="btn" id="cfg-bo-users-add-btn" onclick="cfgAddBoUser()">+ Add User</button></div>
+        <p style="font-size:13px;color:var(--muted);margin-bottom:16px">Manage staff who can log in to this backoffice. Assign outlet access and feature permissions per user.</p>
+        <div id="cfg-bo-users-list"></div>
+      </div>
+
     </div><!-- cfg-content -->
   </div><!-- cfg-layout -->
 </div><!-- view-config -->
@@ -4088,12 +4098,41 @@ async function initApp () {
       return
     }
   }
+  applyUserPermissions()
   setTodayDates()
   await loadMenu()
   await loadDashboard()
   await loadStaff()
   loadRptFilterOptions()
   loadBrandContext()
+}
+
+function applyUserPermissions () {
+  const p   = currentUser?.permissions || {}
+  const isOwner = currentUser?.role === 'owner' || currentUser?.role === 'admin' || currentUser?.switched_from_owner
+  // If owner/admin — full access, nothing to hide
+  if (isOwner) return
+
+  const hide = (id) => { const el = document.getElementById(id); if (el) el.style.display = 'none' }
+  const show = (id) => { const el = document.getElementById(id); if (el) el.style.display = '' }
+
+  // Reports nav group + sub-items
+  if (!p.view_reports) {
+    hide('nav-reports')
+  } else {
+    if (!p.view_sales_invoice)  hide('nav-orders')
+    if (!p.view_expenses)       hide('navsub-rpt-expenses')
+    if (!p.view_cashier_report) hide('navsub-rpt-cashier')
+    if (!p.view_voids)          { hide('navsub-rpt-voids'); hide('navsub-rpt-canceled-items'); hide('navsub-rpt-canceled-bills') }
+    if (!p.view_audit)          hide('navsub-rpt-security')
+  }
+
+  // Config nav
+  if (!p.manage_config) hide('navg-config')
+  // Users management — only visible if manage_users permission
+  if (!p.manage_users)  hide('navsub-bo-users')
+  // Add user button in BO users pane
+  if (!p.manage_users) { const btn = document.getElementById('cfg-bo-users-add-btn'); if (btn) btn.style.display = 'none' }
 }
 
 // ─── GLOBAL SEARCH ───────────────────────────────────────────────
@@ -4428,7 +4467,12 @@ function populateDashFilters () {
 }
 
 function populateOutletSelectors () {
-  const outlets = _rptFilterData.outlets || []
+  const allOutlets = _rptFilterData.outlets || []
+  // Filter to permitted outlets if user has outlet_ids restriction
+  const permittedIds = currentUser?.outlet_ids
+  const outlets = permittedIds && permittedIds.length
+    ? allOutlets.filter(o => permittedIds.includes(o.id))
+    : allOutlets
   const selectors = ['orders-outlet','kds-outlet-filter','isr-outlet','ci-outlet','cb-outlet','cob-outlet','coi-outlet']
   selectors.forEach(id => {
     const sel = document.getElementById(id); if (!sel) return
@@ -7327,6 +7371,7 @@ function showCfgTab (tab) {
     payment: cfgLoadPayment, delivery: cfgLoadDelivery,
     kitchens: cfgLoadKitchens, designations: cfgLoadDesignations, tax: cfgLoadTax,
     'pos-layout': cfgLoadPosLayout, 'modifier-groups': cfgLoadModifierGroups,
+    'bo-users': cfgLoadBoUsers,
   }
   if (loaders[tab]) loaders[tab]()
 }
@@ -8172,6 +8217,156 @@ async function cfgSaveDesignation () {
     closeModal('modal-designation')
     showToast(id ? 'Designation updated' : 'Designation added', 'success')
     cfgLoadDesignations()
+  } catch (e) { showToast(friendlyError(e.message), 'error') }
+}
+
+// ─── BO USERS ────────────────────────────────────────────────────────────────
+const BO_USER_PERMS = [
+  { key: 'view_reports',        label: 'View Reports (Day Summary, Items, etc.)' },
+  { key: 'view_sales_invoice',  label: 'View Sales Invoice' },
+  { key: 'view_expenses',       label: 'View Expenses' },
+  { key: 'view_cashier_report', label: 'View Cashier Performance' },
+  { key: 'view_voids',          label: 'View Voids & Canceled Orders' },
+  { key: 'view_audit',          label: 'View Audit & Security Log' },
+  { key: 'manage_menu',         label: 'Manage Menu Items' },
+  { key: 'manage_config',       label: 'Manage Configuration (Outlets, Tables, etc.)' },
+  { key: 'manage_users',        label: 'Manage BO Users (this section)' },
+]
+
+let _boUsersOutlets = []
+
+async function cfgLoadBoUsers () {
+  const canManage = currentUser?.role === 'owner' || currentUser?.role === 'admin' || currentUser?.permissions?.manage_users
+  const addBtn = document.getElementById('cfg-bo-users-add-btn')
+  if (addBtn) addBtn.style.display = canManage ? '' : 'none'
+  try {
+    showSkeleton('cfg-bo-users-list', 3)
+    const { rows, outlets } = await apiFetch('GET', '/config/users')
+    _boUsersOutlets = outlets || []
+    document.getElementById('cfg-bo-users-list').innerHTML = rows.length ? rows.map(u => {
+      const perms = u.permissions || {}
+      const activePerms = BO_USER_PERMS.filter(p => perms[p.key]).map(p => p.label.split('(')[0].trim())
+      const outletNames = u.outlet_ids && u.outlet_ids.length
+        ? u.outlet_ids.map(id => (_boUsersOutlets.find(o => o.id === id) || {}).name || id).join(', ')
+        : 'All Outlets'
+      return `
+      <div class="cfg-card" style="margin-bottom:12px">
+        <div class="cfg-card-hdr">
+          <div style="flex:1">
+            <div class="cfg-card-title" style="display:flex;align-items:center;gap:8px">
+              ${u.name ? `<span>${u.name}</span><span style="font-weight:400;color:var(--muted);font-size:13px">@${u.username}</span>` : `<span>@${u.username}</span>`}
+              <span class="cfg-badge" style="background:${u.active!==false?'#f0fdf4':'#fef2f2'};color:${u.active!==false?'#16a34a':'#dc2626'};font-size:10px">${u.active!==false?'Active':'Inactive'}</span>
+              <span class="cfg-badge cfg-badge-blue" style="font-size:10px">${u.role}</span>
+            </div>
+            <div style="font-size:12px;color:var(--muted);margin-top:3px">
+              Outlets: <b>${outletNames}</b>
+              ${u.email ? ` · ${u.email}` : ''}
+            </div>
+            ${activePerms.length ? `<div style="font-size:11px;color:var(--muted);margin-top:4px">${activePerms.join(' · ')}</div>` : '<div style="font-size:11px;color:var(--muted);margin-top:4px">No special permissions</div>'}
+          </div>
+          ${canManage ? `<div style="display:flex;gap:8px;margin-left:12px">
+            <button class="btn btn-sm" onclick='cfgEditBoUser(${JSON.stringify(u).replace(/'/g,"&#39;")})'>Edit</button>
+            ${u.active!==false
+              ? `<button class="btn btn-sm btn-danger" onclick="cfgToggleBoUser('${u.id}',false)">Disable</button>`
+              : `<button class="btn btn-sm" onclick="cfgToggleBoUser('${u.id}',true)">Enable</button>`}
+          </div>` : ''}
+        </div>
+      </div>`
+    }).join('') : '<div class="empty-state"><p>No staff users yet. Click + Add User to create one.</p></div>'
+  } catch (e) { showToast(friendlyError(e.message), 'error') }
+}
+
+function _renderBoUserModal (u, outlets) {
+  const perms = u?.permissions || {}
+  const uOutlets = u?.outlet_ids || []
+  return `
+  <div class="modal-overlay" id="modal-bo-user" onclick="if(event.target===this)closeModal('modal-bo-user')">
+    <div class="modal-box" style="max-width:520px">
+      <div class="modal-hdr"><h3 id="bo-user-modal-title">${u ? 'Edit User' : 'Add User'}</h3><button class="modal-close" onclick="closeModal('modal-bo-user')">✕</button></div>
+      <div class="modal-body" style="max-height:70vh;overflow-y:auto">
+        <input type="hidden" id="bou-id" value="${u?.id || ''}">
+        <div class="form-row">
+          <div class="form-group" style="flex:1"><label class="form-label">Display Name</label>
+            <input class="form-control" id="bou-name" value="${u?.name || ''}" placeholder="e.g. Ahmad Razif"></div>
+          <div class="form-group" style="flex:1"><label class="form-label">Username *</label>
+            <input class="form-control" id="bou-username" value="${u?.username || ''}" placeholder="lowercase, letters/numbers/_" ${u ? 'readonly style="background:#f8fafc"' : ''}></div>
+        </div>
+        <div class="form-row">
+          <div class="form-group" style="flex:1"><label class="form-label">Password ${u ? '(leave blank to keep)' : '*'}</label>
+            <input class="form-control" id="bou-password" type="password" placeholder="${u ? 'New password (optional)' : 'Min 6 characters'}"></div>
+          <div class="form-group" style="flex:1"><label class="form-label">Email (optional)</label>
+            <input class="form-control" id="bou-email" value="${u?.email || ''}" placeholder="staff@example.com"></div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Outlet Access</label>
+          <div style="font-size:12px;color:var(--muted);margin-bottom:6px">Leave all unchecked = access to all outlets.</div>
+          <div style="display:flex;flex-wrap:wrap;gap:8px">
+            ${outlets.map(o => `
+              <label style="display:flex;align-items:center;gap:5px;font-size:13px;cursor:pointer">
+                <input type="checkbox" class="bou-outlet-cb" value="${o.id}" ${uOutlets.includes(o.id)?'checked':''}> ${o.name}
+              </label>`).join('')}
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Permissions</label>
+          <div style="display:flex;flex-direction:column;gap:7px;margin-top:4px">
+            ${BO_USER_PERMS.map(p => `
+              <label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer">
+                <input type="checkbox" class="bou-perm-cb" data-pkey="${p.key}" ${perms[p.key]?'checked':''}> ${p.label}
+              </label>`).join('')}
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="closeModal('modal-bo-user')">Cancel</button>
+        <button class="btn btn-primary" onclick="cfgSaveBoUser()">Save</button>
+      </div>
+    </div>
+  </div>`
+}
+
+function cfgAddBoUser () {
+  const existing = document.getElementById('modal-bo-user')
+  if (existing) existing.remove()
+  document.body.insertAdjacentHTML('beforeend', _renderBoUserModal(null, _boUsersOutlets))
+}
+
+function cfgEditBoUser (u) {
+  const existing = document.getElementById('modal-bo-user')
+  if (existing) existing.remove()
+  document.body.insertAdjacentHTML('beforeend', _renderBoUserModal(u, _boUsersOutlets))
+}
+
+async function cfgToggleBoUser (id, active) {
+  try {
+    await apiFetch('PUT', '/config/users/' + id, { active })
+    showToast(active ? 'User enabled' : 'User disabled', 'success')
+    cfgLoadBoUsers()
+  } catch (e) { showToast(friendlyError(e.message), 'error') }
+}
+
+async function cfgSaveBoUser () {
+  const id       = document.getElementById('bou-id').value.trim()
+  const name     = document.getElementById('bou-name').value.trim()
+  const username = document.getElementById('bou-username').value.trim()
+  const password = document.getElementById('bou-password').value
+  const email    = document.getElementById('bou-email').value.trim()
+  const outlet_ids = [...document.querySelectorAll('.bou-outlet-cb:checked')].map(cb => cb.value)
+  const permissions = {}
+  document.querySelectorAll('.bou-perm-cb').forEach(cb => { permissions[cb.dataset.pkey] = cb.checked })
+  if (!id && !username) { showToast('Username is required', 'error'); return }
+  if (!id && (!password || password.length < 6)) { showToast('Password must be at least 6 characters', 'error'); return }
+  try {
+    if (id) {
+      const body = { name, email, outlet_ids, permissions }
+      if (password && password.length >= 6) body.password = password
+      await apiFetch('PUT', '/config/users/' + id, body)
+    } else {
+      await apiFetch('POST', '/config/users', { name, username, password, email, outlet_ids, permissions })
+    }
+    closeModal('modal-bo-user')
+    showToast(id ? 'User updated' : 'User created', 'success')
+    cfgLoadBoUsers()
   } catch (e) { showToast(friendlyError(e.message), 'error') }
 }
 

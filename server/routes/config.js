@@ -216,17 +216,28 @@ module.exports = function configRouter (sql) {
 
   // ── OUTLETS (list, multi-outlet per owner) ────────────────────────────────
   router.get('/outlets', async (req, res) => {
-    const rid = req.user.brand_id
+    const rid        = req.user.brand_id
+    const outletIds  = req.user.outlet_ids || null   // null = all outlets
     try {
-      const rows = await sql`
-        SELECT o.*, b.name AS brand_name, b.logo_url AS brand_logo,
-               m.name AS market_name, m.country AS market_country,
-               m.currency_code AS market_currency_code, m.currency_symbol AS market_currency_symbol
-        FROM outlets o
-        LEFT JOIN brands b ON b.id = o.brand_id
-        LEFT JOIN markets m ON m.id = o.market_id
-        WHERE o.brand_id = ${rid}
-        ORDER BY o.created_at`
+      const rows = outletIds && outletIds.length
+        ? await sql`
+            SELECT o.*, b.name AS brand_name, b.logo_url AS brand_logo,
+                   m.name AS market_name, m.country AS market_country,
+                   m.currency_code AS market_currency_code, m.currency_symbol AS market_currency_symbol
+            FROM outlets o
+            LEFT JOIN brands b ON b.id = o.brand_id
+            LEFT JOIN markets m ON m.id = o.market_id
+            WHERE o.brand_id = ${rid} AND o.id = ANY(${sql.array(outletIds)})
+            ORDER BY o.created_at`
+        : await sql`
+            SELECT o.*, b.name AS brand_name, b.logo_url AS brand_logo,
+                   m.name AS market_name, m.country AS market_country,
+                   m.currency_code AS market_currency_code, m.currency_symbol AS market_currency_symbol
+            FROM outlets o
+            LEFT JOIN brands b ON b.id = o.brand_id
+            LEFT JOIN markets m ON m.id = o.market_id
+            WHERE o.brand_id = ${rid}
+            ORDER BY o.created_at`
       res.json({ rows })
     } catch (e) { serverError(res, e) }
   })
@@ -723,6 +734,102 @@ module.exports = function configRouter (sql) {
     const rid = req.user.brand_id
     try {
       await sql`DELETE FROM designations WHERE id = ${req.params.id} AND brand_id = ${rid}`
+      res.json({ ok: true })
+    } catch (e) { serverError(res, e) }
+  })
+
+  // ── BO USERS (backoffice user management) ─────────────────────────────────
+  // Only role='owner' or users with permissions.manage_users can manage BO users.
+  function canManageUsers (req) {
+    return req.user.role === 'owner' || req.user.permissions?.manage_users === true
+  }
+
+  const DEFAULT_BO_PERMISSIONS = {
+    view_reports:       false,
+    view_sales_invoice: false,
+    view_expenses:      false,
+    view_cashier_report:false,
+    view_voids:         false,
+    view_audit:         false,
+    manage_menu:        false,
+    manage_config:      false,
+    manage_users:       false,
+  }
+
+  const FULL_BO_PERMISSIONS = {
+    view_reports:       true,
+    view_sales_invoice: true,
+    view_expenses:      true,
+    view_cashier_report:true,
+    view_voids:         true,
+    view_audit:         true,
+    manage_menu:        true,
+    manage_config:      true,
+    manage_users:       true,
+  }
+
+  router.get('/users', async (req, res) => {
+    if (!canManageUsers(req)) return res.status(403).json({ error: 'Not allowed' })
+    const rid = req.user.brand_id
+    try {
+      const rows    = await sql`SELECT id, name, username, email, role, active, outlet_ids, permissions, created_at FROM bo_users WHERE brand_id = ${rid} ORDER BY created_at`
+      const outlets = await sql`SELECT id, name FROM outlets WHERE brand_id = ${rid} ORDER BY created_at`
+      res.json({ rows, outlets })
+    } catch (e) { serverError(res, e) }
+  })
+
+  router.post('/users', async (req, res) => {
+    if (!canManageUsers(req)) return res.status(403).json({ error: 'Not allowed' })
+    const rid = req.user.brand_id
+    if (!rid) return res.status(400).json({ error: 'No brand linked' })
+    const { name, username, password, email, outlet_ids, permissions } = req.body || {}
+    if (!username || !password) return res.status(400).json({ error: 'username and password required' })
+    if (password.length < 6) return res.status(400).json({ error: 'Password must be at least 6 characters' })
+    if (!/^[a-z0-9_]+$/i.test(username)) return res.status(400).json({ error: 'username: letters, numbers and _ only' })
+    try {
+      const existing = await sql`SELECT id FROM bo_users WHERE LOWER(username) = ${username.toLowerCase()}`
+      if (existing.length) return res.status(409).json({ error: 'Username already taken' })
+      const id   = newId()
+      const hash = await (require('bcryptjs')).hash(password, 10)
+      const perms = { ...DEFAULT_BO_PERMISSIONS, ...(permissions || {}) }
+      const oIds  = Array.isArray(outlet_ids) && outlet_ids.length ? outlet_ids : null
+      const [row] = await sql`
+        INSERT INTO bo_users (id, brand_id, name, username, password, email, role, outlet_ids, permissions)
+        VALUES (${id}, ${rid}, ${name || null}, ${username.toLowerCase()}, ${hash},
+                ${email || null}, 'staff', ${oIds ? sql.array(oIds) : null}, ${sql.json(perms)})
+        RETURNING id, name, username, email, role, active, outlet_ids, permissions, created_at`
+      res.json({ ok: true, user: row })
+    } catch (e) { serverError(res, e) }
+  })
+
+  router.put('/users/:id', async (req, res) => {
+    if (!canManageUsers(req)) return res.status(403).json({ error: 'Not allowed' })
+    const rid = req.user.brand_id
+    const { name, password, email, outlet_ids, permissions, active } = req.body || {}
+    try {
+      const hash = password && password.length >= 6 ? await (require('bcryptjs')).hash(password, 10) : null
+      const oIds = Array.isArray(outlet_ids) ? (outlet_ids.length ? outlet_ids : null) : undefined
+      const [row] = await sql`
+        UPDATE bo_users SET
+          name        = COALESCE(${name !== undefined ? (name || null) : null}, name),
+          password    = COALESCE(${hash}, password),
+          email       = COALESCE(${email !== undefined ? (email || null) : null}, email),
+          outlet_ids  = ${oIds !== undefined ? (oIds ? sql.array(oIds) : null) : sql`outlet_ids`},
+          permissions = CASE WHEN ${permissions !== undefined} THEN ${permissions ? sql.json(permissions) : sql.json({})} ELSE permissions END,
+          active      = COALESCE(${active !== undefined ? !!active : null}, active)
+        WHERE id = ${req.params.id} AND brand_id = ${rid}
+        RETURNING id, name, username, email, role, active, outlet_ids, permissions, created_at`
+      if (!row) return res.status(404).json({ error: 'User not found' })
+      res.json({ ok: true, user: row })
+    } catch (e) { serverError(res, e) }
+  })
+
+  router.delete('/users/:id', async (req, res) => {
+    if (!canManageUsers(req)) return res.status(403).json({ error: 'Not allowed' })
+    const rid = req.user.brand_id
+    if (req.params.id === req.user.id) return res.status(400).json({ error: 'Cannot deactivate yourself' })
+    try {
+      await sql`UPDATE bo_users SET active = false WHERE id = ${req.params.id} AND brand_id = ${rid}`
       res.json({ ok: true })
     } catch (e) { serverError(res, e) }
   })
