@@ -2312,8 +2312,7 @@ input:checked+.toggle-slider:before{transform:translateX(17px)}
       <!-- BRAND -->
       <div id="cfg-brand" class="cfg-section active">
         <div class="page-header">
-          <h2>Brands</h2>
-          <button class="btn" onclick="cfgOpenBrandModal(null)">+ Add Brand</button>
+          <h2>Brand Structure</h2>
         </div>
         <div id="cfg-brands-list"></div>
       </div>
@@ -6667,8 +6666,7 @@ async function cfgLoadBrands () {
               <div style="font-size:11px;color:var(--muted);margin-top:2px">${bMarkets.length} market${bMarkets.length!==1?'s':''} · ${outlets.filter(o=>o.brand_id===b.id).length} outlet${outlets.filter(o=>o.brand_id===b.id).length!==1?'s':''}</div>
             </div>
             <div style="display:flex;gap:5px;flex-shrink:0">
-              <button class="btn btn-sm" onclick="cfgOpenBrandModal(${bData})">Edit</button>
-              <button class="btn btn-sm btn-danger" onclick="cfgDeleteBrand('${b.id}','${esc(b.name)}')">Delete</button>
+              <button class="btn btn-sm" onclick="cfgOpenBrandModal(${bData})">Edit Brand</button>
             </div>
           </div>
           <div class="hier-markets-wrap">

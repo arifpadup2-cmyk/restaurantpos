@@ -123,33 +123,25 @@ module.exports = function configRouter (sql) {
     } catch (e) { res.status(500).json({ error: e.message }) }
   })
 
-  // ── BRANDS (list, multi-brand per owner) ────────────────────────────────────
+  // ── BRANDS — brand IS the root tenant; user can only see/edit their own brand ──
   router.get('/brands', async (req, res) => {
     const rid = req.user.brand_id
     if (!rid) return res.json({ rows: [] })
     try {
-      const rows = await sql`SELECT * FROM brands WHERE brand_id = ${rid} ORDER BY created_at`
+      const rows = await sql`SELECT * FROM brands WHERE id = ${rid} ORDER BY created_at`
       res.json({ rows })
     } catch (e) { res.status(500).json({ error: e.message }) }
   })
 
+  // Brand owners cannot create new brands — admin panel creates tenants
   router.post('/brands', async (req, res) => {
-    const { name, logo_url, business_type, country, owner_name } = req.body || {}
-    const rid = req.user.brand_id
-    if (!rid) return res.status(400).json({ error: 'No restaurant account linked to this user.' })
-    if (!name?.trim()) return res.status(400).json({ error: 'Brand name is required' })
-    try {
-      const [row] = await sql`
-        INSERT INTO brands (id, brand_id, name, logo_url, business_type, country, owner_name, created_at)
-        VALUES (${newId()}, ${rid}, ${name.trim()}, ${logo_url||null}, ${business_type||null}, ${country||'MY'}, ${(owner_name||'').trim()||null}, ${Date.now()})
-        RETURNING *`
-      res.json(row)
-    } catch (e) { res.status(500).json({ error: e.message }) }
+    return res.status(403).json({ error: 'Brands are created via the admin panel. Use Edit to update this brand.' })
   })
 
   router.patch('/brands/:id', async (req, res) => {
     const { name, logo_url, business_type, country, owner_name } = req.body || {}
     const rid = req.user.brand_id
+    if (req.params.id !== rid) return res.status(403).json({ error: 'You can only edit your own brand.' })
     try {
       const [row] = await sql`
         UPDATE brands SET
@@ -158,22 +150,15 @@ module.exports = function configRouter (sql) {
           business_type = COALESCE(NULLIF(${business_type||''}, ''), business_type),
           country       = COALESCE(NULLIF(${country||''}, ''), country),
           owner_name    = COALESCE(NULLIF(${(owner_name||'').trim()}, ''), owner_name)
-        WHERE id = ${req.params.id} AND brand_id = ${rid}
+        WHERE id = ${rid}
         RETURNING *`
       if (!row) return res.status(404).json({ error: 'Brand not found' })
       res.json(row)
     } catch (e) { res.status(500).json({ error: e.message }) }
   })
 
-  router.delete('/brands/:id', async (req, res) => {
-    const rid = req.user.brand_id
-    try {
-      let linked = 0
-      try { const [c] = await sql`SELECT COUNT(*)::int AS n FROM outlets WHERE brand_id = ${req.params.id}`; linked = c?.n || 0 } catch (_) {}
-      if (linked > 0) return res.status(409).json({ error: 'This brand has outlets linked to it. Remove the outlets first, then delete the brand.' })
-      await sql`DELETE FROM brands WHERE id = ${req.params.id} AND brand_id = ${rid}`
-      res.json({ ok: true })
-    } catch (e) { res.status(500).json({ error: e.message }) }
+  router.delete('/brands/:id', (_req, res) => {
+    res.status(403).json({ error: 'Brands cannot be deleted from the back office. Contact your provider.' })
   })
 
   // ── MARKETS ────────────────────────────────────────────────────────────────
