@@ -15,6 +15,7 @@ module.exports = function settingsRouter (sql) {
     'owner_phone', 'business_type', 'country',
     'address', 'opening_time', 'closing_time',
     'table_count', 'outlet_phone', 'outlet_email',
+    'market_name', 'tax_system',
   ]
 
   // GET /settings — returns all public settings
@@ -46,6 +47,7 @@ module.exports = function settingsRouter (sql) {
           ON CONFLICT (brand_id, key) DO UPDATE SET value = EXCLUDED.value`
       }
       if (req.user?.brand_id) {
+        const rid           = req.user.brand_id
         const name          = (body.restaurant_name || '').trim() || null
         const owner         = (body.owner_name || '').trim() || null
         const business_type = (body.business_type || '').trim() || null
@@ -59,7 +61,17 @@ module.exports = function settingsRouter (sql) {
                 business_type = COALESCE(${business_type}, business_type),
                 country       = COALESCE(${country}, country),
                 setup_done    = COALESCE(${setupDone ?? null}::boolean, setup_done)
-            WHERE id = ${req.user.brand_id}`
+            WHERE id = ${rid}`
+        }
+        const marketName = (body.market_name || '').trim()
+        if (marketName) {
+          const [existing] = await sql`SELECT id FROM markets WHERE brand_id = ${rid} ORDER BY created_at LIMIT 1`
+          if (existing) {
+            await sql`UPDATE markets SET name = ${marketName} WHERE id = ${existing.id}`
+          } else {
+            const mid = Date.now().toString(36) + Math.random().toString(36).slice(2, 7)
+            await sql`INSERT INTO markets (id, brand_id, name, created_at) VALUES (${mid}, ${rid}, ${marketName}, ${Date.now()})`
+          }
         }
       }
       res.json({ ok: true })

@@ -200,5 +200,214 @@ module.exports = function reportsRouter (sql) {
     } catch (e) { res.status(500).json({ error: e.message }) }
   })
 
+  // GET /reports/item-sales?from=YYYY-MM-DD&to=YYYY-MM-DD&outlet_id=&market_id=
+  router.get('/item-sales', async (req, res) => {
+    const { from, to, outlet_id, market_id } = req.query
+    const { start, end } = dateRange(from, to)
+    const rid = req.user.brand_id
+    try {
+      let outletIds = null
+      if (outlet_id) {
+        outletIds = [outlet_id]
+      } else if (market_id) {
+        const outlets = await sql`SELECT id FROM outlets WHERE brand_id = ${rid} AND market_id = ${market_id}`
+        outletIds = outlets.map(o => o.id)
+        if (outletIds.length === 0) return res.json({ rows: [] })
+      }
+      const rows = outletIds
+        ? await sql`
+          SELECT oi.item_name,
+                 COALESCE(oi.category_name,'Uncategorised') AS category_name,
+                 SUM(oi.quantity)::int       AS total_qty,
+                 COUNT(DISTINCT o.id)::int  AS order_count,
+                 SUM(oi.total_price)        AS total_revenue
+          FROM order_items oi
+          JOIN orders o ON o.id = oi.order_id
+          WHERE o.created_at >= ${start} AND o.created_at < ${end}
+            AND o.status = 'paid' AND oi.cancelled = 0
+            AND o.outlet_id = ANY(${outletIds})
+          GROUP BY oi.item_name, oi.category_name
+          ORDER BY total_qty DESC`
+        : await sql`
+          SELECT oi.item_name,
+                 COALESCE(oi.category_name,'Uncategorised') AS category_name,
+                 SUM(oi.quantity)::int       AS total_qty,
+                 COUNT(DISTINCT o.id)::int  AS order_count,
+                 SUM(oi.total_price)        AS total_revenue
+          FROM order_items oi
+          JOIN orders o ON o.id = oi.order_id
+          WHERE o.created_at >= ${start} AND o.created_at < ${end}
+            AND o.status = 'paid' AND oi.cancelled = 0
+            AND o.outlet_id IN (SELECT id FROM outlets WHERE brand_id = ${rid})
+          GROUP BY oi.item_name, oi.category_name
+          ORDER BY total_qty DESC`
+      res.json({ rows })
+    } catch (e) { res.status(500).json({ error: e.message }) }
+  })
+
+  // GET /reports/canceled-items?from=YYYY-MM-DD&to=YYYY-MM-DD&outlet_id=&market_id=
+  router.get('/canceled-items', async (req, res) => {
+    const { from, to, outlet_id, market_id } = req.query
+    const { start, end } = dateRange(from, to)
+    const rid = req.user.brand_id
+    try {
+      let outletIds = null
+      if (outlet_id) {
+        outletIds = [outlet_id]
+      } else if (market_id) {
+        const outlets = await sql`SELECT id FROM outlets WHERE brand_id = ${rid} AND market_id = ${market_id}`
+        outletIds = outlets.map(o => o.id)
+        if (outletIds.length === 0) return res.json({ rows: [] })
+      }
+      const rows = outletIds
+        ? await sql`
+          SELECT oi.item_name, COALESCE(oi.category_name,'Uncategorised') AS category_name,
+                 oi.quantity, oi.total_price, oi.void_reason, oi.voided_by,
+                 o.order_number, o.cashier_name, o.created_at, o.outlet_id
+          FROM order_items oi
+          JOIN orders o ON o.id = oi.order_id
+          WHERE oi.cancelled = 1
+            AND o.created_at >= ${start} AND o.created_at < ${end}
+            AND o.outlet_id = ANY(${outletIds})
+          ORDER BY o.created_at DESC`
+        : await sql`
+          SELECT oi.item_name, COALESCE(oi.category_name,'Uncategorised') AS category_name,
+                 oi.quantity, oi.total_price, oi.void_reason, oi.voided_by,
+                 o.order_number, o.cashier_name, o.created_at, o.outlet_id
+          FROM order_items oi
+          JOIN orders o ON o.id = oi.order_id
+          WHERE oi.cancelled = 1
+            AND o.created_at >= ${start} AND o.created_at < ${end}
+            AND o.outlet_id IN (SELECT id FROM outlets WHERE brand_id = ${rid})
+          ORDER BY o.created_at DESC`
+      res.json({ rows })
+    } catch (e) { res.status(500).json({ error: e.message }) }
+  })
+
+  // GET /reports/canceled-bills?from=YYYY-MM-DD&to=YYYY-MM-DD&outlet_id=&market_id=
+  router.get('/canceled-bills', async (req, res) => {
+    const { from, to, outlet_id, market_id } = req.query
+    const { start, end } = dateRange(from, to)
+    const rid = req.user.brand_id
+    try {
+      let outletIds = null
+      if (outlet_id) {
+        outletIds = [outlet_id]
+      } else if (market_id) {
+        const outlets = await sql`SELECT id FROM outlets WHERE brand_id = ${rid} AND market_id = ${market_id}`
+        outletIds = outlets.map(o => o.id)
+        if (outletIds.length === 0) return res.json({ rows: [] })
+      }
+      const rows = outletIds
+        ? await sql`
+          SELECT o.order_number, o.order_type, o.cashier_name, o.subtotal, o.tax_amount,
+                 o.total, o.void_reason, o.voided_by, o.created_at, o.status, o.outlet_id,
+                 json_agg(json_build_object('item_name',oi.item_name,'quantity',oi.quantity,'total_price',oi.total_price) ORDER BY oi.id) FILTER (WHERE oi.id IS NOT NULL) AS items
+          FROM orders o
+          LEFT JOIN order_items oi ON oi.order_id = o.id
+          WHERE o.status IN ('void','cancelled')
+            AND o.created_at >= ${start} AND o.created_at < ${end}
+            AND o.outlet_id = ANY(${outletIds})
+          GROUP BY o.id ORDER BY o.created_at DESC`
+        : await sql`
+          SELECT o.order_number, o.order_type, o.cashier_name, o.subtotal, o.tax_amount,
+                 o.total, o.void_reason, o.voided_by, o.created_at, o.status, o.outlet_id,
+                 json_agg(json_build_object('item_name',oi.item_name,'quantity',oi.quantity,'total_price',oi.total_price) ORDER BY oi.id) FILTER (WHERE oi.id IS NOT NULL) AS items
+          FROM orders o
+          LEFT JOIN order_items oi ON oi.order_id = o.id
+          WHERE o.status IN ('void','cancelled')
+            AND o.created_at >= ${start} AND o.created_at < ${end}
+            AND o.outlet_id IN (SELECT id FROM outlets WHERE brand_id = ${rid})
+          GROUP BY o.id ORDER BY o.created_at DESC`
+      res.json({ rows })
+    } catch (e) { res.status(500).json({ error: e.message }) }
+  })
+
+  // GET /reports/comp-bills?from=YYYY-MM-DD&to=YYYY-MM-DD&outlet_id=&market_id=
+  router.get('/comp-bills', async (req, res) => {
+    const { from, to, outlet_id, market_id } = req.query
+    const { start, end } = dateRange(from, to)
+    const rid = req.user.brand_id
+    try {
+      let outletIds = null
+      if (outlet_id) {
+        outletIds = [outlet_id]
+      } else if (market_id) {
+        const outlets = await sql`SELECT id FROM outlets WHERE brand_id = ${rid} AND market_id = ${market_id}`
+        outletIds = outlets.map(o => o.id)
+        if (outletIds.length === 0) return res.json({ rows: [] })
+      }
+      const rows = outletIds
+        ? await sql`
+          SELECT o.order_number, o.order_type, o.cashier_name, o.subtotal, o.tax_amount,
+                 o.total, o.payment_method, o.discount_type, o.discount_amount, o.created_at, o.outlet_id,
+                 json_agg(json_build_object('item_name',oi.item_name,'quantity',oi.quantity,'total_price',oi.total_price) ORDER BY oi.id) FILTER (WHERE oi.id IS NOT NULL) AS items
+          FROM orders o
+          LEFT JOIN order_items oi ON oi.order_id = o.id
+          WHERE (o.payment_method = 'comp' OR o.total = 0 OR o.discount_type = 'comp')
+            AND o.status = 'paid'
+            AND o.created_at >= ${start} AND o.created_at < ${end}
+            AND o.outlet_id = ANY(${outletIds})
+          GROUP BY o.id ORDER BY o.created_at DESC`
+        : await sql`
+          SELECT o.order_number, o.order_type, o.cashier_name, o.subtotal, o.tax_amount,
+                 o.total, o.payment_method, o.discount_type, o.discount_amount, o.created_at, o.outlet_id,
+                 json_agg(json_build_object('item_name',oi.item_name,'quantity',oi.quantity,'total_price',oi.total_price) ORDER BY oi.id) FILTER (WHERE oi.id IS NOT NULL) AS items
+          FROM orders o
+          LEFT JOIN order_items oi ON oi.order_id = o.id
+          WHERE (o.payment_method = 'comp' OR o.total = 0 OR o.discount_type = 'comp')
+            AND o.status = 'paid'
+            AND o.created_at >= ${start} AND o.created_at < ${end}
+            AND o.outlet_id IN (SELECT id FROM outlets WHERE brand_id = ${rid})
+          GROUP BY o.id ORDER BY o.created_at DESC`
+      res.json({ rows })
+    } catch (e) { res.status(500).json({ error: e.message }) }
+  })
+
+  // GET /reports/comp-items?from=YYYY-MM-DD&to=YYYY-MM-DD&outlet_id=&market_id=
+  router.get('/comp-items', async (req, res) => {
+    const { from, to, outlet_id, market_id } = req.query
+    const { start, end } = dateRange(from, to)
+    const rid = req.user.brand_id
+    try {
+      let outletIds = null
+      if (outlet_id) {
+        outletIds = [outlet_id]
+      } else if (market_id) {
+        const outlets = await sql`SELECT id FROM outlets WHERE brand_id = ${rid} AND market_id = ${market_id}`
+        outletIds = outlets.map(o => o.id)
+        if (outletIds.length === 0) return res.json({ rows: [] })
+      }
+      const rows = outletIds
+        ? await sql`
+          SELECT oi.item_name, COALESCE(oi.category_name,'Uncategorised') AS category_name,
+                 SUM(oi.quantity)::int AS total_qty,
+                 COUNT(DISTINCT o.id)::int AS order_count,
+                 SUM(oi.total_price) AS total_value
+          FROM order_items oi
+          JOIN orders o ON o.id = oi.order_id
+          WHERE (o.payment_method = 'comp' OR o.total = 0 OR o.discount_type = 'comp')
+            AND o.status = 'paid'
+            AND o.created_at >= ${start} AND o.created_at < ${end}
+            AND o.outlet_id = ANY(${outletIds})
+          GROUP BY oi.item_name, oi.category_name
+          ORDER BY total_qty DESC`
+        : await sql`
+          SELECT oi.item_name, COALESCE(oi.category_name,'Uncategorised') AS category_name,
+                 SUM(oi.quantity)::int AS total_qty,
+                 COUNT(DISTINCT o.id)::int AS order_count,
+                 SUM(oi.total_price) AS total_value
+          FROM order_items oi
+          JOIN orders o ON o.id = oi.order_id
+          WHERE (o.payment_method = 'comp' OR o.total = 0 OR o.discount_type = 'comp')
+            AND o.status = 'paid'
+            AND o.created_at >= ${start} AND o.created_at < ${end}
+            AND o.outlet_id IN (SELECT id FROM outlets WHERE brand_id = ${rid})
+          GROUP BY oi.item_name, oi.category_name
+          ORDER BY total_qty DESC`
+      res.json({ rows })
+    } catch (e) { res.status(500).json({ error: e.message }) }
+  })
+
   return router
 }

@@ -57,6 +57,7 @@ module.exports = function setupRouter (sql) {
       owner_name, owner_mobile, email, whatsapp,
       outlet_name, outlet_phone, outlet_email, address,
       google_map_url, opening_time, closing_time,
+      tax_system, tax_rate,
       order_types_list, delivery_aggregators, table_count,
     } = req.body || {}
     if (!name || !name.trim()) return res.status(400).json({ error: 'name is required' })
@@ -114,6 +115,14 @@ module.exports = function setupRouter (sql) {
           ${outlet_name || name.trim() + ' - Main'},
           ${outlet_phone || null}, ${outlet_email || null}, ${address || null},
           ${opening_time || '09:00'}, ${closing_time || '22:00'})`
+
+      // Store initial settings (tax, branch name)
+      const taxRateVal  = parseFloat(tax_rate) || 0
+      const taxSysVal   = tax_system || 'exclusive'
+      const branchName  = outlet_name || name.trim() + ' - Main'
+      for (const [key, val] of [['tax_rate', String(taxRateVal)], ['tax_system', taxSysVal], ['branch_name', branchName]]) {
+        await sql`INSERT INTO settings (brand_id, key, value) VALUES (${id}, ${key}, ${val}) ON CONFLICT (brand_id, key) DO UPDATE SET value = EXCLUDED.value`
+      }
 
       res.json({
         ok: true,

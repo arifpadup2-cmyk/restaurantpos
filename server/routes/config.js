@@ -184,8 +184,8 @@ module.exports = function configRouter (sql) {
     if (!brand_id) return res.status(400).json({ error: 'Brand is required' })
     try {
       const [row] = await sql`
-        INSERT INTO markets (id, brand_id, brand_id, name, country, currency_code, currency_symbol, created_at)
-        VALUES (${newId()}, ${rid}, ${brand_id}, ${name.trim()},
+        INSERT INTO markets (id, brand_id, name, country, currency_code, currency_symbol, created_at)
+        VALUES (${newId()}, ${rid}, ${name.trim()},
                 ${country||null}, ${currency_code||'USD'}, ${currency_symbol||'$'}, ${Date.now()})
         RETURNING *`
       res.json(row)
@@ -247,8 +247,8 @@ module.exports = function configRouter (sql) {
     try {
       const mkt = market_id ? (await sql`SELECT * FROM markets WHERE id = ${market_id} AND brand_id = ${rid}`)[0] : null
       const [row] = await sql`
-        INSERT INTO outlets (id, brand_id, brand_id, market_id, name, phone, email, address, opening_time, closing_time, currency, country, currency_code, currency_symbol, created_at)
-        VALUES (${outletId()}, ${rid}, ${brand_id||mkt?.brand_id||null}, ${market_id},
+        INSERT INTO outlets (id, brand_id, market_id, name, phone, email, address, opening_time, closing_time, currency, country, currency_code, currency_symbol, created_at)
+        VALUES (${outletId()}, ${rid}, ${market_id},
                 ${name.trim()}, ${phone||null}, ${email||null}, ${address||null},
                 ${opening_time||'09:00'}, ${closing_time||'22:00'}, ${mkt?.currency_code||currency||'USD'},
                 ${mkt?.country||country||null}, ${mkt?.currency_code||currency_code||'USD'}, ${mkt?.currency_symbol||currency_symbol||'$'}, ${Date.now()})

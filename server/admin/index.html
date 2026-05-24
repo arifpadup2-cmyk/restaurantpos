@@ -769,11 +769,55 @@ body{font-family:'Inter',-apple-system,'Segoe UI',sans-serif;background:var(--bg
                   <label>Country *</label>
                   <select id="rg-country">
                     <option value="">— Select country —</option>
-                    <option>Qatar</option><option>Saudi Arabia</option><option>UAE</option>
-                    <option>Kuwait</option><option>Bahrain</option><option>Oman</option>
-                    <option>Malaysia</option><option>Indonesia</option><option>India</option>
-                    <option>Pakistan</option><option>Philippines</option>
-                    <option>United Kingdom</option><option>United States</option><option>Other</option>
+                    <optgroup label="Southeast Asia">
+                      <option>Malaysia</option><option>Singapore</option><option>Indonesia</option>
+                      <option>Thailand</option><option>Philippines</option><option>Vietnam</option>
+                      <option>Myanmar</option><option>Cambodia</option><option>Laos</option>
+                      <option>Brunei</option><option>Timor-Leste</option>
+                    </optgroup>
+                    <optgroup label="Middle East">
+                      <option>UAE</option><option>Saudi Arabia</option><option>Qatar</option>
+                      <option>Kuwait</option><option>Bahrain</option><option>Oman</option>
+                      <option>Jordan</option><option>Lebanon</option><option>Israel</option>
+                      <option>Iraq</option><option>Yemen</option><option>Syria</option>
+                      <option>Turkey</option>
+                    </optgroup>
+                    <optgroup label="South Asia">
+                      <option>India</option><option>Pakistan</option><option>Bangladesh</option>
+                      <option>Sri Lanka</option><option>Nepal</option><option>Maldives</option>
+                      <option>Bhutan</option>
+                    </optgroup>
+                    <optgroup label="East Asia">
+                      <option>China</option><option>Japan</option><option>South Korea</option>
+                      <option>Hong Kong</option><option>Taiwan</option><option>Mongolia</option>
+                    </optgroup>
+                    <optgroup label="Oceania">
+                      <option>Australia</option><option>New Zealand</option><option>Papua New Guinea</option>
+                      <option>Fiji</option>
+                    </optgroup>
+                    <optgroup label="Europe">
+                      <option>United Kingdom</option><option>Germany</option><option>France</option>
+                      <option>Italy</option><option>Spain</option><option>Netherlands</option>
+                      <option>Belgium</option><option>Sweden</option><option>Norway</option>
+                      <option>Denmark</option><option>Finland</option><option>Switzerland</option>
+                      <option>Austria</option><option>Poland</option><option>Portugal</option>
+                      <option>Greece</option><option>Czech Republic</option><option>Romania</option>
+                      <option>Hungary</option><option>Ireland</option>
+                    </optgroup>
+                    <optgroup label="Americas">
+                      <option>United States</option><option>Canada</option><option>Mexico</option>
+                      <option>Brazil</option><option>Argentina</option><option>Colombia</option>
+                      <option>Chile</option><option>Peru</option>
+                    </optgroup>
+                    <optgroup label="Africa">
+                      <option>South Africa</option><option>Nigeria</option><option>Kenya</option>
+                      <option>Ghana</option><option>Ethiopia</option><option>Tanzania</option>
+                      <option>Egypt</option><option>Morocco</option><option>Tunisia</option>
+                    </optgroup>
+                    <optgroup label="Other">
+                      <option>Russia</option><option>Kazakhstan</option><option>Ukraine</option>
+                      <option>Other</option>
+                    </optgroup>
                   </select>
                 </div>
                 <div>
@@ -869,6 +913,22 @@ body{font-family:'Inter',-apple-system,'Segoe UI',sans-serif;background:var(--bg
                 <div>
                   <label>Closing Time *</label>
                   <input id="rg-close" type="time" value="23:00">
+                </div>
+              </div>
+              <div class="mg">
+                <div>
+                  <label>Tax System</label>
+                  <select id="rg-tax-system" onchange="rgTaxSystemChange(this.value)">
+                    <option value="exclusive">GST / Exclusive (added on top)</option>
+                    <option value="inclusive">Inclusive Tax (in price)</option>
+                    <option value="vat">VAT</option>
+                    <option value="sst">SST (Sales &amp; Service Tax)</option>
+                    <option value="none">No Tax</option>
+                  </select>
+                </div>
+                <div id="rg-tax-rate-wrap">
+                  <label>Tax Rate (%)</label>
+                  <input id="rg-taxrate" type="number" min="0" max="100" step="0.5" placeholder="e.g. 8" value="0">
                 </div>
               </div>
             </div>
@@ -1802,6 +1862,12 @@ function togglePill (el, groupId) {
   el.classList.toggle('sel')
 }
 
+function rgTaxSystemChange (val) {
+  const wrap = document.getElementById('rg-tax-rate-wrap')
+  if (wrap) wrap.style.opacity = val === 'none' ? '0.4' : '1'
+  if (val === 'none') { const el = document.getElementById('rg-taxrate'); if (el) el.value = '0' }
+}
+
 function syncWhatsApp () {
   const wa = document.getElementById('rg-whatsapp')
   if(!wa.value || wa.dataset.synced) wa.value = document.getElementById('rg-mobile').value
@@ -1878,6 +1944,8 @@ async function submitReg () {
       google_map_url:  document.getElementById('rg-gmap').value.trim()||null,
       opening_time:    document.getElementById('rg-open').value,
       closing_time:    document.getElementById('rg-close').value,
+      tax_system:      document.getElementById('rg-tax-system')?.value || 'exclusive',
+      tax_rate:        parseFloat(document.getElementById('rg-taxrate')?.value) || 0,
       order_types:     orderTypes||null,
       delivery_aggregators: aggregators||null,
       table_count:     parseInt(document.getElementById('rg-tables').value)||0,

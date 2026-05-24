@@ -1081,10 +1081,6 @@ input:checked+.toggle-slider:before{transform:translateX(17px)}
         <svg class="ni-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
         <span>Kitchen View</span>
       </div>
-      <div class="nav-item" id="nav-orders" onclick="showView('orders')" role="button" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' ')showView('orders')">
-        <svg class="ni-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
-        <span>Orders</span>
-      </div>
       <div class="nav-group" id="navg-menu">
         <div class="nav-group-hdr" id="nav-menu" onclick="showView('menu');showMenuTab('categories')" role="button" tabindex="0">
           <svg class="ni-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 002-2V2"/><path d="M7 2v20"/><path d="M21 15V2a5 5 0 00-5 5v6c0 1.1.9 2 2 2h3zm0 0v7"/></svg>
@@ -1110,8 +1106,11 @@ input:checked+.toggle-slider:before{transform:translateX(17px)}
           <svg class="nav-chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
         </div>
         <div class="nav-group-body" id="navg-reports-body">
+          <div class="nav-sub" id="nav-orders" onclick="showView('orders')" role="button" tabindex="0">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg><span>Sales Invoice</span>
+          </div>
           <div class="nav-sub active" id="navsub-rpt-sales" onclick="showView('reports');showRptTab('sales')" role="button" tabindex="0">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg><span>Sales Report</span>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg><span>Day Summary</span>
           </div>
           <div class="nav-sub" id="navsub-rpt-expenses" onclick="showView('reports');showRptTab('expenses')" role="button" tabindex="0">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg><span>Expenses</span>
@@ -1133,6 +1132,21 @@ input:checked+.toggle-slider:before{transform:translateX(17px)}
           </div>
           <div class="nav-sub" id="navsub-rpt-security" onclick="showView('reports');showRptTab('security')" role="button" tabindex="0">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg><span>Audit &amp; Security</span>
+          </div>
+          <div class="nav-sub" id="navsub-rpt-item-sales" onclick="showView('reports');showRptTab('item-sales')" role="button" tabindex="0">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v2"/><line x1="12" y1="12" x2="12" y2="16"/><line x1="10" y1="14" x2="14" y2="14"/></svg><span>Item Report</span>
+          </div>
+          <div class="nav-sub" id="navsub-rpt-canceled-items" onclick="showView('reports');showRptTab('canceled-items')" role="button" tabindex="0">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg><span>Canceled Items</span>
+          </div>
+          <div class="nav-sub" id="navsub-rpt-canceled-bills" onclick="showView('reports');showRptTab('canceled-bills')" role="button" tabindex="0">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><line x1="9" y1="14" x2="15" y2="14"/><line x1="9" y1="10" x2="15" y2="10"/><polyline points="14 2 14 8 20 8"/><line x1="10" y1="5" x2="14" y2="9" style="stroke:#ef4444"/></svg><span>Canceled Bills</span>
+          </div>
+          <div class="nav-sub" id="navsub-rpt-comp-bills" onclick="showView('reports');showRptTab('comp-bills')" role="button" tabindex="0">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/><path d="M9 14h6"/></svg><span>Complementary Bills</span>
+          </div>
+          <div class="nav-sub" id="navsub-rpt-comp-items" onclick="showView('reports');showRptTab('comp-items')" role="button" tabindex="0">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2a10 10 0 100 20 10 10 0 000-20z"/><path d="M9 12l2 2 4-4"/></svg><span>Complementary Items</span>
           </div>
         </div>
       </div>
@@ -1486,7 +1500,7 @@ input:checked+.toggle-slider:before{transform:translateX(17px)}
   <!-- ── ORDERS ── -->
   <div class="view" id="v-orders">
     <div class="page-header">
-      <h2>Orders</h2>
+      <h2>Sales Invoice</h2>
       <div class="date-filter" style="flex-wrap:wrap;gap:6px">
         <select id="orders-outlet" onchange="loadOrders()" style="font-size:12px;padding:6px 8px;border:1.5px solid var(--border);border-radius:6px;color:var(--text);background:var(--card)"><option value="">All Outlets</option></select>
         <input type="date" id="orders-date" onchange="loadOrders()">
@@ -1516,7 +1530,7 @@ input:checked+.toggle-slider:before{transform:translateX(17px)}
     <div class="page-header"><h2 id="rpt-page-title">Sales Report</h2></div>
     <!-- Mobile: report sub-section tab bar -->
     <div class="mob-rpt-tabs">
-      <button class="mob-rpt-tab active" id="mobrpt-sales" onclick="showRptTab('sales');mobSetRptTab('sales')">Sales</button>
+      <button class="mob-rpt-tab active" id="mobrpt-sales" onclick="showRptTab('sales');mobSetRptTab('sales')">Day Summary</button>
       <button class="mob-rpt-tab" id="mobrpt-expenses" onclick="showRptTab('expenses');mobSetRptTab('expenses')">Expenses</button>
       <button class="mob-rpt-tab" id="mobrpt-cashier" onclick="showRptTab('cashier');mobSetRptTab('cashier')">Cashier</button>
       <button class="mob-rpt-tab" id="mobrpt-voids" onclick="showRptTab('voids');mobSetRptTab('voids')">Voids</button>
@@ -1524,6 +1538,11 @@ input:checked+.toggle-slider:before{transform:translateX(17px)}
       <button class="mob-rpt-tab" id="mobrpt-wastage" onclick="showRptTab('wastage');mobSetRptTab('wastage')">Wastage</button>
       <button class="mob-rpt-tab" id="mobrpt-devices" onclick="showRptTab('devices');mobSetRptTab('devices')">Devices</button>
       <button class="mob-rpt-tab" id="mobrpt-security" onclick="showRptTab('security');mobSetRptTab('security')">Audit</button>
+      <button class="mob-rpt-tab" id="mobrpt-item-sales" onclick="showRptTab('item-sales');mobSetRptTab('item-sales')">Item Rpt</button>
+      <button class="mob-rpt-tab" id="mobrpt-canceled-items" onclick="showRptTab('canceled-items');mobSetRptTab('canceled-items')">Cancel'd Items</button>
+      <button class="mob-rpt-tab" id="mobrpt-canceled-bills" onclick="showRptTab('canceled-bills');mobSetRptTab('canceled-bills')">Cancel'd Bills</button>
+      <button class="mob-rpt-tab" id="mobrpt-comp-bills" onclick="showRptTab('comp-bills');mobSetRptTab('comp-bills')">Comp Bills</button>
+      <button class="mob-rpt-tab" id="mobrpt-comp-items" onclick="showRptTab('comp-items');mobSetRptTab('comp-items')">Comp Items</button>
     </div>
 
     <!-- ─── SALES PANE ─── -->
@@ -1851,6 +1870,126 @@ input:checked+.toggle-slider:before{transform:translateX(17px)}
         </div>
       </div>
     </div><!-- /rpt-pane-security -->
+
+    <!-- ─── ITEM REPORT PANE ─── -->
+    <div id="rpt-pane-item-sales" style="display:none">
+    <div class="card">
+      <div class="card-header">
+        <h3>Item Report <span style="font-size:10px;font-weight:400;color:var(--muted)">(Sold Items by Period)</span></h3>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+          <input type="date" id="isr-from"><input type="date" id="isr-to">
+          <select id="isr-outlet" style="font-size:12px;padding:6px 8px;border:1.5px solid var(--border);border-radius:6px;color:var(--text);background:var(--card)"><option value="">All Outlets</option></select>
+          <button class="btn btn-primary btn-sm" onclick="loadItemSalesReport()"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="5 3 19 12 5 21 5 3"/></svg> Generate</button>
+          <button class="btn btn-outline btn-sm" onclick="exportItemSalesCSV()"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> CSV</button>
+        </div>
+      </div>
+      <div class="card-body">
+        <div class="table-wrap">
+          <table class="data-table">
+            <thead><tr><th>#</th><th>Item Name</th><th>Category</th><th>Qty Sold</th><th>Orders</th><th>Revenue</th></tr></thead>
+            <tbody id="isr-tbody"><tr><td colspan="6" style="text-align:center;color:var(--muted);padding:20px">Select date range and Generate</td></tr></tbody>
+          </table>
+        </div>
+        <div id="isr-total" style="text-align:right;padding:10px 0;font-size:14px;font-weight:700;display:none"></div>
+      </div>
+    </div>
+    </div><!-- /rpt-pane-item-sales -->
+
+    <!-- ─── CANCELED ITEMS PANE ─── -->
+    <div id="rpt-pane-canceled-items" style="display:none">
+    <div class="card">
+      <div class="card-header">
+        <h3>Canceled Items Report</h3>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+          <input type="date" id="ci-from"><input type="date" id="ci-to">
+          <select id="ci-outlet" style="font-size:12px;padding:6px 8px;border:1.5px solid var(--border);border-radius:6px;color:var(--text);background:var(--card)"><option value="">All Outlets</option></select>
+          <button class="btn btn-primary btn-sm" onclick="loadCanceledItemsReport()"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="5 3 19 12 5 21 5 3"/></svg> Generate</button>
+          <button class="btn btn-outline btn-sm" onclick="exportCanceledItemsCSV()"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> CSV</button>
+        </div>
+      </div>
+      <div class="card-body">
+        <div class="table-wrap">
+          <table class="data-table">
+            <thead><tr><th>Order #</th><th>Item</th><th>Category</th><th>Qty</th><th>Value</th><th>Cancelled By</th><th>Reason</th><th>Time</th></tr></thead>
+            <tbody id="ci-tbody"><tr><td colspan="8" style="text-align:center;color:var(--muted);padding:20px">Select date range and Generate</td></tr></tbody>
+          </table>
+        </div>
+        <div id="ci-total" style="text-align:right;padding:10px 0;font-size:14px;font-weight:700;display:none"></div>
+      </div>
+    </div>
+    </div><!-- /rpt-pane-canceled-items -->
+
+    <!-- ─── CANCELED BILLS PANE ─── -->
+    <div id="rpt-pane-canceled-bills" style="display:none">
+    <div class="card">
+      <div class="card-header">
+        <h3>Canceled Bills Report</h3>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+          <input type="date" id="cb-from"><input type="date" id="cb-to">
+          <select id="cb-outlet" style="font-size:12px;padding:6px 8px;border:1.5px solid var(--border);border-radius:6px;color:var(--text);background:var(--card)"><option value="">All Outlets</option></select>
+          <button class="btn btn-primary btn-sm" onclick="loadCanceledBillsReport()"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="5 3 19 12 5 21 5 3"/></svg> Generate</button>
+          <button class="btn btn-outline btn-sm" onclick="exportCanceledBillsCSV()"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> CSV</button>
+        </div>
+      </div>
+      <div class="card-body">
+        <div class="table-wrap">
+          <table class="data-table">
+            <thead><tr><th>Order #</th><th>Type</th><th>Status</th><th>Cashier</th><th>Items</th><th>Value</th><th>Reason</th><th>Time</th></tr></thead>
+            <tbody id="cb-tbody"><tr><td colspan="8" style="text-align:center;color:var(--muted);padding:20px">Select date range and Generate</td></tr></tbody>
+          </table>
+        </div>
+        <div id="cb-total" style="text-align:right;padding:10px 0;font-size:14px;font-weight:700;display:none"></div>
+      </div>
+    </div>
+    </div><!-- /rpt-pane-canceled-bills -->
+
+    <!-- ─── COMPLEMENTARY BILLS PANE ─── -->
+    <div id="rpt-pane-comp-bills" style="display:none">
+    <div class="card">
+      <div class="card-header">
+        <h3>Complementary Bills Report</h3>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+          <input type="date" id="cob-from"><input type="date" id="cob-to">
+          <select id="cob-outlet" style="font-size:12px;padding:6px 8px;border:1.5px solid var(--border);border-radius:6px;color:var(--text);background:var(--card)"><option value="">All Outlets</option></select>
+          <button class="btn btn-primary btn-sm" onclick="loadCompBillsReport()"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="5 3 19 12 5 21 5 3"/></svg> Generate</button>
+          <button class="btn btn-outline btn-sm" onclick="exportCompBillsCSV()"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> CSV</button>
+        </div>
+      </div>
+      <div class="card-body">
+        <div class="table-wrap">
+          <table class="data-table">
+            <thead><tr><th>Order #</th><th>Type</th><th>Cashier</th><th>Subtotal</th><th>Total</th><th>Items</th><th>Time</th></tr></thead>
+            <tbody id="cob-tbody"><tr><td colspan="7" style="text-align:center;color:var(--muted);padding:20px">Select date range and Generate</td></tr></tbody>
+          </table>
+        </div>
+        <div id="cob-total" style="text-align:right;padding:10px 0;font-size:14px;font-weight:700;display:none"></div>
+      </div>
+    </div>
+    </div><!-- /rpt-pane-comp-bills -->
+
+    <!-- ─── COMPLEMENTARY ITEMS PANE ─── -->
+    <div id="rpt-pane-comp-items" style="display:none">
+    <div class="card">
+      <div class="card-header">
+        <h3>Complementary Items Report</h3>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+          <input type="date" id="coi-from"><input type="date" id="coi-to">
+          <select id="coi-outlet" style="font-size:12px;padding:6px 8px;border:1.5px solid var(--border);border-radius:6px;color:var(--text);background:var(--card)"><option value="">All Outlets</option></select>
+          <button class="btn btn-primary btn-sm" onclick="loadCompItemsReport()"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="5 3 19 12 5 21 5 3"/></svg> Generate</button>
+          <button class="btn btn-outline btn-sm" onclick="exportCompItemsCSV()"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> CSV</button>
+        </div>
+      </div>
+      <div class="card-body">
+        <div class="table-wrap">
+          <table class="data-table">
+            <thead><tr><th>#</th><th>Item Name</th><th>Category</th><th>Qty</th><th>Orders</th><th>Value</th></tr></thead>
+            <tbody id="coi-tbody"><tr><td colspan="6" style="text-align:center;color:var(--muted);padding:20px">Select date range and Generate</td></tr></tbody>
+          </table>
+        </div>
+        <div id="coi-total" style="text-align:right;padding:10px 0;font-size:14px;font-weight:700;display:none"></div>
+      </div>
+    </div>
+    </div><!-- /rpt-pane-comp-items -->
 
   </div>
 
@@ -3412,11 +3551,17 @@ function ssUpdateProgress () {
 }
 
 function ssWatchInputs () {
-  const ids = ['ss-brand-name','ss-first-name','ss-last-name','ss-phone','ss-outlet-name']
+  const ids = ['ss-brand-name','ss-first-name','ss-last-name','ss-phone','ss-market-name','ss-outlet-name']
   ids.forEach(id => {
     const el = document.getElementById(id)
     if (el) el.addEventListener('input', ssUpdateProgress)
   })
+}
+
+function ssTaxSystemChange (val) {
+  const wrap = document.getElementById('ss-tax-rate-wrap')
+  if (wrap) wrap.style.opacity = val === 'none' ? '0.4' : '1'
+  if (val === 'none') { const el = document.getElementById('ss-tax'); if (el) el.value = '0' }
 }
 
 async function ssSubmit () {
@@ -3425,13 +3570,15 @@ async function ssSubmit () {
   const lastName    = (document.getElementById('ss-last-name')?.value || '').trim()
   const phoneCode   = document.getElementById('ss-phone-code')?.value || '+60'
   const phoneNum    = (document.getElementById('ss-phone')?.value || '').trim()
+  const marketName  = (document.getElementById('ss-market-name')?.value || '').trim()
   const outletName  = (document.getElementById('ss-outlet-name')?.value || '').trim()
   const currency    = document.getElementById('ss-currency')?.value || 'MYR'
   const address     = (document.getElementById('ss-address')?.value || '').trim()
   const is24h       = document.getElementById('ss-24h')?.checked
   const openTime    = is24h ? '00:00' : (document.getElementById('ss-open-time')?.value || '09:00')
   const closeTime   = is24h ? '24:00' : (document.getElementById('ss-close-time')?.value || '22:00')
-  const tax         = parseFloat(document.getElementById('ss-tax')?.value) || 0
+  const taxSystem   = document.getElementById('ss-tax-system')?.value || 'exclusive'
+  const tax         = taxSystem === 'none' ? 0 : (parseFloat(document.getElementById('ss-tax')?.value) || 0)
   const bizType     = document.getElementById('ss-biz-type')?.value || ''
   const country     = document.getElementById('ss-country')?.value || 'MY'
   const outletPhone = (document.getElementById('ss-outlet-phone')?.value || '').trim()
@@ -3441,6 +3588,7 @@ async function ssSubmit () {
   if (!firstName)  { showToast('First name is required', 'error'); return }
   if (!lastName)   { showToast('Last name is required', 'error'); return }
   if (!phoneNum)   { showToast('Mobile number is required', 'error'); return }
+  if (!marketName) { showToast('Market name is required', 'error'); return }
   if (!outletName) { showToast('Outlet name is required', 'error'); return }
 
   const btn = document.getElementById('ss-submit-btn')
@@ -3457,9 +3605,11 @@ async function ssSubmit () {
       restaurant_name:     brandName,
       owner_name:          firstName + ' ' + lastName,
       owner_phone:         phoneCode + phoneNum,
+      market_name:         marketName,
       branch_name:         outletName,
       currency,
       tax_rate:            tax,
+      tax_system:          taxSystem,
       address,
       opening_time:        openTime,
       closing_time:        closeTime,
@@ -3918,7 +4068,7 @@ function populateDashFilters () {
 
 function populateOutletSelectors () {
   const outlets = _rptFilterData.outlets || []
-  const selectors = ['orders-outlet','kds-outlet-filter']
+  const selectors = ['orders-outlet','kds-outlet-filter','isr-outlet','ci-outlet','cb-outlet','cob-outlet','coi-outlet']
   selectors.forEach(id => {
     const sel = document.getElementById(id); if (!sel) return
     const cur = sel.value
@@ -3929,9 +4079,12 @@ function populateOutletSelectors () {
 
 // ─── REPORTS SUB-NAV ─────────────────────────────────────────────
 const RPT_TAB_TITLES = {
-  sales: 'Sales Report', expenses: 'Expenses', cashier: 'Cashier Performance',
+  sales: 'Day Summary Report', expenses: 'Expenses', cashier: 'Cashier Performance',
   voids: 'Voids & Discounts', consumption: 'Item Consumption', wastage: 'Wastage Report',
-  devices: 'Device Activity', inventory: 'Inventory Reports', security: 'Audit & Security'
+  devices: 'Device Activity', inventory: 'Inventory Reports', security: 'Audit & Security',
+  'item-sales': 'Item Report', 'canceled-items': 'Canceled Items',
+  'canceled-bills': 'Canceled Bills', 'comp-bills': 'Complementary Bills',
+  'comp-items': 'Complementary Items',
 }
 function showRptTab (tab) {
   document.querySelectorAll('[id^="rpt-pane-"]').forEach(p => p.style.display = 'none')
@@ -4034,7 +4187,7 @@ function showView (id) {
   if (ctxBar) ctxBar.style.display = OUTLET_SCOPED_VIEWS.has(id) ? '' : 'none'
   if (id === 'menu')      { document.getElementById('navg-menu')?.classList.add('open'); loadMenu() }
   if (id === 'item-editor')  {}
-  if (id === 'orders')       { setOrdersDate('today'); populateOutletSelectors(); loadOrders() }
+  if (id === 'orders')       { document.getElementById('navg-reports')?.classList.add('open'); setOrdersDate('today'); populateOutletSelectors(); loadOrders() }
   if (id === 'staff')        loadStaff()
   if (id === 'dashboard')    { populateOutletSelectors(); loadDashboard() }
   if (id === 'reports')   { document.getElementById('navg-reports')?.classList.add('open'); loadRptFilterOptions(); setRptPreset('today', document.querySelector('.rpt-preset-btn')); loadReport(); showRptTab('sales') }
@@ -5590,6 +5743,228 @@ function exportWastageCSV () {
     return `"${r.order_number}","${r.order_type||''}","${r.status}","${r.cashier_name||''}","${items}",${parseFloat(r.total||0).toFixed(2)},"${r.void_reason||''}","${r.created_at?new Date(+r.created_at).toLocaleString():''}"`
   })
   downloadCSV([header,...rows].join('\n'), `wastage_${todayStr()}.csv`)
+}
+
+// ─── ITEM REPORT ───────────────────────────────────────────────────
+let _isrRows = []
+async function loadItemSalesReport () {
+  initRptDates('isr-from','isr-to')
+  const { from, to } = rptDateRange('isr-from','isr-to')
+  const outlet_id = document.getElementById('isr-outlet')?.value || ''
+  const cur = boSettings.currency
+  const tbody = document.getElementById('isr-tbody')
+  tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:20px;color:var(--muted)">Loading…</td></tr>'
+  try {
+    const qs = `from=${from}&to=${to}${outlet_id?`&outlet_id=${outlet_id}`:''}`
+    const { rows } = await apiFetch('GET', `/reports/item-sales?${qs}`)
+    _isrRows = rows || []
+    if (!_isrRows.length) {
+      tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:20px;color:var(--muted)">No items sold in range</td></tr>'
+      document.getElementById('isr-total').style.display = 'none'; return
+    }
+    let totalRev = 0, totalQty = 0
+    tbody.innerHTML = _isrRows.map((r, i) => {
+      totalRev += parseFloat(r.total_revenue || 0)
+      totalQty += parseInt(r.total_qty || 0)
+      return `<tr>
+        <td style="color:var(--muted)">${i+1}</td>
+        <td style="font-weight:600">${r.item_name}</td>
+        <td><span class="badge badge-blue">${r.category_name}</span></td>
+        <td style="font-weight:700;color:var(--primary)">${r.total_qty}</td>
+        <td>${r.order_count}</td>
+        <td style="font-weight:700">${cur} ${parseFloat(r.total_revenue||0).toFixed(2)}</td>
+      </tr>`
+    }).join('')
+    const totEl = document.getElementById('isr-total')
+    totEl.style.display = 'block'
+    totEl.innerHTML = `Total Qty: <span style="color:var(--primary)">${totalQty}</span> &nbsp;|&nbsp; Total Revenue: <span>${cur} ${totalRev.toFixed(2)}</span>`
+  } catch (e) { tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;padding:20px;color:var(--danger)">${e.message}</td></tr>` }
+}
+function exportItemSalesCSV () {
+  const cur = boSettings.currency
+  const header = 'Rank,Item Name,Category,Qty Sold,Orders,Revenue'
+  const rows = _isrRows.map((r,i) => `${i+1},"${r.item_name}","${r.category_name}",${r.total_qty},${r.order_count},${parseFloat(r.total_revenue||0).toFixed(2)}`)
+  downloadCSV([header,...rows].join('\n'), `item_report_${todayStr()}.csv`)
+}
+
+// ─── CANCELED ITEMS REPORT ─────────────────────────────────────────
+let _ciRows = []
+async function loadCanceledItemsReport () {
+  initRptDates('ci-from','ci-to')
+  const { from, to } = rptDateRange('ci-from','ci-to')
+  const outlet_id = document.getElementById('ci-outlet')?.value || ''
+  const cur = boSettings.currency
+  const tbody = document.getElementById('ci-tbody')
+  tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:20px;color:var(--muted)">Loading…</td></tr>'
+  try {
+    const qs = `from=${from}&to=${to}${outlet_id?`&outlet_id=${outlet_id}`:''}`
+    const { rows } = await apiFetch('GET', `/reports/canceled-items?${qs}`)
+    _ciRows = rows || []
+    if (!_ciRows.length) {
+      tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:20px;color:var(--muted)">No canceled items in range</td></tr>'
+      document.getElementById('ci-total').style.display = 'none'; return
+    }
+    let total = 0, totalQty = 0
+    tbody.innerHTML = _ciRows.map(r => {
+      total += parseFloat(r.total_price || 0)
+      totalQty += parseInt(r.quantity || 0)
+      return `<tr>
+        <td style="font-weight:700;color:var(--primary)">#${r.order_number}</td>
+        <td style="font-weight:600">${r.item_name}</td>
+        <td><span class="badge badge-blue">${r.category_name}</span></td>
+        <td style="font-weight:700;color:var(--danger)">${r.quantity}</td>
+        <td>${cur} ${parseFloat(r.total_price||0).toFixed(2)}</td>
+        <td style="font-size:11px">${r.voided_by||r.cashier_name||'—'}</td>
+        <td style="font-size:11px;color:var(--muted)">${r.void_reason||'—'}</td>
+        <td style="font-size:11px;color:var(--muted)">${r.created_at?new Date(+r.created_at).toLocaleString():'—'}</td>
+      </tr>`
+    }).join('')
+    const totEl = document.getElementById('ci-total')
+    totEl.style.display = 'block'
+    totEl.innerHTML = `Total Qty Canceled: <span style="color:var(--danger)">${totalQty}</span> &nbsp;|&nbsp; Total Value: <span>${cur} ${total.toFixed(2)}</span>`
+  } catch (e) { tbody.innerHTML = `<tr><td colspan="8" style="text-align:center;padding:20px;color:var(--danger)">${e.message}</td></tr>` }
+}
+function exportCanceledItemsCSV () {
+  const cur = boSettings.currency
+  const header = 'Order#,Item,Category,Qty,Value,Cancelled By,Reason,Time'
+  const rows = _ciRows.map(r => `"${r.order_number}","${r.item_name}","${r.category_name}",${r.quantity},${parseFloat(r.total_price||0).toFixed(2)},"${r.voided_by||r.cashier_name||''}","${r.void_reason||''}","${r.created_at?new Date(+r.created_at).toLocaleString():''}"`)
+  downloadCSV([header,...rows].join('\n'), `canceled_items_${todayStr()}.csv`)
+}
+
+// ─── CANCELED BILLS REPORT ─────────────────────────────────────────
+let _cbRows = []
+async function loadCanceledBillsReport () {
+  initRptDates('cb-from','cb-to')
+  const { from, to } = rptDateRange('cb-from','cb-to')
+  const outlet_id = document.getElementById('cb-outlet')?.value || ''
+  const cur = boSettings.currency
+  const tbody = document.getElementById('cb-tbody')
+  tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:20px;color:var(--muted)">Loading…</td></tr>'
+  try {
+    const qs = `from=${from}&to=${to}${outlet_id?`&outlet_id=${outlet_id}`:''}`
+    const { rows } = await apiFetch('GET', `/reports/canceled-bills?${qs}`)
+    _cbRows = rows || []
+    if (!_cbRows.length) {
+      tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:20px;color:var(--muted)">No canceled bills in range</td></tr>'
+      document.getElementById('cb-total').style.display = 'none'; return
+    }
+    let total = 0
+    tbody.innerHTML = _cbRows.map(r => {
+      total += parseFloat(r.total || 0)
+      const items = (r.items||[]).filter(i=>i.item_name).map(i=>`${i.quantity}× ${i.item_name}`).join(', ')||'—'
+      const badge = r.status==='void' ? `<span class="badge badge-red">Void</span>` : `<span class="badge badge-amber">Cancelled</span>`
+      return `<tr>
+        <td style="font-weight:700;color:var(--primary)">#${r.order_number}</td>
+        <td>${(r.order_type||'').replace(/-/g,' ')}</td>
+        <td>${badge}</td>
+        <td>${r.cashier_name||'—'}</td>
+        <td style="max-width:200px;white-space:normal;font-size:11px;color:var(--muted)">${items}</td>
+        <td style="font-weight:700;color:var(--danger)">${cur} ${parseFloat(r.total||0).toFixed(2)}</td>
+        <td style="font-size:11px;color:var(--muted)">${r.void_reason||'—'}</td>
+        <td style="font-size:11px;color:var(--muted)">${r.created_at?new Date(+r.created_at).toLocaleString():'—'}</td>
+      </tr>`
+    }).join('')
+    const totEl = document.getElementById('cb-total')
+    totEl.style.display = 'block'
+    totEl.innerHTML = `Total Canceled Value: <span style="color:var(--danger)">${cur} ${total.toFixed(2)}</span>`
+  } catch (e) { tbody.innerHTML = `<tr><td colspan="8" style="text-align:center;padding:20px;color:var(--danger)">${e.message}</td></tr>` }
+}
+function exportCanceledBillsCSV () {
+  const cur = boSettings.currency
+  const header = 'Order#,Type,Status,Cashier,Items,Value,Reason,Time'
+  const rows = _cbRows.map(r => {
+    const items = (r.items||[]).filter(i=>i.item_name).map(i=>`${i.quantity}x ${i.item_name}`).join('; ')
+    return `"${r.order_number}","${r.order_type||''}","${r.status}","${r.cashier_name||''}","${items}",${parseFloat(r.total||0).toFixed(2)},"${r.void_reason||''}","${r.created_at?new Date(+r.created_at).toLocaleString():''}"`
+  })
+  downloadCSV([header,...rows].join('\n'), `canceled_bills_${todayStr()}.csv`)
+}
+
+// ─── COMPLEMENTARY BILLS REPORT ────────────────────────────────────
+let _cobRows = []
+async function loadCompBillsReport () {
+  initRptDates('cob-from','cob-to')
+  const { from, to } = rptDateRange('cob-from','cob-to')
+  const outlet_id = document.getElementById('cob-outlet')?.value || ''
+  const cur = boSettings.currency
+  const tbody = document.getElementById('cob-tbody')
+  tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:20px;color:var(--muted)">Loading…</td></tr>'
+  try {
+    const qs = `from=${from}&to=${to}${outlet_id?`&outlet_id=${outlet_id}`:''}`
+    const { rows } = await apiFetch('GET', `/reports/comp-bills?${qs}`)
+    _cobRows = rows || []
+    if (!_cobRows.length) {
+      tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:20px;color:var(--muted)">No complementary bills in range</td></tr>'
+      document.getElementById('cob-total').style.display = 'none'; return
+    }
+    let totalSub = 0
+    tbody.innerHTML = _cobRows.map(r => {
+      totalSub += parseFloat(r.subtotal || 0)
+      const items = (r.items||[]).filter(i=>i.item_name).map(i=>`${i.quantity}× ${i.item_name}`).join(', ')||'—'
+      return `<tr>
+        <td style="font-weight:700;color:var(--primary)">#${r.order_number}</td>
+        <td>${(r.order_type||'').replace(/-/g,' ')}</td>
+        <td>${r.cashier_name||'—'}</td>
+        <td>${cur} ${parseFloat(r.subtotal||0).toFixed(2)}</td>
+        <td style="font-weight:700;color:var(--success)">${cur} ${parseFloat(r.total||0).toFixed(2)}</td>
+        <td style="max-width:200px;white-space:normal;font-size:11px;color:var(--muted)">${items}</td>
+        <td style="font-size:11px;color:var(--muted)">${r.created_at?new Date(+r.created_at).toLocaleString():'—'}</td>
+      </tr>`
+    }).join('')
+    const totEl = document.getElementById('cob-total')
+    totEl.style.display = 'block'
+    totEl.innerHTML = `Total Comp Bills: <span style="color:var(--primary)">${_cobRows.length}</span> &nbsp;|&nbsp; Total Subtotal Comp'd: <span>${cur} ${totalSub.toFixed(2)}</span>`
+  } catch (e) { tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;padding:20px;color:var(--danger)">${e.message}</td></tr>` }
+}
+function exportCompBillsCSV () {
+  const cur = boSettings.currency
+  const header = 'Order#,Type,Cashier,Subtotal,Total,Items,Time'
+  const rows = _cobRows.map(r => {
+    const items = (r.items||[]).filter(i=>i.item_name).map(i=>`${i.quantity}x ${i.item_name}`).join('; ')
+    return `"${r.order_number}","${r.order_type||''}","${r.cashier_name||''}",${parseFloat(r.subtotal||0).toFixed(2)},${parseFloat(r.total||0).toFixed(2)},"${items}","${r.created_at?new Date(+r.created_at).toLocaleString():''}"`
+  })
+  downloadCSV([header,...rows].join('\n'), `comp_bills_${todayStr()}.csv`)
+}
+
+// ─── COMPLEMENTARY ITEMS REPORT ────────────────────────────────────
+let _coiRows = []
+async function loadCompItemsReport () {
+  initRptDates('coi-from','coi-to')
+  const { from, to } = rptDateRange('coi-from','coi-to')
+  const outlet_id = document.getElementById('coi-outlet')?.value || ''
+  const cur = boSettings.currency
+  const tbody = document.getElementById('coi-tbody')
+  tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:20px;color:var(--muted)">Loading…</td></tr>'
+  try {
+    const qs = `from=${from}&to=${to}${outlet_id?`&outlet_id=${outlet_id}`:''}`
+    const { rows } = await apiFetch('GET', `/reports/comp-items?${qs}`)
+    _coiRows = rows || []
+    if (!_coiRows.length) {
+      tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:20px;color:var(--muted)">No complementary items in range</td></tr>'
+      document.getElementById('coi-total').style.display = 'none'; return
+    }
+    let totalQty = 0, totalVal = 0
+    tbody.innerHTML = _coiRows.map((r,i) => {
+      totalQty += parseInt(r.total_qty||0)
+      totalVal += parseFloat(r.total_value||0)
+      return `<tr>
+        <td style="color:var(--muted)">${i+1}</td>
+        <td style="font-weight:600">${r.item_name}</td>
+        <td><span class="badge badge-blue">${r.category_name}</span></td>
+        <td style="font-weight:700;color:var(--primary)">${r.total_qty}</td>
+        <td>${r.order_count}</td>
+        <td style="font-weight:700">${cur} ${parseFloat(r.total_value||0).toFixed(2)}</td>
+      </tr>`
+    }).join('')
+    const totEl = document.getElementById('coi-total')
+    totEl.style.display = 'block'
+    totEl.innerHTML = `Total Qty Comp'd: <span style="color:var(--primary)">${totalQty}</span> &nbsp;|&nbsp; Total Value: <span>${cur} ${totalVal.toFixed(2)}</span>`
+  } catch (e) { tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;padding:20px;color:var(--danger)">${e.message}</td></tr>` }
+}
+function exportCompItemsCSV () {
+  const cur = boSettings.currency
+  const header = 'Rank,Item Name,Category,Qty,Orders,Value'
+  const rows = _coiRows.map((r,i) => `${i+1},"${r.item_name}","${r.category_name}",${r.total_qty},${r.order_count},${parseFloat(r.total_value||0).toFixed(2)}`)
+  downloadCSV([header,...rows].join('\n'), `comp_items_${todayStr()}.csv`)
 }
 
 // ─── PASSCODE USAGE ────────────────────────────────────────────────
@@ -7606,9 +7981,19 @@ const _origShowView = showView
       <div class="ss-card">
         <div class="ss-card-header">
           <div class="ss-card-num">3</div>
-          <div class="ss-card-title">Outlet Details</div>
+          <div class="ss-card-title">Market &amp; Outlet Details</div>
         </div>
         <div class="ss-card-body">
+          <div class="ss-row">
+            <div class="ss-field">
+              <label>Market Name <span style="color:#ef4444">*</span></label>
+              <input id="ss-market-name" type="text" placeholder="e.g. Kuala Lumpur, Penang, Main City">
+            </div>
+            <div class="ss-field">
+              <label style="opacity:0">—</label>
+              <div style="padding:10px 12px;background:#0d1a2d;border:1.5px solid #1e3a5f;border-radius:8px;font-size:12px;color:#94a3b8">A market groups your outlets geographically. You can add more markets later.</div>
+            </div>
+          </div>
           <div class="ss-row">
             <div class="ss-field">
               <label>Outlet Name <span style="color:#ef4444">*</span></label>
@@ -7623,19 +8008,43 @@ const _origShowView = showView
             <div class="ss-field">
               <label>Outlet Country <span style="color:#ef4444">*</span></label>
               <select id="ss-country" onchange="ssCountryChange(this.value)">
-                <option value="MY">🇲🇾 Malaysia</option>
-                <option value="SG">🇸🇬 Singapore</option>
-                <option value="ID">🇮🇩 Indonesia</option>
-                <option value="TH">🇹🇭 Thailand</option>
-                <option value="PH">🇵🇭 Philippines</option>
-                <option value="AE">🇦🇪 UAE</option>
-                <option value="SA">🇸🇦 Saudi Arabia</option>
-                <option value="PK">🇵🇰 Pakistan</option>
-                <option value="IN">🇮🇳 India</option>
-                <option value="GB">🇬🇧 United Kingdom</option>
-                <option value="US">🇺🇸 United States</option>
-                <option value="EU">🇪🇺 Europe</option>
-                <option value="OTHER">🌍 Other</option>
+                <option value="MY">Malaysia</option>
+                <option value="SG">Singapore</option>
+                <option value="ID">Indonesia</option>
+                <option value="TH">Thailand</option>
+                <option value="PH">Philippines</option>
+                <option value="VN">Vietnam</option>
+                <option value="MM">Myanmar</option>
+                <option value="KH">Cambodia</option>
+                <option value="LA">Laos</option>
+                <option value="BN">Brunei</option>
+                <option value="AE">UAE</option>
+                <option value="SA">Saudi Arabia</option>
+                <option value="QA">Qatar</option>
+                <option value="KW">Kuwait</option>
+                <option value="BH">Bahrain</option>
+                <option value="OM">Oman</option>
+                <option value="JO">Jordan</option>
+                <option value="EG">Egypt</option>
+                <option value="IN">India</option>
+                <option value="PK">Pakistan</option>
+                <option value="BD">Bangladesh</option>
+                <option value="LK">Sri Lanka</option>
+                <option value="NP">Nepal</option>
+                <option value="CN">China</option>
+                <option value="JP">Japan</option>
+                <option value="KR">South Korea</option>
+                <option value="HK">Hong Kong</option>
+                <option value="TW">Taiwan</option>
+                <option value="AU">Australia</option>
+                <option value="NZ">New Zealand</option>
+                <option value="GB">United Kingdom</option>
+                <option value="US">United States</option>
+                <option value="CA">Canada</option>
+                <option value="ZA">South Africa</option>
+                <option value="NG">Nigeria</option>
+                <option value="KE">Kenya</option>
+                <option value="OTHER">Other</option>
               </select>
             </div>
             <div class="ss-field">
@@ -7646,24 +8055,55 @@ const _origShowView = showView
                 <option value="IDR">IDR — Indonesian Rupiah</option>
                 <option value="THB">THB — Thai Baht</option>
                 <option value="PHP">PHP — Philippine Peso</option>
+                <option value="VND">VND — Vietnamese Dong</option>
                 <option value="AED">AED — UAE Dirham</option>
                 <option value="SAR">SAR — Saudi Riyal</option>
-                <option value="PKR">PKR — Pakistani Rupee</option>
+                <option value="QAR">QAR — Qatari Riyal</option>
+                <option value="KWD">KWD — Kuwaiti Dinar</option>
+                <option value="BHD">BHD — Bahraini Dinar</option>
+                <option value="OMR">OMR — Omani Rial</option>
+                <option value="JOD">JOD — Jordanian Dinar</option>
+                <option value="EGP">EGP — Egyptian Pound</option>
                 <option value="INR">INR — Indian Rupee</option>
+                <option value="PKR">PKR — Pakistani Rupee</option>
+                <option value="BDT">BDT — Bangladeshi Taka</option>
+                <option value="LKR">LKR — Sri Lankan Rupee</option>
+                <option value="CNY">CNY — Chinese Yuan</option>
+                <option value="JPY">JPY — Japanese Yen</option>
+                <option value="KRW">KRW — South Korean Won</option>
+                <option value="HKD">HKD — Hong Kong Dollar</option>
+                <option value="AUD">AUD — Australian Dollar</option>
+                <option value="NZD">NZD — New Zealand Dollar</option>
                 <option value="GBP">GBP — British Pound</option>
                 <option value="USD">USD — US Dollar</option>
+                <option value="CAD">CAD — Canadian Dollar</option>
                 <option value="EUR">EUR — Euro</option>
+                <option value="ZAR">ZAR — South African Rand</option>
+                <option value="NGN">NGN — Nigerian Naira</option>
+                <option value="KES">KES — Kenyan Shilling</option>
               </select>
+            </div>
+          </div>
+          <div class="ss-row">
+            <div class="ss-field">
+              <label>Tax System</label>
+              <select id="ss-tax-system" onchange="ssTaxSystemChange(this.value)">
+                <option value="exclusive">GST / Exclusive Tax (added on top)</option>
+                <option value="inclusive">Inclusive Tax (included in price)</option>
+                <option value="vat">VAT</option>
+                <option value="sst">SST (Sales &amp; Service Tax)</option>
+                <option value="none">No Tax</option>
+              </select>
+            </div>
+            <div class="ss-field" id="ss-tax-rate-wrap">
+              <label>Tax Rate (%)</label>
+              <input id="ss-tax" type="number" min="0" max="30" step="0.5" placeholder="0" value="0">
             </div>
           </div>
           <div class="ss-row">
             <div class="ss-field">
               <label>Outlet Email Address</label>
               <input id="ss-outlet-email" type="email" placeholder="outlet@yourbrand.com">
-            </div>
-            <div class="ss-field">
-              <label>Tax Rate (%)</label>
-              <input id="ss-tax" type="number" min="0" max="30" step="0.5" placeholder="0" value="0">
             </div>
           </div>
           <div class="ss-field">
