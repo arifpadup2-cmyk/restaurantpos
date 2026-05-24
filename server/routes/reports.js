@@ -1,4 +1,4 @@
-'use strict'
+﻿'use strict'
 
 const express = require('express')
 const { jwtAuth } = require('../middleware/jwtAuth')
@@ -26,7 +26,7 @@ module.exports = function reportsRouter (sql) {
       } else if (brand_id || market_id || country) {
         const outlets = await sql`
           SELECT id FROM outlets
-          WHERE restaurant_id = ${req.user.restaurant_id}
+          WHERE brand_id = ${req.user.brand_id}
           ${brand_id  ? sql`AND brand_id  = ${brand_id}`  : sql``}
           ${market_id ? sql`AND market_id = ${market_id}` : sql``}
           ${country   ? sql`AND country   = ${country}`   : sql``}`
@@ -54,7 +54,7 @@ module.exports = function reportsRouter (sql) {
       } else if (brand_id || market_id || country) {
         const outlets = await sql`
           SELECT id FROM outlets
-          WHERE restaurant_id = ${req.user.restaurant_id}
+          WHERE brand_id = ${req.user.brand_id}
           ${brand_id  ? sql`AND brand_id  = ${brand_id}`  : sql``}
           ${market_id ? sql`AND market_id = ${market_id}` : sql``}
           ${country   ? sql`AND country   = ${country}`   : sql``}`
@@ -76,12 +76,12 @@ module.exports = function reportsRouter (sql) {
   router.get('/expenses', async (req, res) => {
     const { from, to } = req.query
     const { start, end } = dateRange(from, to)
-    const rid = req.user.restaurant_id
+    const rid = req.user.brand_id
     try {
       const exps = await sql`
         SELECT * FROM expenses
         WHERE created_at >= ${start} AND created_at < ${end}
-          AND (restaurant_id = ${rid} OR restaurant_id IS NULL)
+          AND (brand_id = ${rid} OR brand_id IS NULL)
         ORDER BY created_at DESC`
       res.json({ expenses: exps })
     } catch (e) { res.status(500).json({ error: e.message }) }
@@ -98,7 +98,7 @@ module.exports = function reportsRouter (sql) {
       } else if (brand_id || country) {
         const outlets = await sql`
           SELECT id FROM outlets
-          WHERE restaurant_id = ${req.user.restaurant_id}
+          WHERE brand_id = ${req.user.brand_id}
           ${brand_id ? sql`AND brand_id = ${brand_id}` : sql``}
           ${country  ? sql`AND country  = ${country}`  : sql``}`
         outletIds = outlets.map(o => o.id)
@@ -138,7 +138,7 @@ module.exports = function reportsRouter (sql) {
   router.get('/wastage', async (req, res) => {
     const { from, to } = req.query
     const { start, end } = dateRange(from, to)
-    const rid = req.user.restaurant_id
+    const rid = req.user.brand_id
     try {
       const rows = await sql`
         SELECT o.order_number, o.order_type, o.cashier_name, o.total,
@@ -154,7 +154,7 @@ module.exports = function reportsRouter (sql) {
         LEFT JOIN order_items oi ON oi.order_id = o.id
         WHERE o.created_at >= ${start} AND o.created_at < ${end}
           AND o.status IN ('void','cancelled')
-          AND o.outlet_id IN (SELECT id FROM outlets WHERE restaurant_id = ${rid})
+          AND o.outlet_id IN (SELECT id FROM outlets WHERE brand_id = ${rid})
         GROUP BY o.id
         ORDER BY o.created_at DESC`
       res.json({ rows })
@@ -165,7 +165,7 @@ module.exports = function reportsRouter (sql) {
   router.get('/device-activity', async (req, res) => {
     const from = Number(req.query.from) || new Date().setHours(0,0,0,0)
     const to   = Number(req.query.to)   || Date.now()
-    const rid  = req.user.restaurant_id
+    const rid  = req.user.brand_id
     try {
       const rows = await sql`
         SELECT terminal_id,
@@ -180,7 +180,7 @@ module.exports = function reportsRouter (sql) {
         FROM audit_log
         WHERE created_at >= ${from} AND created_at <= ${to}
           AND terminal_id IS NOT NULL
-          AND (restaurant_id = ${rid} OR restaurant_id IS NULL)
+          AND (brand_id = ${rid} OR brand_id IS NULL)
         GROUP BY terminal_id
         ORDER BY event_count DESC`
       res.json({ rows })
@@ -189,12 +189,12 @@ module.exports = function reportsRouter (sql) {
 
   // GET /reports/filter-options — brands, markets, outlets for this restaurant
   router.get('/filter-options', async (req, res) => {
-    const rid = req.user.restaurant_id
+    const rid = req.user.brand_id
     try {
       const [brands, markets, outlets] = await Promise.all([
-        sql`SELECT id, name FROM brands WHERE restaurant_id = ${rid} ORDER BY name`,
-        sql`SELECT id, name, brand_id, country, currency_code, currency_symbol FROM markets WHERE restaurant_id = ${rid} ORDER BY name`,
-        sql`SELECT id, name, brand_id, market_id, country, currency_code, currency_symbol FROM outlets WHERE restaurant_id = ${rid} ORDER BY name`,
+        sql`SELECT id, name FROM brands WHERE brand_id = ${rid} ORDER BY name`,
+        sql`SELECT id, name, brand_id, country, currency_code, currency_symbol FROM markets WHERE brand_id = ${rid} ORDER BY name`,
+        sql`SELECT id, name, brand_id, market_id, country, currency_code, currency_symbol FROM outlets WHERE brand_id = ${rid} ORDER BY name`,
       ])
       res.json({ brands, markets, outlets })
     } catch (e) { res.status(500).json({ error: e.message }) }

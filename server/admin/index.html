@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -302,7 +302,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
       <!-- RESTAURANTS -->
       <div class="view" id="v-restaurants">
         <div class="ph">
-          <div><h2>Restaurants</h2><p>All licensed restaurants — click row for full details</p></div>
+          <div><h2>Brands</h2><p>All licensed brands — click row for full details</p></div>
           <button class="btn btn-p" onclick="showReg()">+ Register New</button>
         </div>
         <div class="fr">
@@ -337,7 +337,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
       <!-- OUTLETS -->
       <div class="view" id="v-outlets">
         <div class="ph">
-          <div><h2>Outlets</h2><p>All outlets across all restaurants — set license dates here</p></div>
+          <div><h2>Outlets</h2><p>All outlets across all brands — set license dates here</p></div>
           <button class="btn btn-o" onclick="loadOutlets()">↻ Refresh</button>
         </div>
         <div class="fr">
@@ -351,7 +351,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
             <table class="dt">
               <thead>
                 <tr>
-                  <th>Outlet ID</th><th>Outlet Name</th><th>Brand</th><th>Restaurant</th>
+                  <th>Outlet ID</th><th>Outlet Name</th><th>Brand</th><th>Market</th>
                   <th>Country</th><th>License End Date</th><th>Actions</th>
                 </tr>
               </thead>
@@ -395,7 +395,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 
       <!-- PERFORMANCE -->
       <div class="view" id="v-performance">
-        <div class="ph"><div><h2>Performance Reports</h2><p>System metrics and restaurant statistics</p></div>
+        <div class="ph"><div><h2>Performance Reports</h2><p>System metrics and brand statistics</p></div>
           <button class="btn btn-o" onclick="loadPerformance()">↻ Refresh</button>
         </div>
         <div id="perf-body" style="display:grid;grid-template-columns:1fr 1fr;gap:18px">
@@ -425,7 +425,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
               <ol>
                 <li>Copy the <strong>server folder</strong> to the restaurant's server PC</li>
                 <li>Right-click <code>INSTALL-SERVER.bat</code> → <strong>Run as Administrator</strong></li>
-                <li>When prompted, enter the <strong>Restaurant ID</strong> and <strong>License Key</strong> from the credentials below</li>
+                <li>When prompted, enter the <strong>Brand ID</strong> and <strong>License Key</strong> from the credentials below</li>
                 <li>Script auto-installs Node.js, PostgreSQL, configures everything and starts the server as a Windows service</li>
                 <li>It saves a <code>SETUP-SUMMARY.txt</code> file with all credentials and the server IP address</li>
               </ol>
@@ -434,7 +434,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
               <h4>Step 2 — POS Terminal (on each cashier/waiter Windows PC)</h4>
               <ol>
                 <li>Download and run <code>Restaurant POS Setup X.X.X.exe</code></li>
-                <li>On first launch, a setup screen appears — enter <strong>Server IP</strong>, <strong>Restaurant ID</strong>, <strong>License Key</strong></li>
+                <li>On first launch, a setup screen appears — enter <strong>Server IP</strong>, <strong>Brand ID</strong>, <strong>License Key</strong></li>
                 <li>Click <strong>Connect &amp; Save</strong> — POS downloads its database credentials from the server and connects</li>
                 <li>Enter staff PIN to login and start using the POS</li>
               </ol>
@@ -474,17 +474,17 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 
         <!-- Per-restaurant credential card -->
         <div class="card">
-          <div class="ch"><h3>🔑 Restaurant Credentials Lookup</h3></div>
+          <div class="ch"><h3>🔑 Brand Credentials Lookup</h3></div>
           <div class="cb">
             <div class="mf">
               <label>Select Restaurant</label>
               <select id="cred-select" onchange="showRestCreds()">
-                <option value="">— Select a restaurant —</option>
+                <option value="">— Select a brand —</option>
               </select>
             </div>
             <div id="cred-display" style="display:none">
               <div class="cred-box">
-                <div class="cred-row"><div><div class="cred-label">Restaurant ID</div><div class="cred-value" id="ci-id"></div></div><button class="cred-copy" onclick="cp('ci-id')">Copy</button></div>
+                <div class="cred-row"><div><div class="cred-label">Brand ID</div><div class="cred-value" id="ci-id"></div></div><button class="cred-copy" onclick="cp('ci-id')">Copy</button></div>
                 <div class="cred-row"><div><div class="cred-label">License Key</div><div class="cred-value" id="ci-key"></div></div><button class="cred-copy" onclick="cp('ci-key')">Copy</button></div>
                 <div class="cred-row"><div><div class="cred-label">Trial / Expiry</div><div class="cred-value" id="ci-exp" style="font-size:13px;color:#fbbf24"></div></div></div>
               </div>
@@ -512,6 +512,18 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
               <button class="btn btn-p" onclick="downloadBackup()">⬇ Download Full Backup</button>
               <div id="backup-status" style="font-size:12px;color:#64748b;margin-top:10px"></div>
             </div>
+          </div>
+        </div>
+        <div class="card" style="border:1px solid #7f1d1d">
+          <div class="ch" style="background:#1c0a0a"><h3 style="color:#f87171">⚠️ Danger Zone</h3></div>
+          <div class="cb">
+            <p style="font-size:13px;color:#94a3b8;margin-bottom:14px">
+              Wipe <strong>all</strong> brands, outlets, markets, menu data, orders, staff and BO users from the system.
+              Only superadmin accounts survive. This is <strong style="color:#f87171">irreversible</strong>.
+            </p>
+            <button class="btn" style="background:#7f1d1d;color:#fca5a5;border:1px solid #991b1b" onclick="wipeAllData()">
+              🗑 Wipe All Data
+            </button>
           </div>
         </div>
         <div class="card">
@@ -549,7 +561,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
       <button class="dtab" onclick="dtab('edit')" id="dtab-edit" style="padding:8px 14px;background:none;border:none;color:#64748b;font-size:13px;cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-1px">Edit</button>
     </div>
     <div id="dtab-info-body">
-      <div class="ir"><div class="il">Restaurant ID</div><div class="iv"><span class="mono" id="di-id"></span></div></div>
+      <div class="ir"><div class="il">Brand ID</div><div class="iv"><span class="mono" id="di-id"></span></div></div>
       <div class="ir"><div class="il">Name</div><div class="iv strong" id="di-name"></div></div>
       <div class="ir"><div class="il">Owner</div><div class="iv" id="di-owner"></div></div>
       <div class="ir"><div class="il">Email</div><div class="iv" id="di-email"></div></div>
@@ -570,7 +582,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
     <div id="dtab-creds-body" style="display:none">
       <div class="cred-box">
         <div style="font-size:11px;font-weight:700;color:#64748b;text-transform:uppercase;margin-bottom:12px">License Information</div>
-        <div class="cred-row"><div><div class="cred-label">Restaurant ID</div><div class="cred-value" id="dc-rid"></div></div><button class="cred-copy" onclick="cp('dc-rid')">Copy</button></div>
+        <div class="cred-row"><div><div class="cred-label">Brand ID</div><div class="cred-value" id="dc-rid"></div></div><button class="cred-copy" onclick="cp('dc-rid')">Copy</button></div>
         <div class="cred-row"><div><div class="cred-label">License Key</div><div class="cred-value" id="dc-key"></div></div><button class="cred-copy" onclick="cp('dc-key')">Copy</button></div>
       </div>
       <div class="cred-box">
@@ -863,7 +875,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
                 <div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:10px;padding:14px;margin-bottom:14px">
                   <div style="font-size:11px;font-weight:700;color:#15803d;text-transform:uppercase;letter-spacing:.4px;margin-bottom:10px">License Information</div>
                   <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
-                    <div><div style="font-size:10px;font-weight:700;color:#6b7280;text-transform:uppercase">Restaurant ID</div><div style="font-family:monospace;font-size:14px;font-weight:700;color:#1d4ed8" id="rg-rid"></div></div>
+                    <div><div style="font-size:10px;font-weight:700;color:#6b7280;text-transform:uppercase">Brand ID</div><div style="font-family:monospace;font-size:14px;font-weight:700;color:#1d4ed8" id="rg-rid"></div></div>
                     <button class="cred-copy" onclick="cp('rg-rid')" style="background:#fff;border-color:#d1d5db;color:#374151">Copy</button>
                   </div>
                   <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
@@ -1128,11 +1140,12 @@ function renderOutlets () {
       <td><span class="mono" style="font-size:11px">${esc(r.id)}</span><button class="bsm" style="margin-left:6px;font-size:10px" onclick="navigator.clipboard.writeText('${esc(r.id)}').then(()=>alert('Copied!'))">Copy</button></td>
       <td><div class="strong">${esc(r.name)}</div></td>
       <td style="color:#94a3b8;font-size:12px">${esc(r.brand_name||'—')}</td>
-      <td style="color:#94a3b8;font-size:12px">${esc(r.restaurant_name||'—')}</td>
+      <td style="color:#94a3b8;font-size:12px">${esc(r.market_name||'—')}</td>
       <td style="color:#94a3b8;font-size:12px">${esc(r.country||'—')}</td>
       <td style="${dateColor};font-size:12px">${expDate ? (isExpired ? '⚠️ Expired ' : '✅ ') + expDate : '—'}</td>
-      <td>
-        <button class="bsm b" onclick="setOutletLicense('${esc(r.id)}','${esc(r.name)}','${expDate}')">📅 Set License</button>
+      <td style="display:flex;gap:6px">
+        <button class="bsm b" onclick="setOutletLicense('${esc(r.id)}','${esc(r.name)}','${expDate}')">📅 License</button>
+        <button class="bsm" style="background:#065f46;color:#4ade80" onclick="seedOutlet('${esc(r.id)}','${esc(r.name)}')">🌱 Seed Data</button>
       </td>
     </tr>`
   }).join('')
@@ -1640,7 +1653,7 @@ function wizGoto (step) {
   } else {
     backBtn.style.display = step > 1 ? '' : 'none'
     nextBtn.style.display = ''
-    nextBtn.textContent   = step === 3 ? '🚀 Create Restaurant' : 'Next Step →'
+    nextBtn.textContent   = step === 3 ? '🚀 Create Brand' : 'Next Step →'
     cancelBtn.textContent = 'Cancel'
   }
 }
@@ -1685,7 +1698,7 @@ async function submitReg () {
   wizGoto(4)
   document.getElementById('wiz-running').style.display = 'block'
   const tasks = [
-    {id:'wt1', label:'Creating restaurant record'},
+    {id:'wt1', label:'Creating brand record'},
     {id:'wt2', label:'Initializing database schema'},
     {id:'wt3', label:'Generating POS license & credentials'},
     {id:'wt4', label:'Setting up Back Office access'},
@@ -1801,7 +1814,7 @@ async function loadPerformance () {
             ${byOnboarding.map(r=>`<tr><td>${olabels[Math.min(r.onboarding_step,4)]}</td><td>${r.cnt}</td></tr>`).join('')}
           </table>
           <div style="padding:12px;font-size:12px;color:#64748b">
-            Fully live (Step 4): <strong style="color:#4ade80">${byOnboarding.find(r=>r.onboarding_step===4)?.cnt||0}</strong> restaurants
+            Fully live (Step 4): <strong style="color:#4ade80">${byOnboarding.find(r=>r.onboarding_step===4)?.cnt||0}</strong> brands
           </div>
         </div>
       </div>
@@ -1840,7 +1853,7 @@ async function loadInstallFiles () {
 
 function populateCredSelect () {
   const sel = document.getElementById('cred-select')
-  sel.innerHTML = '<option value="">— Select a restaurant —</option>' +
+  sel.innerHTML = '<option value="">— Select a brand —</option>' +
     _data.map(r=>`<option value="${r.id}">${esc(r.name)} (${r.id})</option>`).join('')
 }
 
@@ -1906,6 +1919,30 @@ async function downloadBackup () {
     status.style.color = '#f87171'
   }
   btn.disabled = false; btn.textContent = '⬇ Download Full Backup'
+}
+
+// ── Danger Zone ────────────────────────────────────────────────────────────
+async function wipeAllData () {
+  const c1 = confirm('⚠️ WIPE ALL DATA?\n\nThis will permanently delete:\n• All brands and BO users\n• All markets and outlets\n• All menu, orders, staff, settings\n\nOnly superadmin accounts survive.\nThis CANNOT be undone.')
+  if (!c1) return
+  const typed = prompt('Type WIPE to confirm:')
+  if (typed !== 'WIPE') { alert('Cancelled.'); return }
+  try {
+    await api('POST', '/setup/wipe-all-data')
+    alert('✓ All data wiped. System is clean.')
+    loadDashboard()
+    loadRestaurants()
+  } catch(e) { alert('Error: ' + e.message) }
+}
+
+// ── Sample Data Seeding ────────────────────────────────────────────────────
+async function seedOutlet (id, name) {
+  const c = confirm(`Seed sample data for outlet:\n\n"${name}"\n\nThis will add:\n• Order types (Dine In, Takeaway, Delivery)\n• Payment methods (Cash, Card, QR)\n• Kitchens, tax groups, designations\n• 10 tables\n• Sample menu categories and items\n\nExisting records will not be overwritten.`)
+  if (!c) return
+  try {
+    await api('POST', `/setup/outlets/${id}/seed`)
+    alert(`✓ Sample data seeded for "${name}"`)
+  } catch(e) { alert('Error: ' + e.message) }
 }
 
 // ── Helpers ────────────────────────────────────────────────────────────────

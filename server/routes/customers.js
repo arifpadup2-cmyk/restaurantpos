@@ -1,4 +1,4 @@
-'use strict'
+﻿'use strict'
 
 const express = require('express')
 const { jwtAuth } = require('../middleware/jwtAuth')
@@ -38,9 +38,9 @@ module.exports = function customersRouter (sql) {
     try {
       const now = Date.now()
       const newId = id || require('crypto').randomUUID()
-      const rid = req.user?.restaurant_id || null
+      const rid = req.user?.brand_id || null
       const [row] = await sql`
-        INSERT INTO customers (id, name, phone, email, notes, created_at, updated_at, restaurant_id)
+        INSERT INTO customers (id, name, phone, email, notes, created_at, updated_at, brand_id)
         VALUES (${newId}, ${name}, ${phone || null}, ${email || null}, ${notes || null}, ${now}, ${now}, ${rid})
         ON CONFLICT (id) DO UPDATE SET
           name       = EXCLUDED.name,

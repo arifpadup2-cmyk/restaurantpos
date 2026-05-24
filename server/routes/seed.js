@@ -1,4 +1,4 @@
-'use strict'
+﻿'use strict'
 
 const express  = require('express')
 const crypto   = require('crypto')
@@ -16,18 +16,18 @@ module.exports = function seedRouter (sql) {
     try {
       if (clearExisting) {
         await sql`DELETE FROM order_items WHERE order_id IN (
-          SELECT id FROM orders WHERE outlet_id IN (SELECT id FROM outlets WHERE restaurant_id = ${rid})
+          SELECT id FROM orders WHERE outlet_id IN (SELECT id FROM outlets WHERE brand_id = ${rid})
         )`
-        await sql`DELETE FROM orders     WHERE outlet_id IN (SELECT id FROM outlets WHERE restaurant_id = ${rid})`
-        await sql`DELETE FROM expenses   WHERE restaurant_id = ${rid}`
-        await sql`DELETE FROM shifts     WHERE restaurant_id = ${rid}`
-        await sql`DELETE FROM day_closings WHERE restaurant_id = ${rid}`
-        await sql`DELETE FROM audit_log  WHERE restaurant_id = ${rid}`
-        await sql`DELETE FROM no_sale_log WHERE restaurant_id = ${rid}`
-        await sql`DELETE FROM cashiers   WHERE restaurant_id = ${rid} AND name != 'admin'`
-        await sql`DELETE FROM categories WHERE restaurant_id = ${rid}`
-        await sql`DELETE FROM menu_items WHERE restaurant_id = ${rid}`
-        await sql`DELETE FROM customers  WHERE restaurant_id = ${rid}`
+        await sql`DELETE FROM orders     WHERE outlet_id IN (SELECT id FROM outlets WHERE brand_id = ${rid})`
+        await sql`DELETE FROM expenses   WHERE brand_id = ${rid}`
+        await sql`DELETE FROM shifts     WHERE brand_id = ${rid}`
+        await sql`DELETE FROM day_closings WHERE brand_id = ${rid}`
+        await sql`DELETE FROM audit_log  WHERE brand_id = ${rid}`
+        await sql`DELETE FROM no_sale_log WHERE brand_id = ${rid}`
+        await sql`DELETE FROM cashiers   WHERE brand_id = ${rid} AND name != 'admin'`
+        await sql`DELETE FROM categories WHERE brand_id = ${rid}`
+        await sql`DELETE FROM menu_items WHERE brand_id = ${rid}`
+        await sql`DELETE FROM customers  WHERE brand_id = ${rid}`
         log.push('Cleared existing demo data')
       }
 
@@ -45,9 +45,9 @@ module.exports = function seedRouter (sql) {
         cash_variance_alert_pct:'5',
         kot_stay_seconds:       '8',
       }
-      const rid = req.user?.restaurant_id || ''
+      const rid = req.user?.brand_id || ''
       for (const [key, value] of Object.entries(settingsMap)) {
-        await sql`INSERT INTO settings (restaurant_id,key,value) VALUES (${rid},${key},${value}) ON CONFLICT (restaurant_id,key) DO UPDATE SET value=EXCLUDED.value`
+        await sql`INSERT INTO settings (brand_id,key,value) VALUES (${rid},${key},${value}) ON CONFLICT (brand_id,key) DO UPDATE SET value=EXCLUDED.value`
       }
       log.push('Restaurant settings configured')
 
@@ -341,19 +341,19 @@ module.exports = function seedRouter (sql) {
 
   // POST /seed/clear — wipe all transactional data (keep menu/staff)
   router.post('/clear', async (req, res) => {
-    const rid = req.user?.restaurant_id || null
+    const rid = req.user?.brand_id || null
     if (!rid) return res.status(400).json({ error: 'No restaurant linked to this account' })
     try {
-      // Scope deletes strictly to this restaurant via outlet join or restaurant_id column
+      // Scope deletes strictly to this restaurant via outlet join or brand_id column
       await sql`DELETE FROM order_items WHERE order_id IN (
-        SELECT id FROM orders WHERE outlet_id IN (SELECT id FROM outlets WHERE restaurant_id = ${rid})
+        SELECT id FROM orders WHERE outlet_id IN (SELECT id FROM outlets WHERE brand_id = ${rid})
       )`
-      await sql`DELETE FROM orders WHERE outlet_id IN (SELECT id FROM outlets WHERE restaurant_id = ${rid})`
-      await sql`DELETE FROM expenses    WHERE restaurant_id = ${rid}`
-      await sql`DELETE FROM shifts      WHERE restaurant_id = ${rid}`
-      await sql`DELETE FROM day_closings WHERE restaurant_id = ${rid}`
-      await sql`DELETE FROM audit_log   WHERE restaurant_id = ${rid}`
-      await sql`DELETE FROM no_sale_log WHERE restaurant_id = ${rid}`
+      await sql`DELETE FROM orders WHERE outlet_id IN (SELECT id FROM outlets WHERE brand_id = ${rid})`
+      await sql`DELETE FROM expenses    WHERE brand_id = ${rid}`
+      await sql`DELETE FROM shifts      WHERE brand_id = ${rid}`
+      await sql`DELETE FROM day_closings WHERE brand_id = ${rid}`
+      await sql`DELETE FROM audit_log   WHERE brand_id = ${rid}`
+      await sql`DELETE FROM no_sale_log WHERE brand_id = ${rid}`
       res.json({ ok: true, message: 'Transaction data cleared. Menu and staff retained.' })
     } catch (e) {
       res.status(500).json({ error: e.message })

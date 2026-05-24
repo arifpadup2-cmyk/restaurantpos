@@ -1,4 +1,4 @@
-'use strict'
+﻿'use strict'
 
 const express  = require('express')
 const fs       = require('fs')
@@ -91,11 +91,11 @@ module.exports = function downloadsRouter (sql) {
   router.get('/backup', jwtAuth, async (req, res) => {
     try {
       const { outlet_id } = req.query
-      const rid = req.user.restaurant_id || ''
+      const rid = req.user.brand_id || ''
 
       let orders, order_items, outlet_name = null
       if (outlet_id) {
-        const [ol] = await sql`SELECT name FROM outlets WHERE id = ${outlet_id} AND restaurant_id = ${rid}`
+        const [ol] = await sql`SELECT name FROM outlets WHERE id = ${outlet_id} AND brand_id = ${rid}`
         outlet_name = ol?.name || outlet_id
         orders      = await sql`SELECT * FROM orders       WHERE outlet_id = ${outlet_id} ORDER BY created_at`
         order_items = await sql`SELECT oi.* FROM order_items oi JOIN orders o ON oi.order_id = o.id WHERE o.outlet_id = ${outlet_id}`
@@ -108,7 +108,7 @@ module.exports = function downloadsRouter (sql) {
         settings, cashiers, categories, menu_items, customers,
         shifts, expenses, day_closings, audit_log, no_sale_log, tables_layout, printers,
       ] = await Promise.all([
-        sql`SELECT * FROM settings WHERE restaurant_id = ${rid}`,
+        sql`SELECT * FROM settings WHERE brand_id = ${rid}`,
         sql`SELECT * FROM cashiers`,
         sql`SELECT * FROM categories`,
         sql`SELECT * FROM menu_items`,

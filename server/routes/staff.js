@@ -1,4 +1,4 @@
-'use strict'
+﻿'use strict'
 
 const express = require('express')
 const bcrypt  = require('bcryptjs')
@@ -18,14 +18,14 @@ module.exports = function staffRouter (sql) {
 
   // GET /staff/cashiers
   router.get('/cashiers', async (req, res) => {
-    const rid = req.user?.restaurant_id || null
+    const rid = req.user?.brand_id || null
     const oid = req.query.outlet_id || null
     try {
       const cashiers = rid
         ? oid
-          ? await sql`SELECT * FROM cashiers WHERE restaurant_id = ${rid} AND (outlet_id = ${oid} OR outlet_id IS NULL) ORDER BY name`
-          : await sql`SELECT * FROM cashiers WHERE restaurant_id = ${rid} ORDER BY name`
-        : await sql`SELECT * FROM cashiers WHERE restaurant_id IS NULL ORDER BY name`
+          ? await sql`SELECT * FROM cashiers WHERE brand_id = ${rid} AND (outlet_id = ${oid} OR outlet_id IS NULL) ORDER BY name`
+          : await sql`SELECT * FROM cashiers WHERE brand_id = ${rid} ORDER BY name`
+        : await sql`SELECT * FROM cashiers WHERE brand_id IS NULL ORDER BY name`
       res.json({ cashiers: cashiers.map(safeCashier) })
     } catch (e) { res.status(500).json({ error: e.message }) }
   })
@@ -37,10 +37,10 @@ module.exports = function staffRouter (sql) {
     if (!/^\d{4}$/.test(pin)) return res.status(400).json({ error: 'pin must be 4 digits' })
     try {
       const id      = uid()
-      const rid     = req.user?.restaurant_id || null
+      const rid     = req.user?.brand_id || null
       const pinHash = await bcrypt.hash(pin, 10)
       const [row]   = await sql`
-        INSERT INTO cashiers (id, name, pin, pin_hash, role, active, created_at, restaurant_id, outlet_id)
+        INSERT INTO cashiers (id, name, pin, pin_hash, role, active, created_at, brand_id, outlet_id)
         VALUES (${id}, ${name}, ${pin}, ${pinHash}, ${role || 'cashier'}, 1, ${Date.now()}, ${rid}, ${outlet_id || null})
         RETURNING *`
       res.json({ ok: true, cashier: safeCashier(row) })
@@ -51,7 +51,7 @@ module.exports = function staffRouter (sql) {
   router.put('/cashiers/:id', async (req, res) => {
     const { name, pin, role, active } = req.body || {}
     if (pin && !/^\d{4}$/.test(pin)) return res.status(400).json({ error: 'pin must be 4 digits' })
-    const rid = req.user?.restaurant_id || null
+    const rid = req.user?.brand_id || null
     try {
       const pinHash = pin ? await bcrypt.hash(pin, 10) : null
       const [row]   = await sql`
@@ -62,7 +62,7 @@ module.exports = function staffRouter (sql) {
           role     = COALESCE(${role ?? null}, role),
           active   = COALESCE(${active ?? null}, active)
         WHERE id = ${req.params.id}
-          AND (restaurant_id = ${rid} OR (${rid} IS NULL AND restaurant_id IS NULL))
+          AND (brand_id = ${rid} OR (${rid} IS NULL AND brand_id IS NULL))
         RETURNING *`
       if (!row) return res.status(404).json({ error: 'not found' })
       res.json({ ok: true, cashier: safeCashier(row) })

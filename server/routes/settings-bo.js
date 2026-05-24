@@ -1,4 +1,4 @@
-'use strict'
+﻿'use strict'
 
 const express = require('express')
 const { jwtAuth } = require('../middleware/jwtAuth')
@@ -19,12 +19,12 @@ module.exports = function settingsRouter (sql) {
 
   // GET /settings — returns all public settings
   router.get('/', async (req, res) => {
-    const rid = req.user?.restaurant_id || ''
+    const rid = req.user?.brand_id || ''
     try {
-      const rows = await sql`SELECT key, value FROM settings WHERE key = ANY(${KEYS}) AND restaurant_id = ${rid}`
+      const rows = await sql`SELECT key, value FROM settings WHERE key = ANY(${KEYS}) AND brand_id = ${rid}`
       const settings = Object.fromEntries(rows.map(r => [r.key, r.value]))
-      if (req.user?.restaurant_id) {
-        const [r] = await sql`SELECT setup_done FROM restaurants WHERE id = ${req.user.restaurant_id}`
+      if (req.user?.brand_id) {
+        const [r] = await sql`SELECT setup_done FROM restaurants WHERE id = ${req.user.brand_id}`
         settings.setup_done = r?.setup_done ?? false
       } else {
         settings.setup_done = true
@@ -35,16 +35,16 @@ module.exports = function settingsRouter (sql) {
 
   // PUT /settings — upsert restaurant settings
   router.put('/', async (req, res) => {
-    const rid  = req.user?.restaurant_id || ''
+    const rid  = req.user?.brand_id || ''
     const body = req.body || {}
     try {
       for (const key of KEYS) {
         if (body[key] === undefined) continue
         await sql`
-          INSERT INTO settings (restaurant_id, key, value) VALUES (${rid}, ${key}, ${String(body[key])})
-          ON CONFLICT (restaurant_id, key) DO UPDATE SET value = EXCLUDED.value`
+          INSERT INTO settings (brand_id, key, value) VALUES (${rid}, ${key}, ${String(body[key])})
+          ON CONFLICT (brand_id, key) DO UPDATE SET value = EXCLUDED.value`
       }
-      if (req.user?.restaurant_id) {
+      if (req.user?.brand_id) {
         const name          = (body.restaurant_name || '').trim() || null
         const owner         = (body.owner_name || '').trim() || null
         const business_type = (body.business_type || '').trim() || null
@@ -59,7 +59,7 @@ module.exports = function settingsRouter (sql) {
                 business_type = COALESCE(${business_type}, business_type),
                 country       = COALESCE(${country}, country),
                 setup_done    = COALESCE(${setupDone ?? null}::boolean, setup_done)
-            WHERE id = ${req.user.restaurant_id}`
+            WHERE id = ${req.user.brand_id}`
         }
       }
       res.json({ ok: true })

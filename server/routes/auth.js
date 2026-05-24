@@ -6,7 +6,6 @@ const { sign, jwtAuth } = require('../middleware/jwtAuth')
 
 // ── Simple in-memory rate limiter ─────────────────────────────────────────────
 const _rateBuckets = new Map()
-// Periodically prune expired buckets (every 10 min)
 setInterval(() => {
   const now = Date.now()
   for (const [k, v] of _rateBuckets) if (now > v.reset) _rateBuckets.delete(k)
@@ -72,38 +71,38 @@ module.exports = function authRouter (sql) {
       if (user.active === false)
         return res.status(401).json({ error: 'Account disabled. Contact your administrator.' })
 
-      const ok   = await bcrypt.compare(password, user.password)
+      const ok = await bcrypt.compare(password, user.password)
       if (!ok)
         return res.status(401).json({ error: 'Invalid username or password' })
 
-      const token = sign({ id: user.id, username: user.username, role: user.role, restaurant_id: user.restaurant_id || null })
+      const token = sign({ id: user.id, username: user.username, role: user.role, brand_id: user.brand_id || null })
       let owner_name = null
-      if (user.restaurant_id) {
+      if (user.brand_id) {
         try {
-          const [r] = await sql`SELECT owner_name FROM restaurants WHERE id = ${user.restaurant_id}`
-          owner_name = r?.owner_name || null
+          const [b] = await sql`SELECT owner_name FROM brands WHERE id = ${user.brand_id}`
+          owner_name = b?.owner_name || null
         } catch (_) {}
       }
-      res.json({ ok: true, token, user: { id: user.id, username: user.username, role: user.role, restaurant_id: user.restaurant_id || null, owner_name } })
+      res.json({ ok: true, token, user: { id: user.id, username: user.username, role: user.role, brand_id: user.brand_id || null, owner_name } })
     } catch (e) {
       res.status(500).json({ error: e.message })
     }
   })
 
-  // GET /auth/me — verify token and return user with enriched profile
+  // GET /auth/me
   router.get('/me', jwtAuth, async (req, res) => {
     const user = req.user
     let owner_name = null
-    if (user.restaurant_id) {
+    if (user.brand_id) {
       try {
-        const [r] = await sql`SELECT owner_name FROM restaurants WHERE id = ${user.restaurant_id}`
-        owner_name = r?.owner_name || null
+        const [b] = await sql`SELECT owner_name FROM brands WHERE id = ${user.brand_id}`
+        owner_name = b?.owner_name || null
       } catch (_) {}
     }
     res.json({ ok: true, user: { ...user, owner_name } })
   })
 
-  // GET /auth/config — public config for the front-end
+  // GET /auth/config
   router.get('/config', (_req, res) => {
     res.json({ googleClientId: process.env.GOOGLE_CLIENT_ID || null })
   })
@@ -152,21 +151,21 @@ module.exports = function authRouter (sql) {
       if (user.active === false)
         return res.status(401).json({ error: 'Account disabled. Contact your administrator.' })
 
-      const token = sign({ id: user.id, username: user.username, role: user.role, restaurant_id: user.restaurant_id || null })
+      const token = sign({ id: user.id, username: user.username, role: user.role, brand_id: user.brand_id || null })
       let owner_name = null
-      if (user.restaurant_id) {
+      if (user.brand_id) {
         try {
-          const [r] = await sql`SELECT owner_name FROM restaurants WHERE id = ${user.restaurant_id}`
-          owner_name = r?.owner_name || null
+          const [b] = await sql`SELECT owner_name FROM brands WHERE id = ${user.brand_id}`
+          owner_name = b?.owner_name || null
         } catch (_) {}
       }
-      res.json({ ok: true, token, user: { id: user.id, username: user.username, role: user.role, restaurant_id: user.restaurant_id || null, owner_name } })
+      res.json({ ok: true, token, user: { id: user.id, username: user.username, role: user.role, brand_id: user.brand_id || null, owner_name } })
     } catch (e) {
       res.status(500).json({ error: e.message })
     }
   })
 
-  // POST /auth/signup — self-service 7-day trial signup (email + password only)
+  // POST /auth/signup — self-service 7-day trial signup (email + password)
   router.post('/signup', async (req, res) => {
     const ip = req.ip || 'unknown'
     if (isRateLimited(ip, 'signup', 5, 60 * 60 * 1000))
@@ -188,22 +187,16 @@ module.exports = function authRouter (sql) {
       const licKey     = generateLicenseKey()
       const keyHash    = await hashLicenseKey(licKey)
       const prefix     = keyPrefix(licKey)
-      const keyEnc     = encryptText(licKey)
       const trialEnds  = new Date(Date.now() + 7 * 86400000).toISOString()
-      const now        = new Date().toISOString()
       const placeholder = email.toLowerCase().split('@')[0]
 
       await sql`
-        INSERT INTO restaurants (
-          id, name, brand_name, license_key_hash, license_prefix, license_key_enc,
-          max_terminals, license_start_at,
-          owner_name, email, active, plan, status, trial_ends_at, signup_source, setup_done
+        INSERT INTO brands (
+          id, name, license_key_hash, license_prefix, max_terminals,
+          email, active, plan, status, trial_ends_at, signup_source
         ) VALUES (
-          ${id}, ${placeholder}, ${placeholder},
-          ${keyHash}, ${prefix}, ${keyEnc},
-          5, ${now},
-          '', ${email.toLowerCase()},
-          true, 'trial', 'trial', ${trialEnds}, 'self_signup', false
+          ${id}, ${placeholder}, ${keyHash}, ${prefix}, ${5},
+          ${email.toLowerCase()}, ${true}, ${'trial'}, ${'trial'}, ${trialEnds}, ${'self_signup'}
         )`
 
       const uid      = Date.now().toString(36) + Math.random().toString(36).slice(2, 8)
@@ -211,18 +204,11 @@ module.exports = function authRouter (sql) {
       const hash     = await bcrypt.hash(password, 10)
 
       await sql`
-        INSERT INTO bo_users (id, restaurant_id, username, password, email, role)
+        INSERT INTO bo_users (id, brand_id, username, password, email, role)
         VALUES (${uid}, ${id}, ${username}, ${hash}, ${email.toLowerCase()}, 'owner')`
 
-      const token = sign({ id: uid, username, role: 'owner', restaurant_id: id, email: email.toLowerCase() })
-      let owner_name = null
-      if (id) {
-        try {
-          const [r] = await sql`SELECT owner_name FROM restaurants WHERE id = ${id}`
-          owner_name = r?.owner_name || null
-        } catch (_) {}
-      }
-      res.json({ ok: true, token, user: { id: uid, username, role: 'owner', restaurant_id: id, email: email.toLowerCase(), owner_name }, trialEndsAt: trialEnds })
+      const token = sign({ id: uid, username, role: 'owner', brand_id: id, email: email.toLowerCase() })
+      res.json({ ok: true, token, user: { id: uid, username, role: 'owner', brand_id: id, email: email.toLowerCase() }, trialEndsAt: trialEnds })
     } catch (e) {
       res.status(500).json({ error: e.message })
     }
@@ -258,45 +244,32 @@ module.exports = function authRouter (sql) {
           return res.status(409).json({ error: 'Account already exists. Sign in instead.' })
       }
 
-      const { generateRestaurantId, generateLicenseKey, hashLicenseKey, keyPrefix, encryptText } = require('../lib/license')
+      const { generateRestaurantId, generateLicenseKey, hashLicenseKey, keyPrefix } = require('../lib/license')
       const id        = generateRestaurantId()
       const licKey    = generateLicenseKey()
       const keyHash   = await hashLicenseKey(licKey)
       const prefix    = keyPrefix(licKey)
-      const keyEnc    = encryptText(licKey)
       const trialEnds = new Date(Date.now() + 7 * 86400000).toISOString()
-      const now       = new Date().toISOString()
-
       const placeholder = (email || 'user').split('@')[0]
+
       await sql`
-        INSERT INTO restaurants (
-          id, name, brand_name, license_key_hash, license_prefix, license_key_enc,
-          max_terminals, license_start_at,
-          owner_name, email, active, plan, status, trial_ends_at, signup_source, setup_done
+        INSERT INTO brands (
+          id, name, license_key_hash, license_prefix, max_terminals,
+          email, active, plan, status, trial_ends_at, signup_source
         ) VALUES (
-          ${id}, ${placeholder}, ${placeholder},
-          ${keyHash}, ${prefix}, ${keyEnc},
-          5, ${now},
-          '', ${email},
-          true, 'trial', 'trial', ${trialEnds}, 'self_signup', false
+          ${id}, ${placeholder}, ${keyHash}, ${prefix}, ${5},
+          ${email}, ${true}, ${'trial'}, ${'trial'}, ${trialEnds}, ${'self_signup'}
         )`
 
       const uid      = Date.now().toString(36) + Math.random().toString(36).slice(2, 8)
       const username = (placeholder.replace(/[^a-z0-9_]/g, '_').slice(0, 16) + '_' + id.slice(-4)).toLowerCase()
 
       await sql`
-        INSERT INTO bo_users (id, restaurant_id, username, password, email, google_id, role)
+        INSERT INTO bo_users (id, brand_id, username, password, email, google_id, role)
         VALUES (${uid}, ${id}, ${username}, '', ${email}, ${googleId}, 'owner')`
 
-      const token = sign({ id: uid, username, role: 'owner', restaurant_id: id, email })
-      let owner_name = null
-      if (id) {
-        try {
-          const [r] = await sql`SELECT owner_name FROM restaurants WHERE id = ${id}`
-          owner_name = r?.owner_name || null
-        } catch (_) {}
-      }
-      res.json({ ok: true, token, user: { id: uid, username, role: 'owner', restaurant_id: id, email, owner_name }, trialEndsAt: trialEnds })
+      const token = sign({ id: uid, username, role: 'owner', brand_id: id, email })
+      res.json({ ok: true, token, user: { id: uid, username, role: 'owner', brand_id: id, email }, trialEndsAt: trialEnds })
     } catch (e) {
       res.status(500).json({ error: e.message })
     }

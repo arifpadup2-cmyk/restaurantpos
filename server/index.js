@@ -1,4 +1,4 @@
-'use strict'
+﻿'use strict'
 
 require('dotenv').config()
 
@@ -146,7 +146,7 @@ function auth (req, res, next) {
 
 io.on('connection', socket => {
   const area = socket.handshake.query.area || 'general'
-  const rid  = socket.handshake.query.restaurant_id
+  const rid  = socket.handshake.query.brand_id
   socket.join(area)
   if (rid) socket.join('rest:' + rid)
   socket.on('disconnect', () => {})
@@ -166,10 +166,10 @@ app.get('/health', async (_req, res) => {
 // Internal notify — called by Electron POS after direct DB writes
 // so Socket.io can broadcast to KDS / waiter apps.
 app.post('/internal/notify', auth, (req, res) => {
-  const { event, payload, restaurant_id } = req.body || {}
+  const { event, payload, brand_id } = req.body || {}
   if (event && payload) {
-    // Scope to restaurant room when restaurant_id is provided; broadcast otherwise (legacy).
-    if (restaurant_id) io.to('rest:' + restaurant_id).emit(event, payload)
+    // Scope to restaurant room when brand_id is provided; broadcast otherwise (legacy).
+    if (brand_id) io.to('rest:' + brand_id).emit(event, payload)
     else io.emit(event, payload)
   }
   res.json({ ok: true })
@@ -181,8 +181,8 @@ app.get('/sync/pos-config', auth, async (req, res) => {
   try {
     let rid = null
     if (outlet_id) {
-      const [o] = await sql`SELECT restaurant_id FROM outlets WHERE id = ${outlet_id}`
-      rid = o?.restaurant_id || null
+      const [o] = await sql`SELECT brand_id FROM outlets WHERE id = ${outlet_id}`
+      rid = o?.brand_id || null
     }
 
     const POS_BUTTONS_DEF = [
@@ -200,10 +200,10 @@ app.get('/sync/pos-config', auth, async (req, res) => {
 
     const [orderTypes, savedBtns] = await Promise.all([
       rid
-        ? sql`SELECT * FROM order_types WHERE restaurant_id = ${rid} AND enabled = true ORDER BY sort_order, name`
+        ? sql`SELECT * FROM order_types WHERE brand_id = ${rid} AND enabled = true ORDER BY sort_order, name`
         : sql`SELECT * FROM order_types WHERE enabled = true ORDER BY sort_order, name`,
       rid
-        ? sql`SELECT button_key, visible, sort_order FROM pos_button_config WHERE restaurant_id = ${rid}`
+        ? sql`SELECT button_key, visible, sort_order FROM pos_button_config WHERE brand_id = ${rid}`
         : Promise.resolve([]),
     ])
 
@@ -520,7 +520,7 @@ async function checkTrialExpiry () {
   try {
     // Mark expired trials as expired
     const expired = await sql`
-      UPDATE restaurants
+      UPDATE brands
       SET status = 'expired'
       WHERE status = 'trial'
         AND trial_ends_at IS NOT NULL
@@ -531,7 +531,7 @@ async function checkTrialExpiry () {
 
     // Log upcoming expirations (< 3 days)
     const soonExpiring = await sql`
-      SELECT id, name, trial_ends_at FROM restaurants
+      SELECT id, name, trial_ends_at FROM brands
       WHERE status = 'trial'
         AND trial_ends_at IS NOT NULL
         AND trial_ends_at < now() + interval '3 days'
