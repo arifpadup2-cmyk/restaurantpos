@@ -1,5 +1,6 @@
 'use strict'
 
+const crypto  = require('crypto')
 const express = require('express')
 const {
   generateRestaurantId, generateLicenseKey, generateMachineId,
@@ -444,6 +445,101 @@ module.exports = function setupRouter (sql) {
     } catch (e) { serverError(res, e) }
   })
 
+  // ── Superadmin: seed historical orders for a specific outlet ─────────────
+  router.post('/outlets/:id/seed-orders', jwtAuth, async (req, res) => {
+    if (!req.user.admin) return res.status(403).json({ error: 'Superadmin only' })
+    const outletId = req.params.id
+    const { days = 30 } = req.body || {}
+    try {
+      const [outlet] = await sql`SELECT * FROM outlets WHERE id = ${outletId}`
+      if (!outlet) return res.status(404).json({ error: 'Outlet not found' })
+      const bid = outlet.brand_id
+
+      const items = await sql`SELECT id, name, price FROM menu_items WHERE brand_id = ${bid} AND outlet_id = ${outletId} AND active = 1`
+      if (!items.length) return res.status(400).json({ error: 'No menu items found — run /seed first' })
+
+      const payMethods  = ['cash','cash','cash','card','card','ewallet']
+      const orderTypes  = ['dine-in','dine-in','dine-in','takeaway','takeaway','delivery']
+      const staffNames  = ['Ahmad','Suraya','Hafiz','Nadia']
+
+      let totalOrders = 0
+
+      for (let d = parseInt(days); d >= 1; d--) {
+        const dayStart = new Date()
+        dayStart.setHours(0, 0, 0, 0)
+        dayStart.setDate(dayStart.getDate() - d)
+        const dateStr = dayStart.toISOString().split('T')[0]
+
+        const shifts = [
+          { start: new Date(dayStart.getTime() + 7 * 3600000), end: new Date(dayStart.getTime() + 15 * 3600000), cashier: staffNames[0] },
+          { start: new Date(dayStart.getTime() + 15 * 3600000), end: new Date(dayStart.getTime() + 23 * 3600000), cashier: staffNames[1] },
+        ]
+
+        for (const sh of shifts) {
+          const shiftId  = crypto.randomUUID()
+          await sql`
+            INSERT INTO shifts (id, brand_id, outlet_id, cashier_id, cashier_name, opening_cash, status, terminal_id, opened_at, closed_at, synced)
+            VALUES (${shiftId}, ${bid}, ${outletId}, ${sh.cashier}, ${sh.cashier}, 300, 'closed', 'POS-SEED', ${sh.start.getTime()}, ${sh.end.getTime()}, 1)
+            ON CONFLICT (id) DO NOTHING`
+
+          const isEvening  = sh.start.getHours() >= 15
+          const orderCount = isEvening ? 10 + Math.floor(Math.random() * 8) : 5 + Math.floor(Math.random() * 6)
+
+          for (let o = 0; o < orderCount; o++) {
+            const orderId   = crypto.randomUUID()
+            const orderType = orderTypes[Math.floor(Math.random() * orderTypes.length)]
+            const payMethod = payMethods[Math.floor(Math.random() * payMethods.length)]
+            const createdAt = sh.start.getTime() + Math.floor(Math.random() * (sh.end.getTime() - sh.start.getTime()))
+            const orderNum  = `${dateStr.replace(/-/g, '')}-${String(totalOrders + 1).padStart(4, '0')}`
+
+            const picked = shuffleArr([...items]).slice(0, 1 + Math.floor(Math.random() * 4))
+            let subtotal = 0
+            const orderItems = picked.map(item => {
+              const qty   = 1 + Math.floor(Math.random() * 3)
+              const total = parseFloat((item.price * qty).toFixed(2))
+              subtotal   += total
+              return { id: crypto.randomUUID(), orderId, itemId: item.id, name: item.name, qty, price: item.price, total }
+            })
+            subtotal = parseFloat(subtotal.toFixed(2))
+
+            const taxRate = 6
+            const taxAmt  = parseFloat((subtotal * taxRate / 100).toFixed(2))
+            let discType = 'none', discVal = 0, discAmt = 0
+            if (Math.random() < 0.12) {
+              discType = 'percent'; discVal = [5, 10, 15][Math.floor(Math.random() * 3)]
+              discAmt  = parseFloat((subtotal * discVal / 100).toFixed(2))
+            }
+            const total    = parseFloat((subtotal + taxAmt - discAmt).toFixed(2))
+            const received = payMethod === 'cash' ? Math.ceil(total / 10) * 10 : total
+            const change   = parseFloat((received - total).toFixed(2))
+
+            await sql`
+              INSERT INTO orders (id, brand_id, outlet_id, order_number, order_type, status,
+                subtotal, tax_rate, tax_amount, discount_type, discount_value, discount_amount,
+                total, payment_method, payment_received, change_amount,
+                cashier_id, cashier_name, shift_id, terminal_id, created_at, updated_at, billed_at, synced)
+              VALUES (${orderId}, ${bid}, ${outletId}, ${orderNum}, ${orderType}, 'paid',
+                ${subtotal}, ${taxRate}, ${taxAmt}, ${discType}, ${discVal}, ${discAmt},
+                ${total}, ${payMethod}, ${received}, ${change},
+                ${sh.cashier}, ${sh.cashier}, ${shiftId}, 'POS-SEED',
+                ${createdAt}, ${createdAt}, ${createdAt}, 1)
+              ON CONFLICT (id) DO NOTHING`
+
+            for (const i of orderItems)
+              await sql`
+                INSERT INTO order_items (id, order_id, item_id, item_name, quantity, unit_price, total_price)
+                VALUES (${i.id}, ${i.orderId}, ${i.itemId}, ${i.name}, ${i.qty}, ${i.price}, ${i.total})
+                ON CONFLICT (id) DO NOTHING`
+
+            totalOrders++
+          }
+        }
+      }
+
+      res.json({ ok: true, message: `Seeded ${totalOrders} orders for outlet: ${outlet.name}`, total_orders: totalOrders })
+    } catch (e) { serverError(res, e) }
+  })
+
   // ── Public: POS terminal connects ────────────────────────────────────────
   // Accepts brand_id (new) or restaurant_id (legacy alias)
   router.post('/connect', async (req, res) => {
@@ -685,4 +781,12 @@ module.exports = function setupRouter (sql) {
   })
 
   return router
+}
+
+function shuffleArr (arr) {
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]]
+  }
+  return arr
 }
