@@ -548,6 +548,9 @@ input:checked+.toggle-slider:before{transform:translateX(17px)}
   .filter-chip{flex-shrink:0}
   /* Live Orders + KDS: shrink board to avoid overlap with bottom nav */
   #v-live .live-wrap,#v-kds .kds-wrap{height:calc(100dvh - var(--hdr-h) - 56px - env(safe-area-inset-bottom,0px))}
+  /* Live Orders: hide right summary panel — kanban needs full width */
+  .live-right{display:none !important}
+  .live-col{flex:0 0 200px}
   /* Config: reduce content padding on mobile */
   .cfg-content{padding:12px 0;max-width:100%}
   /* Staff/Audit/Reports: table scroll hint */
