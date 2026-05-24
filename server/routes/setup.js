@@ -448,7 +448,9 @@ module.exports = function setupRouter (sql) {
   // ── Superadmin: seed historical orders for a specific outlet ─────────────
   router.post('/outlets/:id/seed-orders', jwtAuth, async (req, res) => {
     const outletId = req.params.id
-    const { days = 30 } = req.body || {}
+    const { days = 30, from_days_ago, to_days_ago } = req.body || {}
+    const startDay = from_days_ago !== undefined ? parseInt(from_days_ago) : parseInt(days)
+    const endDay   = to_days_ago   !== undefined ? parseInt(to_days_ago)   : 1
     try {
       const [outlet] = await sql`SELECT * FROM outlets WHERE id = ${outletId}`
       if (!outlet) return res.status(404).json({ error: 'Outlet not found' })
@@ -466,7 +468,7 @@ module.exports = function setupRouter (sql) {
 
       let totalOrders = 0
 
-      for (let d = parseInt(days); d >= 1; d--) {
+      for (let d = startDay; d >= endDay; d--) {
         const dayStart = new Date()
         dayStart.setHours(0, 0, 0, 0)
         dayStart.setDate(dayStart.getDate() - d)
