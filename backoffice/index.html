@@ -405,6 +405,18 @@ input:checked+.toggle-slider:before{transform:translateX(17px)}
 .cfg-field textarea{resize:vertical;min-height:60px;font-family:inherit}
 /* List items (payment methods, kitchens, etc.) */
 .cfg-list{display:flex;flex-direction:column;gap:2px}
+/* Brand > Market > Outlet hierarchy */
+.hier-brand-card{background:#fff;border:1px solid var(--border);border-radius:14px;margin-bottom:18px;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,.05)}
+.hier-brand-hdr{display:flex;align-items:center;gap:12px;padding:14px 16px;border-bottom:1px solid var(--border);background:#fafbff}
+.hier-markets-wrap{padding:12px 16px;display:flex;flex-direction:column;gap:10px}
+.hier-market{background:#f8fafc;border:1px solid var(--border);border-radius:10px;overflow:hidden}
+.hier-market-hdr{display:flex;align-items:center;gap:10px;padding:9px 14px;border-bottom:1px solid var(--border)}
+.hier-outlets-wrap{padding:8px 12px;display:flex;flex-direction:column;gap:5px}
+.hier-outlet-row{display:flex;align-items:center;gap:8px;padding:7px 10px;background:#fff;border:1px solid var(--border);border-radius:7px}
+.hier-outlet-row:hover{border-color:var(--primary);background:#fafbff}
+.hier-add-btn{font-size:12px;color:var(--primary);background:none;border:1.5px dashed var(--primary-light,#bfdbfe);border-radius:7px;padding:5px 12px;cursor:pointer;width:100%;text-align:left;margin-top:4px;transition:.12s}
+.hier-add-btn:hover{background:#eff6ff}
+.sb-logo-path{font-size:10px;color:var(--muted,#94a3b8);margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:150px}
 .cfg-list-item{display:flex;align-items:center;gap:10px;padding:10px 14px;border-radius:8px;background:#fff;border:1px solid var(--border);margin-bottom:6px;transition:.12s}
 .cfg-list-item:hover{border-color:var(--primary);background:#fafbff}
 .cfg-list-item-name{flex:1;font-size:13px;font-weight:600;color:var(--text)}
@@ -1052,6 +1064,7 @@ input:checked+.toggle-slider:before{transform:translateX(17px)}
       <div class="sb-logo-text">
         <div class="sb-logo-name" id="hdr-name">Back Office</div>
         <div class="sb-logo-sub" id="sb-branch">Back Office</div>
+        <div class="sb-logo-path" id="sb-brand-path"></div>
       </div>
     </div>
     <div class="sb-nav">
@@ -3622,6 +3635,29 @@ function updateSidebarUser () {
   }
 })()
 
+// ─── BRAND CONTEXT SIDEBAR ───────────────────────────────────────
+async function loadBrandContext () {
+  try {
+    const [{ rows: brands }, { rows: markets }, { rows: outlets }] = await Promise.all([
+      apiFetch('GET', '/config/brands'),
+      apiFetch('GET', '/config/markets'),
+      apiFetch('GET', '/config/outlets'),
+    ])
+    _brandsCache = brands
+    _marketsCache = markets
+    const brand = brands[0]
+    if (!brand) return
+    const hdrEl = document.getElementById('hdr-name')
+    if (hdrEl && brand.name) hdrEl.textContent = brand.name
+    const pathEl = document.getElementById('sb-brand-path')
+    if (pathEl) {
+      const mCount = markets.filter(m => m.brand_id === brand.id).length
+      const oCount = outlets.filter(o => o.brand_id === brand.id).length
+      pathEl.textContent = mCount + (mCount !== 1 ? ' markets' : ' market') + ' · ' + oCount + (oCount !== 1 ? ' outlets' : ' outlet')
+    }
+  } catch (_) {}
+}
+
 // ─── INIT ────────────────────────────────────────────────────────
 async function initApp () {
   updateSidebarUser()
@@ -3634,7 +3670,8 @@ async function initApp () {
   await loadMenu()
   await loadDashboard()
   await loadStaff()
-  loadRptFilterOptions()  // pre-load filter options in background
+  loadRptFilterOptions()
+  loadBrandContext()
 }
 
 // ─── GLOBAL SEARCH ───────────────────────────────────────────────
@@ -6551,26 +6588,97 @@ function showSkeleton(elId, rows = 3) {
 }
 
 async function cfgLoadBrands () {
+  const list = document.getElementById('cfg-brands-list')
+  showSkeleton('cfg-brands-list', 2)
   try {
-    const { rows } = await apiFetch('GET', '/config/brands')
-    _brandsCache = rows
-    const list = document.getElementById('cfg-brands-list')
-    if (!rows.length) {
-      list.innerHTML = `<div class="empty-state" style="padding:40px;text-align:center;color:var(--muted)">
-        <p style="margin-bottom:12px">No brands yet. Add your first brand to get started.</p>
+    const [{ rows: brands }, { rows: markets }, { rows: outlets }] = await Promise.all([
+      apiFetch('GET', '/config/brands'),
+      apiFetch('GET', '/config/markets'),
+      apiFetch('GET', '/config/outlets'),
+    ])
+    _brandsCache = brands
+    _marketsCache = markets
+
+    if (!brands.length) {
+      list.innerHTML = `<div class="empty-state" style="padding:48px;text-align:center;color:var(--muted)">
+        <div style="font-size:36px;margin-bottom:12px">🏷️</div>
+        <div style="font-weight:700;font-size:15px;color:var(--text);margin-bottom:6px">No brands yet</div>
+        <p style="margin-bottom:16px;font-size:13px">Add a brand to start building your Brand → Market → Outlet hierarchy.</p>
         <button class="btn" onclick="cfgOpenBrandModal(null)">+ Add Brand</button></div>`
       return
     }
-    list.innerHTML = rows.map(r => `
-      <div class="cfg-list-item" style="cursor:pointer" onclick="cfgOpenBrandModal(${JSON.stringify(r).replace(/"/g,'&quot;')})">
-        ${r.logo_url ? `<img src="${r.logo_url}" alt="${r.name}" style="height:40px;width:40px;object-fit:contain;border-radius:8px;border:1px solid var(--border);padding:4px;background:#fff;flex-shrink:0" onerror="this.style.display='none'">` : `<div style="height:40px;width:40px;border-radius:8px;background:var(--primary-light,#eff6ff);display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0">🏷️</div>`}
-        <div style="flex:1;min-width:0">
-          <div class="cfg-list-item-name">${r.name}</div>
-          <div class="cfg-list-item-sub">${[r.business_type, r.country].filter(Boolean).join(' · ')}${r.owner_name ? ' · ' + r.owner_name : ''}</div>
-        </div>
-        <button class="btn btn-sm" onclick="event.stopPropagation();cfgOpenBrandModal(${JSON.stringify(r).replace(/"/g,'&quot;')})">Edit</button>
-        <button class="btn btn-sm btn-danger" style="margin-left:4px" onclick="event.stopPropagation();cfgDeleteBrand('${r.id}','${r.name}')">Delete</button>
-      </div>`).join('')
+
+    list.innerHTML = brands.map(b => {
+      const bMarkets = markets.filter(m => m.brand_id === b.id)
+      const noMarketOutlets = outlets.filter(o => o.brand_id === b.id && !o.market_id)
+
+      const marketsHtml = bMarkets.map(m => {
+        const mOutlets = outlets.filter(o => o.market_id === m.id)
+        const outletsHtml = mOutlets.map(o => `
+          <div class="hier-outlet-row">
+            <span style="font-size:15px">🏪</span>
+            <div style="flex:1;min-width:0">
+              <div style="font-weight:600;font-size:13px">${esc(o.name)}</div>
+              <div style="font-size:11px;color:var(--muted)">${[o.phone, o.currency_code ? (o.currency_symbol||'') + ' ' + o.currency_code : '', o.address?.split('\n')[0]].filter(Boolean).join(' · ') || 'No details'}</div>
+            </div>
+            <button class="btn btn-sm" style="font-size:11px;padding:3px 8px" onclick="navigator.clipboard.writeText('${o.id}').then(()=>showToast('Outlet ID copied','success'))">Copy ID</button>
+            <button class="btn btn-sm" style="margin-left:3px" onclick="cfgOpenOutletModal(${JSON.stringify(o).replace(/"/g,'&quot;')})">Edit</button>
+          </div>`).join('')
+        const mData = JSON.stringify(m).replace(/"/g,'&quot;')
+        return `
+          <div class="hier-market">
+            <div class="hier-market-hdr">
+              <span style="font-size:16px">🌍</span>
+              <div style="flex:1;min-width:0">
+                <div style="font-weight:700;font-size:13px">${esc(m.name)}</div>
+                <div style="font-size:11px;color:var(--muted)">${[m.country, m.currency_code ? (m.currency_symbol||'') + ' ' + m.currency_code : ''].filter(Boolean).join(' · ')}</div>
+              </div>
+              <button class="btn btn-sm" onclick="cfgOpenMarketModal(${mData})">Edit</button>
+              <button class="btn btn-sm btn-danger" style="margin-left:3px" onclick="cfgDeleteMarket('${m.id}','${esc(m.name)}')">Delete</button>
+            </div>
+            <div class="hier-outlets-wrap">
+              ${outletsHtml || '<div style="font-size:12px;color:var(--muted);padding:4px 2px">No outlets in this market yet.</div>'}
+              <button class="hier-add-btn" onclick="cfgAddOutletInMarket('${m.id}','${b.id}')">+ Add Outlet to ${esc(m.name)}</button>
+            </div>
+          </div>`
+      }).join('')
+
+      const noMktHtml = noMarketOutlets.map(o => `
+        <div class="hier-outlet-row" style="margin-left:4px">
+          <span style="font-size:15px">🏪</span>
+          <div style="flex:1;min-width:0">
+            <div style="font-weight:600;font-size:13px">${esc(o.name)}</div>
+            <div style="font-size:11px;color:var(--muted)">No market assigned · ${[o.phone, o.currency_code ? (o.currency_symbol||'') + ' ' + o.currency_code : ''].filter(Boolean).join(' · ')}</div>
+          </div>
+          <button class="btn btn-sm" style="font-size:11px;padding:3px 8px" onclick="navigator.clipboard.writeText('${o.id}').then(()=>showToast('Outlet ID copied','success'))">Copy ID</button>
+          <button class="btn btn-sm" style="margin-left:3px" onclick="cfgOpenOutletModal(${JSON.stringify(o).replace(/"/g,'&quot;')})">Edit</button>
+        </div>`).join('')
+
+      const bData = JSON.stringify(b).replace(/"/g,'&quot;')
+      return `
+        <div class="hier-brand-card">
+          <div class="hier-brand-hdr">
+            ${b.logo_url
+              ? `<img src="${b.logo_url}" alt="${esc(b.name)}" style="height:44px;width:44px;object-fit:contain;border-radius:10px;border:1px solid var(--border);padding:4px;background:#fff;flex-shrink:0" onerror="this.style.display='none'">`
+              : `<div style="height:44px;width:44px;border-radius:10px;background:var(--primary-light,#eff6ff);display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0">🏷️</div>`}
+            <div style="flex:1;min-width:0">
+              <div style="font-weight:800;font-size:15px">${esc(b.name)}</div>
+              <div style="font-size:12px;color:var(--muted)">${[b.business_type, b.country, b.owner_name].filter(Boolean).join(' · ')}</div>
+              <div style="font-size:11px;color:var(--muted);margin-top:2px">${bMarkets.length} market${bMarkets.length!==1?'s':''} · ${outlets.filter(o=>o.brand_id===b.id).length} outlet${outlets.filter(o=>o.brand_id===b.id).length!==1?'s':''}</div>
+            </div>
+            <div style="display:flex;gap:5px;flex-shrink:0">
+              <button class="btn btn-sm" onclick="cfgOpenBrandModal(${bData})">Edit</button>
+              <button class="btn btn-sm btn-danger" onclick="cfgDeleteBrand('${b.id}','${esc(b.name)}')">Delete</button>
+            </div>
+          </div>
+          <div class="hier-markets-wrap">
+            ${marketsHtml}
+            ${noMktHtml}
+            ${!marketsHtml && !noMktHtml ? '<div style="font-size:12px;color:var(--muted);padding:4px 0">No markets or outlets yet.</div>' : ''}
+            <button class="hier-add-btn" onclick="cfgAddMarketForBrand('${b.id}')">+ Add Market to ${esc(b.name)}</button>
+          </div>
+        </div>`
+    }).join('')
   } catch (e) { showToast(friendlyError(e.message), 'error') }
 }
 
@@ -6636,6 +6744,19 @@ async function cfgDeleteBrand (id, name) {
   } catch (e) { showToast(friendlyError(e.message), 'error') }
 }
 
+function cfgAddMarketForBrand (brandId) {
+  cfgOpenMarketModal(null)
+  setTimeout(() => { const s = document.getElementById('mkt-brand'); if (s) s.value = brandId }, 120)
+}
+
+function cfgAddOutletInMarket (marketId, brandId) {
+  cfgOpenOutletModal(null)
+  setTimeout(() => {
+    const ms = document.getElementById('outlet-market-id'); if (ms) ms.value = marketId
+    const bs = document.getElementById('outlet-brand-id');  if (bs)  bs.value = brandId
+  }, 350)
+}
+
 // ─── MARKETS ─────────────────────────────────────────────────────────────────
 let _marketsCache = []
 
@@ -6697,7 +6818,7 @@ async function cfgSaveMarketModal () {
     if (id) await apiFetch('PATCH', `/config/markets/${id}`, body)
     else    await apiFetch('POST',  '/config/markets', body)
     closeModal('modal-market')
-    cfgLoadMarkets()
+    cfgLoadMarkets(); cfgLoadBrands()
     await loadRptFilterOptions()
     showToast(id ? 'Market updated' : 'Market added')
   } catch (e) { showToast(friendlyError(e.message), 'error') }
@@ -6834,7 +6955,7 @@ async function cfgSaveOutletModal () {
        : await apiFetch('POST',  '/config/outlets', body)
     closeModal('modal-outlet')
     showToast(id ? 'Outlet updated' : 'Outlet added', 'success')
-    cfgLoadOutlets()
+    cfgLoadOutlets(); cfgLoadBrands()
   } catch (e) { showToast(friendlyError(e.message), 'error') }
 }
 
