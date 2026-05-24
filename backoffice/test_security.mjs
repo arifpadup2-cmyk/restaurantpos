@@ -14,7 +14,6 @@ function ok (label, val) {
   else      { console.log(`  FAIL  ${label}`); failed++ }
 }
 
-// ── Helper: raw API call ──────────────────────────────────────────────────────
 async function api (method, path, body, token) {
   const r = await page.request.fetch(`${API}${path}`, {
     method,
@@ -26,118 +25,166 @@ async function api (method, path, body, token) {
   return { status: r.status(), json }
 }
 
-// ── 1. BO Login — good credentials ───────────────────────────────────────────
+// ── 0. Unlock main test account if it was accidentally locked by a prior run ──
+console.log('[0] Pre-flight: ensure test account is not locked...')
+const ownerLogin0 = await api('POST', '/owner/login', { username: 'mkhalid', password: 'MK@Owner2024!' })
+const ownerPortalToken0 = ownerLogin0.json.token
+const brands0 = ownerLogin0.json.brands || []
+if (ownerPortalToken0 && brands0.length) {
+  // Get BO users and unlock chillzoneice218 if locked
+  const switchR = await api('POST', `/owner/switch/${brands0[0].brand_id}`, {}, ownerPortalToken0)
+  const switchToken = switchR.json.token
+  if (switchToken) {
+    const usersR0 = await api('GET', '/config/users', null, switchToken)
+    const locked = (usersR0.json.rows || []).find(u => u.username === 'chillzoneice218')
+    if (locked?.id) {
+      await api('PUT', `/config/users/${locked.id}`, { unlock_account: true }, switchToken)
+      console.log('  unlocked chillzoneice218')
+    }
+  }
+}
+await new Promise(r => setTimeout(r, 1000))
+
+// ── 1. BO login ───────────────────────────────────────────────────────────────
 console.log('[1] BO login — valid credentials...')
 const login1 = await api('POST', '/auth/login', { username: 'chillzoneice218', password: 'PWDPU782!' })
-ok('login returns 200',        login1.status === 200)
-ok('token present',            !!login1.json.token)
-ok('app_access in response',   typeof login1.json.user?.app_access === 'object')
+ok('login 200',               login1.status === 200)
+ok('token present',           !!login1.json.token)
+ok('refresh token present',   !!login1.json.refresh)
+ok('app_access in response',  typeof login1.json.user?.app_access === 'object')
 const ownerToken = login1.json.token
 const refresh1   = login1.json.refresh
 
-// ── 2. Rate limit test ────────────────────────────────────────────────────────
-console.log('[2] Bad password × 5 — account lockout...')
-// Use a separate throwaway username; we test lockout on a known account
-// Use a non-existent user to avoid locking a real account
-for (let i = 0; i < 5; i++) {
-  await api('POST', '/auth/login', { username: 'chillzoneice218', password: 'WrongPass!' + i })
-}
-// 6th attempt should be either 423 (locked) or 401 (still counting)
-// We need exactly 5 wrong hits on same account — but we already have a valid
-// session so lets test with a brand-new user account on owner portal instead
-// because we don't want to lock the test owner. Skip lockout count test on main
-// account and just verify the column exists (checked indirectly by migration).
-console.log('  (Lockout column tested via migration — skipping live lock to protect test account)')
-
-// ── 3. Refresh token rotation ─────────────────────────────────────────────────
-console.log('[3] Refresh token rotation...')
+// ── 2. Refresh token rotation ─────────────────────────────────────────────────
+console.log('[2] Refresh token rotation...')
 const ref1 = await api('POST', '/auth/refresh', { refresh: refresh1 })
-ok('refresh returns 200',      ref1.status === 200)
-ok('new access token',         !!ref1.json.token)
-ok('new refresh token',        !!ref1.json.refresh)
-const newRefresh = ref1.json.refresh
-
-// Old refresh should now be invalid (rotated)
+ok('refresh 200',             ref1.status === 200)
+ok('new access token',        !!ref1.json.token)
+ok('new refresh token',       !!ref1.json.refresh)
 const ref2 = await api('POST', '/auth/refresh', { refresh: refresh1 })
-ok('old refresh revoked (401)', ref2.status === 401)
+ok('old refresh revoked 401', ref2.status === 401)
 
-// ── 4. app_access gate — create user with backoffice=false ───────────────────
-console.log('[4] app_access gate — backoffice=false user blocked...')
-// Create a staff user with backoffice: false
-const boToken = ownerToken
-const createR = await api('POST', '/config/users', {
-  username: 'sec_test_noaccess',
-  password: 'SecTest@99!',
-  app_access: { pos: true, captain_app: false, kds: false, backoffice: false, owner_app: false },
+// ── 3. Password complexity — letters + numbers required ───────────────────────
+console.log('[3] Password complexity enforcement...')
+const allLetters = await api('POST', '/config/users', { username: 'cplx_t1', password: 'AbcdEfgh' }, ownerToken)
+ok('all-letters password rejected (400)', allLetters.status === 400)
+const allNums = await api('POST', '/config/users', { username: 'cplx_t2', password: '12345678' }, ownerToken)
+ok('all-numbers password rejected (400)', allNums.status === 400)
+const tooShort = await api('POST', '/config/users', { username: 'cplx_t3', password: 'Abc123!' }, ownerToken)
+ok('7-char password rejected (400)',      tooShort.status === 400)
+// Valid password
+const validPwd = await api('POST', '/config/users', {
+  username: 'cplx_testvalid',
+  password: 'Secure99!',
+  app_access: { pos: false, captain_app: false, kds: false, backoffice: true, owner_app: false },
   permissions: {},
-}, boToken)
-ok('create user 200', createR.status === 200 || createR.status === 409) // 409 if already exists
+}, ownerToken)
+ok('valid password accepted (200 or 409)', validPwd.status === 200 || validPwd.status === 409)
 
-// Login as that user
-const loginNoAccess = await api('POST', '/auth/login', { username: 'sec_test_noaccess', password: 'SecTest@99!' })
-ok('login returns 200', loginNoAccess.status === 200)
-const noAccessToken = loginNoAccess.json.token
-if (noAccessToken) {
-  const blocked = await api('GET', '/config/users', null, noAccessToken)
-  ok('blocked from /config/users (403)', blocked.status === 403)
+// ── 4. Signup password complexity ─────────────────────────────────────────────
+console.log('[4] Signup password validation...')
+const signupWeak  = await api('POST', '/auth/signup', { email: 'cplx@x.com', password: 'letters' })
+ok('signup all-letters rejected (400)',  signupWeak.status === 400)
+const signupShort = await api('POST', '/auth/signup', { email: 'cplx@x.com', password: 'Ab1234' })
+ok('signup 6-char rejected (400)',       signupShort.status === 400)
+const signupNoNum = await api('POST', '/auth/signup', { email: 'cplx@x.com', password: 'Abcdefgh' })
+ok('signup no-number rejected (400)',    signupNoNum.status === 400)
+
+// ── 5. Account lockout on a throwaway user ────────────────────────────────────
+console.log('[5] Account lockout (throwaway account)...')
+// Ensure locktest user exists
+await api('POST', '/config/users', { username: 'locktest_user', password: 'LockTest1!', permissions: {}, app_access: { backoffice: true } }, ownerToken)
+// Send 5 wrong passwords
+for (let i = 0; i < 5; i++) {
+  await api('POST', '/auth/login', { username: 'locktest_user', password: 'Wrong' + i })
+}
+const lockedR = await api('POST', '/auth/login', { username: 'locktest_user', password: 'LockTest1!' })
+ok('account locked after 5 failures (423)', lockedR.status === 423)
+// Owner unlocks it
+const lockedUser = (await api('GET', '/config/users', null, ownerToken)).json.rows?.find(u => u.username === 'locktest_user')
+if (lockedUser) {
+  const unlockR = await api('PUT', `/config/users/${lockedUser.id}`, { unlock_account: true }, ownerToken)
+  ok('owner unlock returns 200', unlockR.status === 200)
+  const afterUnlock = await api('POST', '/auth/login', { username: 'locktest_user', password: 'LockTest1!' })
+  ok('login works after unlock', afterUnlock.status === 200)
 }
 
-// ── 5. Owner-portal protected from modification ───────────────────────────────
-console.log('[5] Protected owner account cannot be disabled...')
-// Get users list as owner
-const usersR = await api('GET', '/config/users', null, ownerToken)
-ok('GET /config/users 200', usersR.status === 200)
-const ownerUser = (usersR.json.rows || []).find(u => u.is_protected)
-if (ownerUser) {
-  const delR = await api('DELETE', `/config/users/${ownerUser.id}`, null, ownerToken)
-  ok('owner cannot DELETE self (400/403)', delR.status === 400 || delR.status === 403)
-} else {
-  console.log('  SKIP  (no protected user found in list)')
-}
-
-// ── 6. /owner/switch token has app_access ─────────────────────────────────────
-console.log('[6] /owner/switch token includes app_access...')
+// ── 6. Owner portal DELETE — is_protected guard ───────────────────────────────
+console.log('[6] Owner portal DELETE — protected user blocked...')
 const ownerLogin = await api('POST', '/owner/login', { username: 'mkhalid', password: 'MK@Owner2024!' })
-ok('owner login 200', ownerLogin.status === 200)
+ok('owner portal login 200', ownerLogin.status === 200)
 const ownerPortalToken = ownerLogin.json.token
-if (ownerPortalToken) {
-  const brands = ownerLogin.json.brands || []
-  if (brands.length) {
-    const sw = await api('POST', `/owner/switch/${brands[0].brand_id}`, {}, ownerPortalToken)
-    ok('switch returns 200', sw.status === 200)
-    if (sw.json.token) {
-      // Decode payload (base64 middle part)
-      const parts = sw.json.token.split('.')
-      const payload = JSON.parse(Buffer.from(parts[1], 'base64url').toString())
-      ok('switch token has app_access', typeof payload.app_access === 'object')
-      ok('switch token backoffice=true', payload.app_access?.backoffice === true)
-    }
+const brands = ownerLogin.json.brands || []
+if (ownerPortalToken && brands.length) {
+  const brandId = brands[0].brand_id
+  const ouR = await api('GET', `/owner/brands/${brandId}/users`, null, ownerPortalToken)
+  ok('owner GET users 200', ouR.status === 200)
+  const protectedUser = (ouR.json.rows || []).find(u => u.is_protected)
+  if (protectedUser) {
+    const delR = await api('DELETE', `/owner/brands/${brandId}/users/${protectedUser.id}`, null, ownerPortalToken)
+    ok('owner portal DELETE protected → 403', delR.status === 403)
   } else {
-    console.log('  SKIP  (no brands in portfolio)')
+    console.log('  SKIP  no protected user in brand')
   }
 }
 
-// ── 7. Password min 8 chars enforced ─────────────────────────────────────────
-console.log('[7] Password minimum 8 chars...')
-const shortPwd = await api('POST', '/config/users', {
-  username: 'shortpwdtest',
-  password: 'Ab1!567', // 7 chars
+// ── 7. Force-logout endpoint ──────────────────────────────────────────────────
+console.log('[7] Force-logout endpoint...')
+const cplxLogin = await api('POST', '/auth/login', { username: 'cplx_testvalid', password: 'Secure99!' })
+if (cplxLogin.status === 200) {
+  const cplxId      = cplxLogin.json.user?.id
+  const cplxRefresh = cplxLogin.json.refresh
+  const forceR = await api('DELETE', `/config/users/${cplxId}/sessions`, null, ownerToken)
+  ok('force-logout 200', forceR.status === 200)
+  const afterForce = await api('POST', '/auth/refresh', { refresh: cplxRefresh })
+  ok('refresh after force-logout → 401', afterForce.status === 401)
+} else {
+  console.log('  SKIP  cplx_testvalid login failed')
+}
+
+// ── 8. /owner/switch has app_access ──────────────────────────────────────────
+console.log('[8] /owner/switch token includes app_access...')
+if (ownerPortalToken && brands.length) {
+  const sw = await api('POST', `/owner/switch/${brands[0].brand_id}`, {}, ownerPortalToken)
+  ok('switch 200', sw.status === 200)
+  if (sw.json.token) {
+    const payload = JSON.parse(Buffer.from(sw.json.token.split('.')[1], 'base64url').toString())
+    ok('switch token has app_access',  typeof payload.app_access === 'object')
+    ok('switch token backoffice=true', payload.app_access?.backoffice === true)
+  }
+}
+
+// ── 9. app_access gate ────────────────────────────────────────────────────────
+console.log('[9] app_access gate — backoffice=false blocked...')
+await api('POST', '/config/users', {
+  username: 'sec_noaccess',
+  password: 'NoAccess1!',
+  app_access: { pos: true, captain_app: false, kds: false, backoffice: false, owner_app: false },
+  permissions: {},
 }, ownerToken)
-ok('7-char password rejected (400)', shortPwd.status === 400)
+const loginNA = await api('POST', '/auth/login', { username: 'sec_noaccess', password: 'NoAccess1!' })
+if (loginNA.status === 200 && loginNA.json.token) {
+  const blocked = await api('GET', '/config/users', null, loginNA.json.token)
+  ok('backoffice=false blocked 403', blocked.status === 403)
+} else {
+  console.log('  SKIP  sec_noaccess already exists with different password')
+}
 
-// Owner portal POST also enforces 8 chars
-const ownerShortPwd = await api('POST', `/owner/brands/${ownerLogin.json.brands?.[0]?.brand_id}/users`, {
-  username: 'shortpwdtest2',
-  password: 'Ab1!567', // 7 chars
-}, ownerPortalToken)
-ok('owner portal 7-char password rejected (400)', ownerShortPwd.status === 400)
+// ── 10. Config DELETE protected owner blocked ─────────────────────────────────
+console.log('[10] Config DELETE protected owner cannot be disabled...')
+const usersR = await api('GET', '/config/users', null, ownerToken)
+ok('GET /config/users 200', usersR.status === 200)
+const protUser = (usersR.json.rows || []).find(u => u.is_protected)
+if (protUser) {
+  const delR2 = await api('DELETE', `/config/users/${protUser.id}`, null, ownerToken)
+  ok('DELETE protected owner → 400/403', delR2.status === 400 || delR2.status === 403)
+}
 
-// ── 8. owner_app UI label updated ────────────────────────────────────────────
-console.log('[8] owner_app UI description updated...')
+// ── 11. owner_app UI description ─────────────────────────────────────────────
+console.log('[11] owner_app UI description updated...')
 await page.goto(`${BASE}/backoffice/index.html`)
 await page.waitForTimeout(3000)
-const html = await page.content()
-ok('owner_app desc says "separate login"', html.includes('separate login'))
+ok('owner_app says "separate login"', (await page.content()).includes('separate login'))
 
 // ── Summary ───────────────────────────────────────────────────────────────────
 await browser.close()

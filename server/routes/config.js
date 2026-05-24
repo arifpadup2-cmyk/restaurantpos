@@ -841,7 +841,7 @@ module.exports = function configRouter (sql) {
   router.put('/users/:id', async (req, res) => {
     if (!canManageUsers(req)) return res.status(403).json({ error: 'Not allowed' })
     const rid = req.user.brand_id
-    const { name, password, email, outlet_ids, permissions, app_access, designation_id, active, pos_pin } = req.body || {}
+    const { name, password, email, outlet_ids, permissions, app_access, designation_id, active, pos_pin, unlock_account } = req.body || {}
     try {
       const [target] = await sql`SELECT role, is_protected, username FROM bo_users WHERE id = ${req.params.id} AND brand_id = ${rid}`
       if (!target) return res.status(404).json({ error: 'User not found' })
@@ -858,17 +858,21 @@ module.exports = function configRouter (sql) {
       const pin   = pinRaw !== undefined ? (pinRaw ? await (require('bcryptjs')).hash(pinRaw, 8) : null) : undefined
       // Prevent manage_users escalation by non-owners
       if (permissions !== undefined && req.user.role !== 'owner') permissions.manage_users = false
+      // unlock_account: owner can clear lockout (failed_attempts + locked_until) on any non-protected user
+      const doUnlock = !!unlock_account && req.user.role === 'owner'
       const [row] = await sql`
         UPDATE bo_users SET
-          name           = COALESCE(${name !== undefined ? (name || null) : null}, name),
-          password       = COALESCE(${hash}, password),
-          email          = COALESCE(${email !== undefined ? (email || null) : null}, email),
-          outlet_ids     = ${oIds !== undefined ? (oIds ? sql.array(oIds) : null) : sql`outlet_ids`},
-          permissions    = CASE WHEN ${permissions !== undefined} THEN ${permissions ? sql.json(permissions) : sql.json({})} ELSE permissions END,
-          app_access     = CASE WHEN ${app_access !== undefined} THEN ${app_access ? sql.json(app_access) : sql.json({})} ELSE app_access END,
-          designation_id = CASE WHEN ${desId !== undefined} THEN ${desId} ELSE designation_id END,
-          pos_pin        = CASE WHEN ${pin !== undefined} THEN ${pin} ELSE pos_pin END,
-          active         = COALESCE(${active !== undefined ? !!active : null}, active)
+          name            = COALESCE(${name !== undefined ? (name || null) : null}, name),
+          password        = COALESCE(${hash}, password),
+          email           = COALESCE(${email !== undefined ? (email || null) : null}, email),
+          outlet_ids      = ${oIds !== undefined ? (oIds ? sql.array(oIds) : null) : sql`outlet_ids`},
+          permissions     = CASE WHEN ${permissions !== undefined} THEN ${permissions ? sql.json(permissions) : sql.json({})} ELSE permissions END,
+          app_access      = CASE WHEN ${app_access !== undefined} THEN ${app_access ? sql.json(app_access) : sql.json({})} ELSE app_access END,
+          designation_id  = CASE WHEN ${desId !== undefined} THEN ${desId} ELSE designation_id END,
+          pos_pin         = CASE WHEN ${pin !== undefined} THEN ${pin} ELSE pos_pin END,
+          active          = COALESCE(${active !== undefined ? !!active : null}, active),
+          failed_attempts = CASE WHEN ${doUnlock} THEN 0 ELSE failed_attempts END,
+          locked_until    = CASE WHEN ${doUnlock} THEN NULL ELSE locked_until END
         WHERE id = ${req.params.id} AND brand_id = ${rid}
         RETURNING id, name, username, email, role, active, outlet_ids, permissions, app_access, designation_id, is_protected, last_login_at, created_at`
       if (!row) return res.status(404).json({ error: 'User not found' })
