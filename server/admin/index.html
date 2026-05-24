@@ -1,9 +1,9 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>RestaurantPOS — Provider Admin</title>
+<title>POS — Provider Admin</title>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#0f172a;color:#e2e8f0;min-height:100vh}
@@ -230,7 +230,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
     <div class="login-logo">
       <div class="ico">🏢</div>
       <h1>Provider Admin</h1>
-      <p>Restaurant POS Management Platform</p>
+      <p>POS Management Platform</p>
     </div>
     <div class="lerr" id="lerr"></div>
     <div class="lf">
@@ -256,7 +256,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
   <div class="topbar">
     <div class="topbar-left">
       <div class="topbar-ico">🏢</div>
-      <h1>Restaurant POS</h1>
+      <h1>POS</h1>
       <span>Provider Admin</span>
     </div>
     <div class="topbar-right">
@@ -269,7 +269,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
     <aside class="sidebar">
       <div class="sec">Overview</div>
       <div class="ni active" onclick="nav('dashboard')" id="nav-dashboard"><span class="ic">📊</span>Dashboard</div>
-      <div class="ni" onclick="nav('restaurants')" id="nav-restaurants"><span class="ic">🏪</span>Restaurants</div>
+      <div class="ni" onclick="nav('restaurants')" id="nav-restaurants"><span class="ic">🏪</span>Brands</div>
       <div class="ni" onclick="nav('outlets')" id="nav-outlets"><span class="ic">🏬</span>Outlets</div>
       <div class="sec">Global Config</div>
       <div class="ni" onclick="nav('gpm')" id="nav-gpm"><span class="ic">💳</span>Payment Methods</div>
@@ -299,7 +299,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
         </div>
       </div>
 
-      <!-- RESTAURANTS -->
+      <!-- BRANDS -->
       <div class="view" id="v-restaurants">
         <div class="ph">
           <div><h2>Brands</h2><p>All licensed brands — click row for full details</p></div>
@@ -323,7 +323,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
             <table class="dt">
               <thead>
                 <tr>
-                  <th>ID</th><th>Restaurant · Owner</th><th>Country · Reseller</th>
+                  <th>ID</th><th>Brand · Owner</th><th>Country · Reseller</th>
                   <th>License Key</th><th>Given Days</th><th>Days Left</th>
                   <th>Last Billed</th><th>Status</th><th>BO Login</th><th>Actions</th>
                 </tr>
@@ -421,9 +421,9 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
           <div class="ch"><h3>📋 Step-by-Step Installation</h3></div>
           <div class="cb">
             <div class="step-box">
-              <h4>Step 1 — Server PC Setup (Run once, on the main restaurant computer)</h4>
+              <h4>Step 1 — Server PC Setup (Run once, on the main outlet computer)</h4>
               <ol>
-                <li>Copy the <strong>server folder</strong> to the restaurant's server PC</li>
+                <li>Copy the <strong>server folder</strong> to the outlet server PC</li>
                 <li>Right-click <code>INSTALL-SERVER.bat</code> → <strong>Run as Administrator</strong></li>
                 <li>When prompted, enter the <strong>Brand ID</strong> and <strong>License Key</strong> from the credentials below</li>
                 <li>Script auto-installs Node.js, PostgreSQL, configures everything and starts the server as a Windows service</li>
@@ -433,7 +433,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
             <div class="step-box">
               <h4>Step 2 — POS Terminal (on each cashier/waiter Windows PC)</h4>
               <ol>
-                <li>Download and run <code>Restaurant POS Setup X.X.X.exe</code></li>
+                <li>Download and run <code>POS Setup X.X.X.exe</code></li>
                 <li>On first launch, a setup screen appears — enter <strong>Server IP</strong>, <strong>Brand ID</strong>, <strong>License Key</strong></li>
                 <li>Click <strong>Connect &amp; Save</strong> — POS downloads its database credentials from the server and connects</li>
                 <li>Enter staff PIN to login and start using the POS</li>
@@ -442,7 +442,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
             <div class="step-box">
               <h4>Step 3 — Web Apps (Waiter App, Kitchen Display, Back Office)</h4>
               <ol>
-                <li>On any device connected to the restaurant's LAN, open a browser</li>
+                <li>On any device connected to the outlet LAN, open a browser</li>
                 <li>Back Office: <code>http://&lt;server-ip&gt;:3001/backoffice/</code> — login with Back Office credentials</li>
                 <li>Waiter App: <code>http://&lt;server-ip&gt;:3001/waiter-app/</code> — tap the screen bookmark/install as PWA</li>
                 <li>Kitchen Display: <code>http://&lt;server-ip&gt;:3001/kds/</code> — open on kitchen screen, set to kiosk mode</li>
@@ -452,7 +452,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
               <h4>Step 4 — Back Office First-Time Setup</h4>
               <ol>
                 <li>Login to Back Office with the provided username and password</li>
-                <li>Go to <strong>Settings</strong> → enter Restaurant Name, currency, tax rate</li>
+                <li>Go to <strong>Settings</strong> → enter Brand Name, currency, tax rate</li>
                 <li>Go to <strong>Menu</strong> → add categories and menu items</li>
                 <li>Go to <strong>Staff</strong> → add cashiers and waiters with PINs</li>
                 <li>Go to <strong>Tables</strong> (if dine-in) → configure table layout</li>
@@ -462,7 +462,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
             <div class="step-box" style="border-color:#854d0e">
               <h4>⚠️ Important Notes</h4>
               <ol>
-                <li>The server PC must always be on when the restaurant is operating — all terminals depend on it</li>
+                <li>The server PC must always be on when the outlet is operating — all terminals depend on it</li>
                 <li>Server PC should be connected via LAN cable (not WiFi) for reliability</li>
                 <li>Firewall ports that must be open: <strong>3001</strong> (API) and <strong>5432</strong> (PostgreSQL) — the install script opens these automatically</li>
                 <li>Auto-backups run every 6 hours and are kept for 14 days — downloadable from Back Office → Downloads</li>
@@ -472,12 +472,12 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
           </div>
         </div>
 
-        <!-- Per-restaurant credential card -->
+        <!-- Per-brand credential card -->
         <div class="card">
           <div class="ch"><h3>🔑 Brand Credentials Lookup</h3></div>
           <div class="cb">
             <div class="mf">
-              <label>Select Restaurant</label>
+              <label>Select Brand</label>
               <select id="cred-select" onchange="showRestCreds()">
                 <option value="">— Select a brand —</option>
               </select>
@@ -508,7 +508,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
           <div class="card">
             <div class="ch"><h3>Database Backup</h3></div>
             <div class="cb">
-              <p style="font-size:13px;color:#94a3b8;margin-bottom:14px">Download a full export of all restaurant data as JSON.</p>
+              <p style="font-size:13px;color:#94a3b8;margin-bottom:14px">Download a full export of all brand data as JSON.</p>
               <button class="btn btn-p" onclick="downloadBackup()">⬇ Download Full Backup</button>
               <div id="backup-status" style="font-size:12px;color:#64748b;margin-top:10px"></div>
             </div>
@@ -530,7 +530,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
           <div class="ch"><h3>Quick Links</h3></div>
           <div class="cb" style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
             ${[
-              ['/backoffice/','Back Office (Restaurant)'],
+              ['/backoffice/','Back Office (Outlet)'],
               ['/signup','Public Signup Page'],
               ['/health','API Health JSON'],
               ['/waiter-app/','Waiter App'],
@@ -549,10 +549,10 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
   </div>
 </div>
 
-<!-- ── RESTAURANT DETAIL MODAL ── -->
+<!-- ── BRAND DETAIL MODAL ── -->
 <div class="mo" id="mo-detail">
   <div class="mb" style="max-width:720px">
-    <h3 id="md-title">Restaurant Details</h3>
+    <h3 id="md-title">Brand Details</h3>
     <div class="sub" id="md-sub"></div>
     <!-- Tabs -->
     <div style="display:flex;gap:4px;margin-bottom:18px;border-bottom:1px solid #334155;padding-bottom:0">
@@ -592,7 +592,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
         <div style="font-size:11px;color:#64748b;margin-top:8px">Login URL: <span style="font-family:monospace;color:#818cf8">http://&lt;server-ip&gt;:3001/backoffice/</span></div>
       </div>
       <div style="background:#1c1806;border:1px solid #854d0e;border-radius:8px;padding:10px 12px;font-size:12px;color:#fcd34d">
-        ⚠️ Keep these credentials confidential. Share only with the restaurant owner.
+        ⚠️ Keep these credentials confidential. Share only with the brand owner.
       </div>
     </div>
     <div id="dtab-edit-body" style="display:none">
@@ -673,8 +673,8 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
       <!-- Header -->
       <div class="wiz-mhdr">
         <div>
-          <h3>New Restaurant Setup</h3>
-          <p id="wiz-sub">Complete the information below to set up the restaurant and get started</p>
+          <h3>New Brand Setup</h3>
+          <p id="wiz-sub">Complete the information below to set up the brand and get started</p>
         </div>
         <div class="wiz-mhdr-btns">
           <button class="btn btn-o" id="wiz-back-btn" onclick="wizBack()" style="display:none;font-size:12px">← Prev Step</button>
@@ -756,7 +756,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
                 </div>
                 <div>
                   <label>Owner Email *</label>
-                  <input id="rg-email" type="email" placeholder="owner@restaurant.com">
+                  <input id="rg-email" type="email" placeholder="owner@yourbrand.com">
                 </div>
               </div>
               <div class="mg">
@@ -794,7 +794,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
               <div class="mg">
                 <div>
                   <label>Outlet Email</label>
-                  <input id="rg-oemail" type="email" placeholder="info@restaurant.com">
+                  <input id="rg-oemail" type="email" placeholder="info@yourbrand.com">
                 </div>
                 <div>
                   <label>Google Maps URL</label>
@@ -855,11 +855,11 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
         <div class="wiz-panel" id="wp-4">
           <div id="wiz-running" style="display:none">
             <div class="wiz-card">
-              <div class="wiz-card-hdr"><span>⚙️</span><span>Creating Restaurant</span></div>
+              <div class="wiz-card-hdr"><span>⚙️</span><span>Creating Brand</span></div>
               <div class="wiz-card-body">
                 <div style="text-align:center;padding:8px 0 12px">
                   <div style="font-size:36px;margin-bottom:8px">🏗️</div>
-                  <div style="font-weight:700;color:#111827;margin-bottom:4px">Setting up your restaurant…</div>
+                  <div style="font-weight:700;color:#111827;margin-bottom:4px">Setting up your brand…</div>
                   <div style="font-size:13px;color:#6b7280">This takes just a few seconds</div>
                 </div>
                 <div id="wiz-tasks" style="border-top:1px solid #f1f5f9;padding-top:4px"></div>
@@ -869,7 +869,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
           <div id="wiz-done" style="display:none">
             <div class="wiz-card" style="border-color:#86efac">
               <div class="wiz-card-hdr" style="background:#f0fdf4;border-bottom-color:#dcfce7">
-                <span>✅</span><span style="color:#15803d">Restaurant Created Successfully!</span>
+                <span>✅</span><span style="color:#15803d">Brand Created Successfully!</span>
               </div>
               <div class="wiz-card-body">
                 <div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:10px;padding:14px;margin-bottom:14px">
@@ -1038,7 +1038,7 @@ async function loadDashboard () {
       else if(s==='suspended') C.suspended++
       if(new Date(r.created_at).getTime()>d7) C.new7++
     }
-    document.getElementById('dash-sub').textContent = `${C.total} restaurants · ${C.new7} new this week · ${C.exp3} expiring ≤3 days`
+    document.getElementById('dash-sub').textContent = `${C.total} brands · ${C.new7} new this week · ${C.exp3} expiring ≤3 days`
     document.getElementById('dash-cards').innerHTML = [
       {cls:'ind', v:C.total,    l:'Total'},
       {cls:'warn',v:C.trial,    l:'Trial'},
@@ -1544,7 +1544,7 @@ async function regenKey (id) {
 
 async function toggleActive (id, current) {
   const action = current ? 'deactivate' : 'activate'
-  if(!confirm(`${action.charAt(0).toUpperCase()+action.slice(1)} this restaurant?`)) return
+  if(!confirm(`${action.charAt(0).toUpperCase()+action.slice(1)} this brand?`)) return
   try {
     await api('PATCH', `/setup/restaurants/${id}`, { active: !current })
     closeModal('mo-detail')
@@ -1555,9 +1555,9 @@ async function toggleActive (id, current) {
 async function deleteRestaurant (id) {
   const r = _data.find(x => x.id === id)
   const name = r ? r.name : id
-  const confirm1 = confirm(`⚠️ DELETE "${name}"?\n\nThis will permanently delete:\n• Restaurant record\n• All BO user accounts\n• All terminals\n• All orders, shifts, expenses\n\nThis CANNOT be undone.`)
+  const confirm1 = confirm(`⚠️ DELETE "${name}"?\n\nThis will permanently delete:\n• Brand record\n• All BO user accounts\n• All terminals\n• All orders, shifts, expenses\n\nThis CANNOT be undone.`)
   if (!confirm1) return
-  const input = prompt(`Type the restaurant name exactly to confirm:\n\n"${name}"`)
+  const input = prompt(`Type the brand name exactly to confirm:\n\n"${name}"`)
   if (input !== name) { alert('Name did not match. Delete cancelled.'); return }
   try {
     await api('DELETE', `/setup/restaurants/${id}`)
@@ -1624,10 +1624,10 @@ function showReg () {
 function wizGoto (step) {
   _wizStep = step
   const subs = [
-    'Complete the information below to set up the restaurant and get started',
+    'Complete the information below to set up the brand and get started',
     'Enter the owner contact and account information',
     'Provide outlet location, hours and operations details',
-    'Creating your restaurant — please wait',
+    'Creating your brand — please wait',
   ]
   document.getElementById('wiz-sub').textContent       = subs[step-1]
   document.getElementById('wiz-step-label').textContent = 'Step '+step+' of 4'
@@ -1752,11 +1752,11 @@ async function submitReg () {
     setT('wt4','ok','✓'); await _delay(350)
 
     document.getElementById('wiz-running').style.display = 'none'
-    document.getElementById('rg-rid').textContent = r.restaurant.id
-    document.getElementById('rg-key').textContent = r.restaurant.license_key
-    document.getElementById('rg-exp').textContent = r.restaurant.expires_at ? fmtDate(r.restaurant.expires_at) : 'Unlimited'
-    document.getElementById('rg-bou').textContent = r.restaurant.bo_username || '—'
-    document.getElementById('rg-bop').textContent = r.restaurant.bo_password  || '—'
+    document.getElementById('rg-rid').textContent = r.brand.id
+    document.getElementById('rg-key').textContent = r.brand.license_key
+    document.getElementById('rg-exp').textContent = r.brand.expires_at ? fmtDate(r.brand.expires_at) : 'Unlimited'
+    document.getElementById('rg-bou').textContent = r.brand.bo_username || '—'
+    document.getElementById('rg-bop').textContent = r.brand.bo_password  || '—'
     document.getElementById('wiz-done').style.display = 'block'
     document.getElementById('wiz-cancel-btn').textContent = 'Close'
     loadRestaurants()
