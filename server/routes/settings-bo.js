@@ -73,6 +73,45 @@ module.exports = function settingsRouter (sql) {
             await sql`INSERT INTO markets (id, brand_id, name, created_at) VALUES (${mid}, ${rid}, ${marketName}, ${Date.now()})`
           }
         }
+
+        // Upsert outlet whenever branch_name is provided — ensures outlet exists in outlets table
+        const branchName = (body.branch_name || '').trim()
+        if (branchName) {
+          const [mkt] = await sql`SELECT id FROM markets WHERE brand_id = ${rid} ORDER BY created_at LIMIT 1`
+          if (mkt) {
+            const currency   = (body.currency || 'USD').trim()
+            const symMap     = { USD:'$', MYR:'RM', SGD:'S$', GBP:'£', EUR:'€', AUD:'A$', CAD:'C$', AED:'د.إ', SAR:'﷼', INR:'₹', JPY:'¥', CNY:'¥', KRW:'₩', THB:'฿', IDR:'Rp', PHP:'₱', VND:'₫', PKR:'₨', BDT:'৳', LKR:'₨', QAR:'﷼', KWD:'د.ك', BHD:'BD', OMR:'ر.ع.', JOD:'JD', EGP:'E£', NGN:'₦', KES:'KSh', ZAR:'R', NZD:'NZ$', HKD:'HK$', TWD:'NT$' }
+            const curSym     = symMap[currency] || currency
+            const oPhone     = (body.outlet_phone || '').trim() || null
+            const oEmail     = (body.outlet_email || '').trim() || null
+            const oAddr      = (body.address || '').trim() || null
+            const oOpen      = (body.opening_time || '09:00').trim()
+            const oClose     = (body.closing_time || '22:00').trim()
+            const oCountry   = (body.country || '').trim() || null
+            const [existing] = await sql`SELECT id FROM outlets WHERE brand_id = ${rid} ORDER BY created_at LIMIT 1`
+            if (existing) {
+              await sql`
+                UPDATE outlets SET
+                  name          = ${branchName},
+                  market_id     = ${mkt.id},
+                  phone         = COALESCE(${oPhone}, phone),
+                  email         = COALESCE(${oEmail}, email),
+                  address       = COALESCE(${oAddr}, address),
+                  opening_time  = ${oOpen},
+                  closing_time  = ${oClose},
+                  currency      = ${currency},
+                  currency_code = ${currency},
+                  currency_symbol = ${curSym},
+                  country       = COALESCE(${oCountry}, country)
+                WHERE id = ${existing.id}`
+            } else {
+              const oid = Date.now().toString(36) + Math.random().toString(36).slice(2, 7)
+              await sql`
+                INSERT INTO outlets (id, brand_id, market_id, name, phone, email, address, opening_time, closing_time, currency, country, currency_code, currency_symbol, created_at)
+                VALUES (${oid}, ${rid}, ${mkt.id}, ${branchName}, ${oPhone}, ${oEmail}, ${oAddr}, ${oOpen}, ${oClose}, ${currency}, ${oCountry}, ${currency}, ${curSym}, ${Date.now()})`
+            }
+          }
+        }
       }
       res.json({ ok: true })
     } catch (e) { res.status(500).json({ error: e.message }) }
