@@ -4,168 +4,192 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>POS — Provider Admin</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
-body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#0f172a;color:#e2e8f0;min-height:100vh}
+:root{
+  --bg:#07101F;--bg-s:#0C1828;--bg-c:#111E30;
+  --bd:#1B2C43;--bd2:#243754;
+  --t1:#EEF2FF;--t2:#94A3B8;--t3:#475569;
+  --ac:#6366F1;--acl:#818CF8;--acd:rgba(99,102,241,.14);
+  --gr:#22C55E;--am:#F59E0B;--rd:#EF4444;
+  --sb:220px;--tb:58px;
+}
+body{font-family:'Inter',-apple-system,'Segoe UI',sans-serif;background:var(--bg);color:var(--t1);min-height:100vh;font-size:14px;line-height:1.5}
 /* ── Login ── */
-#login-screen{display:flex;align-items:center;justify-content:center;min-height:100vh;padding:24px;background:#f1f5f9}
-.login-card{background:#fff;border-radius:20px;padding:40px;width:100%;max-width:380px;box-shadow:0 8px 40px rgba(0,0,0,.10)}
+#login-screen{display:flex;align-items:center;justify-content:center;min-height:100vh;padding:24px;background:radial-gradient(ellipse at 50% 0%,#1e1b4b 0%,var(--bg) 60%)}
+.login-card{background:var(--bg-c);border:1px solid var(--bd2);border-radius:20px;padding:40px;width:100%;max-width:380px;box-shadow:0 24px 64px rgba(0,0,0,.55)}
 .login-logo{text-align:center;margin-bottom:28px}
-.login-logo .ico{width:60px;height:60px;background:linear-gradient(135deg,#f97316,#ea580c);border-radius:16px;display:inline-flex;align-items:center;justify-content:center;font-size:28px;margin-bottom:12px;box-shadow:0 4px 16px rgba(249,115,22,.3)}
-.login-logo h1{font-size:21px;font-weight:800;color:#0f172a}
-.login-logo p{font-size:13px;color:#64748b;margin-top:3px}
-.lf label{display:block;font-size:11px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px}
-.lf input{width:100%;padding:11px 14px;background:#f8fafc;border:1.5px solid #e2e8f0;border-radius:10px;font-size:14px;color:#0f172a;outline:none;margin-bottom:14px;transition:.15s}
-.lf input:focus{border-color:#f97316;box-shadow:0 0 0 3px rgba(249,115,22,.12);background:#fff}
-.lf input::placeholder{color:#94a3b8}
+.login-logo .ico{width:60px;height:60px;background:linear-gradient(135deg,#6366f1,#4338ca);border-radius:16px;display:inline-flex;align-items:center;justify-content:center;margin-bottom:12px;box-shadow:0 8px 24px rgba(99,102,241,.4);color:#fff}
+.login-logo h1{font-size:21px;font-weight:800;color:var(--t1);letter-spacing:-.3px}
+.login-logo p{font-size:13px;color:var(--t3);margin-top:3px}
+.lf label{display:block;font-size:11px;font-weight:600;color:var(--t3);text-transform:uppercase;letter-spacing:.6px;margin-bottom:6px}
+.lf input{width:100%;padding:11px 14px;background:var(--bg);border:1.5px solid var(--bd);border-radius:10px;font-size:14px;color:var(--t1);outline:none;margin-bottom:14px;transition:.2s;font-family:inherit}
+.lf input:focus{border-color:var(--ac);box-shadow:0 0 0 3px var(--acd)}
+.lf input::placeholder{color:var(--t3)}
 .pw-wrap{position:relative;margin-bottom:14px}
 .pw-wrap input{margin-bottom:0;padding-right:44px}
-.pw-eye{position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:#94a3b8;font-size:16px;padding:2px;line-height:1}
-.pw-eye:hover{color:#0f172a}
-.lbtn{width:100%;padding:13px;background:linear-gradient(135deg,#f97316,#ea580c);color:#fff;border:none;border-radius:10px;font-size:15px;font-weight:700;cursor:pointer;transition:.15s;margin-top:4px}
-.lbtn:hover{transform:translateY(-1px);box-shadow:0 8px 24px rgba(249,115,22,.35)}
-.lbtn:disabled{opacity:.6;transform:none;cursor:not-allowed}
-.lerr{background:#fef2f2;border:1px solid #fecaca;border-radius:8px;padding:10px 14px;font-size:13px;color:#dc2626;margin-bottom:14px;display:none}
+.pw-eye{position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:var(--t3);padding:4px;line-height:1;display:flex;align-items:center;border-radius:4px;transition:.15s}
+.pw-eye:hover{color:var(--t2)}
+.lbtn{width:100%;padding:13px;background:linear-gradient(135deg,#6366f1,#4338ca);color:#fff;border:none;border-radius:10px;font-size:15px;font-weight:700;cursor:pointer;transition:.2s;margin-top:4px;font-family:inherit;letter-spacing:.1px}
+.lbtn:hover{transform:translateY(-1px);box-shadow:0 8px 24px rgba(99,102,241,.45)}
+.lbtn:active{transform:translateY(0)}
+.lbtn:disabled{opacity:.55;transform:none;cursor:not-allowed}
+.lerr{background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.3);border-radius:8px;padding:10px 14px;font-size:13px;color:#fca5a5;margin-bottom:14px;display:none}
 /* ── App ── */
 #app{display:none;flex-direction:column;min-height:100vh}
-.topbar{background:#1e293b;border-bottom:1px solid #334155;padding:0 24px;height:56px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;flex-shrink:0}
+/* ── Topbar ── */
+.topbar{background:var(--bg-s);border-bottom:1px solid var(--bd);padding:0 20px;height:var(--tb);display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:200;flex-shrink:0}
 .topbar-left{display:flex;align-items:center;gap:12px}
-.topbar-ico{width:32px;height:32px;background:linear-gradient(135deg,#6366f1,#4338ca);border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:15px}
-.topbar-left h1{font-size:14px;font-weight:700;color:#f1f5f9}
-.topbar-left span{font-size:11px;color:#64748b;background:#0f172a;padding:2px 8px;border-radius:20px;border:1px solid #334155}
+.topbar-ico{width:34px;height:34px;background:linear-gradient(135deg,#6366f1,#4338ca);border-radius:9px;display:flex;align-items:center;justify-content:center;flex-shrink:0;color:#fff}
+.topbar-left h1{font-size:15px;font-weight:700;color:var(--t1);letter-spacing:-.2px}
+.topbar-left span{font-size:11px;color:var(--t3);background:rgba(255,255,255,.04);padding:2px 10px;border-radius:20px;border:1px solid var(--bd);letter-spacing:.3px}
 .topbar-right{display:flex;align-items:center;gap:10px}
-.topbar-user{font-size:13px;color:#94a3b8}strong{color:#e2e8f0}
-.tbtn{background:#334155;border:none;color:#94a3b8;padding:7px 14px;border-radius:8px;font-size:13px;cursor:pointer}
-.tbtn:hover{background:#475569;color:#f1f5f9}
+.topbar-user{font-size:13px;color:var(--t3)}
+.topbar-user strong{color:var(--t2);font-weight:600}
+.tbtn{background:transparent;border:1px solid var(--bd);color:var(--t3);padding:7px 14px;border-radius:8px;font-size:13px;cursor:pointer;transition:.15s;font-family:inherit}
+.tbtn:hover{background:var(--bd2);color:var(--t1)}
+.mob-menu-btn{display:none;background:none;border:none;color:var(--t2);cursor:pointer;padding:6px;border-radius:6px;align-items:center;justify-content:center;transition:.15s}
+.mob-menu-btn:hover{background:var(--bg-c);color:var(--t1)}
+/* ── Layout ── */
 .layout{display:flex;flex:1;overflow:hidden}
-.sidebar{width:210px;background:#1e293b;border-right:1px solid #334155;padding:16px 0;flex-shrink:0;overflow-y:auto}
-.sec{padding:5px 16px 3px;font-size:10px;font-weight:700;color:#475569;text-transform:uppercase;letter-spacing:.6px;margin-top:10px}
-.ni{display:flex;align-items:center;gap:10px;padding:9px 18px;font-size:13px;color:#94a3b8;cursor:pointer;border-left:3px solid transparent;transition:.1s}
-.ni:hover{background:#0f172a;color:#e2e8f0}
-.ni.active{background:#0f172a;color:#818cf8;border-left-color:#6366f1;font-weight:600}
-.ni .ic{font-size:15px;width:20px;text-align:center}
-.main{flex:1;padding:24px;overflow-y:auto;background:#0f172a}
+/* ── Sidebar ── */
+.sidebar{width:var(--sb);background:var(--bg-s);border-right:1px solid var(--bd);padding:10px 0 20px;flex-shrink:0;overflow-y:auto;transition:left .25s ease}
+.sidebar::-webkit-scrollbar{width:3px}
+.sidebar::-webkit-scrollbar-thumb{background:var(--bd2);border-radius:4px}
+.sec{padding:16px 16px 5px;font-size:10px;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:.8px}
+.ni{display:flex;align-items:center;gap:10px;padding:9px 14px 9px 16px;font-size:13px;color:var(--t2);cursor:pointer;border-left:3px solid transparent;transition:.15s;user-select:none}
+.ni:hover{background:var(--acd);color:var(--t1)}
+.ni.active{background:var(--acd);color:var(--acl);border-left-color:var(--ac);font-weight:600}
+.ni .ic{width:18px;height:18px;display:flex;align-items:center;justify-content:center;flex-shrink:0;opacity:.75}
+.ni.active .ic,.ni:hover .ic{opacity:1}
+.mob-sb-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.65);z-index:150;backdrop-filter:blur(2px)}
+/* ── Main ── */
+.main{flex:1;padding:24px;overflow-y:auto;background:var(--bg)}
+.main::-webkit-scrollbar{width:5px}
+.main::-webkit-scrollbar-thumb{background:var(--bd2);border-radius:6px}
 .view{display:none}
 .view.active{display:block}
-.ph{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:12px}
-.ph h2{font-size:20px;font-weight:800;color:#f1f5f9}
-.ph p{font-size:13px;color:#64748b;margin-top:3px}
+.ph{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:22px;flex-wrap:wrap;gap:12px}
+.ph h2{font-size:20px;font-weight:800;color:var(--t1);letter-spacing:-.3px}
+.ph p{font-size:13px;color:var(--t3);margin-top:4px}
 /* ── Cards ── */
-.card{background:#1e293b;border:1px solid #334155;border-radius:12px;margin-bottom:18px;overflow:hidden}
-.ch{display:flex;align-items:center;justify-content:space-between;padding:14px 18px;border-bottom:1px solid #334155;flex-wrap:wrap;gap:8px}
-.ch h3{font-size:14px;font-weight:700;color:#f1f5f9}
+.card{background:var(--bg-c);border:1px solid var(--bd);border-radius:12px;margin-bottom:18px;overflow:hidden}
+.ch{display:flex;align-items:center;justify-content:space-between;padding:14px 18px;border-bottom:1px solid var(--bd);flex-wrap:wrap;gap:8px}
+.ch h3{font-size:14px;font-weight:600;color:var(--t1)}
 .cb{padding:18px}
 /* ── Stat cards ── */
-.sg{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:12px;margin-bottom:20px}
-.sc{background:#1e293b;border:1px solid #334155;border-radius:10px;padding:16px}
-.sc .v{font-size:30px;font-weight:800;color:#f1f5f9;line-height:1}
-.sc .l{font-size:11px;color:#64748b;margin-top:5px;font-weight:600}
-.sc.ind{border-color:#4f46e5;background:#12122a}.sc.ind .v{color:#818cf8}
-.sc.warn{border-color:#d97706;background:#1c1806}.sc.warn .v{color:#fbbf24}
-.sc.ok{border-color:#16a34a;background:#071810}.sc.ok .v{color:#4ade80}
-.sc.err{border-color:#dc2626;background:#1c0a0a}.sc.err .v{color:#f87171}
+.sg{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px;margin-bottom:22px}
+.sc{background:var(--bg-c);border:1px solid var(--bd);border-radius:10px;padding:18px 16px;border-left:3px solid var(--bd2);transition:.2s}
+.sc .v{font-size:32px;font-weight:800;color:var(--t1);line-height:1;font-family:'Fira Code','Fira Mono',monospace}
+.sc .l{font-size:10px;color:var(--t3);margin-top:7px;font-weight:600;text-transform:uppercase;letter-spacing:.5px}
+.sc.ind{border-left-color:var(--ac);background:linear-gradient(135deg,rgba(99,102,241,.07),var(--bg-c))}.sc.ind .v{color:var(--acl)}
+.sc.warn{border-left-color:var(--am);background:linear-gradient(135deg,rgba(245,158,11,.07),var(--bg-c))}.sc.warn .v{color:#FCD34D}
+.sc.ok{border-left-color:var(--gr);background:linear-gradient(135deg,rgba(34,197,94,.07),var(--bg-c))}.sc.ok .v{color:#4ADE80}
+.sc.err{border-left-color:var(--rd);background:linear-gradient(135deg,rgba(239,68,68,.07),var(--bg-c))}.sc.err .v{color:#F87171}
 /* ── Alerts ── */
-.al{padding:11px 15px;border-radius:9px;font-size:13px;margin-bottom:10px;display:flex;align-items:flex-start;gap:8px;line-height:1.5}
-.al-warn{background:#1c180a;border:1px solid #92400e;color:#fcd34d}
-.al-err{background:#1c0a0a;border:1px solid #7f1d1d;color:#fca5a5}
+.al{padding:12px 16px;border-radius:9px;font-size:13px;margin-bottom:10px;display:flex;align-items:flex-start;gap:10px;line-height:1.6}
+.al-warn{background:rgba(245,158,11,.07);border:1px solid rgba(245,158,11,.22);color:#FCD34D}
+.al-err{background:rgba(239,68,68,.07);border:1px solid rgba(239,68,68,.22);color:#FCA5A5}
 /* ── Table ── */
 .dt{width:100%;border-collapse:collapse;font-size:12px;min-width:900px}
-.dt th{padding:9px 10px;text-align:left;font-size:10px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:.4px;border-bottom:1px solid #334155;background:#1e293b;white-space:nowrap;position:sticky;top:0}
-.dt td{padding:10px;border-bottom:1px solid #1a2535;color:#cbd5e1;vertical-align:middle}
-.dt tr:hover td{background:#1e293b}
-.dt .mono{font-family:monospace;font-weight:700;color:#818cf8;font-size:12px}
-.dt .strong{font-weight:600;color:#f1f5f9}
-.dt .muted{color:#64748b;font-size:11px;margin-top:2px}
+.dt th{padding:10px 12px;text-align:left;font-size:10px;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:.5px;border-bottom:1px solid var(--bd);background:var(--bg-c);white-space:nowrap;position:sticky;top:0}
+.dt td{padding:11px 12px;border-bottom:1px solid rgba(27,44,67,.5);color:var(--t2);vertical-align:middle;transition:.1s}
+.dt tr:hover td{background:var(--acd);color:var(--t1)}
+.dt .mono{font-family:'Fira Code','Fira Mono',monospace;font-weight:500;color:var(--acl);font-size:12px;letter-spacing:.3px}
+.dt .strong{font-weight:600;color:var(--t1)}
+.dt .muted{color:var(--t3);font-size:11px;margin-top:2px}
 /* ── Badges ── */
-.badge{display:inline-flex;align-items:center;padding:2px 8px;border-radius:20px;font-size:10px;font-weight:700;white-space:nowrap}
-.b-trial{background:#1c1806;color:#fbbf24;border:1px solid #854d0e}
-.b-active{background:#052e16;color:#4ade80;border:1px solid #166534}
-.b-expired{background:#1c0a0a;color:#f87171;border:1px solid #7f1d1d}
-.b-suspended{background:#1a2535;color:#64748b;border:1px solid #334155}
+.badge{display:inline-flex;align-items:center;padding:3px 9px;border-radius:20px;font-size:10px;font-weight:700;letter-spacing:.3px;white-space:nowrap}
+.b-trial{background:rgba(245,158,11,.1);color:#FCD34D;border:1px solid rgba(245,158,11,.25)}
+.b-active{background:rgba(34,197,94,.1);color:#4ADE80;border:1px solid rgba(34,197,94,.25)}
+.b-expired{background:rgba(239,68,68,.1);color:#F87171;border:1px solid rgba(239,68,68,.25)}
+.b-suspended{background:rgba(71,85,105,.15);color:var(--t3);border:1px solid var(--bd)}
 /* ── Buttons ── */
-.btn{padding:8px 16px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;border:none;transition:.1s}
-.btn-p{background:#6366f1;color:#fff}.btn-p:hover{background:#4f46e5}
-.btn-o{background:transparent;color:#94a3b8;border:1px solid #334155}.btn-o:hover{background:#1e293b;color:#e2e8f0}
-.btn-g{background:#166534;color:#4ade80;border:1px solid #166534}.btn-g:hover{background:#14532d}
-.btn-r{background:#7f1d1d;color:#fca5a5;border:1px solid #7f1d1d}.btn-r:hover{background:#991b1b}
-.btn-y{background:#92400e;color:#fcd34d;border:1px solid #92400e}.btn-y:hover{background:#78350f}
-.bsm{padding:4px 8px;font-size:11px;border-radius:5px;border:1px solid #334155;background:transparent;color:#94a3b8;cursor:pointer;white-space:nowrap}
-.bsm:hover{background:#334155;color:#f1f5f9}
-.bsm.g{color:#4ade80;border-color:#166534}.bsm.r{color:#f87171;border-color:#7f1d1d}.bsm.y{color:#fbbf24;border-color:#854d0e}.bsm.b{color:#818cf8;border-color:#4f46e5}
+.btn{padding:8px 16px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;border:none;transition:.15s;font-family:inherit;display:inline-flex;align-items:center;gap:6px}
+.btn:focus-visible{outline:2px solid var(--ac);outline-offset:2px}
+.btn-p{background:var(--ac);color:#fff}.btn-p:hover{background:#4f46e5;box-shadow:0 4px 16px rgba(99,102,241,.35)}
+.btn-o{background:transparent;color:var(--t2);border:1px solid var(--bd)}.btn-o:hover{background:var(--bg-c);color:var(--t1);border-color:var(--bd2)}
+.btn-g{background:rgba(34,197,94,.1);color:#4ade80;border:1px solid rgba(34,197,94,.25)}.btn-g:hover{background:rgba(34,197,94,.18)}
+.btn-r{background:rgba(239,68,68,.1);color:#f87171;border:1px solid rgba(239,68,68,.25)}.btn-r:hover{background:rgba(239,68,68,.18)}
+.btn-y{background:rgba(245,158,11,.1);color:#fcd34d;border:1px solid rgba(245,158,11,.25)}.btn-y:hover{background:rgba(245,158,11,.18)}
+.bsm{padding:4px 10px;font-size:11px;border-radius:6px;border:1px solid var(--bd);background:transparent;color:var(--t2);cursor:pointer;white-space:nowrap;font-family:inherit;transition:.1s}
+.bsm:hover{background:var(--bg-c);color:var(--t1);border-color:var(--bd2)}
+.bsm.g{color:#4ade80;border-color:rgba(34,197,94,.3)}.bsm.r{color:#f87171;border-color:rgba(239,68,68,.3)}.bsm.y{color:#fcd34d;border-color:rgba(245,158,11,.3)}.bsm.b{color:var(--acl);border-color:rgba(99,102,241,.3)}
 /* ── Modal ── */
-.mo{display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:1000;align-items:center;justify-content:center;padding:20px}
-.mb{background:#1e293b;border:1px solid #334155;border-radius:16px;padding:26px;max-width:680px;width:100%;max-height:90vh;overflow-y:auto;box-shadow:0 25px 80px rgba(0,0,0,.8)}
-.mb h3{font-size:17px;font-weight:700;color:#f1f5f9;margin-bottom:4px}
-.mb .sub{font-size:13px;color:#64748b;margin-bottom:18px}
-.mf label{display:block;font-size:10px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:.4px;margin-bottom:5px}
-.mf input,.mf select,.mf textarea{width:100%;padding:9px 12px;background:#0f172a;border:1.5px solid #334155;border-radius:8px;font-size:13px;color:#f1f5f9;outline:none;margin-bottom:12px}
-.mf input:focus,.mf select:focus{border-color:#6366f1}
-.mf input::placeholder{color:#475569}
+.mo{display:none;position:fixed;inset:0;background:rgba(0,0,0,.72);z-index:1000;align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(4px)}
+.mb{background:var(--bg-c);border:1px solid var(--bd2);border-radius:16px;padding:26px;max-width:680px;width:100%;max-height:90vh;overflow-y:auto;box-shadow:0 32px 96px rgba(0,0,0,.8)}
+.mb h3{font-size:17px;font-weight:700;color:var(--t1);margin-bottom:4px}
+.mb .sub{font-size:13px;color:var(--t3);margin-bottom:18px}
+.mf label{display:block;font-size:10px;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:5px}
+.mf input,.mf select,.mf textarea{width:100%;padding:10px 12px;background:var(--bg);border:1.5px solid var(--bd);border-radius:8px;font-size:13px;color:var(--t1);outline:none;margin-bottom:12px;font-family:inherit;transition:.15s}
+.mf input:focus,.mf select:focus{border-color:var(--ac);box-shadow:0 0 0 3px var(--acd)}
+.mf input::placeholder{color:var(--t3)}
 .mg{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-.ma{display:flex;gap:10px;justify-content:flex-end;margin-top:6px;border-top:1px solid #334155;padding-top:16px}
+.ma{display:flex;gap:10px;justify-content:flex-end;margin-top:6px;border-top:1px solid var(--bd);padding-top:16px}
 .qb{display:flex;gap:8px;margin-bottom:12px}
-.qb button{flex:1;padding:8px;background:#0f172a;border:1px solid #334155;border-radius:7px;color:#94a3b8;cursor:pointer;font-size:12px}
-.qb button:hover{border-color:#6366f1;color:#818cf8}
+.qb button{flex:1;padding:8px;background:var(--bg);border:1px solid var(--bd);border-radius:7px;color:var(--t3);cursor:pointer;font-size:12px;font-family:inherit;transition:.15s}
+.qb button:hover{border-color:var(--ac);color:var(--acl)}
 /* ── Info rows ── */
-.ir{display:flex;align-items:flex-start;padding:9px 0;border-bottom:1px solid #334155}
+.ir{display:flex;align-items:flex-start;padding:10px 0;border-bottom:1px solid var(--bd)}
 .ir:last-child{border-bottom:none}
-.ir .il{font-size:11px;font-weight:700;color:#475569;text-transform:uppercase;letter-spacing:.4px;width:160px;flex-shrink:0;padding-top:2px}
-.ir .iv{font-size:13px;color:#e2e8f0;flex:1;word-break:break-all}
-.ir .iv .mono{font-family:monospace;color:#818cf8}
+.ir .il{font-size:11px;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:.4px;width:160px;flex-shrink:0;padding-top:2px}
+.ir .iv{font-size:13px;color:var(--t2);flex:1;word-break:break-all}
+.ir .iv .mono{font-family:'Fira Code','Fira Mono',monospace;color:var(--acl)}
 /* ── Progress ── */
-.prog{height:4px;background:#334155;border-radius:4px;overflow:hidden}
-.prog-f{height:100%;background:#6366f1;border-radius:4px;transition:width .3s}
+.prog{height:4px;background:var(--bd);border-radius:4px;overflow:hidden}
+.prog-f{height:100%;background:var(--ac);border-radius:4px;transition:width .35s ease}
 /* ── Cred box ── */
-.cred-box{background:#0f172a;border:1px solid #334155;border-radius:10px;padding:14px;margin-bottom:12px}
+.cred-box{background:var(--bg);border:1px solid var(--bd);border-radius:10px;padding:14px;margin-bottom:12px}
 .cred-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
 .cred-row:last-child{margin-bottom:0}
-.cred-label{font-size:10px;font-weight:700;color:#64748b;text-transform:uppercase}
-.cred-value{font-family:monospace;font-size:14px;font-weight:700;color:#818cf8;word-break:break-all}
-.cred-copy{background:#1e293b;border:1px solid #334155;border-radius:6px;padding:3px 9px;font-size:11px;cursor:pointer;color:#94a3b8}
-.cred-copy:hover{background:#334155;color:#f1f5f9}
+.cred-label{font-size:10px;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:.5px}
+.cred-value{font-family:'Fira Code','Fira Mono',monospace;font-size:13px;font-weight:600;color:var(--acl);word-break:break-all}
+.cred-copy{background:var(--bg-c);border:1px solid var(--bd);border-radius:6px;padding:3px 10px;font-size:11px;cursor:pointer;color:var(--t2);font-family:inherit;transition:.1s}
+.cred-copy:hover{background:var(--bd2);color:var(--t1)}
 /* ── Install guide ── */
-.step-box{background:#0f172a;border:1px solid #334155;border-radius:10px;padding:16px;margin-bottom:12px}
-.step-box h4{font-size:13px;font-weight:700;color:#f1f5f9;margin-bottom:8px}
-.step-box ol{margin-left:18px;font-size:13px;color:#94a3b8;line-height:2}
-.step-box ol strong{color:#e2e8f0}
-.step-box code{background:#1e293b;padding:2px 7px;border-radius:5px;font-family:monospace;font-size:12px;color:#818cf8;border:1px solid #334155}
-.dl-btn{display:inline-flex;align-items:center;gap:8px;padding:9px 16px;background:#0f172a;border:1.5px solid #334155;border-radius:9px;font-size:13px;color:#94a3b8;cursor:pointer;text-decoration:none;transition:.1s;margin:4px}
-.dl-btn:hover{border-color:#6366f1;color:#818cf8}
+.step-box{background:var(--bg);border:1px solid var(--bd);border-radius:10px;padding:16px;margin-bottom:12px}
+.step-box h4{font-size:13px;font-weight:700;color:var(--t1);margin-bottom:8px}
+.step-box ol{margin-left:18px;font-size:13px;color:var(--t2);line-height:2}
+.step-box ol strong{color:var(--t1)}
+.step-box code{background:var(--bg-c);padding:2px 7px;border-radius:5px;font-family:'Fira Code','Fira Mono',monospace;font-size:12px;color:var(--acl);border:1px solid var(--bd)}
+.dl-btn{display:inline-flex;align-items:center;gap:8px;padding:9px 16px;background:var(--bg);border:1.5px solid var(--bd);border-radius:9px;font-size:13px;color:var(--t2);cursor:pointer;text-decoration:none;transition:.15s;margin:4px;font-family:inherit}
+.dl-btn:hover{border-color:var(--ac);color:var(--acl)}
 /* ── Filters ── */
-.fr{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:14px}
-.fr select,.fr input{background:#0f172a;border:1.5px solid #334155;border-radius:8px;color:#e2e8f0;padding:7px 10px;font-size:12px;outline:none}
-.fr select:focus,.fr input:focus{border-color:#6366f1}
-.fr input::placeholder{color:#475569}
+.fr{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:16px}
+.fr select,.fr input{background:var(--bg-c);border:1.5px solid var(--bd);border-radius:8px;color:var(--t1);padding:8px 12px;font-size:12px;outline:none;font-family:inherit;transition:.15s}
+.fr select:focus,.fr input:focus{border-color:var(--ac);box-shadow:0 0 0 3px var(--acd)}
+.fr input::placeholder{color:var(--t3)}
 /* ── Perf table ── */
 .pt{width:100%;border-collapse:collapse;font-size:13px}
-.pt td,.pt th{padding:9px 12px;border-bottom:1px solid #334155;text-align:left;color:#94a3b8}
-.pt th{font-size:11px;font-weight:700;text-transform:uppercase;color:#64748b}
-.pt td:first-child{font-weight:600;color:#e2e8f0}
-.bar{height:8px;background:#0f172a;border-radius:4px;overflow:hidden;display:inline-block;vertical-align:middle;margin-left:8px}
-.bar-f{height:100%;background:#6366f1;border-radius:4px}
+.pt td,.pt th{padding:10px 14px;border-bottom:1px solid var(--bd);text-align:left;color:var(--t2)}
+.pt th{font-size:11px;font-weight:700;text-transform:uppercase;color:var(--t3)}
+.pt td:first-child{font-weight:600;color:var(--t1)}
+.bar{height:6px;background:var(--bg);border-radius:4px;overflow:hidden;display:inline-block;vertical-align:middle;margin-left:8px}
+.bar-f{height:100%;background:var(--ac);border-radius:4px}
 /* ── Wizard Split-Panel ── */
-.wiz-modal{display:flex;width:100%;max-width:960px;max-height:90vh;border-radius:16px;overflow:hidden;box-shadow:0 25px 80px rgba(0,0,0,.85)}
-/* Sidebar */
-.wiz-sb{width:248px;flex-shrink:0;background:#1e293b;display:flex;flex-direction:column;border-right:1px solid #2d3f55}
-.wiz-sb-top{padding:22px 20px 18px;border-bottom:1px solid #2d3f55}
-.wiz-sb-ico{width:46px;height:46px;background:linear-gradient(135deg,#f97316,#ea580c);border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:23px;margin-bottom:12px;box-shadow:0 4px 12px rgba(249,115,22,.3)}
-.wiz-sb-ttl{font-size:14px;font-weight:700;color:#f1f5f9}
-.wiz-sb-sub{font-size:11px;color:#64748b;margin:3px 0 10px}
-.wiz-pbar{height:4px;background:#334155;border-radius:4px;overflow:hidden}
-.wiz-pfill{height:100%;background:linear-gradient(90deg,#6366f1,#818cf8);border-radius:4px;transition:width .45s ease}
+.wiz-modal{display:flex;width:100%;max-width:960px;max-height:90vh;border-radius:16px;overflow:hidden;box-shadow:0 32px 96px rgba(0,0,0,.9)}
+.wiz-sb{width:248px;flex-shrink:0;background:var(--bg-c);display:flex;flex-direction:column;border-right:1px solid var(--bd)}
+.wiz-sb-top{padding:22px 20px 18px;border-bottom:1px solid var(--bd)}
+.wiz-sb-ico{width:46px;height:46px;background:linear-gradient(135deg,#f97316,#ea580c);border-radius:12px;display:flex;align-items:center;justify-content:center;margin-bottom:12px;box-shadow:0 4px 12px rgba(249,115,22,.3)}
+.wiz-sb-ttl{font-size:14px;font-weight:700;color:var(--t1)}
+.wiz-sb-sub{font-size:11px;color:var(--t3);margin:3px 0 10px}
+.wiz-pbar{height:4px;background:var(--bd);border-radius:4px;overflow:hidden}
+.wiz-pfill{height:100%;background:linear-gradient(90deg,var(--ac),var(--acl));border-radius:4px;transition:width .45s ease}
 .wiz-slist{flex:1;padding:10px 0;overflow-y:auto}
-.wiz-si{display:flex;align-items:flex-start;gap:10px;padding:12px 18px;position:relative;transition:.1s}
-.wiz-si.active{background:rgba(99,102,241,.12)}
-.wiz-si.active::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;background:#6366f1;border-radius:0 2px 2px 0}
-.wiz-si-num{width:28px;height:28px;border-radius:50%;border:2px solid #334155;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#475569;flex-shrink:0;background:#0f172a;transition:.2s;margin-top:1px}
-.wiz-si.active .wiz-si-num{border-color:#6366f1;color:#818cf8;background:rgba(99,102,241,.15)}
-.wiz-si.done .wiz-si-num{background:#166534;border-color:#166534;color:#4ade80}
-.wiz-si-name{font-size:12px;font-weight:600;color:#64748b;transition:.15s}
-.wiz-si.active .wiz-si-name{color:#e2e8f0}
-.wiz-si.done .wiz-si-name{color:#86efac}
-.wiz-si-desc{font-size:10px;color:#475569;margin-top:2px}
-.wiz-sb-foot{padding:14px 18px;border-top:1px solid #2d3f55;font-size:11px;color:#475569;flex-shrink:0}
-/* Main panel */
+.wiz-si{display:flex;align-items:flex-start;gap:10px;padding:12px 18px;position:relative;transition:.15s}
+.wiz-si.active{background:var(--acd)}
+.wiz-si.active::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--ac);border-radius:0 2px 2px 0}
+.wiz-si-num{width:28px;height:28px;border-radius:50%;border:2px solid var(--bd);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:var(--t3);flex-shrink:0;background:var(--bg);transition:.2s;margin-top:1px}
+.wiz-si.active .wiz-si-num{border-color:var(--ac);color:var(--acl);background:var(--acd)}
+.wiz-si.done .wiz-si-num{background:rgba(34,197,94,.2);border-color:#22C55E;color:#4ADE80}
+.wiz-si-name{font-size:12px;font-weight:600;color:var(--t3);transition:.15s}
+.wiz-si.active .wiz-si-name{color:var(--t1)}
+.wiz-si.done .wiz-si-name{color:#86EFAC}
+.wiz-si-desc{font-size:10px;color:var(--t3);margin-top:2px}
+.wiz-sb-foot{padding:14px 18px;border-top:1px solid var(--bd);font-size:11px;color:var(--t3);flex-shrink:0}
 .wiz-main{flex:1;display:flex;flex-direction:column;background:#f1f5f9;min-width:0;min-height:0;overflow:hidden}
 .wiz-mhdr{display:flex;align-items:flex-start;justify-content:space-between;padding:18px 22px 14px;background:#fff;border-bottom:1px solid #e2e8f0;gap:12px;flex-wrap:wrap;flex-shrink:0}
 .wiz-mhdr h3{font-size:16px;font-weight:800;color:#0f172a}
@@ -174,26 +198,21 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 .wiz-body{flex:1;min-height:0;overflow-y:auto;padding:18px 22px;-webkit-overflow-scrolling:touch}
 .wiz-panel{display:none}
 .wiz-panel.active{display:block}
-/* White cards inside wizard */
 .wiz-card{background:#fff;border:1px solid #e2e8f0;border-radius:12px;margin-bottom:14px;overflow:hidden}
 .wiz-card-hdr{display:flex;align-items:center;gap:8px;padding:10px 16px;background:#f8fafc;border-bottom:1px solid #f1f5f9}
 .wiz-card-hdr span{font-size:12px;font-weight:700;color:#374151;text-transform:uppercase;letter-spacing:.4px}
 .wiz-card-body{padding:16px}
-/* Light form inputs inside wizard */
 .wiz-main .mf label,.wiz-card-body label{display:block;font-size:11px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:.4px;margin-bottom:5px}
 .wiz-main .mf input,.wiz-main .mf select,.wiz-main .mf textarea,
-.wiz-card-body input,.wiz-card-body select,.wiz-card-body textarea{width:100%;padding:9px 12px;background:#fff;border:1.5px solid #e2e8f0;border-radius:8px;font-size:13px;color:#111827;outline:none;margin-bottom:12px;transition:.15s}
+.wiz-card-body input,.wiz-card-body select,.wiz-card-body textarea{width:100%;padding:9px 12px;background:#fff;border:1.5px solid #e2e8f0;border-radius:8px;font-size:13px;color:#111827;outline:none;margin-bottom:12px;transition:.15s;font-family:inherit}
 .wiz-card-body input:focus,.wiz-card-body select:focus{border-color:#6366f1;box-shadow:0 0 0 3px rgba(99,102,241,.1)}
 .wiz-card-body input::placeholder,.wiz-card-body textarea::placeholder{color:#9ca3af}
 .wiz-card-body .mg{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-/* Toggle pills for order types / aggregators */
 .tog-group{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px}
-.tog-btn{display:inline-flex;align-items:center;gap:5px;padding:6px 12px;background:#f9fafb;border:1.5px solid #e5e7eb;border-radius:7px;font-size:12px;font-weight:500;color:#6b7280;cursor:pointer;transition:.15s;user-select:none}
+.tog-btn{display:inline-flex;align-items:center;gap:5px;padding:6px 12px;background:#f9fafb;border:1.5px solid #e5e7eb;border-radius:7px;font-size:12px;font-weight:500;color:#6b7280;cursor:pointer;transition:.15s;user-select:none;font-family:inherit}
 .tog-btn:hover{border-color:#6366f1;color:#4f46e5}
 .tog-btn.sel{background:#ede9fe;border-color:#6366f1;color:#4f46e5;font-weight:600}
-/* Wizard footer */
 .wiz-foot{display:flex;align-items:center;justify-content:space-between;padding:14px 22px;background:#fff;border-top:1px solid #e2e8f0;flex-shrink:0;gap:10px}
-/* Setup completion tasks */
 .wiz-task{display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid #f1f5f9}
 .wiz-task:last-child{border-bottom:none}
 .wiz-task-ico{width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;flex-shrink:0;transition:.2s}
@@ -202,28 +221,34 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 .wiz-task-ico.ok{background:#dcfce7;border:2px solid #16a34a;color:#15803d}
 .wiz-task-ico.err{background:#fee2e2;border:2px solid #dc2626;color:#dc2626}
 /* ── Admin Hierarchy Tree ── */
-.adm-brand-card{background:#1e293b;border:1px solid #334155;border-radius:12px;margin-bottom:16px;overflow:hidden}
-.adm-brand-hdr{display:flex;align-items:center;gap:12px;padding:12px 16px;border-bottom:1px solid #334155;background:#0f1a2e;cursor:pointer}
-.adm-brand-hdr:hover{background:#1a2840}
-.adm-brand-ico{width:34px;height:34px;border-radius:9px;background:linear-gradient(135deg,#6366f1,#4338ca);display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0}
-.adm-brand-name{font-size:14px;font-weight:700;color:#f1f5f9;flex:1}
-.adm-brand-meta{font-size:11px;color:#64748b}
+.adm-brand-card{background:var(--bg-c);border:1px solid var(--bd);border-radius:12px;margin-bottom:16px;overflow:hidden}
+.adm-brand-hdr{display:flex;align-items:center;gap:12px;padding:12px 16px;border-bottom:1px solid var(--bd);background:var(--bg-s);cursor:pointer;transition:.15s}
+.adm-brand-hdr:hover{background:rgba(99,102,241,.07)}
+.adm-brand-ico{width:34px;height:34px;border-radius:9px;background:linear-gradient(135deg,var(--ac),#4338ca);display:flex;align-items:center;justify-content:center;flex-shrink:0;color:#fff}
+.adm-brand-name{font-size:14px;font-weight:700;color:var(--t1);flex:1}
+.adm-brand-meta{font-size:11px;color:var(--t3)}
 .adm-brand-counts{display:flex;gap:8px;flex-shrink:0}
-.adm-count-pill{font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px;background:#0f172a;border:1px solid #334155;color:#94a3b8}
+.adm-count-pill{font-size:10px;font-weight:700;padding:2px 9px;border-radius:20px;background:var(--bg);border:1px solid var(--bd);color:var(--t3)}
 .adm-markets-wrap{padding:10px 14px;display:flex;flex-direction:column;gap:8px}
-.adm-market{background:#0f172a;border:1px solid #1e293b;border-radius:9px;overflow:hidden}
-.adm-market-hdr{display:flex;align-items:center;gap:9px;padding:8px 12px;border-bottom:1px solid #1e293b}
-.adm-market-ico{width:26px;height:26px;border-radius:7px;background:#1e293b;border:1px solid #334155;display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0}
-.adm-market-name{font-size:13px;font-weight:600;color:#e2e8f0;flex:1}
-.adm-market-meta{font-size:11px;color:#475569}
+.adm-market{background:var(--bg);border:1px solid var(--bd);border-radius:9px;overflow:hidden}
+.adm-market-hdr{display:flex;align-items:center;gap:9px;padding:8px 12px;border-bottom:1px solid var(--bd)}
+.adm-market-ico{width:26px;height:26px;border-radius:7px;background:var(--bg-c);border:1px solid var(--bd);display:flex;align-items:center;justify-content:center;flex-shrink:0;color:var(--t2)}
+.adm-market-name{font-size:13px;font-weight:600;color:var(--t1);flex:1}
+.adm-market-meta{font-size:11px;color:var(--t3)}
 .adm-outlets-wrap{padding:6px 10px;display:flex;flex-direction:column;gap:4px}
-.adm-outlet-row{display:flex;align-items:center;gap:8px;padding:6px 10px;background:#1e293b;border:1px solid #334155;border-radius:7px}
-.adm-outlet-dot{width:7px;height:7px;border-radius:50%;background:#4ade80;flex-shrink:0}
-.adm-outlet-name{font-size:12px;font-weight:600;color:#cbd5e1;flex:1}
-.adm-outlet-id{font-size:10px;font-family:monospace;color:#475569}
-.adm-no-market{padding:8px 14px 10px;font-size:12px;color:#475569;font-style:italic}
+.adm-outlet-row{display:flex;align-items:center;gap:8px;padding:6px 10px;background:var(--bg-c);border:1px solid var(--bd);border-radius:7px;transition:.1s}
+.adm-outlet-row:hover{background:var(--acd)}
+.adm-outlet-dot{width:7px;height:7px;border-radius:50%;background:var(--gr);flex-shrink:0}
+.adm-outlet-name{font-size:12px;font-weight:600;color:var(--t2);flex:1}
+.adm-outlet-id{font-size:10px;font-family:'Fira Code','Fira Mono',monospace;color:var(--t3)}
+.adm-no-market{padding:8px 14px 10px;font-size:12px;color:var(--t3);font-style:italic}
+/* ── Responsive ── */
 @media(max-width:768px){
-  .sidebar{display:none}
+  .mob-menu-btn{display:flex}
+  .sidebar{position:fixed;left:calc(var(--sb) * -1);top:0;height:100vh;z-index:300;padding-top:calc(var(--tb) + 12px);box-shadow:4px 0 24px rgba(0,0,0,.5)}
+  .sidebar.open{left:0}
+  .mob-sb-overlay.open{display:block}
+  .topbar-user{display:none}
   .sg{grid-template-columns:1fr 1fr}
   .mg{grid-template-columns:1fr}
   .wiz-card-body .mg{grid-template-columns:1fr}
@@ -249,7 +274,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 <div id="login-screen">
   <div class="login-card">
     <div class="login-logo">
-      <div class="ico">🏢</div>
+      <div class="ico"><svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 22V4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v18Z"/><path d="M6 12H4a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h2"/><path d="M18 9h2a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2h-2"/><path d="M10 6h4"/><path d="M10 10h4"/><path d="M10 14h4"/><path d="M10 18h4"/></svg></div>
       <h1>Provider Admin</h1>
       <p>POS Management Platform</p>
     </div>
@@ -261,7 +286,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
       <label>Password</label>
       <div class="pw-wrap">
         <input id="lp" type="password" placeholder="Enter password" autocomplete="new-password" name="admin_password">
-        <button type="button" class="pw-eye" onclick="toggleAdminPw()" id="pw-eye-btn">👁</button>
+        <button type="button" class="pw-eye" onclick="toggleAdminPw()" id="pw-eye-btn"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg></button>
       </div>
     </div>
     <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px">
@@ -276,30 +301,32 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 <div id="app">
   <div class="topbar">
     <div class="topbar-left">
-      <div class="topbar-ico">🏢</div>
+      <div class="topbar-ico"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 22V4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v18Z"/><path d="M6 12H4a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h2"/><path d="M18 9h2a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2h-2"/><path d="M10 6h4"/><path d="M10 10h4"/></svg></div>
       <h1>POS</h1>
       <span>Provider Admin</span>
     </div>
     <div class="topbar-right">
       <div class="topbar-user">Signed in as <strong id="udisp"></strong></div>
       <button class="tbtn" onclick="logout()">Logout</button>
+      <button class="mob-menu-btn" onclick="toggleAdmSidebar()" aria-label="Menu"><svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" x2="21" y1="6" y2="6"/><line x1="3" x2="21" y1="12" y2="12"/><line x1="3" x2="21" y1="18" y2="18"/></svg></button>
     </div>
   </div>
 
   <div class="layout">
-    <aside class="sidebar">
+    <div class="mob-sb-overlay" id="adm-mob-overlay" onclick="closeAdmSidebar()"></div>
+    <aside class="sidebar" id="adm-sidebar">
       <div class="sec">Overview</div>
-      <div class="ni active" onclick="nav('dashboard')" id="nav-dashboard"><span class="ic">📊</span>Dashboard</div>
-      <div class="ni" onclick="nav('restaurants')" id="nav-restaurants"><span class="ic">🏪</span>Brands</div>
-      <div class="ni" onclick="nav('outlets')" id="nav-outlets"><span class="ic">🏬</span>Outlets</div>
-      <div class="ni" onclick="nav('structure')" id="nav-structure"><span class="ic">🌲</span>Structure</div>
+      <div class="ni active" onclick="nav('dashboard')" id="nav-dashboard"><span class="ic"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="7" height="9" x="3" y="3" rx="1"/><rect width="7" height="5" x="14" y="3" rx="1"/><rect width="7" height="9" x="14" y="12" rx="1"/><rect width="7" height="5" x="3" y="16" rx="1"/></svg></span>Dashboard</div>
+      <div class="ni" onclick="nav('restaurants')" id="nav-restaurants"><span class="ic"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 22V4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v18Z"/><path d="M6 12H4a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h2"/><path d="M18 9h2a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2h-2"/><path d="M10 6h4"/><path d="M10 10h4"/></svg></span>Brands</div>
+      <div class="ni" onclick="nav('outlets')" id="nav-outlets"><span class="ic"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m2 7 4.41-4.41A2 2 0 0 1 7.83 2h8.34a2 2 0 0 1 1.42.59L22 7"/><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><path d="M15 22v-4a2 2 0 0 0-2-2h-2a2 2 0 0 0-2 2v4"/><path d="M2 7h20"/></svg></span>Outlets</div>
+      <div class="ni" onclick="nav('structure')" id="nav-structure"><span class="ic"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="6" x2="6" y1="3" y2="15"/><circle cx="18" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M18 9a9 9 0 0 1-9 9"/></svg></span>Structure</div>
       <div class="sec">Global Config</div>
-      <div class="ni" onclick="nav('gpm')" id="nav-gpm"><span class="ic">💳</span>Payment Methods</div>
-      <div class="ni" onclick="nav('gdp')" id="nav-gdp"><span class="ic">🚗</span>Delivery Partners</div>
+      <div class="ni" onclick="nav('gpm')" id="nav-gpm"><span class="ic"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="14" x="2" y="5" rx="2"/><line x1="2" x2="22" y1="10" y2="10"/></svg></span>Payment Methods</div>
+      <div class="ni" onclick="nav('gdp')" id="nav-gdp"><span class="ic"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 17H3a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11a2 2 0 0 1 2 2v3"/><polyline points="9 17 20 17 23 11 16 11 16 17 9 17"/><circle cx="7.5" cy="17.5" r="2.5"/><circle cx="17.5" cy="17.5" r="2.5"/></svg></span>Delivery Partners</div>
       <div class="sec">Tools</div>
-      <div class="ni" onclick="nav('performance')" id="nav-performance"><span class="ic">📈</span>Performance</div>
-      <div class="ni" onclick="nav('install')" id="nav-install"><span class="ic">📋</span>Install Guide</div>
-      <div class="ni" onclick="nav('system')" id="nav-system"><span class="ic">⚙️</span>System</div>
+      <div class="ni" onclick="nav('performance')" id="nav-performance"><span class="ic"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg></span>Performance</div>
+      <div class="ni" onclick="nav('install')" id="nav-install"><span class="ic"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg></span>Install Guide</div>
+      <div class="ni" onclick="nav('system')" id="nav-system"><span class="ic"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg></span>System</div>
     </aside>
 
     <main class="main">
@@ -440,7 +467,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 
         <!-- Download files -->
         <div class="card">
-          <div class="ch"><h3>📥 Download Files</h3><button class="btn btn-o" onclick="loadInstallFiles()">↻ Refresh</button></div>
+          <div class="ch"><h3>Download Files</h3><button class="btn btn-o" onclick="loadInstallFiles()">↻ Refresh</button></div>
           <div class="cb">
             <div id="install-files" style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px">Loading…</div>
             <div style="font-size:12px;color:#64748b">These files are served from <code style="background:#0f172a;padding:2px 6px;border-radius:4px;font-family:monospace">/updates/</code> on this server.</div>
@@ -449,7 +476,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 
         <!-- Step-by-step -->
         <div class="card">
-          <div class="ch"><h3>📋 Step-by-Step Installation</h3></div>
+          <div class="ch"><h3>Step-by-Step Installation</h3></div>
           <div class="cb">
             <div class="step-box">
               <h4>Step 1 — Server PC Setup (Run once, on the main outlet computer)</h4>
@@ -491,7 +518,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
               </ol>
             </div>
             <div class="step-box" style="border-color:#854d0e">
-              <h4>⚠️ Important Notes</h4>
+              <h4>Important Notes</h4>
               <ol>
                 <li>The server PC must always be on when the outlet is operating — all terminals depend on it</li>
                 <li>Server PC should be connected via LAN cable (not WiFi) for reliability</li>
@@ -505,7 +532,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 
         <!-- Per-brand credential card -->
         <div class="card">
-          <div class="ch"><h3>🔑 Brand Credentials Lookup</h3></div>
+          <div class="ch"><h3>Brand Credentials Lookup</h3></div>
           <div class="cb">
             <div class="mf">
               <label>Select Brand</label>
@@ -546,14 +573,14 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
           </div>
         </div>
         <div class="card" style="border:1px solid #7f1d1d">
-          <div class="ch" style="background:#1c0a0a"><h3 style="color:#f87171">⚠️ Danger Zone</h3></div>
+          <div class="ch" style="background:#1c0a0a"><h3 style="color:#f87171">Danger Zone</h3></div>
           <div class="cb">
             <p style="font-size:13px;color:#94a3b8;margin-bottom:14px">
               Wipe <strong>all</strong> brands, outlets, markets, menu data, orders, staff and BO users from the system.
               Only superadmin accounts survive. This is <strong style="color:#f87171">irreversible</strong>.
             </p>
             <button class="btn" style="background:#7f1d1d;color:#fca5a5;border:1px solid #991b1b" onclick="wipeAllData()">
-              🗑 Wipe All Data
+              Wipe All Data
             </button>
           </div>
         </div>
@@ -623,7 +650,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
         <div style="font-size:11px;color:#64748b;margin-top:8px">Login URL: <span style="font-family:monospace;color:#818cf8">http://&lt;server-ip&gt;:3001/backoffice/</span></div>
       </div>
       <div style="background:#1c1806;border:1px solid #854d0e;border-radius:8px;padding:10px 12px;font-size:12px;color:#fcd34d">
-        ⚠️ Keep these credentials confidential. Share only with the brand owner.
+        Keep these credentials confidential. Share only with the brand owner.
       </div>
     </div>
     <div id="dtab-edit-body" style="display:none">
@@ -657,10 +684,10 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
     </div>
     <div class="ma">
       <button class="btn btn-o" onclick="closeModal('mo-detail')">Close</button>
-      <button class="btn btn-y" onclick="regenKey(_detailId)" id="md-regen">🔑 Regen Key</button>
-      <button class="btn btn-r" onclick="toggleActive(_detailId, _detailActive)" id="md-toggle">⛔ Deactivate</button>
+      <button class="btn btn-y" onclick="regenKey(_detailId)" id="md-regen">Regen Key</button>
+      <button class="btn btn-r" onclick="toggleActive(_detailId, _detailActive)" id="md-toggle">Deactivate</button>
       <button class="btn btn-p" onclick="saveDetail()" id="md-save">Save Changes</button>
-      <button class="btn" style="background:#7f1d1d;color:#fca5a5;border:1px solid #991b1b" onclick="deleteRestaurant(_detailId)">🗑 Delete</button>
+      <button class="btn" style="background:#7f1d1d;color:#fca5a5;border:1px solid #991b1b" onclick="deleteRestaurant(_detailId)">Delete Brand</button>
     </div>
   </div>
 </div>
@@ -672,7 +699,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
     <!-- ── Left Sidebar ── -->
     <div class="wiz-sb">
       <div class="wiz-sb-top">
-        <div class="wiz-sb-ico">🍽️</div>
+        <div class="wiz-sb-ico" style="color:#fff"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 0 0 2-2V2"/><path d="M7 2v20"/><path d="M21 15V2v0a5 5 0 0 0-5 5v6c0 1.1.9 2 2 2h3Zm0 0v7"/></svg></div>
         <div class="wiz-sb-ttl">Setup Progress</div>
         <div class="wiz-sb-sub" id="wiz-step-label">Step 1 of 4</div>
         <div class="wiz-pbar"><div class="wiz-pfill" id="wiz-pfill" style="width:25%"></div></div>
@@ -695,7 +722,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
           <div><div class="wiz-si-name">Setup Completion</div><div class="wiz-si-desc">Create &amp; launch</div></div>
         </div>
       </div>
-      <div class="wiz-sb-foot">🔒 Your data is 100% secure</div>
+      <div class="wiz-sb-foot">Encrypted &amp; secure</div>
     </div>
 
     <!-- ── Right Main ── -->
@@ -719,7 +746,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
         <!-- ── Step 1: Brand Details ── -->
         <div class="wiz-panel active" id="wp-1">
           <div class="wiz-card">
-            <div class="wiz-card-hdr"><span>🏷️</span><span>Brand Details</span></div>
+            <div class="wiz-card-hdr"><span style="color:#6366f1;display:flex"><svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2H2v10l9.29 9.29c.94.94 2.48.94 3.42 0l6.58-6.58c.94-.94.94-2.48 0-3.42L12 2Z"/><path d="M7 7h.01"/></svg></span><span>Brand Details</span></div>
             <div class="wiz-card-body">
               <div class="mg">
                 <div>
@@ -757,7 +784,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
             </div>
           </div>
           <div class="wiz-card">
-            <div class="wiz-card-hdr"><span>⚙️</span><span>License Configuration</span></div>
+            <div class="wiz-card-hdr"><span style="color:#6366f1;display:flex"><svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg></span><span>License Configuration</span></div>
             <div class="wiz-card-body">
               <div class="mg">
                 <div>
@@ -778,7 +805,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
         <!-- ── Step 2: Owner Details ── -->
         <div class="wiz-panel" id="wp-2">
           <div class="wiz-card">
-            <div class="wiz-card-hdr"><span>👤</span><span>Owner Information</span></div>
+            <div class="wiz-card-hdr"><span style="color:#6366f1;display:flex"><svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="5"/><path d="M20 21a8 8 0 1 0-16 0"/></svg></span><span>Owner Information</span></div>
             <div class="wiz-card-body">
               <div class="mg">
                 <div>
@@ -810,7 +837,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
         <!-- ── Step 3: Outlet Details ── -->
         <div class="wiz-panel" id="wp-3">
           <div class="wiz-card">
-            <div class="wiz-card-hdr"><span>🏪</span><span>Outlet Information</span></div>
+            <div class="wiz-card-hdr"><span style="color:#6366f1;display:flex"><svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m2 7 4.41-4.41A2 2 0 0 1 7.83 2h8.34a2 2 0 0 1 1.42.59L22 7"/><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><path d="M15 22v-4a2 2 0 0 0-2-2h-2a2 2 0 0 0-2 2v4"/><path d="M2 7h20"/></svg></span><span>Outlet Information</span></div>
             <div class="wiz-card-body">
               <div class="mg">
                 <div>
@@ -847,29 +874,29 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
             </div>
           </div>
           <div class="wiz-card">
-            <div class="wiz-card-hdr"><span>🛵</span><span>Order Types &amp; Delivery</span></div>
+            <div class="wiz-card-hdr"><span style="color:#6366f1;display:flex"><svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 17H3a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11a2 2 0 0 1 2 2v3"/><polyline points="9 17 20 17 23 11 16 11 16 17 9 17"/><circle cx="7.5" cy="17.5" r="2.5"/><circle cx="17.5" cy="17.5" r="2.5"/></svg></span><span>Order Types &amp; Delivery</span></div>
             <div class="wiz-card-body">
               <label>Order Types</label>
               <div class="tog-group" id="tg-ordertypes">
-                <div class="tog-btn" data-val="Dine-In" onclick="togglePill(this,'tg-ordertypes')">🍽️ Dine-In</div>
-                <div class="tog-btn" data-val="Takeaway" onclick="togglePill(this,'tg-ordertypes')">🛍️ Takeaway</div>
-                <div class="tog-btn" data-val="Delivery" onclick="togglePill(this,'tg-ordertypes')">🛵 Delivery</div>
-                <div class="tog-btn" data-val="Drive-Through" onclick="togglePill(this,'tg-ordertypes')">🚗 Drive-Through</div>
+                <div class="tog-btn" data-val="Dine-In" onclick="togglePill(this,'tg-ordertypes')">Dine-In</div>
+                <div class="tog-btn" data-val="Takeaway" onclick="togglePill(this,'tg-ordertypes')">Takeaway</div>
+                <div class="tog-btn" data-val="Delivery" onclick="togglePill(this,'tg-ordertypes')">Delivery</div>
+                <div class="tog-btn" data-val="Drive-Through" onclick="togglePill(this,'tg-ordertypes')">Drive-Through</div>
               </div>
               <label style="margin-top:4px">Delivery Aggregators</label>
               <div class="tog-group" id="tg-aggregators">
-                <div class="tog-btn" data-val="Talabat" onclick="togglePill(this,'tg-aggregators')">🔴 Talabat</div>
-                <div class="tog-btn" data-val="Careem" onclick="togglePill(this,'tg-aggregators')">🟢 Careem</div>
-                <div class="tog-btn" data-val="Deliveroo" onclick="togglePill(this,'tg-aggregators')">🩵 Deliveroo</div>
-                <div class="tog-btn" data-val="Noon Food" onclick="togglePill(this,'tg-aggregators')">🟡 Noon Food</div>
-                <div class="tog-btn" data-val="Snoonu" onclick="togglePill(this,'tg-aggregators')">🟣 Snoonu</div>
-                <div class="tog-btn" data-val="HungerStation" onclick="togglePill(this,'tg-aggregators')">🟠 HungerStation</div>
-                <div class="tog-btn" data-val="Own Delivery" onclick="togglePill(this,'tg-aggregators')">🚴 Own Delivery</div>
+                <div class="tog-btn" data-val="Talabat" onclick="togglePill(this,'tg-aggregators')">Talabat</div>
+                <div class="tog-btn" data-val="Careem" onclick="togglePill(this,'tg-aggregators')">Careem</div>
+                <div class="tog-btn" data-val="Deliveroo" onclick="togglePill(this,'tg-aggregators')">Deliveroo</div>
+                <div class="tog-btn" data-val="Noon Food" onclick="togglePill(this,'tg-aggregators')">Noon Food</div>
+                <div class="tog-btn" data-val="Snoonu" onclick="togglePill(this,'tg-aggregators')">Snoonu</div>
+                <div class="tog-btn" data-val="HungerStation" onclick="togglePill(this,'tg-aggregators')">HungerStation</div>
+                <div class="tog-btn" data-val="Own Delivery" onclick="togglePill(this,'tg-aggregators')">Own Delivery</div>
               </div>
             </div>
           </div>
           <div class="wiz-card">
-            <div class="wiz-card-hdr"><span>🪑</span><span>Table Setup</span></div>
+            <div class="wiz-card-hdr"><span style="color:#6366f1;display:flex"><svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7h18"/><path d="M3 12h18"/><path d="M5 7V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v2"/><path d="M5 17H4a1 1 0 0 1-1-1v-1a1 1 0 0 1 1-1h16a1 1 0 0 1 1 1v1a1 1 0 0 1-1 1h-1"/><path d="M7 17v3"/><path d="M17 17v3"/></svg></span><span>Table Setup</span></div>
             <div class="wiz-card-body">
               <div class="mg">
                 <div>
@@ -886,10 +913,10 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
         <div class="wiz-panel" id="wp-4">
           <div id="wiz-running" style="display:none">
             <div class="wiz-card">
-              <div class="wiz-card-hdr"><span>⚙️</span><span>Creating Brand</span></div>
+              <div class="wiz-card-hdr"><span style="color:#6366f1;display:flex"><svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 22V4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v18Z"/><path d="M6 12H4a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h2"/><path d="M18 9h2a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2h-2"/><path d="M10 6h4"/><path d="M10 10h4"/></svg></span><span>Creating Brand</span></div>
               <div class="wiz-card-body">
                 <div style="text-align:center;padding:8px 0 12px">
-                  <div style="font-size:36px;margin-bottom:8px">🏗️</div>
+                  <div style="margin-bottom:8px;display:flex;justify-content:center;color:#6366f1"><svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 22V4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v18Z"/><path d="M6 12H4a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h2"/><path d="M18 9h2a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2h-2"/><path d="M10 6h4"/><path d="M10 10h4"/><path d="M10 14h4"/></svg></div>
                   <div style="font-weight:700;color:#111827;margin-bottom:4px">Setting up your brand…</div>
                   <div style="font-size:13px;color:#6b7280">This takes just a few seconds</div>
                 </div>
@@ -900,7 +927,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
           <div id="wiz-done" style="display:none">
             <div class="wiz-card" style="border-color:#86efac">
               <div class="wiz-card-hdr" style="background:#f0fdf4;border-bottom-color:#dcfce7">
-                <span>✅</span><span style="color:#15803d">Brand Created Successfully!</span>
+                <span style="color:#16a34a;display:flex"><svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg></span><span style="color:#15803d">Brand Created Successfully!</span>
               </div>
               <div class="wiz-card-body">
                 <div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:10px;padding:14px;margin-bottom:14px">
@@ -927,7 +954,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
                   </div>
                 </div>
                 <div style="background:#fef9c3;border:1px solid #fde047;border-radius:8px;padding:9px 12px;font-size:12px;color:#713f12">
-                  ⚠️ Copy the credentials now — the password is shown only this once.
+                  Copy the credentials now — the password is shown only this once.
                 </div>
               </div>
             </div>
@@ -935,7 +962,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
           <div id="wiz-fail" style="display:none">
             <div class="wiz-card" style="border-color:#fca5a5">
               <div class="wiz-card-hdr" style="background:#fef2f2;border-bottom-color:#fecaca">
-                <span>❌</span><span style="color:#dc2626">Registration Failed</span>
+                <span style="color:#dc2626;display:flex"><svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="15" x2="9" y1="9" y2="15"/><line x1="9" x2="15" y1="9" y2="15"/></svg></span><span style="color:#dc2626">Registration Failed</span>
               </div>
               <div class="wiz-card-body">
                 <div id="wiz-fail-msg" style="font-size:13px;color:#991b1b"></div>
@@ -980,8 +1007,19 @@ let _detailActive = true
 function toggleAdminPw () {
   const inp = document.getElementById('lp')
   const btn = document.getElementById('pw-eye-btn')
-  if (inp.type === 'password') { inp.type = 'text'; btn.textContent = '🙈' }
-  else { inp.type = 'password'; btn.textContent = '👁' }
+  const eyeOpen = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>`
+  const eyeOff  = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9.88 9.88a3 3 0 1 0 4.24 4.24"/><path d="M10.73 5.08A10.43 10.43 0 0 1 12 5c7 0 10 7 10 7a13.16 13.16 0 0 1-1.67 2.68"/><path d="M6.61 6.61A13.526 13.526 0 0 0 2 12s3 7 10 7a9.74 9.74 0 0 0 5.39-1.61"/><line x1="2" x2="22" y1="2" y2="22"/></svg>`
+  if (inp.type === 'password') { inp.type = 'text'; btn.innerHTML = eyeOff }
+  else { inp.type = 'password'; btn.innerHTML = eyeOpen }
+}
+
+function toggleAdmSidebar () {
+  document.getElementById('adm-sidebar').classList.toggle('open')
+  document.getElementById('adm-mob-overlay').classList.toggle('open')
+}
+function closeAdmSidebar () {
+  document.getElementById('adm-sidebar').classList.remove('open')
+  document.getElementById('adm-mob-overlay').classList.remove('open')
 }
 
 async function doLogin () {
@@ -1043,6 +1081,7 @@ function nav (id) {
   document.querySelectorAll('.ni').forEach(n => n.classList.remove('active'))
   document.getElementById('v-'+id).classList.add('active')
   document.getElementById('nav-'+id).classList.add('active')
+  closeAdmSidebar()
   if (id==='dashboard')   loadDashboard()
   if (id==='restaurants') loadRestaurants()
   if (id==='outlets')     loadOutlets()
@@ -1083,8 +1122,8 @@ async function loadDashboard () {
     let al = ''
     const ex3 = restaurants.filter(r=>r.status==='trial'&&daysLeft(r)!==null&&daysLeft(r)<=3&&daysLeft(r)>=0)
     const exd  = restaurants.filter(r=>r.status==='expired')
-    if(ex3.length) al+=`<div class="al al-warn">⚠️ <div><b>${ex3.length} trial(s) expiring ≤3 days:</b> ${ex3.map(r=>esc(r.name)+' ('+daysLeft(r)+'d)').join(', ')}</div></div>`
-    if(exd.length) al+=`<div class="al al-err">🔴 <b>${exd.length} expired:</b> ${exd.map(r=>esc(r.name)).join(', ')}</div>`
+    if(ex3.length) al+=`<div class="al al-warn"><b>!</b> <div><b>${ex3.length} trial(s) expiring ≤3 days:</b> ${ex3.map(r=>esc(r.name)+' ('+daysLeft(r)+'d)').join(', ')}</div></div>`
+    if(exd.length) al+=`<div class="al al-err"><b>!</b> <b>${exd.length} expired:</b> ${exd.map(r=>esc(r.name)).join(', ')}</div>`
     document.getElementById('dash-alerts').innerHTML = al
 
     const recent = restaurants.filter(r=>new Date(r.created_at).getTime()>d7).sort((a,b)=>new Date(b.created_at)-new Date(a.created_at))
@@ -1174,10 +1213,10 @@ function renderOutlets () {
       <td style="color:#94a3b8;font-size:12px">${esc(r.brand_name||'—')}</td>
       <td style="color:#94a3b8;font-size:12px">${esc(r.market_name||'—')}</td>
       <td style="color:#94a3b8;font-size:12px">${esc(r.country||'—')}</td>
-      <td style="${dateColor};font-size:12px">${expDate ? (isExpired ? '⚠️ Expired ' : '✅ ') + expDate : '—'}</td>
+      <td style="${dateColor};font-size:12px">${expDate ? (isExpired ? '⚠ Expired ' : '✓ ') + expDate : '—'}</td>
       <td style="display:flex;gap:6px">
-        <button class="bsm b" onclick="setOutletLicense('${esc(r.id)}','${esc(r.name)}','${expDate}')">📅 License</button>
-        <button class="bsm" style="background:#065f46;color:#4ade80" onclick="seedOutlet('${esc(r.id)}','${esc(r.name)}')">🌱 Seed Data</button>
+        <button class="bsm b" onclick="setOutletLicense('${esc(r.id)}','${esc(r.name)}','${expDate}')">License</button>
+        <button class="bsm" style="background:#065f46;color:#4ade80" onclick="seedOutlet('${esc(r.id)}','${esc(r.name)}')">Seed</button>
       </td>
     </tr>`
   }).join('')
@@ -1260,12 +1299,12 @@ function renderStructure () {
               <div class="adm-outlet-dot"></div>
               <div class="adm-outlet-name">${esc(o.name)}</div>
               <div class="adm-outlet-id">${esc(o.id)}</div>
-              <button class="bsm b" style="font-size:10px" onclick="setOutletLicense('${esc(o.id)}','${esc(o.name)}','${o.license_end_date?o.license_end_date.split('T')[0]:''}')">📅</button>
+              <button class="bsm b" style="font-size:10px;display:inline-flex;align-items:center;gap:3px" onclick="setOutletLicense('${esc(o.id)}','${esc(o.name)}','${o.license_end_date?o.license_end_date.split('T')[0]:''}')"><svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/></svg>License</button>
             </div>`).join('')}</div>`
         : `<div style="padding:6px 12px 10px;font-size:11px;color:#475569;font-style:italic">No outlets</div>`
       return `<div class="adm-market">
         <div class="adm-market-hdr">
-          <div class="adm-market-ico">🏬</div>
+          <div class="adm-market-ico"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m2 7 4.41-4.41A2 2 0 0 1 7.83 2h8.34a2 2 0 0 1 1.42.59L22 7"/><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><path d="M15 22v-4a2 2 0 0 0-2-2h-2a2 2 0 0 0-2 2v4"/><path d="M2 7h20"/></svg></div>
           <div class="adm-market-name">${esc(mkt.name)}</div>
           <div class="adm-market-meta">${outlets.length} outlet${outlets.length!==1?'s':''} · ${esc(mkt.country||'—')}</div>
         </div>
@@ -1275,7 +1314,7 @@ function renderStructure () {
 
     return `<div class="adm-brand-card">
       <div class="adm-brand-hdr" onclick="openDetail('${brand.id}')">
-        <div class="adm-brand-ico">🏪</div>
+        <div class="adm-brand-ico"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 22V4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v18Z"/><path d="M6 12H4a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h2"/><path d="M18 9h2a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2h-2"/><path d="M10 6h4"/><path d="M10 10h4"/></svg></div>
         <div>
           <div class="adm-brand-name">${esc(brand.name)}</div>
           <div class="adm-brand-meta">${esc(brand.country||'—')} · ${badge(brand)}</div>
@@ -1487,12 +1526,12 @@ function renderTable () {
       <td style="font-size:11px;font-family:monospace;color:#64748b">${esc(r.bo_username||'—')}</td>
       <td onclick="event.stopPropagation()">
         <div style="display:flex;gap:3px;flex-wrap:wrap">
-          <button class="bsm b" onclick="openDetail('${r.id}')" title="Details">🔍</button>
-          <button class="bsm y" onclick="showExtend('${r.id}','${esc(r.name)}')" title="Extend Trial">📅</button>
-          <button class="bsm" onclick="regenKey('${r.id}')" title="Regen Key">🔑</button>
-          <button class="bsm" onclick="viewTerminals('${r.id}','${esc(r.name)}')" title="Terminals">🖥</button>
-          <button class="bsm ${r.active?'r':'g'}" onclick="toggleActive('${r.id}',${r.active})" title="${r.active?'Deactivate':'Activate'}">${r.active?'⛔':'✅'}</button>
-          <button class="bsm r" onclick="deleteRestaurant('${r.id}')" title="Delete Restaurant">🗑</button>
+          <button class="bsm b" onclick="openDetail('${r.id}')" title="Details">View</button>
+          <button class="bsm y" onclick="showExtend('${r.id}','${esc(r.name)}')" title="Extend Trial">Extend</button>
+          <button class="bsm" onclick="regenKey('${r.id}')" title="Regen Key">Regen</button>
+          <button class="bsm" onclick="viewTerminals('${r.id}','${esc(r.name)}')" title="Terminals">POS</button>
+          <button class="bsm ${r.active?'r':'g'}" onclick="toggleActive('${r.id}',${r.active})" title="${r.active?'Deactivate':'Activate'}">${r.active?'Suspend':'Activate'}</button>
+          <button class="bsm r" onclick="deleteRestaurant('${r.id}')" title="Delete Restaurant">Del</button>
         </div>
       </td>
     </tr>`
@@ -1548,7 +1587,7 @@ function openDetail (id) {
   document.getElementById('de-error').textContent = ''
 
   // Toggle button label
-  document.getElementById('md-toggle').textContent = r.active ? '⛔ Deactivate' : '✅ Activate'
+  document.getElementById('md-toggle').textContent = r.active ? 'Deactivate' : 'Activate'
   document.getElementById('md-toggle').className   = 'btn ' + (r.active ? 'btn-r' : 'btn-g')
 
   dtab('info')
@@ -1754,7 +1793,7 @@ function wizGoto (step) {
   } else {
     backBtn.style.display = step > 1 ? '' : 'none'
     nextBtn.style.display = ''
-    nextBtn.textContent   = step === 3 ? '🚀 Create Brand' : 'Next Step →'
+    nextBtn.textContent   = step === 3 ? 'Create Brand' : 'Next Step →'
     cancelBtn.textContent = 'Cancel'
   }
 }
