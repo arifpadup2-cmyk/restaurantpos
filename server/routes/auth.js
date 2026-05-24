@@ -38,6 +38,15 @@ function isRateLimited (ip, scope, maxReqs, windowMs) {
   return entry.count > maxReqs
 }
 
+async function writeLoginAudit (sql, userType, userId, username, brandId, success, ip, ua) {
+  try {
+    await sql`
+      INSERT INTO login_audit_log (id, user_type, user_id, username, brand_id, success, ip, user_agent, created_at)
+      VALUES (${randomUUID().replace(/-/g,'').slice(0,20)}, ${userType}, ${userId||null}, ${username||null},
+              ${brandId||null}, ${success}, ${(ip||'').slice(0,64)}, ${(ua||'').slice(0,200)}, ${Date.now()})`
+  } catch (_) {}
+}
+
 module.exports = function authRouter (sql) {
   const router = express.Router()
 
@@ -87,10 +96,20 @@ module.exports = function authRouter (sql) {
       const user = rows[0]
       if (user.active === false)
         return res.status(401).json({ error: 'Account disabled. Contact your administrator.' })
+      if (user.locked_until && user.locked_until > Date.now())
+        return res.status(423).json({ error: 'Account temporarily locked due to too many failed attempts. Try again later.' })
 
       const ok = await bcrypt.compare(password, user.password)
-      if (!ok)
+      if (!ok) {
+        try {
+          await sql`UPDATE bo_users SET
+            failed_attempts = failed_attempts + 1,
+            locked_until = CASE WHEN failed_attempts + 1 >= 5 THEN ${Date.now() + 15 * 60 * 1000} ELSE locked_until END
+            WHERE id = ${user.id}`
+        } catch (_) {}
+        await writeLoginAudit(sql, 'bo_user', user.id, user.username, user.brand_id || null, false, ip, req.headers['user-agent'])
         return res.status(401).json({ error: 'Invalid username or password' })
+      }
 
       // Block unverified brand owners. Admin and non-brand-scoped users bypass.
       if (user.brand_id) {
@@ -106,8 +125,9 @@ module.exports = function authRouter (sql) {
       const app_access  = user.app_access  || {}
       const token = sign({ id: user.id, username: user.username, role: user.role, brand_id: user.brand_id || null, outlet_ids, permissions, app_access })
       const refresh = await issueRefreshToken(sql, user, req)
-      // Track login
-      try { await sql`UPDATE bo_users SET last_login_at = ${Date.now()}, login_count = login_count + 1 WHERE id = ${user.id}` } catch (_) {}
+      // Reset failed attempts, track login
+      try { await sql`UPDATE bo_users SET failed_attempts = 0, locked_until = NULL, last_login_at = ${Date.now()}, login_count = login_count + 1 WHERE id = ${user.id}` } catch (_) {}
+      await writeLoginAudit(sql, 'bo_user', user.id, user.username, user.brand_id || null, true, ip, req.headers['user-agent'])
       let owner_name = null
       if (user.brand_id) {
         try {
@@ -227,6 +247,7 @@ module.exports = function authRouter (sql) {
       const app_access2  = user.app_access  || {}
       const token = sign({ id: user.id, username: user.username, role: user.role, brand_id: user.brand_id || null, outlet_ids: outlet_ids2, permissions: permissions2, app_access: app_access2 })
       try { await sql`UPDATE bo_users SET last_login_at = ${Date.now()}, login_count = login_count + 1 WHERE id = ${user.id}` } catch (_) {}
+      await writeLoginAudit(sql, 'bo_user', user.id, user.username, user.brand_id || null, true, ip, req.headers['user-agent'])
       let owner_name = null
       if (user.brand_id) {
         try {

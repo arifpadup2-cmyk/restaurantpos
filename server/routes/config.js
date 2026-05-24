@@ -818,7 +818,8 @@ module.exports = function configRouter (sql) {
       const access = { pos: false, captain_app: false, kds: false, backoffice: true, owner_app: false, ...(app_access || {}) }
       const oIds   = Array.isArray(outlet_ids) && outlet_ids.length ? outlet_ids : null
       const desId  = designation_id || null
-      const pin    = pos_pin ? String(pos_pin).replace(/\D/g,'').slice(0,8) || null : null
+      const pinRaw = pos_pin ? String(pos_pin).replace(/\D/g,'').slice(0,8) || null : null
+      const pin    = pinRaw ? await (require('bcryptjs')).hash(pinRaw, 8) : null
       const [row]  = await sql`
         INSERT INTO bo_users (id, brand_id, name, username, password, email, role, outlet_ids, permissions, app_access, designation_id, pos_pin, created_by)
         VALUES (${id}, ${rid}, ${name || null}, ${username.toLowerCase()}, ${hash},
@@ -840,9 +841,13 @@ module.exports = function configRouter (sql) {
       if (target.is_protected && req.user.id !== req.params.id)
         return res.status(403).json({ error: 'Owner account cannot be modified by other users' })
       const hash  = password && password.length >= 8 ? await (require('bcryptjs')).hash(password, 10) : null
+      if (hash) {
+        try { await sql`UPDATE refresh_tokens SET revoked_at = now() WHERE user_id = ${req.params.id} AND revoked_at IS NULL` } catch (_) {}
+      }
       const oIds  = Array.isArray(outlet_ids) ? (outlet_ids.length ? outlet_ids : null) : undefined
       const desId = designation_id !== undefined ? (designation_id || null) : undefined
-      const pin   = pos_pin !== undefined ? (pos_pin ? String(pos_pin).replace(/\D/g,'').slice(0,8) || null : null) : undefined
+      const pinRaw = pos_pin !== undefined ? (pos_pin ? String(pos_pin).replace(/\D/g,'').slice(0,8) || null : null) : undefined
+      const pin   = pinRaw !== undefined ? (pinRaw ? await (require('bcryptjs')).hash(pinRaw, 8) : null) : undefined
       // Prevent manage_users escalation by non-owners
       if (permissions !== undefined && req.user.role !== 'owner') permissions.manage_users = false
       const [row] = await sql`

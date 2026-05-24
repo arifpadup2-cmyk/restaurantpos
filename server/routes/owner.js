@@ -2,8 +2,18 @@
 
 const express  = require('express')
 const bcrypt   = require('bcryptjs')
+const { randomUUID } = require('crypto')
 const { sign, jwtAuth } = require('../middleware/jwtAuth')
 const { serverError }   = require('../middleware/serverError')
+
+async function _writeLoginAudit (sql, userType, userId, username, brandId, success, ip, ua) {
+  try {
+    await sql`
+      INSERT INTO login_audit_log (id, user_type, user_id, username, brand_id, success, ip, user_agent, created_at)
+      VALUES (${randomUUID().replace(/-/g,'').slice(0,20)}, ${userType}, ${userId||null}, ${username||null},
+              ${brandId||null}, ${success}, ${(ip||'').slice(0,64)}, ${(ua||'').slice(0,200)}, ${Date.now()})`
+  } catch (_) {}
+}
 
 // Simple in-memory rate limiter for owner login
 const _ownerRateBuckets = new Map()
@@ -49,9 +59,25 @@ module.exports = function ownerRouter (sql) {
         SELECT * FROM owners WHERE LOWER(username) = ${username.toLowerCase()}`
       if (!owner) return res.status(401).json({ error: 'Invalid username or password' })
       if (!owner.active) return res.status(401).json({ error: 'Account disabled' })
+      if (owner.locked_until && owner.locked_until > Date.now())
+        return res.status(423).json({ error: 'Account temporarily locked due to too many failed attempts. Try again later.' })
 
       const ok = await bcrypt.compare(password, owner.password)
-      if (!ok) return res.status(401).json({ error: 'Invalid username or password' })
+      if (!ok) {
+        try {
+          await sql`UPDATE owners SET
+            failed_attempts = failed_attempts + 1,
+            locked_until = CASE WHEN failed_attempts + 1 >= 5 THEN ${Date.now() + 15 * 60 * 1000} ELSE locked_until END
+            WHERE id = ${owner.id}`
+        } catch (_) {}
+        await _writeLoginAudit(sql, 'owner', owner.id, owner.username, null, false, req.ip, req.headers['user-agent'])
+        return res.status(401).json({ error: 'Invalid username or password' })
+      }
+      try {
+        await sql`UPDATE owners SET failed_attempts = 0, locked_until = NULL,
+          last_login_at = ${Date.now()}, login_count = login_count + 1 WHERE id = ${owner.id}`
+      } catch (_) {}
+      await _writeLoginAudit(sql, 'owner', owner.id, owner.username, null, true, req.ip, req.headers['user-agent'])
 
       const brands = await sql`
         SELECT ob.brand_id, b.name, b.business_type, b.country
@@ -225,8 +251,9 @@ module.exports = function ownerRouter (sql) {
       if (!brand) return res.status(404).json({ error: 'Brand not found' })
 
       // Issue a brand-scoped token valid for 2h (enough to review reports)
+      const switchAccess = { pos: true, captain_app: true, kds: true, backoffice: true, owner_app: true }
       const token = sign(
-        { id: req.user.owner_id, owner_id: req.user.owner_id, username: req.user.username, role: 'owner', brand_id, switched_from_owner: true },
+        { id: req.user.owner_id, owner_id: req.user.owner_id, username: req.user.username, role: 'owner', brand_id, switched_from_owner: true, app_access: switchAccess },
         { expiresIn: '2h' }
       )
       res.json({ ok: true, token, brand_id, brand_name: brand.name })
@@ -255,12 +282,11 @@ module.exports = function ownerRouter (sql) {
       return res.status(403).json({ error: 'Brand not in your portfolio' })
     const { name, username, password, email, outlet_ids, permissions, app_access, designation_id } = req.body || {}
     if (!username || !password) return res.status(400).json({ error: 'username and password required' })
-    if (password.length < 6) return res.status(400).json({ error: 'Password must be at least 6 characters' })
+    if (password.length < 8) return res.status(400).json({ error: 'Password must be at least 8 characters' })
     if (!/^[a-z0-9_]+$/i.test(username)) return res.status(400).json({ error: 'username: letters, numbers and _ only' })
     try {
       const existing = await sql`SELECT id FROM bo_users WHERE LOWER(username) = ${username.toLowerCase()}`
       if (existing.length) return res.status(409).json({ error: 'Username already taken' })
-      const { randomUUID } = require('crypto')
       const id   = randomUUID().replace(/-/g, '').slice(0, 20)
       const hash = await bcrypt.hash(password, 10)
       const oIds = Array.isArray(outlet_ids) && outlet_ids.length ? outlet_ids : null
@@ -293,6 +319,9 @@ module.exports = function ownerRouter (sql) {
       if (target.is_protected)
         return res.status(403).json({ error: 'Owner account cannot be modified' })
       const hash  = password && password.length >= 8 ? await bcrypt.hash(password, 10) : null
+      if (hash) {
+        try { await sql`UPDATE refresh_tokens SET revoked_at = now() WHERE user_id = ${user_id} AND revoked_at IS NULL` } catch (_) {}
+      }
       const oIds  = Array.isArray(outlet_ids) ? (outlet_ids.length ? outlet_ids : null) : undefined
       const desId = designation_id !== undefined ? (designation_id || null) : undefined
       const [row] = await sql`
