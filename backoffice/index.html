@@ -183,6 +183,8 @@ button,.nav-item,.filter-chip,.btn,[role="button"]{touch-action:manipulation}
 .kpi-icon-purple{background:#fdf4ff;color:#9333ea}
 .kpi-label{font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.4px}
 .kpi-value{font-size:20px;font-weight:800;line-height:1;color:var(--text);font-variant-numeric:tabular-nums;font-family:'Fira Code','Inter',monospace}
+.kpi-blue{color:var(--info)}.kpi-orange{color:var(--primary)}.kpi-red{color:var(--danger)}.kpi-green{color:#16a34a}
+.sales-chart-label{font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px}
 .kpi-sub{font-size:11px;color:var(--muted)}
 /* ─── SKELETON ───────────────────────────────────── */
 @keyframes shimmer{0%{background-position:-400px 0}100%{background-position:400px 0}}
@@ -521,6 +523,11 @@ input:checked+.toggle-slider:before{transform:translateX(17px)}
   .rpt-preset-bar{overflow-x:auto !important;flex-wrap:nowrap !important;padding-bottom:4px;scrollbar-width:none}
   .rpt-preset-bar::-webkit-scrollbar{display:none}
   .rpt-preset-btn{flex-shrink:0 !important}
+  #rpt-preset-wrap{position:relative}
+  #rpt-preset-wrap::after{content:'';position:absolute;right:0;top:0;bottom:4px;width:32px;background:linear-gradient(to right,transparent,#fff);pointer-events:none;z-index:1}
+  #rep-table th:nth-child(6),#rep-table td:nth-child(6),#rep-table th:nth-child(7),#rep-table td:nth-child(7),#rep-table th:nth-child(8),#rep-table td:nth-child(8){display:none}
+  #rpt-export-desktop{display:none !important}
+  .rpt-export-mobile{display:block !important}
   /* Dash content: single col */
   .dash-row-2,.dash-row-3{grid-template-columns:1fr}
   /* Forms */
@@ -1497,8 +1504,8 @@ input:checked+.toggle-slider:before{transform:translateX(17px)}
     <!-- ─── SALES PANE ─── -->
     <div id="rpt-pane-sales">
     <div class="card">
-      <div class="card-header"><h3>Sales Report</h3></div>
       <div class="card-body">
+        <div id="rpt-preset-wrap">
         <div class="rpt-preset-bar" id="rpt-preset-bar">
           <button class="rpt-preset-btn active" onclick="setRptPreset('today',this)">Today</button>
           <button class="rpt-preset-btn" onclick="setRptPreset('yesterday',this)">Yesterday</button>
@@ -1507,6 +1514,7 @@ input:checked+.toggle-slider:before{transform:translateX(17px)}
           <button class="rpt-preset-btn" onclick="setRptPreset('this-month',this)">This Month</button>
           <button class="rpt-preset-btn" onclick="setRptPreset('last-month',this)">Last Month</button>
           <button class="rpt-preset-btn" id="rpt-custom-btn" onclick="setRptPreset('custom',this)">Custom Range</button>
+        </div>
         </div>
         <div id="rpt-custom-range" style="display:none;gap:8px;align-items:flex-end;flex-wrap:wrap;margin-bottom:10px">
           <div class="form-group" style="margin:0"><label>From</label><input type="date" id="rep-from"></div>
@@ -1531,16 +1539,30 @@ input:checked+.toggle-slider:before{transform:translateX(17px)}
               <option value="">All Outlets</option>
             </select>
           </div>
-          <button class="btn btn-primary" onclick="loadReport()" style="align-self:flex-end"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="5 3 19 12 5 21 5 3"/></svg> Generate</button>
-          <button class="btn btn-outline" onclick="exportCSV()" style="align-self:flex-end"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> Export CSV</button>
+          <button class="btn btn-primary" id="rpt-generate-btn" onclick="loadReport()" style="align-self:flex-end"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="5 3 19 12 5 21 5 3"/></svg> Generate</button>
+          <button class="btn btn-outline" id="rpt-export-desktop" onclick="exportCSV()" style="align-self:flex-end"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> Export CSV</button>
+        </div>
+        <div id="report-placeholder" style="text-align:center;padding:48px 20px">
+          <div style="width:48px;height:48px;background:#f1f5f9;border-radius:12px;display:flex;align-items:center;justify-content:center;margin:0 auto 12px;opacity:.7">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="21" x2="9" y2="9"/></svg>
+          </div>
+          <div style="font-size:14px;font-weight:700;color:var(--text);margin-bottom:4px">No report generated</div>
+          <div style="font-size:13px;color:var(--muted)">Select a period and click <strong>Generate</strong></div>
         </div>
         <div id="report-summary" style="display:none">
+          <div id="sales-chart-wrap" style="display:none;margin-bottom:16px;background:#fafbfc;border:1px solid var(--border);border-radius:10px;padding:12px 16px">
+            <div class="sales-chart-label">Revenue Trend</div>
+            <svg id="sales-chart-svg" viewBox="0 0 600 120" preserveAspectRatio="none" style="width:100%;height:120px;display:block"></svg>
+          </div>
           <div class="kpi-grid" id="rep-kpis" style="margin-bottom:16px"></div>
           <div class="table-wrap">
             <table class="data-table" id="rep-table">
               <thead><tr><th>Date</th><th>Orders</th><th>Gross Sales</th><th>Expenses</th><th>Net</th><th>Cash</th><th>Card</th><th>Online Pay</th></tr></thead>
               <tbody id="rep-tbody"></tbody>
             </table>
+          </div>
+          <div class="rpt-export-mobile" style="display:none;margin-top:12px">
+            <button class="btn btn-outline" style="width:100%" onclick="exportCSV()"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> Export CSV</button>
           </div>
         </div>
       </div>
@@ -5057,6 +5079,42 @@ function setRptPreset (preset, btn) {
 }
 
 // ─── REPORTS ─────────────────────────────────────────────────────
+function renderSalesChart(data, cur) {
+  const svg = document.getElementById('sales-chart-svg')
+  if (!svg || !data.length) return
+  const W = 600, H = 120, pad = {t:12,r:12,b:30,l:52}
+  const cW = W - pad.l - pad.r, cH = H - pad.t - pad.b
+  const vals = data.map(d => d.sales)
+  const maxV = Math.max(...vals, 0.01), minV = 0
+  const px = i => pad.l + (i / Math.max(data.length - 1, 1)) * cW
+  const py = v => pad.t + cH - ((v - minV) / (maxV - minV || 1)) * cH
+  const pts = data.map((d,i) => `${px(i).toFixed(1)},${py(d.sales).toFixed(1)}`).join(' ')
+  const area = `M ${px(0).toFixed(1)},${py(0).toFixed(1)} ` +
+    data.map((d,i) => `L ${px(i).toFixed(1)},${py(d.sales).toFixed(1)}`).join(' ') +
+    ` L ${px(data.length-1).toFixed(1)},${(pad.t+cH).toFixed(1)} L ${px(0).toFixed(1)},${(pad.t+cH).toFixed(1)} Z`
+  const fmt = v => v >= 1000000 ? (v/1e6).toFixed(1)+'M' : v >= 1000 ? (v/1000).toFixed(1)+'k' : v.toFixed(0)
+  const yLines = [0, maxV/2, maxV].map(v => `
+    <line x1="${pad.l}" y1="${py(v).toFixed(1)}" x2="${W-pad.r}" y2="${py(v).toFixed(1)}" stroke="#e2e8f0" stroke-width="1"/>
+    <text x="${pad.l-6}" y="${(py(v)+4).toFixed(1)}" text-anchor="end" font-size="9" fill="#94a3b8">${fmt(v)}</text>`).join('')
+  const step = Math.max(1, Math.ceil(data.length / 6))
+  const xLabels = data.filter((_,i) => i===0 || i===data.length-1 || i%step===0).map(d => {
+    const i = data.indexOf(d)
+    return `<text x="${px(i).toFixed(1)}" y="${H-4}" text-anchor="middle" font-size="9" fill="#94a3b8">${d.date.slice(5)}</text>`
+  }).join('')
+  const dots = data.length <= 31 ? data.map((d,i) =>
+    `<circle cx="${px(i).toFixed(1)}" cy="${py(d.sales).toFixed(1)}" r="3" fill="#f97316" stroke="#fff" stroke-width="1.5"/>
+     <title>${d.date}: ${cur} ${d.sales.toFixed(2)}</title>`).join('') : ''
+  svg.innerHTML = `
+    <defs><linearGradient id="sg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#f97316" stop-opacity="0.18"/>
+      <stop offset="100%" stop-color="#f97316" stop-opacity="0.02"/>
+    </linearGradient></defs>
+    ${yLines}
+    <path d="${area}" fill="url(#sg)"/>
+    <polyline points="${pts}" fill="none" stroke="#f97316" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+    ${dots}${xLabels}`
+}
+
 async function loadReport () {
   // Resolve dates from custom or preset
   let from = document.getElementById('rep-from')?.value
@@ -5089,10 +5147,10 @@ async function loadReport () {
     const totalExps  = exps.reduce((s, e) => s + (parseFloat(e.amount) || 0), 0)
 
     document.getElementById('rep-kpis').innerHTML = `
-      <div class="kpi-card"><div class="kpi-label">Total Orders</div><div class="kpi-value kpi-blue">${orders.length}</div></div>
-      <div class="kpi-card"><div class="kpi-label">Gross Sales</div><div class="kpi-value kpi-orange">${cur} ${totalSales.toFixed(2)}</div></div>
-      <div class="kpi-card"><div class="kpi-label">Expenses</div><div class="kpi-value kpi-red">${cur} ${totalExps.toFixed(2)}</div></div>
-      <div class="kpi-card"><div class="kpi-label">Net</div><div class="kpi-value kpi-green">${cur} ${(totalSales-totalExps).toFixed(2)}</div></div>`
+      <div class="kpi-card kpi-card-blue"><div class="kpi-label">Total Orders</div><div class="kpi-value kpi-blue">${orders.length}</div></div>
+      <div class="kpi-card kpi-card-orange"><div class="kpi-label">Gross Sales</div><div class="kpi-value kpi-orange">${cur} ${totalSales.toFixed(2)}</div></div>
+      <div class="kpi-card kpi-card-red"><div class="kpi-label">Expenses</div><div class="kpi-value kpi-red">${cur} ${totalExps.toFixed(2)}</div></div>
+      <div class="kpi-card kpi-card-green"><div class="kpi-label">Net</div><div class="kpi-value kpi-green">${cur} ${(totalSales-totalExps).toFixed(2)}</div></div>`
 
     const byDate = {}
     for (const o of orders) {
@@ -5125,8 +5183,13 @@ async function loadReport () {
         <td>${cur} ${r.cash.toFixed(2)}</td>
         <td>${cur} ${r.card.toFixed(2)}</td>
         <td>${cur} ${r.online.toFixed(2)}</td>
-      </tr>`).join('') || `<tr><td colspan="8" class="empty-state">No data</td></tr>`
+      </tr>`).join('') || `<tr><td colspan="8"><div class="empty-state" style="padding:32px 20px"><div class="es-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg></div><h4>No sales data</h4><p>No transactions found for this period</p></div></td></tr>`
 
+    const chartWrap = document.getElementById('sales-chart-wrap')
+    if (reportData.length >= 2) { renderSalesChart(reportData, cur); chartWrap.style.display = 'block' }
+    else { chartWrap.style.display = 'none' }
+
+    document.getElementById('report-placeholder').style.display = 'none'
     document.getElementById('report-summary').style.display = 'block'
   } catch (e) { console.error(e); showToast('Error loading report: ' + e.message,'error') }
 }
