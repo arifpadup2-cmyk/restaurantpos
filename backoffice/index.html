@@ -90,6 +90,7 @@ button,.nav-item,.filter-chip,.btn,[role="button"]{touch-action:manipulation}
 .auth-tabs{display:flex;gap:0;margin-bottom:20px;background:#f3f4f6;border-radius:10px;padding:4px}
 .auth-tab{flex:1;padding:8px 0;border:none;background:transparent;border-radius:7px;font-size:13px;font-weight:600;color:#6b7280;cursor:pointer;transition:.15s}
 .auth-tab.active{background:#fff;color:#1e1b4b;box-shadow:0 1px 4px rgba(0,0,0,.1)}
+.auth-mob-brand{display:none}
 #trial-banner{display:none;align-items:center;gap:10px;background:linear-gradient(135deg,#fef3c7,#fde68a);border-bottom:1px solid #f59e0b;padding:10px 20px;font-size:13px;font-weight:600;color:#92400e}
 #trial-banner span{margin-left:auto;font-weight:400;font-size:12px;color:#b45309}
 /* Responsive */
@@ -101,8 +102,9 @@ button,.nav-item,.filter-chip,.btn,[role="button"]{touch-action:manipulation}
 @media(max-width:700px){
   #auth-screen{flex-direction:column}
   .auth-left{display:none}
-  .auth-right{padding:40px 24px;min-height:100vh;justify-content:center}
+  .auth-right{padding:40px 24px;min-height:100vh;justify-content:flex-start;padding-top:60px}
   .auth-right-inner{max-width:100%}
+  .auth-mob-brand{display:block;text-align:center;margin-bottom:24px}
 }
 
 /* ─── SIDEBAR ───────────────────────────────────── */
@@ -915,6 +917,13 @@ input:checked+.toggle-slider:before{transform:translateX(17px)}
   <!-- Right panel -->
   <div class="auth-right">
     <div class="auth-right-inner">
+      <!-- Mobile brand header (hidden on desktop where auth-left shows) -->
+      <div class="auth-mob-brand">
+        <div style="width:44px;height:44px;border-radius:12px;background:linear-gradient(135deg,#f97316,#ea580c);display:flex;align-items:center;justify-content:center;margin:0 auto 10px">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 002-2V2"/><path d="M7 2v20"/><path d="M21 15V2a5 5 0 00-5 5v6c0 1.1.9 2 2 2h3zm0 0v7"/></svg>
+        </div>
+        <div style="font-size:15px;font-weight:800;color:#0f172a">Restaurant Back Office</div>
+      </div>
       <!-- Tabs -->
       <div class="auth-tabs">
         <button class="auth-tab active" id="tab-signin" onclick="switchAuthTab('signin')">Sign In</button>
