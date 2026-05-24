@@ -221,11 +221,12 @@ module.exports = function ownerRouter (sql) {
     if (!(req.user.brand_ids || []).includes(brand_id))
       return res.status(403).json({ error: 'Brand not in your portfolio' })
     try {
-      const rows = await sql`
-        SELECT id, name, username, email, role, active, outlet_ids, permissions, created_at
+      const rows         = await sql`
+        SELECT id, name, username, email, role, active, outlet_ids, permissions, app_access, designation_id, created_at
         FROM bo_users WHERE brand_id = ${brand_id} ORDER BY created_at`
-      const outlets = await sql`SELECT id, name FROM outlets WHERE brand_id = ${brand_id} ORDER BY created_at`
-      res.json({ rows, outlets })
+      const outlets      = await sql`SELECT id, name FROM outlets WHERE brand_id = ${brand_id} ORDER BY created_at`
+      const designations = await sql`SELECT id, name, access_level FROM designations WHERE brand_id = ${brand_id} ORDER BY access_level, name`
+      res.json({ rows, outlets, designations })
     } catch (e) { serverError(res, e) }
   })
 
@@ -234,7 +235,7 @@ module.exports = function ownerRouter (sql) {
     const { brand_id } = req.params
     if (!(req.user.brand_ids || []).includes(brand_id))
       return res.status(403).json({ error: 'Brand not in your portfolio' })
-    const { name, username, password, email, outlet_ids, permissions } = req.body || {}
+    const { name, username, password, email, outlet_ids, permissions, app_access, designation_id } = req.body || {}
     if (!username || !password) return res.status(400).json({ error: 'username and password required' })
     if (password.length < 6) return res.status(400).json({ error: 'Password must be at least 6 characters' })
     if (!/^[a-z0-9_]+$/i.test(username)) return res.status(400).json({ error: 'username: letters, numbers and _ only' })
@@ -250,12 +251,14 @@ module.exports = function ownerRouter (sql) {
         view_cashier_report: false, view_voids: false, view_audit: false,
         manage_menu: false, manage_config: false, manage_users: false,
       }
-      const perms = { ...DEFAULT_PERMS, ...(permissions || {}) }
-      const [row] = await sql`
-        INSERT INTO bo_users (id, brand_id, name, username, password, email, role, outlet_ids, permissions)
+      const perms  = { ...DEFAULT_PERMS, ...(permissions || {}) }
+      const access = { pos: false, captain_app: false, kds: false, backoffice: true, owner_app: false, ...(app_access || {}) }
+      const desId  = designation_id || null
+      const [row]  = await sql`
+        INSERT INTO bo_users (id, brand_id, name, username, password, email, role, outlet_ids, permissions, app_access, designation_id)
         VALUES (${id}, ${brand_id}, ${name || null}, ${username.toLowerCase()}, ${hash},
-                ${email || null}, 'staff', ${oIds ? sql.array(oIds) : null}, ${sql.json(perms)})
-        RETURNING id, name, username, email, role, active, outlet_ids, permissions, created_at`
+                ${email || null}, 'staff', ${oIds ? sql.array(oIds) : null}, ${sql.json(perms)}, ${sql.json(access)}, ${desId})
+        RETURNING id, name, username, email, role, active, outlet_ids, permissions, app_access, designation_id, created_at`
       res.json({ ok: true, user: row })
     } catch (e) { serverError(res, e) }
   })
@@ -265,20 +268,23 @@ module.exports = function ownerRouter (sql) {
     const { brand_id, user_id } = req.params
     if (!(req.user.brand_ids || []).includes(brand_id))
       return res.status(403).json({ error: 'Brand not in your portfolio' })
-    const { name, password, email, outlet_ids, permissions, active } = req.body || {}
+    const { name, password, email, outlet_ids, permissions, app_access, designation_id, active } = req.body || {}
     try {
-      const hash = password && password.length >= 6 ? await bcrypt.hash(password, 10) : null
-      const oIds = Array.isArray(outlet_ids) ? (outlet_ids.length ? outlet_ids : null) : undefined
+      const hash  = password && password.length >= 6 ? await bcrypt.hash(password, 10) : null
+      const oIds  = Array.isArray(outlet_ids) ? (outlet_ids.length ? outlet_ids : null) : undefined
+      const desId = designation_id !== undefined ? (designation_id || null) : undefined
       const [row] = await sql`
         UPDATE bo_users SET
-          name        = COALESCE(${name !== undefined ? (name || null) : null}, name),
-          password    = COALESCE(${hash}, password),
-          email       = COALESCE(${email !== undefined ? (email || null) : null}, email),
-          outlet_ids  = ${oIds !== undefined ? (oIds ? sql.array(oIds) : null) : sql`outlet_ids`},
-          permissions = CASE WHEN ${permissions !== undefined} THEN ${permissions ? sql.json(permissions) : sql.json({})} ELSE permissions END,
-          active      = COALESCE(${active !== undefined ? !!active : null}, active)
+          name           = COALESCE(${name !== undefined ? (name || null) : null}, name),
+          password       = COALESCE(${hash}, password),
+          email          = COALESCE(${email !== undefined ? (email || null) : null}, email),
+          outlet_ids     = ${oIds !== undefined ? (oIds ? sql.array(oIds) : null) : sql`outlet_ids`},
+          permissions    = CASE WHEN ${permissions !== undefined} THEN ${permissions ? sql.json(permissions) : sql.json({})} ELSE permissions END,
+          app_access     = CASE WHEN ${app_access !== undefined} THEN ${app_access ? sql.json(app_access) : sql.json({})} ELSE app_access END,
+          designation_id = CASE WHEN ${desId !== undefined} THEN ${desId} ELSE designation_id END,
+          active         = COALESCE(${active !== undefined ? !!active : null}, active)
         WHERE id = ${user_id} AND brand_id = ${brand_id}
-        RETURNING id, name, username, email, role, active, outlet_ids, permissions, created_at`
+        RETURNING id, name, username, email, role, active, outlet_ids, permissions, app_access, designation_id, created_at`
       if (!row) return res.status(404).json({ error: 'User not found' })
       res.json({ ok: true, user: row })
     } catch (e) { serverError(res, e) }

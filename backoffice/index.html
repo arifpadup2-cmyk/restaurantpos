@@ -8233,7 +8233,9 @@ const BO_USER_PERMS = [
   { key: 'manage_users',        label: 'Manage BO Users (this section)' },
 ]
 
-let _boUsersOutlets = []
+let _boUsersOutlets      = []
+let _boUsersDesignations = []
+let _boUsersAll          = []
 
 async function cfgLoadBoUsers () {
   const canManage = currentUser?.role === 'owner' || currentUser?.role === 'admin' || currentUser?.permissions?.manage_users
@@ -8241,28 +8243,33 @@ async function cfgLoadBoUsers () {
   if (addBtn) addBtn.style.display = canManage ? '' : 'none'
   try {
     showSkeleton('cfg-bo-users-list', 3)
-    const { rows, outlets } = await apiFetch('GET', '/config/users')
-    _boUsersOutlets = outlets || []
+    const { rows, outlets, designations } = await apiFetch('GET', '/config/users')
+    _boUsersOutlets      = outlets      || []
+    _boUsersDesignations = designations || []
+    _boUsersAll          = rows         || []
+    const APP_LABELS = { pos:'POS', captain_app:'Captain', kds:'KDS', backoffice:'Backoffice', owner_app:'Owner App' }
     document.getElementById('cfg-bo-users-list').innerHTML = rows.length ? rows.map(u => {
       const perms = u.permissions || {}
+      const access = u.app_access || {}
       const activePerms = BO_USER_PERMS.filter(p => perms[p.key]).map(p => p.label.split('(')[0].trim())
       const outletNames = u.outlet_ids && u.outlet_ids.length
         ? u.outlet_ids.map(id => (_boUsersOutlets.find(o => o.id === id) || {}).name || id).join(', ')
         : 'All Outlets'
+      const desig   = u.designation_id ? (_boUsersDesignations.find(d => d.id === u.designation_id) || {}).name : null
+      const appTags = Object.entries(access).filter(([,v]) => v).map(([k]) => APP_LABELS[k] || k).join(' · ')
       return `
       <div class="cfg-card" style="margin-bottom:12px">
         <div class="cfg-card-hdr">
           <div style="flex:1">
-            <div class="cfg-card-title" style="display:flex;align-items:center;gap:8px">
+            <div class="cfg-card-title" style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
               ${u.name ? `<span>${u.name}</span><span style="font-weight:400;color:var(--muted);font-size:13px">@${u.username}</span>` : `<span>@${u.username}</span>`}
               <span class="cfg-badge" style="background:${u.active!==false?'#f0fdf4':'#fef2f2'};color:${u.active!==false?'#16a34a':'#dc2626'};font-size:10px">${u.active!==false?'Active':'Inactive'}</span>
               <span class="cfg-badge cfg-badge-blue" style="font-size:10px">${u.role}</span>
+              ${desig ? `<span class="cfg-badge" style="background:#f0f7ff;color:#2563eb;font-size:10px">${desig}</span>` : ''}
             </div>
-            <div style="font-size:12px;color:var(--muted);margin-top:3px">
-              Outlets: <b>${outletNames}</b>
-              ${u.email ? ` · ${u.email}` : ''}
-            </div>
-            ${activePerms.length ? `<div style="font-size:11px;color:var(--muted);margin-top:4px">${activePerms.join(' · ')}</div>` : '<div style="font-size:11px;color:var(--muted);margin-top:4px">No special permissions</div>'}
+            <div style="font-size:12px;color:var(--muted);margin-top:3px">Outlets: <b>${outletNames}</b>${u.email ? ` · ${u.email}` : ''}</div>
+            ${appTags ? `<div style="font-size:11px;color:var(--muted);margin-top:3px">Apps: ${appTags}</div>` : ''}
+            ${activePerms.length ? `<div style="font-size:11px;color:var(--muted);margin-top:3px">BO Perms: ${activePerms.join(' · ')}</div>` : ''}
           </div>
           ${canManage ? `<div style="display:flex;gap:8px;margin-left:12px">
             <button class="btn btn-sm" onclick='cfgEditBoUser(${JSON.stringify(u).replace(/'/g,"&#39;")})'>Edit</button>
@@ -8276,65 +8283,142 @@ async function cfgLoadBoUsers () {
   } catch (e) { showToast(friendlyError(e.message), 'error') }
 }
 
-function _renderBoUserModal (u, outlets) {
-  const perms = u?.permissions || {}
+const _APP_SYSTEMS = [
+  { key: 'pos',         label: 'POS',        icon: '&#128421;', desc: 'Point of Sale terminal' },
+  { key: 'captain_app', label: 'Captain App', icon: '&#128241;', desc: 'Waiter order-taking app' },
+  { key: 'kds',         label: 'KDS',         icon: '&#128250;', desc: 'Kitchen Display System' },
+  { key: 'backoffice',  label: 'Back Office', icon: '&#128188;', desc: 'This backoffice portal' },
+  { key: 'owner_app',   label: 'Owner App',   icon: '&#128081;', desc: 'Owner dashboard portal' },
+]
+
+function _renderBoUserModal (u, outlets, designations, allUsers) {
+  const perms    = u?.permissions || {}
+  const access   = { pos: false, captain_app: false, kds: false, backoffice: true, owner_app: false, ...(u?.app_access || {}) }
   const uOutlets = u?.outlet_ids || []
+  const isEdit   = !!u
+  const others   = (allUsers || []).filter(x => x.id !== u?.id)
+  const boVisible = access.backoffice
   return `
   <div class="modal-overlay show" id="modal-bo-user" onclick="if(event.target===this)closeModal('modal-bo-user')">
-    <div class="modal-box" style="max-width:520px">
-      <div class="modal-hdr"><h3 id="bo-user-modal-title">${u ? 'Edit User' : 'Add User'}</h3><button class="modal-close" onclick="closeModal('modal-bo-user')">✕</button></div>
-      <div class="modal-body" style="max-height:70vh;overflow-y:auto">
+    <div class="modal-box" style="max-width:600px">
+      <div class="modal-hdr"><h3>${isEdit ? 'Edit User' : 'Add User'}</h3><button class="modal-close" onclick="closeModal('modal-bo-user')">&#10005;</button></div>
+      <div class="modal-body" style="max-height:78vh;overflow-y:auto;padding:20px">
         <input type="hidden" id="bou-id" value="${u?.id || ''}">
+
+        ${!isEdit && others.length ? `
+        <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:12px;margin-bottom:20px">
+          <label class="form-label" style="margin-bottom:6px">Copy settings from existing user <span style="color:var(--muted);font-weight:400">(optional)</span></label>
+          <select class="form-control" onchange="bouCopyFromUser(this.value)">
+            <option value="">— select user to copy from —</option>
+            ${others.map(x => `<option value="${x.id}">${x.name ? x.name + ' (@' + x.username + ')' : '@' + x.username}</option>`).join('')}
+          </select>
+        </div>` : ''}
+
+        <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-bottom:10px">Basic Info</div>
         <div class="form-row">
           <div class="form-group" style="flex:1"><label class="form-label">Display Name</label>
             <input class="form-control" id="bou-name" value="${u?.name || ''}" placeholder="e.g. Ahmad Razif"></div>
           <div class="form-group" style="flex:1"><label class="form-label">Username *</label>
-            <input class="form-control" id="bou-username" value="${u?.username || ''}" placeholder="lowercase, letters/numbers/_" ${u ? 'readonly style="background:#f8fafc"' : ''}></div>
+            <input class="form-control" id="bou-username" value="${u?.username || ''}" placeholder="letters/numbers/_" ${isEdit ? 'readonly style="background:#f8fafc"' : ''}></div>
         </div>
         <div class="form-row">
-          <div class="form-group" style="flex:1"><label class="form-label">Password ${u ? '(leave blank to keep)' : '*'}</label>
-            <input class="form-control" id="bou-password" type="password" placeholder="${u ? 'New password (optional)' : 'Min 6 characters'}"></div>
-          <div class="form-group" style="flex:1"><label class="form-label">Email (optional)</label>
+          <div class="form-group" style="flex:1"><label class="form-label">Password ${isEdit ? '(leave blank to keep)' : '*'}</label>
+            <input class="form-control" id="bou-password" type="password" placeholder="${isEdit ? 'New password (optional)' : 'Min 6 characters'}"></div>
+          <div class="form-group" style="flex:1"><label class="form-label">Email <span style="color:var(--muted);font-weight:400">(optional)</span></label>
             <input class="form-control" id="bou-email" value="${u?.email || ''}" placeholder="staff@example.com"></div>
         </div>
+
+        ${designations && designations.length ? `
+        <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin:16px 0 10px">POS Designation</div>
         <div class="form-group">
-          <label class="form-label">Outlet Access</label>
-          <div style="font-size:12px;color:var(--muted);margin-bottom:6px">Leave all unchecked = access to all outlets.</div>
-          <div style="display:flex;flex-wrap:wrap;gap:8px">
-            ${outlets.map(o => `
-              <label style="display:flex;align-items:center;gap:5px;font-size:13px;cursor:pointer">
-                <input type="checkbox" class="bou-outlet-cb" value="${o.id}" ${uOutlets.includes(o.id)?'checked':''}> ${o.name}
+          <select class="form-control" id="bou-designation">
+            <option value="">— None —</option>
+            ${designations.map(d => `<option value="${d.id}"${u?.designation_id === d.id ? ' selected' : ''}>${d.name}</option>`).join('')}
+          </select>
+          <div style="font-size:12px;color:var(--muted);margin-top:4px">Controls what this user can do on the POS terminal.</div>
+        </div>` : `<input type="hidden" id="bou-designation" value="">`}
+
+        <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin:16px 0 10px">System Access</div>
+        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(105px,1fr));gap:8px;margin-bottom:4px">
+          ${_APP_SYSTEMS.map(s => `
+            <label id="bou-app-lbl-${s.key}" style="display:flex;flex-direction:column;align-items:center;gap:4px;padding:10px 8px;border:1.5px solid ${access[s.key] ? 'var(--primary,#2563eb)' : '#e2e8f0'};border-radius:8px;cursor:pointer;background:${access[s.key] ? 'var(--primary-light,#eff6ff)' : '#fff'};transition:.15s;text-align:center">
+              <input type="checkbox" id="bou-app-${s.key}" class="bou-app-cb" data-appkey="${s.key}" ${access[s.key] ? 'checked' : ''} style="display:none" onchange="bouOnAppChange('${s.key}',this)">
+              <span style="font-size:20px">${s.icon}</span>
+              <span style="font-size:11px;font-weight:600">${s.label}</span>
+              <span style="font-size:10px;color:var(--muted);line-height:1.3">${s.desc}</span>
+            </label>`).join('')}
+        </div>
+        <div style="font-size:12px;color:var(--muted);margin-bottom:16px">Click a system card to toggle access on/off.</div>
+
+        <div id="bou-bo-perms-section" ${boVisible ? '' : 'style="display:none"'}>
+          <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin:0 0 10px">Back Office Permissions</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-bottom:16px">
+            ${BO_USER_PERMS.map(p => `
+              <label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer">
+                <input type="checkbox" class="bou-perm-cb" data-pkey="${p.key}" ${perms[p.key] ? 'checked' : ''}> ${p.label}
               </label>`).join('')}
           </div>
         </div>
-        <div class="form-group">
-          <label class="form-label">Permissions</label>
-          <div style="display:flex;flex-direction:column;gap:7px;margin-top:4px">
-            ${BO_USER_PERMS.map(p => `
-              <label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer">
-                <input type="checkbox" class="bou-perm-cb" data-pkey="${p.key}" ${perms[p.key]?'checked':''}> ${p.label}
-              </label>`).join('')}
-          </div>
+
+        <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin:0 0 10px">Outlet Access</div>
+        <div style="font-size:12px;color:var(--muted);margin-bottom:8px">Leave all unchecked = access to all outlets.</div>
+        <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:4px">
+          ${outlets.map(o => `
+            <label style="display:flex;align-items:center;gap:5px;font-size:13px;cursor:pointer;padding:6px 10px;border:1px solid #e2e8f0;border-radius:6px;background:#fff">
+              <input type="checkbox" class="bou-outlet-cb" value="${o.id}" ${uOutlets.includes(o.id) ? 'checked' : ''}> ${o.name}
+            </label>`).join('')}
         </div>
       </div>
       <div class="modal-footer">
         <button class="btn btn-secondary" onclick="closeModal('modal-bo-user')">Cancel</button>
-        <button class="btn btn-primary" onclick="cfgSaveBoUser()">Save</button>
+        <button class="btn btn-primary" onclick="cfgSaveBoUser()">Save User</button>
       </div>
     </div>
   </div>`
 }
 
+function bouOnAppChange (key, cb) {
+  const lbl = document.getElementById('bou-app-lbl-' + key)
+  if (lbl) {
+    lbl.style.borderColor = cb.checked ? 'var(--primary,#2563eb)' : '#e2e8f0'
+    lbl.style.background  = cb.checked ? 'var(--primary-light,#eff6ff)' : '#fff'
+  }
+  if (key === 'backoffice') {
+    const s = document.getElementById('bou-bo-perms-section')
+    if (s) s.style.display = cb.checked ? '' : 'none'
+  }
+}
+
+function bouCopyFromUser (uid) {
+  if (!uid) return
+  const src = _boUsersAll.find(x => x.id === uid)
+  if (!src) return
+  const desig = document.getElementById('bou-designation')
+  if (desig && src.designation_id) desig.value = src.designation_id
+  const srcAccess = src.app_access || {}
+  _APP_SYSTEMS.forEach(s => {
+    const cb = document.getElementById('bou-app-' + s.key)
+    if (!cb) return
+    cb.checked = !!srcAccess[s.key]
+    bouOnAppChange(s.key, cb)
+  })
+  const srcPerms = src.permissions || {}
+  document.querySelectorAll('.bou-perm-cb').forEach(cb => { cb.checked = !!srcPerms[cb.dataset.pkey] })
+  const srcOutlets = src.outlet_ids || []
+  document.querySelectorAll('.bou-outlet-cb').forEach(cb => { cb.checked = srcOutlets.includes(cb.value) })
+  showToast('Copied settings from @' + src.username, 'success')
+}
+
 function cfgAddBoUser () {
   const existing = document.getElementById('modal-bo-user')
   if (existing) existing.remove()
-  document.body.insertAdjacentHTML('beforeend', _renderBoUserModal(null, _boUsersOutlets))
+  document.body.insertAdjacentHTML('beforeend', _renderBoUserModal(null, _boUsersOutlets, _boUsersDesignations, _boUsersAll))
 }
 
 function cfgEditBoUser (u) {
   const existing = document.getElementById('modal-bo-user')
   if (existing) existing.remove()
-  document.body.insertAdjacentHTML('beforeend', _renderBoUserModal(u, _boUsersOutlets))
+  document.body.insertAdjacentHTML('beforeend', _renderBoUserModal(u, _boUsersOutlets, _boUsersDesignations, _boUsersAll))
 }
 
 async function cfgToggleBoUser (id, active) {
@@ -8351,18 +8435,21 @@ async function cfgSaveBoUser () {
   const username = document.getElementById('bou-username').value.trim()
   const password = document.getElementById('bou-password').value
   const email    = document.getElementById('bou-email').value.trim()
-  const outlet_ids = [...document.querySelectorAll('.bou-outlet-cb:checked')].map(cb => cb.value)
-  const permissions = {}
+  const outlet_ids    = [...document.querySelectorAll('.bou-outlet-cb:checked')].map(cb => cb.value)
+  const permissions   = {}
   document.querySelectorAll('.bou-perm-cb').forEach(cb => { permissions[cb.dataset.pkey] = cb.checked })
+  const app_access    = {}
+  document.querySelectorAll('.bou-app-cb').forEach(cb => { app_access[cb.dataset.appkey] = cb.checked })
+  const designation_id = (document.getElementById('bou-designation')?.value || '') || null
   if (!id && !username) { showToast('Username is required', 'error'); return }
   if (!id && (!password || password.length < 6)) { showToast('Password must be at least 6 characters', 'error'); return }
   try {
     if (id) {
-      const body = { name, email, outlet_ids, permissions }
+      const body = { name, email, outlet_ids, permissions, app_access, designation_id }
       if (password && password.length >= 6) body.password = password
       await apiFetch('PUT', '/config/users/' + id, body)
     } else {
-      await apiFetch('POST', '/config/users', { name, username, password, email, outlet_ids, permissions })
+      await apiFetch('POST', '/config/users', { name, username, password, email, outlet_ids, permissions, app_access, designation_id })
     }
     closeModal('modal-bo-user')
     showToast(id ? 'User updated' : 'User created', 'success')
