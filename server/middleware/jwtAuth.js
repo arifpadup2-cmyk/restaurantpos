@@ -34,9 +34,16 @@ async function jwtAuth (req, res, next) {
   try {
     const payload = jwt.verify(token, SECRET)
     if (_sql && !payload.admin) {
-      const rows = await _sql`SELECT id, active FROM bo_users WHERE id = ${payload.id} LIMIT 1`
-      if (!rows.length || rows[0].active === false)
-        return res.status(401).json({ error: 'Session expired. Please sign in again.' })
+      if (payload.owner_id) {
+        // Owner portal token — validate against owners table
+        const rows = await _sql`SELECT id, active FROM owners WHERE id = ${payload.owner_id} LIMIT 1`
+        if (!rows.length || rows[0].active === false)
+          return res.status(401).json({ error: 'Session expired. Please sign in again.' })
+      } else {
+        const rows = await _sql`SELECT id, active FROM bo_users WHERE id = ${payload.id} LIMIT 1`
+        if (!rows.length || rows[0].active === false)
+          return res.status(401).json({ error: 'Session expired. Please sign in again.' })
+      }
     }
     req.user = payload
     next()
