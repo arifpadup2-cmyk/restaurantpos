@@ -908,7 +908,7 @@ input:checked+.toggle-slider:before{transform:translateX(17px)}
               <input id="auth-password" type="password" placeholder="Enter your password"
                 autocomplete="new-password" name="bo_password"
                 style="padding-right:44px" onkeydown="if(event.key==='Enter')login()">
-              <button type="button" class="auth-field-eye" onclick="toggleBoPw()" id="bo-pw-eye">👁</button>
+              <button type="button" class="auth-field-eye" onclick="toggleBoPw()" id="bo-pw-eye"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button>
             </div>
           </div>
           <div id="auth-error" style="display:none"></div>
@@ -947,7 +947,7 @@ input:checked+.toggle-slider:before{transform:translateX(17px)}
             <div class="auth-field" style="margin:0;position:relative">
               <input id="su-password" type="password" placeholder="At least 6 characters"
                 style="padding-right:44px" onkeydown="if(event.key==='Enter')signup()">
-              <button type="button" class="auth-field-eye" onclick="toggleSuPw()">👁</button>
+              <button type="button" class="auth-field-eye" onclick="toggleSuPw()"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button>
             </div>
           </div>
           <div id="su-error" style="display:none;color:#dc2626;font-size:13px;background:#fef2f2;border:1px solid #fecaca;border-radius:8px;padding:8px 12px;margin-bottom:4px"></div>
@@ -2447,7 +2447,7 @@ input:checked+.toggle-slider:before{transform:translateX(17px)}
               <div class="img-input-wrap">
                 <input id="ie-image" type="url" placeholder="https://example.com/burger.jpg" oninput="ieUpdateImgPreview()">
                 <button type="button" class="btn-pick-img" onclick="openImagePicker(url=>{document.getElementById('ie-image').value=url;ieUpdateImgPreview()}, document.getElementById('ie-name').value||'food')">
-                  🖼 Pick Image
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="vertical-align:-1px;margin-right:3px"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>Pick Image
                 </button>
               </div>
             </div>
@@ -2703,8 +2703,8 @@ input:checked+.toggle-slider:before{transform:translateX(17px)}
       <div class="img-input-wrap">
         <input id="brand-logo" type="url" placeholder="https://...">
         <input type="file" id="brand-logo-file" accept="image/*" style="display:none" onchange="brandLogoFileSelected(this)">
-        <button type="button" class="btn-pick-img" onclick="document.getElementById('brand-logo-file').click()">📁 Upload</button>
-        <button type="button" class="btn-pick-img" onclick="openImagePicker(url=>{document.getElementById('brand-logo').value=url;const p=document.getElementById('brand-logo-preview');const i=document.getElementById('brand-logo-img');i.src=url;p.style.display='block'}, document.getElementById('brand-name').value||'logo')">🖼 Pick</button>
+        <button type="button" class="btn-pick-img" onclick="document.getElementById('brand-logo-file').click()"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="vertical-align:-1px;margin-right:3px"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>Upload</button>
+        <button type="button" class="btn-pick-img" onclick="openImagePicker(url=>{document.getElementById('brand-logo').value=url;const p=document.getElementById('brand-logo-preview');const i=document.getElementById('brand-logo-img');i.src=url;p.style.display='block'}, document.getElementById('brand-name').value||'logo')"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="vertical-align:-1px;margin-right:3px"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>Pick</button>
       </div>
       <div id="brand-logo-preview" style="margin-top:8px;display:none">
         <img id="brand-logo-img" src="" alt="logo" style="height:40px;object-fit:contain;border:1px solid var(--border);border-radius:6px;padding:4px;background:#fff">
@@ -2902,8 +2902,8 @@ input:checked+.toggle-slider:before{transform:translateX(17px)}
       <div class="img-input-wrap">
         <input id="ot-modal-logo" type="url" placeholder="https://...">
         <input type="file" id="ot-modal-logo-file" accept="image/*" style="display:none" onchange="otLogoFileSelected(this)">
-        <button type="button" class="btn-pick-img" onclick="document.getElementById('ot-modal-logo-file').click()">📁 Upload</button>
-        <button type="button" class="btn-pick-img" onclick="openImagePicker(url=>{document.getElementById('ot-modal-logo').value=url;otUpdateLogoPreview(url)},document.getElementById('ot-modal-name').value||'order type')">🖼 Pick</button>
+        <button type="button" class="btn-pick-img" onclick="document.getElementById('ot-modal-logo-file').click()"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="vertical-align:-1px;margin-right:3px"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>Upload</button>
+        <button type="button" class="btn-pick-img" onclick="openImagePicker(url=>{document.getElementById('ot-modal-logo').value=url;otUpdateLogoPreview(url)},document.getElementById('ot-modal-name').value||'order type')"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="vertical-align:-1px;margin-right:3px"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>Pick</button>
       </div>
       <div id="ot-logo-preview" style="margin-top:8px;display:none">
         <img id="ot-logo-img" src="" alt="logo" style="height:36px;object-fit:contain;border:1px solid var(--border);border-radius:6px;padding:4px;background:#fff">
@@ -3429,8 +3429,10 @@ function obStep1Next () {}
 function toggleBoPw () {
   const inp = document.getElementById('auth-password')
   const btn = document.getElementById('bo-pw-eye')
-  if (inp.type === 'password') { inp.type = 'text'; btn.textContent = '🙈' }
-  else { inp.type = 'password'; btn.textContent = '👁' }
+  const eyeOpen = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>`
+  const eyeOff  = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19m-6.72-1.07a3 3 0 11-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>`
+  if (inp.type === 'password') { inp.type = 'text'; btn.innerHTML = eyeOff }
+  else { inp.type = 'password'; btn.innerHTML = eyeOpen }
 }
 
 async function login () {
