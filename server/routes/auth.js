@@ -38,6 +38,13 @@ function isRateLimited (ip, scope, maxReqs, windowMs) {
   return entry.count > maxReqs
 }
 
+function validatePassword (p) {
+  if (!p || p.length < 8)         return 'Password must be at least 8 characters'
+  if (!/[a-zA-Z]/.test(p))        return 'Password must include at least one letter'
+  if (!/[0-9]/.test(p))           return 'Password must include at least one number'
+  return null
+}
+
 async function writeLoginAudit (sql, userType, userId, username, brandId, success, ip, ua) {
   try {
     await sql`
@@ -57,8 +64,8 @@ module.exports = function authRouter (sql) {
     const { username, password } = req.body || {}
     if (!username || !password)
       return res.status(400).json({ error: 'username and password required' })
-    if (password.length < 6)
-      return res.status(400).json({ error: 'password must be at least 6 characters' })
+    const pwdErr = validatePassword(password)
+    if (pwdErr) return res.status(400).json({ error: pwdErr })
     if (!/^[a-z0-9_]+$/i.test(username))
       return res.status(400).json({ error: 'username: letters, numbers and _ only' })
 
@@ -245,7 +252,8 @@ module.exports = function authRouter (sql) {
       const outlet_ids2  = user.outlet_ids  || null
       const permissions2 = user.permissions || {}
       const app_access2  = user.app_access  || {}
-      const token = sign({ id: user.id, username: user.username, role: user.role, brand_id: user.brand_id || null, outlet_ids: outlet_ids2, permissions: permissions2, app_access: app_access2 })
+      const token   = sign({ id: user.id, username: user.username, role: user.role, brand_id: user.brand_id || null, outlet_ids: outlet_ids2, permissions: permissions2, app_access: app_access2 })
+      const refresh = await issueRefreshToken(sql, user, req)
       try { await sql`UPDATE bo_users SET last_login_at = ${Date.now()}, login_count = login_count + 1 WHERE id = ${user.id}` } catch (_) {}
       await writeLoginAudit(sql, 'bo_user', user.id, user.username, user.brand_id || null, true, ip, req.headers['user-agent'])
       let owner_name = null
@@ -255,7 +263,7 @@ module.exports = function authRouter (sql) {
           owner_name = b?.owner_name || null
         } catch (_) {}
       }
-      res.json({ ok: true, token, user: { id: user.id, name: user.name || null, username: user.username, role: user.role, brand_id: user.brand_id || null, owner_name, outlet_ids: outlet_ids2, permissions: permissions2 } })
+      res.json({ ok: true, token, refresh, user: { id: user.id, name: user.name || null, username: user.username, role: user.role, brand_id: user.brand_id || null, owner_name, outlet_ids: outlet_ids2, permissions: permissions2 } })
     } catch (e) { serverError(res, e) }
   })
 
@@ -268,8 +276,8 @@ module.exports = function authRouter (sql) {
     const { email, password } = req.body || {}
     if (!email || !/^[^@]+@[^@]+\.[^@]+$/.test(email))
       return res.status(400).json({ error: 'Valid email required' })
-    if (!password || password.length < 6)
-      return res.status(400).json({ error: 'Password must be at least 6 characters' })
+    const pwdErr2 = validatePassword(password)
+    if (pwdErr2) return res.status(400).json({ error: pwdErr2 })
 
     try {
       const existing = await sql`SELECT id FROM bo_users WHERE LOWER(email) = ${email.toLowerCase()} LIMIT 1`

@@ -6,6 +6,13 @@ const { randomUUID } = require('crypto')
 const { sign, jwtAuth } = require('../middleware/jwtAuth')
 const { serverError }   = require('../middleware/serverError')
 
+function _validatePassword (p) {
+  if (!p || p.length < 8)  return 'Password must be at least 8 characters'
+  if (!/[a-zA-Z]/.test(p)) return 'Password must include at least one letter'
+  if (!/[0-9]/.test(p))    return 'Password must include at least one number'
+  return null
+}
+
 async function _writeLoginAudit (sql, userType, userId, username, brandId, success, ip, ua) {
   try {
     await sql`
@@ -282,7 +289,8 @@ module.exports = function ownerRouter (sql) {
       return res.status(403).json({ error: 'Brand not in your portfolio' })
     const { name, username, password, email, outlet_ids, permissions, app_access, designation_id } = req.body || {}
     if (!username || !password) return res.status(400).json({ error: 'username and password required' })
-    if (password.length < 8) return res.status(400).json({ error: 'Password must be at least 8 characters' })
+    const pwdErr = _validatePassword(password)
+    if (pwdErr) return res.status(400).json({ error: pwdErr })
     if (!/^[a-z0-9_]+$/i.test(username)) return res.status(400).json({ error: 'username: letters, numbers and _ only' })
     try {
       const existing = await sql`SELECT id FROM bo_users WHERE LOWER(username) = ${username.toLowerCase()}`
@@ -347,6 +355,10 @@ module.exports = function ownerRouter (sql) {
     if (!(req.user.brand_ids || []).includes(brand_id))
       return res.status(403).json({ error: 'Brand not in your portfolio' })
     try {
+      const [target] = await sql`SELECT is_protected FROM bo_users WHERE id = ${user_id} AND brand_id = ${brand_id}`
+      if (!target) return res.status(404).json({ error: 'User not found' })
+      if (target.is_protected)
+        return res.status(403).json({ error: 'Owner account cannot be disabled' })
       await sql`UPDATE bo_users SET active = false WHERE id = ${user_id} AND brand_id = ${brand_id}`
       res.json({ ok: true })
     } catch (e) { serverError(res, e) }

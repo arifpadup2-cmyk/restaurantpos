@@ -56,6 +56,13 @@ const DEFAULT_DESIGNATIONS = [
   },
 ]
 
+function validatePassword (p) {
+  if (!p || p.length < 8)  return 'Password must be at least 8 characters'
+  if (!/[a-zA-Z]/.test(p)) return 'Password must include at least one letter'
+  if (!/[0-9]/.test(p))    return 'Password must include at least one number'
+  return null
+}
+
 async function auditLog (sql, brand_id, actor, action, target, changes, ip) {
   try {
     await sql`
@@ -805,7 +812,8 @@ module.exports = function configRouter (sql) {
     if (!rid) return res.status(400).json({ error: 'No brand linked' })
     const { name, username, password, email, outlet_ids, permissions, app_access, designation_id, pos_pin } = req.body || {}
     if (!username || !password) return res.status(400).json({ error: 'username and password required' })
-    if (password.length < 8) return res.status(400).json({ error: 'Password must be at least 8 characters' })
+    const pwdErr = validatePassword(password)
+    if (pwdErr) return res.status(400).json({ error: pwdErr })
     if (!/^[a-z0-9_]+$/i.test(username)) return res.status(400).json({ error: 'username: letters, numbers and _ only' })
     try {
       const existing = await sql`SELECT id FROM bo_users WHERE LOWER(username) = ${username.toLowerCase()}`
@@ -867,6 +875,19 @@ module.exports = function configRouter (sql) {
       await auditLog(sql, rid, req.user, 'user.edit', { id: req.params.id, username: target.username },
         { name, email, active, permissions, app_access }, req.ip)
       res.json({ ok: true, user: row })
+    } catch (e) { serverError(res, e) }
+  })
+
+  router.delete('/users/:id/sessions', async (req, res) => {
+    if (!canManageUsers(req)) return res.status(403).json({ error: 'Not allowed' })
+    const rid = req.user.brand_id
+    try {
+      const [target] = await sql`SELECT is_protected FROM bo_users WHERE id = ${req.params.id} AND brand_id = ${rid}`
+      if (!target) return res.status(404).json({ error: 'User not found' })
+      if (target.is_protected && req.user.id !== req.params.id)
+        return res.status(403).json({ error: 'Cannot force-logout owner account' })
+      await sql`UPDATE refresh_tokens SET revoked_at = now() WHERE user_id = ${req.params.id} AND revoked_at IS NULL`
+      res.json({ ok: true })
     } catch (e) { serverError(res, e) }
   })
 
