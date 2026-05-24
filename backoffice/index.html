@@ -3521,8 +3521,8 @@ function ssUpdateProgress () {
   const phone  = (document.getElementById('ss-phone')?.value || '').trim()
   const outlet = (document.getElementById('ss-outlet-name')?.value || '').trim()
 
-  const s1done = !!brand
-  const s2done = !!(first && last && phone)
+  const s1done = !!(first && last && phone)
+  const s2done = !!brand
   const s3done = !!outlet
 
   const setStep = (id, done, active) => {
@@ -7873,17 +7873,17 @@ const _origShowView = showView
       <div class="ss-progress-title">Setup Progress</div>
       <div id="ss-step1" class="ss-step active">
         <div class="ss-step-num">1</div>
-        <div><div class="ss-step-label">Brand Details</div><div class="ss-step-desc">Tell us about your brand</div></div>
+        <div><div class="ss-step-label">Owner Details</div><div class="ss-step-desc">Your personal information</div></div>
       </div>
       <div class="ss-step-connector"></div>
       <div id="ss-step2" class="ss-step">
         <div class="ss-step-num">2</div>
-        <div><div class="ss-step-label">Owner Details</div><div class="ss-step-desc">Your personal information</div></div>
+        <div><div class="ss-step-label">Brand Details</div><div class="ss-step-desc">Tell us about your brand</div></div>
       </div>
       <div class="ss-step-connector"></div>
       <div id="ss-step3" class="ss-step">
         <div class="ss-step-num">3</div>
-        <div><div class="ss-step-label">Outlet Details</div><div class="ss-step-desc">Location &amp; operations</div></div>
+        <div><div class="ss-step-label">Market &amp; Outlet</div><div class="ss-step-desc">Location &amp; operations</div></div>
       </div>
       <div class="ss-step-connector"></div>
       <div id="ss-step4" class="ss-step">
@@ -7901,46 +7901,10 @@ const _origShowView = showView
       <p class="ss-page-title">New Brand Setup</p>
       <p class="ss-page-sub">Complete the information below to setup your brand and get started</p>
 
-      <!-- Card 1: Brand Details -->
+      <!-- Card 1: Owner Details -->
       <div class="ss-card">
         <div class="ss-card-header">
           <div class="ss-card-num">1</div>
-          <div class="ss-card-title">Brand Details</div>
-        </div>
-        <div class="ss-card-body">
-          <div class="ss-row">
-            <div class="ss-field">
-              <label>Brand Name <span style="color:#ef4444">*</span></label>
-              <input id="ss-brand-name" type="text" placeholder="e.g. Mama's Kitchen" autocomplete="organization">
-            </div>
-            <div class="ss-field">
-              <label>Brand Logo <span style="color:#64748b;font-weight:400">(optional)</span></label>
-              <div class="ss-logo-drop" id="ss-logo-drop" onclick="document.getElementById('ss-logo-input').click()">
-                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#475569" stroke-width="1.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-                <span>Click to upload logo</span>
-                <span style="font-size:11px;color:#334155">PNG, JPG up to 2MB</span>
-              </div>
-              <input id="ss-logo-input" type="file" accept="image/*" style="display:none" onchange="ssPreviewLogo(this)">
-            </div>
-          </div>
-          <div class="ss-row">
-            <div class="ss-field">
-              <label>Business Type</label>
-              <select id="ss-biz-type">
-                <option value="">-- Select --</option>
-                <option>Restaurant</option><option>Cafe</option><option>Fast Food</option>
-                <option>Food Court</option><option>Bakery</option><option>Bar &amp; Grill</option>
-                <option>Cloud Kitchen</option><option>Other</option>
-              </select>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Card 2: Owner Details -->
-      <div class="ss-card">
-        <div class="ss-card-header">
-          <div class="ss-card-num">2</div>
           <div class="ss-card-title">Owner Details</div>
         </div>
         <div class="ss-card-body">
@@ -7972,6 +7936,42 @@ const _origShowView = showView
             <div class="ss-field">
               <label>Owner Email Address</label>
               <input id="ss-owner-email" type="email" placeholder="owner@email.com" readonly style="opacity:.65;cursor:default">
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Card 2: Brand Details -->
+      <div class="ss-card">
+        <div class="ss-card-header">
+          <div class="ss-card-num">2</div>
+          <div class="ss-card-title">Brand Details</div>
+        </div>
+        <div class="ss-card-body">
+          <div class="ss-row">
+            <div class="ss-field">
+              <label>Brand Name <span style="color:#ef4444">*</span></label>
+              <input id="ss-brand-name" type="text" placeholder="e.g. Mama's Kitchen" autocomplete="organization">
+            </div>
+            <div class="ss-field">
+              <label>Brand Logo <span style="color:#64748b;font-weight:400">(optional)</span></label>
+              <div class="ss-logo-drop" id="ss-logo-drop" onclick="document.getElementById('ss-logo-input').click()">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#475569" stroke-width="1.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                <span>Click to upload logo</span>
+                <span style="font-size:11px;color:#334155">PNG, JPG up to 2MB</span>
+              </div>
+              <input id="ss-logo-input" type="file" accept="image/*" style="display:none" onchange="ssPreviewLogo(this)">
+            </div>
+          </div>
+          <div class="ss-row">
+            <div class="ss-field">
+              <label>Business Type</label>
+              <select id="ss-biz-type">
+                <option value="">-- Select --</option>
+                <option>Restaurant</option><option>Cafe</option><option>Fast Food</option>
+                <option>Food Court</option><option>Bakery</option><option>Bar &amp; Grill</option>
+                <option>Cloud Kitchen</option><option>Other</option>
+              </select>
             </div>
           </div>
         </div>
@@ -8148,11 +8148,11 @@ const _origShowView = showView
       <div class="ss-checklist">
         <div class="ss-check-item">
           <div class="ss-check-num active" id="ssc-1">1</div>
-          <div><div class="ss-check-label">Create Brand</div><div class="ss-check-desc">Brand &amp; basic info</div></div>
+          <div><div class="ss-check-label">Owner Profile</div><div class="ss-check-desc">Contact details</div></div>
         </div>
         <div class="ss-check-item">
           <div class="ss-check-num" id="ssc-2">2</div>
-          <div><div class="ss-check-label">Owner Profile</div><div class="ss-check-desc">Contact details</div></div>
+          <div><div class="ss-check-label">Create Brand</div><div class="ss-check-desc">Brand &amp; basic info</div></div>
         </div>
         <div class="ss-check-item">
           <div class="ss-check-num" id="ssc-3">3</div>
