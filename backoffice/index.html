@@ -529,6 +529,17 @@ input:checked+.toggle-slider:before{transform:translateX(17px)}
   #rep-table th{white-space:nowrap}
   #rpt-export-desktop{display:none !important}
   .rpt-export-mobile{display:block !important}
+  /* Menu table: hide low-priority columns on mobile */
+  #menu-pane-categories .data-table th:nth-child(2),
+  #menu-pane-categories .data-table td:nth-child(2),
+  #menu-pane-categories .data-table th:nth-child(3),
+  #menu-pane-categories .data-table td:nth-child(3){display:none}
+  #menu-pane-items .data-table th:nth-child(2),
+  #menu-pane-items .data-table td:nth-child(2),
+  #menu-pane-items .data-table th:nth-child(4),
+  #menu-pane-items .data-table td:nth-child(4){display:none}
+  /* Touch targets: meet 44px minimum */
+  .btn-icon{width:44px;height:44px;min-width:44px}
   /* Dash content: single col */
   .dash-row-2,.dash-row-3{grid-template-columns:1fr}
   /* Forms */
@@ -3972,7 +3983,7 @@ function mobSetCfgTab (id) {
   if (el) { el.classList.add('active'); el.scrollIntoView({behavior:'smooth',block:'nearest',inline:'center'}) }
 }
 
-const MOB_TAB_MAP = {dashboard:'dashboard',live:'live',orders:'orders',reports:'reports',menu:'orders',kds:'live',staff:'more',config:'more','bo-settings':'more',audit:'more',downloads:'more'}
+const MOB_TAB_MAP = {dashboard:'dashboard',live:'live',orders:'orders',reports:'reports',menu:'more',kds:'live',staff:'more',config:'more','bo-settings':'more',audit:'more',downloads:'more'}
 function showView (id) {
   mobCloseSidebar()
   const tabId = MOB_TAB_MAP[id] || id
@@ -4234,7 +4245,7 @@ function renderCategories () {
           <button class="btn btn-danger btn-sm btn-icon" onclick="deleteCategory('${c.id}')" title="Delete"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 011-1h4a1 1 0 011 1v2"/></svg></button>
         </td>
       </tr>`).join('')
-    : `<tr><td colspan="5" class="empty-state">No categories yet</td></tr>`
+    : `<tr><td colspan="5"><div class="empty-state"><div class="es-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/><line x1="9" y1="12" x2="15" y2="12"/><line x1="9" y1="16" x2="12" y2="16"/></svg></div><h4 style="font-size:14px;font-weight:700;color:var(--text);margin:0 0 4px">No categories yet</h4><p style="font-size:13px;color:var(--muted);margin:0 0 14px">Create your first category to start organising your menu</p><button class="btn btn-primary btn-sm" onclick="showCatModal()">+ Add Category</button></div></td></tr>`
 }
 
 function renderItems (filterId) {
@@ -4259,7 +4270,7 @@ function renderItems (filterId) {
           </td>
         </tr>`
       }).join('')
-    : `<tr><td colspan="6" class="empty-state">No items yet</td></tr>`
+    : `<tr><td colspan="6"><div class="empty-state"><div class="es-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 002-2V2"/><path d="M7 2v20"/><path d="M21 15V2a5 5 0 00-5 5v6c0 1.1.9 2 2 2h3zm0 0v7"/></svg></div><h4 style="font-size:14px;font-weight:700;color:var(--text);margin:0 0 4px">No menu items yet</h4><p style="font-size:13px;color:var(--muted);margin:0 0 14px">Add your first item to start building your menu</p><button class="btn btn-primary btn-sm" onclick="showItemEditor(null)">+ Add Item</button></div></td></tr>`
 }
 
 function buildMenuCatFilter () {
