@@ -1825,28 +1825,104 @@ textarea:focus-visible {
           <div class="settings-section">
             <h3 style="display:flex;align-items:center;gap:8px"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="17" height="17"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>Printer Configuration</h3>
             <p style="font-size:13px;color:var(--muted);margin-bottom:14px">
-              Select which printer to use for KOT (kitchen tickets) and bills/receipts.
-              Leave blank to show the print dialog each time.
+              Printers are stored in the local database. Add a Windows OS printer or a network thermal printer.
             </p>
-            <div class="form-row">
-              <div class="form-group">
-                <label>KOT Printer (Kitchen)</label>
-                <select id="set-kot-printer" style="padding:9px 12px;border:1.5px solid var(--border);border-radius:8px;font-size:14px;background:var(--bg);color:var(--text)">
-                  <option value="">-- Show Dialog --</option>
-                </select>
-              </div>
-              <div class="form-group">
-                <label>Bill / Receipt Printer</label>
-                <select id="set-bill-printer" style="padding:9px 12px;border:1.5px solid var(--border);border-radius:8px;font-size:14px;background:var(--bg);color:var(--text)">
-                  <option value="">-- Show Dialog --</option>
-                </select>
-              </div>
+            <div id="printer-list-wrap" style="margin-bottom:14px">
+              <table style="width:100%;border-collapse:collapse;font-size:13px">
+                <thead>
+                  <tr style="background:var(--bg2,#f8fafc);text-align:left">
+                    <th style="padding:8px 10px;border-bottom:1.5px solid var(--border)">Name</th>
+                    <th style="padding:8px 10px;border-bottom:1.5px solid var(--border)">Role</th>
+                    <th style="padding:8px 10px;border-bottom:1.5px solid var(--border)">Connection</th>
+                    <th style="padding:8px 10px;border-bottom:1.5px solid var(--border)">Details</th>
+                    <th style="padding:8px 10px;border-bottom:1.5px solid var(--border)">Width</th>
+                    <th style="padding:8px 10px;border-bottom:1.5px solid var(--border)">Status</th>
+                    <th style="padding:8px 10px;border-bottom:1.5px solid var(--border)"></th>
+                  </tr>
+                </thead>
+                <tbody id="printer-list-body">
+                  <tr><td colspan="7" style="padding:16px;text-align:center;color:var(--muted)">Loading…</td></tr>
+                </tbody>
+              </table>
             </div>
-            <div style="display:flex;gap:10px;margin-top:8px">
-              <button class="btn-primary" onclick="savePrinterSettings()" style="display:inline-flex;align-items:center;gap:6px"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="15" height="15"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>Save Printers</button>
-              <button class="btn-outline" onclick="loadPrinterSettings()">↻ Refresh List</button>
+            <div style="display:flex;gap:10px">
+              <button class="btn-primary" onclick="openPrinterModal(null)" style="display:inline-flex;align-items:center;gap:6px">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="15" height="15"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Add Printer
+              </button>
+              <button class="btn-outline" onclick="loadPrinterSettings()">↻ Refresh</button>
             </div>
             <p id="printer-status-msg" style="font-size:13px;margin-top:8px"></p>
+          </div>
+
+          <!-- Printer Add/Edit Modal -->
+          <div id="printer-modal-overlay" onclick="if(event.target===this)closePrinterModal()" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:9000;align-items:center;justify-content:center">
+            <div style="background:var(--bg);border-radius:14px;padding:28px 32px;min-width:420px;max-width:520px;width:100%;box-shadow:0 20px 60px rgba(0,0,0,.25);position:relative">
+              <h3 id="pm-title" style="margin:0 0 20px;font-size:17px;font-weight:700">Add Printer</h3>
+              <input type="hidden" id="pm-id">
+              <div class="form-group" style="margin-bottom:14px">
+                <label style="font-size:13px;font-weight:600;display:block;margin-bottom:5px">Printer Label</label>
+                <input type="text" id="pm-name" placeholder="e.g. Kitchen Printer" style="width:100%;padding:9px 12px;border:1.5px solid var(--border);border-radius:8px;font-size:14px;background:var(--bg);color:var(--text);box-sizing:border-box">
+              </div>
+              <div class="form-row" style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px">
+                <div class="form-group">
+                  <label style="font-size:13px;font-weight:600;display:block;margin-bottom:5px">Role</label>
+                  <select id="pm-role" style="width:100%;padding:9px 12px;border:1.5px solid var(--border);border-radius:8px;font-size:14px;background:var(--bg);color:var(--text)">
+                    <option value="receipt">Receipt / Bill</option>
+                    <option value="kot">KOT / Kitchen</option>
+                    <option value="both">Both (Receipt + KOT)</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label style="font-size:13px;font-weight:600;display:block;margin-bottom:5px">Paper Width</label>
+                  <select id="pm-width" style="width:100%;padding:9px 12px;border:1.5px solid var(--border);border-radius:8px;font-size:14px;background:var(--bg);color:var(--text)">
+                    <option value="80">80 mm</option>
+                    <option value="58">58 mm</option>
+                  </select>
+                </div>
+              </div>
+              <div class="form-group" style="margin-bottom:14px">
+                <label style="font-size:13px;font-weight:600;display:block;margin-bottom:5px">Connection Type</label>
+                <select id="pm-conn" onchange="pmToggleConn()" style="width:100%;padding:9px 12px;border:1.5px solid var(--border);border-radius:8px;font-size:14px;background:var(--bg);color:var(--text)">
+                  <option value="windows">Windows OS Printer (driver installed)</option>
+                  <option value="network">Network / TCP-IP Thermal Printer</option>
+                </select>
+              </div>
+              <div id="pm-windows-section" style="margin-bottom:14px">
+                <label style="font-size:13px;font-weight:600;display:block;margin-bottom:5px">Select Windows Printer</label>
+                <select id="pm-windows-name" style="width:100%;padding:9px 12px;border:1.5px solid var(--border);border-radius:8px;font-size:14px;background:var(--bg);color:var(--text)">
+                  <option value="">-- loading… --</option>
+                </select>
+              </div>
+              <div id="pm-network-section" style="display:none;margin-bottom:14px">
+                <div class="form-row" style="display:grid;grid-template-columns:1fr 100px 120px;gap:10px">
+                  <div class="form-group">
+                    <label style="font-size:13px;font-weight:600;display:block;margin-bottom:5px">IP Address</label>
+                    <input type="text" id="pm-ip" placeholder="192.168.1.100" style="width:100%;padding:9px 12px;border:1.5px solid var(--border);border-radius:8px;font-size:14px;background:var(--bg);color:var(--text);box-sizing:border-box">
+                  </div>
+                  <div class="form-group">
+                    <label style="font-size:13px;font-weight:600;display:block;margin-bottom:5px">Port</label>
+                    <input type="number" id="pm-port" value="9100" style="width:100%;padding:9px 12px;border:1.5px solid var(--border);border-radius:8px;font-size:14px;background:var(--bg);color:var(--text);box-sizing:border-box">
+                  </div>
+                  <div class="form-group">
+                    <label style="font-size:13px;font-weight:600;display:block;margin-bottom:5px">Protocol</label>
+                    <select id="pm-type" style="width:100%;padding:9px 12px;border:1.5px solid var(--border);border-radius:8px;font-size:14px;background:var(--bg);color:var(--text)">
+                      <option value="epson">Epson ESC/POS</option>
+                      <option value="star">Star</option>
+                      <option value="escpos">Generic ESC/POS</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+              <div class="form-group" style="margin-bottom:20px">
+                <label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer">
+                  <input type="checkbox" id="pm-active" checked style="width:16px;height:16px;cursor:pointer"> Active (enabled for printing)
+                </label>
+              </div>
+              <div style="display:flex;gap:10px;justify-content:flex-end">
+                <button class="btn-outline" onclick="closePrinterModal()">Cancel</button>
+                <button class="btn-primary" onclick="savePrinterModal()">Save Printer</button>
+              </div>
+            </div>
           </div>
 
           <div class="settings-group-label">⚙️ System / Technical — change only when reconfiguring this terminal</div>
@@ -4354,7 +4430,8 @@ async function confirmPayment() {
 async function printDraftBill() {
   if (!cart.items.length) { alert('Cart is empty.'); return; }
   const { subtotal, taxAmt, discAmt, total } = calcTotals();
-  const billPrinter = (window._posConfig && window._posConfig.billPrinter) || '';
+  const rp = await getReceiptPrinter();
+  const billPrinter = rp?.windows_name || (window._posConfig && window._posConfig.billPrinter) || '';
   await print.receipt({
     restaurantName:  settings.restaurant_name,
     orderNumber:     cart.orderNumber || '---',
@@ -4377,7 +4454,8 @@ async function printDraftBill() {
 }
 
 async function printReceipt(order) {
-  const billPrinter = (window._posConfig && window._posConfig.billPrinter) || '';
+  const rp = await getReceiptPrinter();
+  const billPrinter = rp?.windows_name || (window._posConfig && window._posConfig.billPrinter) || '';
   await print.receipt({
     restaurantName: settings.restaurant_name,
     orderNumber:    order.order_number,
@@ -4899,7 +4977,8 @@ async function placeOrder() {
     if (!confirm('No table selected. Continue without a table?')) return;
   }
 
-  const kotPrinter = (window._posConfig && window._posConfig.kotPrinter) || '';
+  const kp = await getKotPrinter();
+  const kotPrinter = kp?.windows_name || (window._posConfig && window._posConfig.kotPrinter) || '';
   const now = Date.now();
 
   let activeOrderId   = cart.orderId;
@@ -5285,42 +5364,120 @@ function renderThemeSwatches() {
 }
 
 // ═══════════════════════════════════════════════════════════════
-//  PRINTER SETTINGS
+//  PRINTER SETTINGS  (stored in local DB)
 // ═══════════════════════════════════════════════════════════════
 async function loadPrinterSettings() {
-  // Per-terminal: read from pos-config.json (not shared DB)
-  const cfg      = (await window.posAPI.getConfig()) || {};
-  const kotSaved  = cfg.kotPrinter  || '';
-  const billSaved = cfg.billPrinter || '';
-  const printers  = await window.posAPI.getPrinters();
-
-  function buildOpts(saved) {
-    return `<option value="">-- Show Dialog --</option>` +
-      printers.map(p =>
-        `<option value="${esc(p.name)}"${p.name === saved ? ' selected' : ''}>${esc(p.name)}${p.isDefault?' (Default)':''}</option>`
-      ).join('');
+  const r = await db.all(`SELECT * FROM printers ORDER BY name`);
+  const rows = r.ok ? r.data : [];
+  const roleLabel = { receipt: 'Receipt', kot: 'KOT', both: 'Receipt+KOT' };
+  const connLabel = { windows: 'Windows', network: 'Network' };
+  const tbody = document.getElementById('printer-list-body');
+  if (!rows.length) {
+    tbody.innerHTML = `<tr><td colspan="7" style="padding:16px;text-align:center;color:var(--muted)">No printers configured. Click <b>Add Printer</b> to get started.</td></tr>`;
+  } else {
+    tbody.innerHTML = rows.map(p => `
+      <tr style="border-bottom:1px solid var(--border)">
+        <td style="padding:9px 10px;font-weight:600">${esc(p.name)}</td>
+        <td style="padding:9px 10px"><span style="background:#f0f9ff;color:#0369a1;padding:2px 8px;border-radius:10px;font-size:12px">${roleLabel[p.role]||p.role}</span></td>
+        <td style="padding:9px 10px">${connLabel[p.connection_type]||p.connection_type}</td>
+        <td style="padding:9px 10px;color:var(--muted);font-size:12px">${p.connection_type==='windows'?(esc(p.windows_name)||'—'):(p.ip?(esc(p.ip)+':'+p.port):'—')}</td>
+        <td style="padding:9px 10px">${p.paper_width||80}mm</td>
+        <td style="padding:9px 10px"><span style="color:${p.active?'var(--success)':'var(--muted)'}">${p.active?'●':'○'} ${p.active?'Active':'Inactive'}</span></td>
+        <td style="padding:9px 10px;white-space:nowrap">
+          <button onclick="openPrinterModal('${p.id}')" style="padding:4px 10px;border:1.5px solid var(--border);border-radius:6px;background:var(--bg);cursor:pointer;font-size:12px;margin-right:4px">Edit</button>
+          <button onclick="deletePrinter('${p.id}','${esc(p.name)}')" style="padding:4px 10px;border:1.5px solid #fca5a5;border-radius:6px;background:#fff;cursor:pointer;font-size:12px;color:#dc2626">Delete</button>
+        </td>
+      </tr>`).join('');
   }
-
-  document.getElementById('set-kot-printer').innerHTML  = buildOpts(kotSaved);
-  document.getElementById('set-bill-printer').innerHTML = buildOpts(billSaved);
-
   const msg = document.getElementById('printer-status-msg');
-  msg.textContent = printers.length
-    ? `${printers.length} printer(s) found on this terminal.`
-    : 'No printers detected. Install a printer driver first.';
-  msg.style.color = printers.length ? 'var(--success)' : 'var(--warning)';
+  msg.textContent = rows.length ? `${rows.length} printer(s) in local database.` : '';
+  msg.style.color = 'var(--muted)';
 }
 
-async function savePrinterSettings() {
-  // Per-terminal: save to pos-config.json alongside DB/server config
-  const cfg = (await window.posAPI.getConfig()) || {};
-  cfg.kotPrinter  = document.getElementById('set-kot-printer').value;
-  cfg.billPrinter = document.getElementById('set-bill-printer').value;
-  await window.posAPI.saveConfig(cfg);
-  window._posConfig = cfg;
+let _pmOsPrinters = [];
+async function openPrinterModal(id) {
+  _pmOsPrinters = await window.posAPI.getPrinters();
+  const sel = document.getElementById('pm-windows-name');
+  sel.innerHTML = `<option value="">-- Show Print Dialog --</option>` +
+    _pmOsPrinters.map(p => `<option value="${esc(p.name)}">${esc(p.name)}${p.isDefault?' (Default)':''}</option>`).join('');
+
+  let row = null;
+  if (id) {
+    const r = await db.get(`SELECT * FROM printers WHERE id=?`, [id]);
+    row = r.ok ? r.data : null;
+  }
+  document.getElementById('pm-title').textContent     = row ? 'Edit Printer' : 'Add Printer';
+  document.getElementById('pm-id').value              = row ? row.id : '';
+  document.getElementById('pm-name').value            = row ? (row.name||'') : '';
+  document.getElementById('pm-role').value            = row ? (row.role||'receipt') : 'receipt';
+  document.getElementById('pm-width').value           = row ? String(row.paper_width||80) : '80';
+  document.getElementById('pm-conn').value            = row ? (row.connection_type||'windows') : 'windows';
+  document.getElementById('pm-windows-name').value   = row ? (row.windows_name||'') : '';
+  document.getElementById('pm-ip').value              = row ? (row.ip||'') : '';
+  document.getElementById('pm-port').value            = row ? String(row.port||9100) : '9100';
+  document.getElementById('pm-type').value            = row ? (row.type||'epson') : 'epson';
+  document.getElementById('pm-active').checked        = row ? !!row.active : true;
+  pmToggleConn();
+  const ov = document.getElementById('printer-modal-overlay');
+  ov.style.display = 'flex';
+}
+
+function pmToggleConn() {
+  const isNet = document.getElementById('pm-conn').value === 'network';
+  document.getElementById('pm-windows-section').style.display = isNet ? 'none' : '';
+  document.getElementById('pm-network-section').style.display = isNet ? '' : 'none';
+}
+
+function closePrinterModal() {
+  document.getElementById('printer-modal-overlay').style.display = 'none';
+}
+
+async function savePrinterModal() {
+  const name   = document.getElementById('pm-name').value.trim();
+  if (!name) { alert('Printer label is required.'); return; }
+  const id     = document.getElementById('pm-id').value || (Date.now().toString(36)+Math.random().toString(36).slice(2,6));
+  const role   = document.getElementById('pm-role').value;
+  const width  = parseInt(document.getElementById('pm-width').value) || 80;
+  const conn   = document.getElementById('pm-conn').value;
+  const wname  = document.getElementById('pm-windows-name').value;
+  const ip     = document.getElementById('pm-ip').value.trim();
+  const port   = parseInt(document.getElementById('pm-port').value) || 9100;
+  const ptype  = document.getElementById('pm-type').value;
+  const active = document.getElementById('pm-active').checked ? 1 : 0;
+
+  const existing = await db.get(`SELECT id FROM printers WHERE id=?`, [id]);
+  if (existing.ok && existing.data) {
+    await db.run(
+      `UPDATE printers SET name=?,role=?,connection_type=?,windows_name=?,ip=?,port=?,type=?,paper_width=?,active=? WHERE id=?`,
+      [name, role, conn, wname||null, ip||null, port, ptype, width, active, id]
+    );
+  } else {
+    await db.run(
+      `INSERT INTO printers (id,name,role,connection_type,windows_name,ip,port,type,area,paper_width,active) VALUES (?,?,?,?,?,?,?,?,?,?,?)`,
+      [id, name, role, conn, wname||null, ip||null, port, ptype, 'counter', width, active]
+    );
+  }
+  closePrinterModal();
+  await loadPrinterSettings();
   const msg = document.getElementById('printer-status-msg');
-  msg.textContent = '✅ Printer settings saved for this terminal!';
+  msg.textContent = '✅ Printer saved.';
   msg.style.color = 'var(--success)';
+}
+
+async function deletePrinter(id, name) {
+  if (!confirm(`Delete printer "${name}"?`)) return;
+  await db.run(`DELETE FROM printers WHERE id=?`, [id]);
+  await loadPrinterSettings();
+}
+
+async function getReceiptPrinter() {
+  const r = await db.get(`SELECT * FROM printers WHERE role IN ('receipt','both') AND active=1 ORDER BY name LIMIT 1`);
+  return (r.ok && r.data) ? r.data : null;
+}
+
+async function getKotPrinter() {
+  const r = await db.get(`SELECT * FROM printers WHERE role IN ('kot','both') AND active=1 ORDER BY name LIMIT 1`);
+  return (r.ok && r.data) ? r.data : null;
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -5576,8 +5733,11 @@ document.querySelectorAll('.modal-overlay').forEach(el => {
 
 // Keyboard shortcuts
 document.addEventListener('keydown', e => {
-  if (e.key === 'Escape')
+  if (e.key === 'Escape') {
     document.querySelectorAll('.modal-overlay.show').forEach(el => el.classList.remove('show'));
+    const pm = document.getElementById('printer-modal-overlay');
+    if (pm && pm.style.display !== 'none') closePrinterModal();
+  }
   if (e.key === 'F11') { e.preventDefault(); toggleFullscreen(); }
   if (!cashier) return; // only active when logged in
   const anyModalOpen = !!document.querySelector('.modal-overlay.show');
