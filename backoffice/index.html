@@ -569,9 +569,9 @@ input:checked+.toggle-slider:before{transform:translateX(17px)}
 /* ─── MOBILE REPORTS & CONFIG TAB BARS ─────────────────── */
 .mob-rpt-tabs,.mob-cfg-tabs{display:none}
 @media(max-width:768px){
-  .mob-rpt-tabs,.mob-cfg-tabs{display:flex;overflow-x:auto;flex-wrap:nowrap;border-bottom:2px solid var(--border);margin-bottom:14px;scrollbar-width:none;padding:0 0 0 0;background:var(--card);border-radius:10px 10px 0 0;margin-top:-4px}
+  .mob-rpt-tabs,.mob-cfg-tabs{display:flex;overflow-x:auto;flex-wrap:nowrap;border-bottom:2px solid var(--border);margin-bottom:16px;scrollbar-width:none;background:#fff}
   .mob-rpt-tabs::-webkit-scrollbar,.mob-cfg-tabs::-webkit-scrollbar{display:none}
-  .mob-rpt-tab,.mob-cfg-tab{flex-shrink:0;padding:10px 14px;background:none;border:none;border-bottom:2px solid transparent;font-size:12px;font-weight:600;color:var(--muted);cursor:pointer;margin-bottom:-2px;white-space:nowrap;transition:color .12s,border-color .12s;min-height:40px}
+  .mob-rpt-tab,.mob-cfg-tab{flex-shrink:0;padding:10px 16px;background:none;border:none;border-bottom:2.5px solid transparent;font-size:12px;font-weight:600;color:var(--muted);cursor:pointer;margin-bottom:-2px;white-space:nowrap;transition:color .12s,border-color .12s;min-height:44px}
   .mob-rpt-tab.active,.mob-cfg-tab.active{color:var(--primary);border-bottom-color:var(--primary)}
 }
 /* ─── REPORT TABS ───────────────────────────────────────── */
@@ -2214,6 +2214,7 @@ input:checked+.toggle-slider:before{transform:translateX(17px)}
     <button class="mob-cfg-tab" id="mobcfg-designations" onclick="showCfgTab('designations');mobSetCfgTab('designations')">Designations</button>
     <button class="mob-cfg-tab" id="mobcfg-tax" onclick="showCfgTab('tax');mobSetCfgTab('tax')">Tax</button>
     <button class="mob-cfg-tab" id="mobcfg-modifier-groups" onclick="showCfgTab('modifier-groups');mobSetCfgTab('modifier-groups')">Modifiers</button>
+    <button class="mob-cfg-tab" id="mobcfg-pos-layout" onclick="showCfgTab('pos-layout');mobSetCfgTab('pos-layout')">POS Layout</button>
   </div>
   <div class="cfg-layout">
     <div class="cfg-content">
