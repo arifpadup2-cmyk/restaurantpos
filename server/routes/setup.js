@@ -493,6 +493,18 @@ module.exports = function setupRouter (sql) {
     } catch (e) { res.status(500).json({ error: e.message }) }
   })
 
+  // ── Superadmin: all markets ───────────────────────────────────────────────
+  router.get('/markets', jwtAuth, async (_req, res) => {
+    try {
+      const rows = await sql`
+        SELECT m.*, b.name AS brand_name
+        FROM markets m
+        LEFT JOIN brands b ON b.id = m.brand_id
+        ORDER BY b.name, m.name`
+      res.json({ ok: true, markets: rows })
+    } catch (e) { res.status(500).json({ error: e.message }) }
+  })
+
   // ── Superadmin: all outlets ───────────────────────────────────────────────
   router.get('/outlets', jwtAuth, async (_req, res) => {
     try {
