@@ -521,7 +521,7 @@ input:checked+.toggle-slider:before{transform:translateX(17px)}
   .page-header{flex-wrap:wrap;gap:8px}
   .page-header h2{font-size:17px;flex:1 0 100%}
   /* Modals: bottom sheet */
-  .modal-wrap{align-items:flex-end;padding:0}
+  .modal-overlay{align-items:flex-end !important;padding:0 !important}
   .modal{min-width:unset !important;width:100% !important;max-height:92dvh;max-height:92vh;border-radius:20px 20px 0 0 !important;padding:24px 16px 20px;overflow-y:auto}
   .modal::before{content:'';display:block;width:40px;height:4px;background:#d1d5db;border-radius:2px;margin:-10px auto 18px}
   /* Outlet ctx bar */
@@ -546,8 +546,12 @@ input:checked+.toggle-slider:before{transform:translateX(17px)}
   .filter-bar{overflow-x:auto;flex-wrap:nowrap;scrollbar-width:none;padding-bottom:2px}
   .filter-bar::-webkit-scrollbar{display:none}
   .filter-chip{flex-shrink:0}
-  /* Live Orders: shrink board to avoid overlap with bottom nav */
-  #v-live .live-wrap{height:calc(100dvh - var(--hdr-h) - 56px - env(safe-area-inset-bottom,0px))}
+  /* Live Orders + KDS: shrink board to avoid overlap with bottom nav */
+  #v-live .live-wrap,#v-kds .kds-wrap{height:calc(100dvh - var(--hdr-h) - 56px - env(safe-area-inset-bottom,0px))}
+  /* Config: reduce content padding on mobile */
+  .cfg-content{padding:12px 0;max-width:100%}
+  /* Staff/Audit/Reports: table scroll hint */
+  .table-wrap{-webkit-overflow-scrolling:touch}
   /* ─── Item Editor: mobile ─── */
   #v-item-editor.active{padding-bottom:calc(58px + env(safe-area-inset-bottom,0px))}
   .ie-topbar{padding:10px 12px;gap:8px}
@@ -3822,6 +3826,7 @@ function showRptTab (tab) {
   if (subEl) subEl.classList.add('active')
   const titleEl = document.getElementById('rpt-page-title')
   if (titleEl) titleEl.textContent = RPT_TAB_TITLES[tab] || 'Reports'
+  mobSetRptTab(tab)
 }
 
 // ─── BRAND LOGO FILE UPLOAD ───────────────────────────────────────
@@ -6372,6 +6377,8 @@ function showCfgTab (tab) {
   document.querySelectorAll('.nav-sub').forEach(s => s.classList.remove('active'))
   const sub = document.getElementById('navsub-' + tab)
   if (sub) sub.classList.add('active')
+  // sync mobile tab bar
+  mobSetCfgTab(tab)
   // Load data for the tab
   const loaders = {
     brand: cfgLoadBrands, markets: cfgLoadMarkets, outlet: cfgLoadOutlets,
