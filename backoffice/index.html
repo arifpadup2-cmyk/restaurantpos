@@ -4074,8 +4074,19 @@ async function initApp () {
   updateSidebarUser()
   await loadBOSettings()
   if (currentUser?.brand_id && !boSettings.setup_done) {
-    showOnboarding()
-    return
+    // Skip onboarding if brand already has outlets (admin-created brands)
+    let hasOutlets = false
+    try {
+      const { rows: existingOutlets } = await apiFetch('GET', '/config/outlets')
+      hasOutlets = existingOutlets && existingOutlets.length > 0
+    } catch (_) {}
+    if (hasOutlets) {
+      boSettings.setup_done = true
+      apiFetch('PUT', '/settings', { setup_done: true }).catch(() => {})
+    } else {
+      showOnboarding()
+      return
+    }
   }
   setTodayDates()
   await loadMenu()
