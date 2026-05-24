@@ -153,7 +153,7 @@ module.exports = function setupRouter (sql) {
       const taxSysVal   = tax_system || 'exclusive'
       const branchName  = outlet_name || name.trim() + ' - Main'
       for (const [key, val] of [['tax_rate', String(taxRateVal)], ['tax_system', taxSysVal], ['branch_name', branchName]]) {
-        await sql`INSERT INTO settings (brand_id, key, value) VALUES (${id}, ${key}, ${val}) ON CONFLICT (brand_id, key) DO UPDATE SET value = EXCLUDED.value`
+        await sql`INSERT INTO settings (brand_id, outlet_id, key, value) VALUES (${id}, ${''}, ${key}, ${val}) ON CONFLICT (brand_id, outlet_id, key) DO UPDATE SET value = EXCLUDED.value`
       }
 
       res.json({

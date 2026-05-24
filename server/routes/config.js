@@ -109,8 +109,8 @@ module.exports = function configRouter (sql) {
       for (const key of OUTLET_KEYS) {
         if (body[key] === undefined) continue
         await sql`
-          INSERT INTO settings (brand_id, key, value) VALUES (${rid}, ${key}, ${String(body[key])})
-          ON CONFLICT (brand_id, key) DO UPDATE SET value = EXCLUDED.value`
+          INSERT INTO settings (brand_id, outlet_id, key, value) VALUES (${rid}, ${''}, ${key}, ${String(body[key])})
+          ON CONFLICT (brand_id, outlet_id, key) DO UPDATE SET value = EXCLUDED.value`
       }
       res.json({ ok: true })
     } catch (e) { serverError(res, e) }
