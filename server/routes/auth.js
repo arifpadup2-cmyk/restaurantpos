@@ -2,10 +2,24 @@
 
 const express  = require('express')
 const bcrypt   = require('bcryptjs')
-const { randomUUID } = require('crypto')
+const crypto   = require('crypto')
+const { randomUUID } = crypto
 const { OAuth2Client } = require('google-auth-library')
 const { sign, jwtAuth } = require('../middleware/jwtAuth')
 const { serverError } = require('../middleware/serverError')
+
+const REFRESH_TTL_DAYS = 30
+async function issueRefreshToken (sql, user, req) {
+  const raw  = crypto.randomBytes(48).toString('base64url')
+  const hash = crypto.createHash('sha256').update(raw).digest('hex')
+  const id   = randomUUID()
+  const expires = new Date(Date.now() + REFRESH_TTL_DAYS * 86400000).toISOString()
+  await sql`
+    INSERT INTO refresh_tokens (id, user_id, brand_id, token_hash, user_agent, ip, expires_at)
+    VALUES (${id}, ${user.id}, ${user.brand_id || null}, ${hash},
+            ${(req.headers['user-agent'] || '').slice(0, 200)}, ${(req.ip || '').slice(0, 64)}, ${expires})`
+  return raw
+}
 
 // ── Simple in-memory rate limiter ─────────────────────────────────────────────
 const _rateBuckets = new Map()
@@ -78,7 +92,17 @@ module.exports = function authRouter (sql) {
       if (!ok)
         return res.status(401).json({ error: 'Invalid username or password' })
 
+      // Block unverified brand owners. Admin and non-brand-scoped users bypass.
+      if (user.brand_id) {
+        const [brand] = await sql`SELECT email_verified, active, status FROM brands WHERE id = ${user.brand_id}`
+        if (brand && brand.active === false)
+          return res.status(403).json({ error: 'Brand suspended. Contact support.' })
+        if (brand && brand.email_verified === false)
+          return res.status(403).json({ error: 'Email not verified. Check your inbox for the verification link.', code: 'EMAIL_NOT_VERIFIED' })
+      }
+
       const token = sign({ id: user.id, username: user.username, role: user.role, brand_id: user.brand_id || null })
+      const refresh = await issueRefreshToken(sql, user, req)
       let owner_name = null
       if (user.brand_id) {
         try {
@@ -86,10 +110,46 @@ module.exports = function authRouter (sql) {
           owner_name = b?.owner_name || null
         } catch (_) {}
       }
-      res.json({ ok: true, token, user: { id: user.id, username: user.username, role: user.role, brand_id: user.brand_id || null, owner_name } })
+      res.json({ ok: true, token, refresh, user: { id: user.id, username: user.username, role: user.role, brand_id: user.brand_id || null, owner_name } })
     } catch (e) {
       serverError(res, e)
     }
+  })
+
+  // POST /auth/refresh — exchange refresh token for new access token
+  router.post('/refresh', async (req, res) => {
+    const raw = String(req.body?.refresh || '').trim()
+    if (!raw) return res.status(400).json({ error: 'refresh required' })
+    const hash = crypto.createHash('sha256').update(raw).digest('hex')
+    try {
+      const [row] = await sql`
+        SELECT rt.id, rt.user_id, rt.brand_id, rt.expires_at, rt.revoked_at,
+               u.id AS uid, u.username, u.role, u.active
+        FROM refresh_tokens rt
+        JOIN bo_users u ON u.id = rt.user_id
+        WHERE rt.token_hash = ${hash}`
+      if (!row || row.revoked_at) return res.status(401).json({ error: 'Invalid refresh token' })
+      if (new Date(row.expires_at) < new Date())
+        return res.status(401).json({ error: 'Refresh token expired' })
+      if (row.active === false)
+        return res.status(401).json({ error: 'Account disabled' })
+
+      // Rotate: revoke old, issue new
+      await sql`UPDATE refresh_tokens SET revoked_at = now() WHERE id = ${row.id}`
+      const newRefresh = await issueRefreshToken(sql, { id: row.uid, brand_id: row.brand_id }, req)
+      const newAccess  = sign({ id: row.uid, username: row.username, role: row.role, brand_id: row.brand_id || null })
+      res.json({ ok: true, token: newAccess, refresh: newRefresh })
+    } catch (e) { serverError(res, e) }
+  })
+
+  // POST /auth/logout — revoke refresh token
+  router.post('/logout', async (req, res) => {
+    const raw = String(req.body?.refresh || '').trim()
+    if (raw) {
+      const hash = crypto.createHash('sha256').update(raw).digest('hex')
+      try { await sql`UPDATE refresh_tokens SET revoked_at = now() WHERE token_hash = ${hash}` } catch (_) {}
+    }
+    res.json({ ok: true })
   })
 
   // GET /auth/me
@@ -183,33 +243,54 @@ module.exports = function authRouter (sql) {
       if (existing.length > 0)
         return res.status(409).json({ error: 'Email already registered. Sign in instead.' })
 
-      const { generateRestaurantId, generateLicenseKey, hashLicenseKey, keyPrefix, encryptText } = require('../lib/license')
+      const { generateRestaurantId, generateLicenseKey, hashLicenseKey, keyPrefix } = require('../lib/license')
+      const crypto2 = require('crypto')
       const id         = generateRestaurantId()
       const licKey     = generateLicenseKey()
       const keyHash    = await hashLicenseKey(licKey)
       const prefix     = keyPrefix(licKey)
       const trialEnds  = new Date(Date.now() + 7 * 86400000).toISOString()
       const placeholder = email.toLowerCase().split('@')[0]
-
-      await sql`
-        INSERT INTO brands (
-          id, name, license_key_hash, license_prefix, max_terminals,
-          email, active, plan, status, trial_ends_at, signup_source
-        ) VALUES (
-          ${id}, ${placeholder}, ${keyHash}, ${prefix}, ${5},
-          ${email.toLowerCase()}, ${true}, ${'trial'}, ${'trial'}, ${trialEnds}, ${'self_signup'}
-        )`
+      const verifyToken = crypto2.randomBytes(32).toString('hex')
+      const verifyExp   = new Date(Date.now() + 24 * 3600000).toISOString()
 
       const uid      = randomUUID().replace(/-/g, '').slice(0, 20)
       const username = (placeholder.replace(/[^a-z0-9_]/g, '_').slice(0, 16) + '_' + id.slice(-4)).toLowerCase()
       const hash     = await bcrypt.hash(password, 10)
+      const marketId = 'mkt-' + crypto2.randomUUID().replace(/-/g, '').slice(0, 16)
+      const outletId = 'out-' + crypto2.randomUUID().replace(/-/g, '').slice(0, 16)
 
-      await sql`
-        INSERT INTO bo_users (id, brand_id, username, password, email, role)
-        VALUES (${uid}, ${id}, ${username}, ${hash}, ${email.toLowerCase()}, 'owner')`
+      await sql.begin(async t => {
+        await t`
+          INSERT INTO brands (
+            id, name, license_key_hash, license_prefix, max_terminals,
+            email, active, plan, status, trial_ends_at, signup_source,
+            email_verified, email_verification_token, email_verification_expires
+          ) VALUES (
+            ${id}, ${placeholder}, ${keyHash}, ${prefix}, ${5},
+            ${email.toLowerCase()}, ${true}, ${'trial'}, ${'trial'}, ${trialEnds}, ${'self_signup'},
+            ${false}, ${verifyToken}, ${verifyExp}
+          )`
+        await t`
+          INSERT INTO bo_users (id, brand_id, username, password, email, role)
+          VALUES (${uid}, ${id}, ${username}, ${hash}, ${email.toLowerCase()}, 'owner')`
+        await t`
+          INSERT INTO markets (id, brand_id, name, currency_code, currency_symbol)
+          VALUES (${marketId}, ${id}, 'Default Market', 'USD', '$')`
+        await t`
+          INSERT INTO outlets (id, brand_id, market_id, name, currency, currency_code, currency_symbol)
+          VALUES (${outletId}, ${id}, ${marketId}, 'Main Outlet', 'USD', 'USD', '$')`
+      })
 
-      const token = sign({ id: uid, username, role: 'owner', brand_id: id, email: email.toLowerCase() })
-      res.json({ ok: true, token, user: { id: uid, username, role: 'owner', brand_id: id, email: email.toLowerCase() }, trialEndsAt: trialEnds })
+      console.log(`  ✉ Verification email queued for ${email}: /api/signup/verify?t=${verifyToken}`)
+
+      // Email not yet verified → return user info but no usable token.
+      res.json({
+        ok: true,
+        user: { id: uid, username, role: 'owner', brand_id: id, email: email.toLowerCase() },
+        trialEndsAt: trialEnds,
+        verify_required: true,
+      })
     } catch (e) {
       serverError(res, e)
     }
@@ -247,28 +328,38 @@ module.exports = function authRouter (sql) {
       }
 
       const { generateRestaurantId, generateLicenseKey, hashLicenseKey, keyPrefix } = require('../lib/license')
+      const crypto3 = require('crypto')
       const id        = generateRestaurantId()
       const licKey    = generateLicenseKey()
       const keyHash   = await hashLicenseKey(licKey)
       const prefix    = keyPrefix(licKey)
       const trialEnds = new Date(Date.now() + 7 * 86400000).toISOString()
       const placeholder = (email || 'user').split('@')[0]
-
-      await sql`
-        INSERT INTO brands (
-          id, name, license_key_hash, license_prefix, max_terminals,
-          email, active, plan, status, trial_ends_at, signup_source
-        ) VALUES (
-          ${id}, ${placeholder}, ${keyHash}, ${prefix}, ${5},
-          ${email}, ${true}, ${'trial'}, ${'trial'}, ${trialEnds}, ${'self_signup'}
-        )`
-
       const uid      = randomUUID().replace(/-/g, '').slice(0, 20)
       const username = (placeholder.replace(/[^a-z0-9_]/g, '_').slice(0, 16) + '_' + id.slice(-4)).toLowerCase()
+      const marketId = 'mkt-' + crypto3.randomUUID().replace(/-/g, '').slice(0, 16)
+      const outletId = 'out-' + crypto3.randomUUID().replace(/-/g, '').slice(0, 16)
 
-      await sql`
-        INSERT INTO bo_users (id, brand_id, username, password, email, google_id, role)
-        VALUES (${uid}, ${id}, ${username}, '', ${email}, ${googleId}, 'owner')`
+      await sql.begin(async t => {
+        // Google sign-in implies verified email
+        await t`
+          INSERT INTO brands (
+            id, name, license_key_hash, license_prefix, max_terminals,
+            email, active, plan, status, trial_ends_at, signup_source, email_verified
+          ) VALUES (
+            ${id}, ${placeholder}, ${keyHash}, ${prefix}, ${5},
+            ${email}, ${true}, ${'trial'}, ${'trial'}, ${trialEnds}, ${'self_signup'}, ${true}
+          )`
+        await t`
+          INSERT INTO bo_users (id, brand_id, username, password, email, google_id, role)
+          VALUES (${uid}, ${id}, ${username}, '', ${email}, ${googleId}, 'owner')`
+        await t`
+          INSERT INTO markets (id, brand_id, name, currency_code, currency_symbol)
+          VALUES (${marketId}, ${id}, 'Default Market', 'USD', '$')`
+        await t`
+          INSERT INTO outlets (id, brand_id, market_id, name, currency, currency_code, currency_symbol)
+          VALUES (${outletId}, ${id}, ${marketId}, 'Main Outlet', 'USD', 'USD', '$')`
+      })
 
       const token = sign({ id: uid, username, role: 'owner', brand_id: id, email })
       res.json({ ok: true, token, user: { id: uid, username, role: 'owner', brand_id: id, email }, trialEndsAt: trialEnds })

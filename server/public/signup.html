@@ -7,27 +7,37 @@
 <style>
   *{box-sizing:border-box;margin:0;padding:0}
   body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:linear-gradient(135deg,#0f172a 0%,#1e293b 50%,#0f172a 100%);min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px}
-  .card{background:#fff;border-radius:20px;padding:40px;width:100%;max-width:520px;box-shadow:0 25px 80px rgba(0,0,0,.4)}
-  .brand{text-align:center;margin-bottom:28px}
+  .card{background:#fff;border-radius:20px;padding:36px;width:100%;max-width:620px;box-shadow:0 25px 80px rgba(0,0,0,.4)}
+  .brand{text-align:center;margin-bottom:24px}
   .brand-icon{width:56px;height:56px;background:linear-gradient(135deg,#f97316,#ea580c);border-radius:14px;display:inline-flex;align-items:center;justify-content:center;margin-bottom:12px}
   .brand-icon svg{color:#fff}
-  h1{font-size:24px;font-weight:800;color:#0f172a;margin-bottom:4px}
-  .subtitle{font-size:14px;color:#64748b;margin-bottom:28px;text-align:center}
-  .trial-badge{display:inline-flex;align-items:center;gap:6px;background:#fef3c7;color:#92400e;padding:6px 14px;border-radius:20px;font-size:12px;font-weight:700;border:1px solid #fcd34d;margin-bottom:20px}
+  h1{font-size:24px;font-weight:800;color:#0f172a;margin-bottom:4px;text-align:center}
+  .subtitle{font-size:14px;color:#64748b;margin-bottom:18px;text-align:center}
+  .trial-badge{display:inline-flex;align-items:center;gap:6px;background:#fef3c7;color:#92400e;padding:6px 14px;border-radius:20px;font-size:12px;font-weight:700;border:1px solid #fcd34d;margin-bottom:18px}
+  .steps-bar{display:flex;gap:6px;margin:18px 0 24px}
+  .step-pill{flex:1;height:6px;background:#e2e8f0;border-radius:3px;transition:.2s}
+  .step-pill.active{background:#f97316}
+  .step-pill.done{background:#10b981}
+  .step-label{font-size:11px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.5px;margin-bottom:14px;text-align:center}
   .form-row{display:grid;grid-template-columns:1fr 1fr;gap:14px}
-  .form-group{margin-bottom:16px}
+  .form-group{margin-bottom:14px}
   label{display:block;font-size:12px;font-weight:700;color:#374151;margin-bottom:6px;text-transform:uppercase;letter-spacing:.4px}
-  input,select{width:100%;padding:11px 14px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:14px;color:#0f172a;background:#fff;transition:.15s;outline:none}
-  input:focus,select:focus{border-color:#f97316;box-shadow:0 0 0 3px rgba(249,115,22,.1)}
+  label .req{color:#dc2626}
+  input,select,textarea{width:100%;padding:11px 14px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:14px;color:#0f172a;background:#fff;transition:.15s;outline:none;font-family:inherit}
+  input:focus,select:focus,textarea:focus{border-color:#f97316;box-shadow:0 0 0 3px rgba(249,115,22,.1)}
   input::placeholder{color:#94a3b8}
-  .btn{width:100%;padding:14px;background:linear-gradient(135deg,#f97316,#ea580c);color:#fff;border:none;border-radius:10px;font-size:16px;font-weight:700;cursor:pointer;transition:.15s;margin-top:8px}
+  .btn{flex:1;padding:14px;background:linear-gradient(135deg,#f97316,#ea580c);color:#fff;border:none;border-radius:10px;font-size:16px;font-weight:700;cursor:pointer;transition:.15s}
   .btn:hover{transform:translateY(-1px);box-shadow:0 8px 24px rgba(249,115,22,.4)}
   .btn:disabled{opacity:.6;transform:none;cursor:not-allowed}
-  .features{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:20px 0}
-  .feat{display:flex;align-items:center;gap:8px;font-size:13px;color:#475569}
-  .feat-icon{width:18px;height:18px;background:#dcfce7;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;flex-shrink:0}
-  .divider{border:none;border-top:1px solid #f1f5f9;margin:20px 0}
+  .btn-secondary{flex:0 0 auto;padding:14px 22px;background:#f1f5f9;color:#374151;border:none;border-radius:10px;font-size:14px;font-weight:600;cursor:pointer}
+  .btn-secondary:hover{background:#e2e8f0}
+  .btn-row{display:flex;gap:10px;margin-top:8px}
+  .divider{border:none;border-top:1px solid #f1f5f9;margin:18px 0}
   .error{background:#fef2f2;border:1px solid #fecaca;color:#dc2626;padding:12px;border-radius:8px;font-size:13px;margin-bottom:14px;display:none}
+  .help{font-size:12px;color:#64748b;margin-top:4px}
+  .logo-preview{width:64px;height:64px;border-radius:12px;background:#f1f5f9;display:flex;align-items:center;justify-content:center;border:1.5px dashed #cbd5e1;color:#94a3b8;font-size:11px;overflow:hidden;flex-shrink:0}
+  .logo-preview img{width:100%;height:100%;object-fit:cover}
+  .logo-row{display:flex;align-items:center;gap:14px}
   /* Success screen */
   #success-screen{display:none;text-align:center}
   .success-icon{font-size:56px;margin-bottom:16px}
@@ -35,17 +45,11 @@
   .cred-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
   .cred-row:last-child{margin-bottom:0}
   .cred-label{font-size:11px;font-weight:700;color:#94a3b8;text-transform:uppercase}
-  .cred-value{font-family:monospace;font-size:16px;font-weight:700;color:#f97316}
+  .cred-value{font-family:monospace;font-size:15px;font-weight:700;color:#f97316;word-break:break-all;max-width:75%}
   .copy-btn{background:none;border:1px solid #e2e8f0;border-radius:6px;padding:4px 10px;font-size:12px;cursor:pointer;color:#64748b}
   .copy-btn:hover{background:#f1f5f9}
   .warning-box{background:#fef3c7;border:1px solid #fcd34d;border-radius:10px;padding:14px;margin:14px 0;font-size:13px;color:#92400e;line-height:1.6}
-  .steps{text-align:left;margin:16px 0}
-  .step{display:flex;gap:12px;margin-bottom:12px;align-items:flex-start}
-  .step-num{width:24px;height:24px;background:#f97316;color:#fff;border-radius:50%;font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px}
-  .step-text{font-size:13px;color:#374151;line-height:1.5}
-  .btn-secondary{background:#f1f5f9;color:#374151;border:none;border-radius:10px;padding:12px;font-size:14px;font-weight:600;cursor:pointer;width:100%;margin-top:8px}
-  .btn-secondary:hover{background:#e2e8f0}
-  @media(max-width:480px){.form-row{grid-template-columns:1fr}.features{grid-template-columns:1fr}}
+  @media(max-width:560px){.form-row{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
@@ -55,72 +59,163 @@
     <div class="brand-icon">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="28" height="28"><path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 002-2V2"/><path d="M7 2v20"/><path d="M21 15V2a5 5 0 00-5 5v6c0 1.1.9 2 2 2h3zm0 0v7"/></svg>
     </div>
-    <h1>Restaurant POS</h1>
-    <p class="subtitle">Complete POS system for your restaurant</p>
+    <h1>Start Your Free Trial</h1>
     <div class="trial-badge">⚡ 7-Day Free Trial — No credit card required</div>
   </div>
 
-  <div class="features">
-    <div class="feat"><div class="feat-icon">✓</div>Full POS system</div>
-    <div class="feat"><div class="feat-icon">✓</div>Kitchen display (KDS)</div>
-    <div class="feat"><div class="feat-icon">✓</div>Waiter app (mobile)</div>
-    <div class="feat"><div class="feat-icon">✓</div>Back office reports</div>
-    <div class="feat"><div class="feat-icon">✓</div>Multi-terminal support</div>
-    <div class="feat"><div class="feat-icon">✓</div>Offline-first (LAN)</div>
+  <div class="step-label" id="step-label">Step 1 of 4 — Owner Details</div>
+  <div class="steps-bar">
+    <div class="step-pill active" data-step="1"></div>
+    <div class="step-pill" data-step="2"></div>
+    <div class="step-pill" data-step="3"></div>
+    <div class="step-pill" data-step="4"></div>
   </div>
-
-  <hr class="divider">
 
   <div class="error" id="error-msg"></div>
 
-  <div class="form-row">
-    <div class="form-group">
-      <label>Restaurant Name *</label>
-      <input id="f-name" type="text" placeholder="Warung Makan Selera" required>
+  <!-- Step 1: Owner -->
+  <div class="step-panel" data-step-panel="1">
+    <div class="form-row">
+      <div class="form-group">
+        <label>Owner Name <span class="req">*</span></label>
+        <input id="f-owner" type="text" placeholder="Ahmad bin Razif">
+      </div>
+      <div class="form-group">
+        <label>Mobile Number <span class="req">*</span></label>
+        <input id="f-phone" type="tel" placeholder="+60 12-345 6789">
+      </div>
     </div>
-    <div class="form-group">
-      <label>Owner Name *</label>
-      <input id="f-owner" type="text" placeholder="Ahmad bin Razif" required>
-    </div>
-  </div>
-  <div class="form-row">
-    <div class="form-group">
-      <label>Email Address *</label>
-      <input id="f-email" type="email" placeholder="owner@restaurant.com" required>
-    </div>
-    <div class="form-group">
-      <label>Phone Number *</label>
-      <input id="f-phone" type="tel" placeholder="+60 12-345 6789" required>
-    </div>
-  </div>
-  <div class="form-row">
-    <div class="form-group">
-      <label>City</label>
-      <input id="f-city" type="text" placeholder="Kuala Lumpur">
-    </div>
-    <div class="form-group">
-      <label>Country</label>
-      <select id="f-country">
-        <option value="Malaysia" selected>Malaysia</option>
-        <option value="Singapore">Singapore</option>
-        <option value="Indonesia">Indonesia</option>
-        <option value="Thailand">Thailand</option>
-        <option value="Philippines">Philippines</option>
-        <option value="Other">Other</option>
-      </select>
+    <div class="form-row">
+      <div class="form-group">
+        <label>Email Address <span class="req">*</span></label>
+        <input id="f-email" type="email" placeholder="owner@restaurant.com">
+        <div class="help">Verification email will be sent here.</div>
+      </div>
+      <div class="form-group">
+        <label>WhatsApp Number</label>
+        <input id="f-whatsapp" type="tel" placeholder="Same as mobile if blank">
+      </div>
     </div>
   </div>
 
-  <div id="signup-progress" style="display:none;margin-bottom:14px">
+  <!-- Step 2: Brand -->
+  <div class="step-panel" data-step-panel="2" style="display:none">
+    <div class="form-row">
+      <div class="form-group">
+        <label>Brand Name <span class="req">*</span></label>
+        <input id="f-brand" type="text" placeholder="Warung Makan Selera">
+      </div>
+      <div class="form-group">
+        <label>Business Type <span class="req">*</span></label>
+        <select id="f-biztype">
+          <option value="">-- Select --</option>
+          <option>Restaurant</option>
+          <option>Cafe / Coffee Shop</option>
+          <option>Quick Service / Fast Food</option>
+          <option>Bakery</option>
+          <option>Bar / Pub</option>
+          <option>Cloud Kitchen</option>
+          <option>Food Truck</option>
+          <option>Catering</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-group">
+      <label>Brand Logo</label>
+      <div class="logo-row">
+        <div class="logo-preview" id="logo-prev">No logo</div>
+        <input id="f-logo" type="file" accept="image/png,image/jpeg,image/webp" style="flex:1">
+      </div>
+      <div class="help">PNG, JPG or WEBP up to 1 MB. Optional.</div>
+    </div>
+    <div class="form-group">
+      <label>Country <span class="req">*</span></label>
+      <select id="f-country">
+        <option value="">-- Select --</option>
+        <option>Malaysia</option>
+        <option>Singapore</option>
+        <option>Indonesia</option>
+        <option>Thailand</option>
+        <option>Philippines</option>
+        <option>Vietnam</option>
+        <option>India</option>
+        <option>Pakistan</option>
+        <option>Bangladesh</option>
+        <option>Sri Lanka</option>
+        <option>UAE</option>
+        <option>Saudi Arabia</option>
+        <option>Qatar</option>
+        <option>Kuwait</option>
+        <option>Bahrain</option>
+        <option>Oman</option>
+        <option>Egypt</option>
+        <option>United Kingdom</option>
+        <option>United States</option>
+        <option>Canada</option>
+        <option>Australia</option>
+      </select>
+      <div class="help">Currency, tax, and market defaults are derived from this.</div>
+    </div>
+  </div>
+
+  <!-- Step 3: Market summary -->
+  <div class="step-panel" data-step-panel="3" style="display:none">
+    <div class="form-group">
+      <label>Default Market</label>
+      <input id="f-market-name" type="text" placeholder="e.g. Malaysia Market" value="">
+      <div class="help">A default market is auto-created from your country. You can add more later.</div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>Currency</label>
+        <input id="f-currency" type="text" readonly>
+      </div>
+      <div class="form-group">
+        <label>Currency Symbol</label>
+        <input id="f-currency-sym" type="text" readonly>
+      </div>
+    </div>
+  </div>
+
+  <!-- Step 4: Outlet -->
+  <div class="step-panel" data-step-panel="4" style="display:none">
+    <div class="form-group">
+      <label>Outlet Name <span class="req">*</span></label>
+      <input id="f-outlet" type="text" placeholder="e.g. Main Branch, Orchard Outlet">
+    </div>
+    <div class="form-group">
+      <label>Outlet Address</label>
+      <textarea id="f-address" rows="2" placeholder="Street, city, postal code"></textarea>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>Outlet Phone</label>
+        <input id="f-outlet-phone" type="tel" placeholder="Same as mobile if blank">
+      </div>
+      <div class="form-group">
+        <label>Opening / Closing</label>
+        <div style="display:flex;gap:8px">
+          <input id="f-open"  type="time" value="09:00">
+          <input id="f-close" type="time" value="22:00">
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="signup-progress" style="display:none;margin:14px 0">
     <div style="height:4px;background:#e2e8f0;border-radius:4px;overflow:hidden">
       <div id="prog-bar" style="height:100%;background:#f97316;width:0;transition:width .4s"></div>
     </div>
     <div id="prog-msg" style="font-size:12px;color:#64748b;text-align:center;margin-top:6px"></div>
   </div>
 
-  <button class="btn" id="btn-signup" onclick="doSignup()">Start My Free Trial →</button>
-  <p style="font-size:12px;color:#94a3b8;text-align:center;margin-top:12px">
-    By signing up you agree to our terms of service. Trial expires after 7 days.
+  <div class="btn-row">
+    <button class="btn-secondary" id="btn-back" onclick="prevStep()" style="display:none">← Back</button>
+    <button class="btn" id="btn-next" onclick="nextStep()">Continue →</button>
+  </div>
+
+  <p style="font-size:12px;color:#94a3b8;text-align:center;margin-top:14px">
+    By signing up you agree to the terms of service. Trial expires after 7 days.
   </p>
 </div>
 
@@ -128,15 +223,15 @@
 <div class="card" id="success-screen">
   <div class="success-icon">🎉</div>
   <h1 style="margin-bottom:8px">You're all set!</h1>
-  <p style="color:#64748b;font-size:14px;margin-bottom:4px">Your 7-day free trial has started. Save these credentials — you'll need them during installation.</p>
+  <p style="color:#64748b;font-size:14px;margin-bottom:4px">Your 7-day free trial has started.</p>
 
   <div class="warning-box">
-    ⚠️ <strong>Important:</strong> Copy and save your License Key now. It cannot be retrieved later.
+    ⚠️ <strong>Important:</strong> Copy and save your License Key and Back Office password now. They cannot be retrieved later — only reset.
   </div>
 
   <div class="cred-box">
     <div class="cred-row">
-      <div><div class="cred-label">Restaurant ID</div><div class="cred-value" id="s-rid"></div></div>
+      <div><div class="cred-label">Brand ID</div><div class="cred-value" id="s-rid"></div></div>
       <button class="copy-btn" onclick="copyEl('s-rid')">Copy</button>
     </div>
     <div class="cred-row">
@@ -144,113 +239,208 @@
       <button class="copy-btn" onclick="copyEl('s-key')">Copy</button>
     </div>
     <div class="cred-row">
+      <div><div class="cred-label">Back Office Username</div><div class="cred-value" id="s-user"></div></div>
+      <button class="copy-btn" onclick="copyEl('s-user')">Copy</button>
+    </div>
+    <div class="cred-row">
+      <div><div class="cred-label">Back Office Password</div><div class="cred-value" id="s-pass"></div></div>
+      <button class="copy-btn" onclick="copyEl('s-pass')">Copy</button>
+    </div>
+    <div class="cred-row">
       <div><div class="cred-label">Trial Expires</div><div style="font-size:14px;font-weight:700;color:#dc2626" id="s-expires"></div></div>
     </div>
   </div>
 
-  <p style="font-size:14px;font-weight:700;color:#0f172a;margin-bottom:12px">Next steps:</p>
-  <div class="steps">
-    <div class="step"><div class="step-num">1</div><div class="step-text"><strong>Download the server installer</strong> and run it on your server PC (the main computer). It installs everything automatically.</div></div>
-    <div class="step"><div class="step-num">2</div><div class="step-text"><strong>Download the POS app</strong> and install on each cashier/waiter PC. Enter your Restaurant ID and License Key when prompted.</div></div>
-    <div class="step"><div class="step-num">3</div><div class="step-text"><strong>Open Back Office</strong> on any browser, add your menu, staff and tables. You're ready to go!</div></div>
+  <div class="warning-box" style="background:#dbeafe;border-color:#93c5fd;color:#1e40af">
+    📧 We sent a verification link to your email. <strong>You must verify your email before logging into the back office.</strong>
   </div>
 
-  <button class="btn" id="btn-onboarding" onclick="goOnboarding()">📋 Open My Setup Guide →</button>
-  <button class="btn-secondary" onclick="window.print()">🖨 Print These Credentials</button>
+  <button class="btn" id="btn-onboarding" onclick="goOnboarding()">📋 Open Setup Guide →</button>
+  <button class="btn-secondary" style="width:100%;margin-top:8px" onclick="window.print()">🖨 Print These Credentials</button>
 </div>
 
 <script>
-let _restaurantId = '';
+let _step = 1, _maxStep = 4
+let _signupData = {}
+let _logoDataUrl = null
+let _onboardingUrl = ''
 
-async function doSignup() {
-  const name  = document.getElementById('f-name').value.trim();
-  const owner = document.getElementById('f-owner').value.trim();
-  const email = document.getElementById('f-email').value.trim();
-  const phone = document.getElementById('f-phone').value.trim();
-  const errEl = document.getElementById('error-msg');
-  errEl.style.display = 'none';
+const COUNTRY_CURRENCY = {
+  Malaysia:{c:'MYR',s:'RM'}, Singapore:{c:'SGD',s:'S$'}, Indonesia:{c:'IDR',s:'Rp'},
+  Thailand:{c:'THB',s:'฿'}, Philippines:{c:'PHP',s:'₱'}, Vietnam:{c:'VND',s:'₫'},
+  India:{c:'INR',s:'₹'}, Pakistan:{c:'PKR',s:'₨'}, Bangladesh:{c:'BDT',s:'৳'},
+  'Sri Lanka':{c:'LKR',s:'₨'}, UAE:{c:'AED',s:'د.إ'}, 'Saudi Arabia':{c:'SAR',s:'﷼'},
+  Qatar:{c:'QAR',s:'﷼'}, Kuwait:{c:'KWD',s:'د.ك'}, Bahrain:{c:'BHD',s:'BD'},
+  Oman:{c:'OMR',s:'ر.ع.'}, Egypt:{c:'EGP',s:'E£'},
+  'United Kingdom':{c:'GBP',s:'£'}, 'United States':{c:'USD',s:'$'},
+  Canada:{c:'CAD',s:'C$'}, Australia:{c:'AUD',s:'A$'}
+}
 
-  if (!name)  { showError('Restaurant name is required.'); return; }
-  if (!owner) { showError('Owner name is required.'); return; }
-  if (!email || !email.includes('@')) { showError('Valid email address is required.'); return; }
-  if (!phone) { showError('Phone number is required.'); return; }
+document.getElementById('f-country').addEventListener('change', e => {
+  const cc = COUNTRY_CURRENCY[e.target.value] || { c:'USD', s:'$' }
+  document.getElementById('f-currency').value = cc.c
+  document.getElementById('f-currency-sym').value = cc.s
+  if (!document.getElementById('f-market-name').value)
+    document.getElementById('f-market-name').value = e.target.value + ' Market'
+})
 
-  const btn = document.getElementById('btn-signup');
-  btn.disabled = true;
-  showProgress(30, 'Creating your account…');
+document.getElementById('f-logo').addEventListener('change', e => {
+  const f = e.target.files?.[0]
+  if (!f) return
+  if (f.size > 1024 * 1024) { showError('Logo file too large (max 1 MB).'); e.target.value=''; return }
+  const reader = new FileReader()
+  reader.onload = () => {
+    _logoDataUrl = reader.result
+    document.getElementById('logo-prev').innerHTML = `<img src="${_logoDataUrl}">`
+  }
+  reader.readAsDataURL(f)
+})
+
+function showStep (n) {
+  document.querySelectorAll('.step-panel').forEach(p => p.style.display = 'none')
+  document.querySelector(`[data-step-panel="${n}"]`).style.display = 'block'
+  document.querySelectorAll('.step-pill').forEach((pill, i) => {
+    pill.classList.toggle('active', i + 1 === n)
+    pill.classList.toggle('done',   i + 1 < n)
+  })
+  const labels = ['Owner Details', 'Brand Details', 'Market Details', 'Outlet Details']
+  document.getElementById('step-label').textContent = `Step ${n} of ${_maxStep} — ${labels[n-1]}`
+  document.getElementById('btn-back').style.display = n === 1 ? 'none' : ''
+  document.getElementById('btn-next').textContent   = n === _maxStep ? 'Create Account 🎉' : 'Continue →'
+}
+
+function validateStep (n) {
+  const v = id => document.getElementById(id).value.trim()
+  if (n === 1) {
+    if (!v('f-owner')) return 'Owner name is required.'
+    const e = v('f-email')
+    if (!e.includes('@')) return 'Valid email is required.'
+    if (!v('f-phone')) return 'Mobile number is required.'
+  }
+  if (n === 2) {
+    if (!v('f-brand')) return 'Brand name is required.'
+    if (!v('f-biztype')) return 'Business type is required.'
+    if (!v('f-country')) return 'Country is required.'
+  }
+  if (n === 4) {
+    if (!v('f-outlet')) return 'Outlet name is required.'
+  }
+  return null
+}
+
+function nextStep () {
+  const err = validateStep(_step)
+  if (err) { showError(err); return }
+  document.getElementById('error-msg').style.display = 'none'
+  if (_step < _maxStep) {
+    _step++
+    if (_step === 3) {
+      const country = document.getElementById('f-country').value
+      const cc = COUNTRY_CURRENCY[country] || { c:'USD', s:'$' }
+      document.getElementById('f-currency').value = cc.c
+      document.getElementById('f-currency-sym').value = cc.s
+      if (!document.getElementById('f-market-name').value)
+        document.getElementById('f-market-name').value = country + ' Market'
+    }
+    showStep(_step)
+  } else {
+    doSignup()
+  }
+}
+function prevStep () {
+  if (_step > 1) { _step--; showStep(_step) }
+}
+
+async function doSignup () {
+  const v = id => document.getElementById(id).value.trim()
+  const payload = {
+    owner_name:      v('f-owner'),
+    email:           v('f-email'),
+    phone:           v('f-phone'),
+    whatsapp_number: v('f-whatsapp') || v('f-phone'),
+    brand_name:      v('f-brand'),
+    business_type:   v('f-biztype'),
+    country:         v('f-country'),
+    logo_url:        _logoDataUrl,
+    outlet_name:     v('f-outlet'),
+    outlet_address:  v('f-address'),
+    outlet_phone:    v('f-outlet-phone') || v('f-phone'),
+    opening_time:    document.getElementById('f-open').value,
+    closing_time:    document.getElementById('f-close').value,
+    signup_source:   'website',
+  }
+  const btn = document.getElementById('btn-next')
+  btn.disabled = true
+  showProgress(30, 'Creating your account…')
 
   try {
     const resp = await fetch('/api/signup', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        name, owner_name: owner, email, phone,
-        city:    document.getElementById('f-city').value.trim(),
-        country: document.getElementById('f-country').value,
-        signup_source: 'website',
-      }),
-    });
-    const data = await resp.json();
-    showProgress(80, 'Setting up your trial…');
+      body: JSON.stringify(payload),
+    })
+    const data = await resp.json()
+    showProgress(80, 'Setting up brand, market and outlet…')
 
     if (!resp.ok || !data.ok) {
-      showError(data.error || 'Signup failed. Please try again.');
-      btn.disabled = false;
-      hideProgress();
-      return;
+      showError(data.error || 'Signup failed. Please try again.')
+      btn.disabled = false
+      hideProgress()
+      return
     }
 
-    showProgress(100, 'Done!');
-    await new Promise(r => setTimeout(r, 500));
+    showProgress(100, 'Done!')
+    await new Promise(r => setTimeout(r, 400))
 
-    _restaurantId = data.restaurant.id;
-    document.getElementById('s-rid').textContent     = data.restaurant.id;
-    document.getElementById('s-key').textContent     = data.restaurant.license_key;
-    document.getElementById('s-expires').textContent = new Date(data.restaurant.trial_ends_at).toLocaleDateString('en-MY', { weekday:'long', year:'numeric', month:'long', day:'numeric' });
-    document.getElementById('btn-onboarding').dataset.rid = data.restaurant.id;
+    _onboardingUrl = data.onboarding_url || ('/onboarding/' + data.brand.id)
+    document.getElementById('s-rid').textContent     = data.brand.id
+    document.getElementById('s-key').textContent     = data.brand.license_key
+    document.getElementById('s-user').textContent    = data.brand.bo_username
+    document.getElementById('s-pass').textContent    = data.brand.bo_password
+    document.getElementById('s-expires').textContent = new Date(data.brand.trial_ends_at).toLocaleDateString(undefined, { weekday:'long', year:'numeric', month:'long', day:'numeric' })
 
-    document.getElementById('signup-screen').style.display = 'none';
-    document.getElementById('success-screen').style.display = 'block';
-  } catch(e) {
-    showError('Network error: ' + e.message + '. Check your connection.');
-    btn.disabled = false;
-    hideProgress();
+    document.getElementById('signup-screen').style.display = 'none'
+    document.getElementById('success-screen').style.display = 'block'
+  } catch (e) {
+    showError('Network error: ' + e.message + '. Check your connection.')
+    btn.disabled = false
+    hideProgress()
   }
 }
 
-function goOnboarding() {
-  const rid = _restaurantId || document.getElementById('btn-onboarding').dataset.rid;
-  window.location.href = '/onboarding/' + rid;
+function goOnboarding () {
+  if (_onboardingUrl) window.location.href = _onboardingUrl
 }
 
-function showError(msg) {
-  const el = document.getElementById('error-msg');
-  el.textContent = msg; el.style.display = 'block';
-  el.scrollIntoView({ behavior:'smooth' });
+function showError (msg) {
+  const el = document.getElementById('error-msg')
+  el.textContent = msg; el.style.display = 'block'
+  el.scrollIntoView({ behavior: 'smooth' })
 }
-
-function showProgress(pct, msg) {
-  document.getElementById('signup-progress').style.display = 'block';
-  document.getElementById('prog-bar').style.width = pct + '%';
-  document.getElementById('prog-msg').textContent = msg;
+function showProgress (pct, msg) {
+  document.getElementById('signup-progress').style.display = 'block'
+  document.getElementById('prog-bar').style.width = pct + '%'
+  document.getElementById('prog-msg').textContent = msg
 }
+function hideProgress () { document.getElementById('signup-progress').style.display = 'none' }
 
-function hideProgress() {
-  document.getElementById('signup-progress').style.display = 'none';
-}
-
-function copyEl(id) {
-  const text = document.getElementById(id).textContent;
+function copyEl (id) {
+  const text = document.getElementById(id).textContent
   navigator.clipboard.writeText(text).then(() => {
-    const btn = event.target;
-    btn.textContent = '✓ Copied!';
-    setTimeout(() => btn.textContent = 'Copy', 1500);
-  });
+    const btn = event.target
+    btn.textContent = '✓ Copied!'
+    setTimeout(() => btn.textContent = 'Copy', 1500)
+  })
 }
 
 document.addEventListener('keydown', e => {
-  if (e.key === 'Enter') doSignup();
-});
+  if (e.key === 'Enter' && document.activeElement.tagName !== 'TEXTAREA') {
+    e.preventDefault()
+    nextStep()
+  }
+})
+
+showStep(1)
 </script>
 </body>
 </html>

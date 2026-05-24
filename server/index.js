@@ -29,7 +29,7 @@ const signupRouter     = require('./routes/signup')
 const adminAuthRouter  = require('./routes/admin-auth')
 const configRouter     = require('./routes/config')
 
-const { apiKey } = require('./middleware/apiKey')
+const { apiKey, initApiKey } = require('./middleware/apiKey')
 const { serverError } = require('./middleware/serverError')
 
 const PORT     = parseInt(process.env.PORT || '3001', 10)
@@ -96,15 +96,61 @@ async function runMigrations () {
 
 // ── Express + Socket.io ───────────────────────────────────────────────────────
 
-const CORS_ORIGIN = process.env.CORS_ORIGIN || '*'
+// CORS_ORIGIN may be:
+//   '*'                             — open (dev only, warned at startup if NODE_ENV=production)
+//   'https://a.com,https://b.com'   — comma-separated allowlist
+//   single URL                      — exact match
+function parseCorsOrigins (raw) {
+  const v = (raw || '').trim()
+  if (!v) return '*'
+  if (v === '*') return '*'
+  return v.split(',').map(s => s.trim()).filter(Boolean)
+}
+const CORS_ORIGIN = parseCorsOrigins(process.env.CORS_ORIGIN)
+function corsOriginFn (origin, cb) {
+  if (CORS_ORIGIN === '*') return cb(null, true)
+  if (!origin) return cb(null, true)                     // same-origin / curl
+  if (CORS_ORIGIN.includes(origin)) return cb(null, true)
+  return cb(new Error('CORS: origin not allowed'))
+}
+
 const app        = express()
 const httpServer = http.createServer(app)
 const io         = new Server(httpServer, {
   cors: { origin: CORS_ORIGIN, methods: ['GET', 'POST'] },
 })
 
-app.use(cors({ origin: CORS_ORIGIN }))
+app.use(cors({ origin: corsOriginFn, credentials: true }))
 app.use(express.json({ limit: '5mb' }))
+
+// ── Per-IP + per-brand request throttling ───────────────────────────────────
+// Cheap in-memory rate limiter. For multi-instance deployments swap to Redis.
+const _rateBuckets = new Map()
+const _rateClean = setInterval(() => {
+  const now = Date.now()
+  for (const [k, v] of _rateBuckets) if (now > v.reset) _rateBuckets.delete(k)
+}, 600000)
+_rateClean.unref?.()
+function rateLimit ({ scope, max, windowMs, keyFn }) {
+  return (req, res, next) => {
+    const key = `${scope}:${keyFn(req)}`
+    const now = Date.now()
+    let entry = _rateBuckets.get(key)
+    if (!entry || now > entry.reset) entry = { count: 0, reset: now + windowMs }
+    entry.count++
+    _rateBuckets.set(key, entry)
+    if (entry.count > max) return res.status(429).json({ error: 'Rate limit exceeded' })
+    next()
+  }
+}
+const ipKey       = req => (req.ip || req.headers['x-forwarded-for'] || 'unknown').toString()
+const brandKey    = req => (req.user?.brand_id || req.terminal?.brand_id || ipKey(req)).toString()
+
+// Global IP-based limit: 600 req / min / IP (loose, just stops trivial floods)
+app.use(rateLimit({ scope: 'global', max: 600, windowMs: 60_000, keyFn: ipKey }))
+app.set('rateLimit', rateLimit)
+app.set('brandKey', brandKey)
+app.set('ipKey', ipKey)
 
 // Expose io to route handlers via req.io
 app.use((req, _res, next) => { req.io = io; next() })
@@ -369,8 +415,9 @@ async function start () {
   await seedAdminUser()
   await migratePinHashes()
 
-  // Wire SQL into JWT middleware so deleted users are rejected immediately
+  // Wire SQL into middleware
   require('./middleware/jwtAuth').initJwtAuth(sql)
+  initApiKey(sql)
 
   app.use('/auth',      authRouter(sql))
   app.use('/menu',      menuRouter(sql))
@@ -407,7 +454,8 @@ async function start () {
   httpServer.listen(PORT, '0.0.0.0', () => {
     console.log(`\n  ✓ API server listening on http://0.0.0.0:${PORT}`)
     console.log(`  ✓ Socket.io enabled`)
-    console.log(`  ✓ API key auth: ${API_KEY ? 'enabled' : 'DISABLED (dev mode)'}`)
+    console.log(`  ✓ Per-terminal API keys: enabled (legacy global API_KEY ${process.env.API_KEY ? 'set as fallback' : 'unset'})`)
+    console.log(`  ✓ CORS: ${CORS_ORIGIN === '*' ? '*' : CORS_ORIGIN.join(', ')}`)
     console.log(`  ✓ Environment: ${process.env.NODE_ENV || 'development'}\n`)
   })
 

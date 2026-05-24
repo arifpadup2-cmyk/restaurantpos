@@ -2,7 +2,7 @@
 
 const express = require('express')
 const { jwtAuth } = require('../middleware/jwtAuth')
-const { apiKey }  = require('../middleware/apiKey')
+const { apiKey, requireTenantTerminal }  = require('../middleware/apiKey')
 const { serverError } = require('../middleware/serverError')
 
 module.exports = function customersRouter (sql) {
@@ -58,10 +58,11 @@ module.exports = function customersRouter (sql) {
     } catch (e) { serverError(res, e) }
   })
 
-  // PATCH /customers/:id/loyalty — POS terminal (API key + brand_id in body)
-  router.patch('/:id/loyalty', apiKey, async (req, res) => {
-    const { delta = 0, spent = 0, brand_id } = req.body
-    if (!brand_id) return res.status(400).json({ error: 'brand_id required' })
+  // PATCH /customers/:id/loyalty — POS terminal (per-terminal API key required).
+  // brand_id is derived from the terminal, never accepted from the request body.
+  router.patch('/:id/loyalty', apiKey, requireTenantTerminal, async (req, res) => {
+    const { delta = 0, spent = 0 } = req.body || {}
+    const brand_id = req.terminal.brand_id
     try {
       const [row] = await sql`
         UPDATE customers SET
@@ -76,20 +77,21 @@ module.exports = function customersRouter (sql) {
     } catch (e) { serverError(res, e) }
   })
 
-  // POST /customers/sync — POS terminal bulk upsert (API key required, ?brand_id= required)
-  router.post('/sync', apiKey, async (req, res) => {
-    const bId = (req.query.brand_id || '').trim()
-    if (!bId) return res.status(400).json({ error: 'brand_id query param required' })
+  // POST /customers/sync — POS terminal bulk upsert (per-terminal API key).
+  // brand_id is derived from the terminal — body brand_id is ignored.
+  router.post('/sync', apiKey, requireTenantTerminal, async (req, res) => {
+    const brand_id = req.terminal.brand_id
     const rows = req.body
     if (!Array.isArray(rows) || rows.length === 0) return res.json({ ok: true })
     try {
       for (const r of rows) {
         await sql`
           INSERT INTO customers (id, name, phone, email, loyalty_points, total_spent,
-                                 visit_count, notes, created_at, updated_at, brand_id)
+                                 visit_count, notes, created_at, updated_at, brand_id, outlet_id)
           VALUES (${r.id}, ${r.name}, ${r.phone || null}, ${r.email || null},
                   ${r.loyalty_points || 0}, ${r.total_spent || 0},
-                  ${r.visit_count || 0}, ${r.notes || null}, ${r.created_at}, ${r.updated_at}, ${bId})
+                  ${r.visit_count || 0}, ${r.notes || null}, ${r.created_at}, ${r.updated_at},
+                  ${brand_id}, ${req.terminal.outlet_id || null})
           ON CONFLICT (id) DO UPDATE SET
             name           = EXCLUDED.name,
             phone          = EXCLUDED.phone,

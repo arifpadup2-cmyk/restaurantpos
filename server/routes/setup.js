@@ -4,25 +4,19 @@ const express = require('express')
 const {
   generateRestaurantId, generateLicenseKey, generateMachineId,
   hashLicenseKey, verifyLicenseKey, keyPrefix, isExpired,
-  encryptText, decryptText,
 } = require('../lib/license')
 const { jwtAuth } = require('../middleware/jwtAuth')
 const { serverError } = require('../middleware/serverError')
+const bcrypt = require('bcryptjs')
 
-function safeDecrypt (enc) {
-  if (!enc) return null
-  try { return decryptText(enc) } catch { return null }
+// Reversible BO password / license storage was removed for security.
+// Credentials are shown once at creation/regeneration and must be reset if lost.
+function scrubBrand (r) {
+  if (!r) return r
+  const { bo_password_enc, license_key_enc, ...rest } = r
+  return { ...rest, license_key: null, bo_password: null }
 }
-
-function decryptBrand (r) {
-  return {
-    ...r,
-    license_key:    safeDecrypt(r.license_key_enc),
-    bo_password:    safeDecrypt(r.bo_password_enc),
-    license_key_enc: undefined,
-    bo_password_enc: undefined,
-  }
-}
+const decryptBrand = scrubBrand    // back-compat alias for existing call sites
 
 const { randomUUID } = require('crypto')
 function uid () { return randomUUID().replace(/-/g, '').slice(0, 16) }
@@ -102,12 +96,10 @@ module.exports = function setupRouter (sql) {
     if (!name || !name.trim()) return res.status(400).json({ error: 'name is required' })
 
     try {
-      const bcrypt     = require('bcryptjs')
       const id         = generateRestaurantId()
       const licenseKey = generateLicenseKey()
       const keyHash    = await hashLicenseKey(licenseKey)
       const prefix     = keyPrefix(licenseKey)
-      const keyEnc     = encryptText(licenseKey)
       const givenDays  = expires_days ? parseInt(expires_days, 10) : null
       const expiresAt  = givenDays ? new Date(Date.now() + givenDays * 86400000).toISOString() : null
       const licStartAt = new Date().toISOString()
@@ -116,21 +108,20 @@ module.exports = function setupRouter (sql) {
                          Math.floor(Math.random() * 900 + 100)
       const boPassword = Math.random().toString(36).slice(2, 8).toUpperCase() +
                          Math.floor(Math.random() * 90 + 10) + '!'
-      const boPassEnc  = encryptText(boPassword)
       const boPassHash = await bcrypt.hash(boPassword, 10)
 
       await sql`
         INSERT INTO brands (
-          id, name, license_key_hash, license_prefix, license_key_enc,
+          id, name, license_key_hash, license_prefix,
           max_terminals, expires_at, notes, active,
-          business_type, country, owner_name, email, phone,
-          bo_username, bo_password_enc, signup_source, status, plan
+          business_type, country, owner_name, email, phone, whatsapp_number,
+          bo_username, signup_source, status, plan, email_verified
         ) VALUES (
-          ${id}, ${name.trim()}, ${keyHash}, ${prefix}, ${keyEnc},
+          ${id}, ${name.trim()}, ${keyHash}, ${prefix},
           ${max_terminals}, ${expiresAt}, ${notes || null}, ${true},
           ${business_type || null}, ${country || 'Malaysia'}, ${owner_name || null},
-          ${email || null}, ${owner_mobile || null},
-          ${boUsername}, ${boPassEnc}, 'admin_panel', 'active', 'paid'
+          ${email || null}, ${owner_mobile || null}, ${whatsapp || null},
+          ${boUsername}, 'admin_panel', 'active', 'paid', ${true}
         )`
 
       // Create BO owner user
@@ -180,16 +171,16 @@ module.exports = function setupRouter (sql) {
   router.get('/restaurants', jwtAuth, async (_req, res) => {
     try {
       const rows = await sql`
-        SELECT b.id, b.name, b.license_prefix, b.license_key_enc, b.max_terminals,
+        SELECT b.id, b.name, b.license_prefix, b.max_terminals,
           b.expires_at, b.active, b.created_at, b.notes,
-          b.email, b.owner_name, b.phone, b.city, b.country,
+          b.email, b.owner_name, b.phone, b.city, b.country, b.whatsapp_number,
           b.plan, b.status, b.trial_ends_at, b.onboarding_step, b.signup_source,
-          b.reseller, b.bo_username, b.bo_password_enc,
+          b.reseller, b.bo_username, b.email_verified,
           COUNT(t.id)::int AS terminal_count
         FROM brands b
         LEFT JOIN terminal_registrations t ON t.brand_id = b.id AND t.active = true
         GROUP BY b.id ORDER BY b.created_at DESC`
-      res.json({ ok: true, restaurants: rows.map(decryptBrand) })
+      res.json({ ok: true, restaurants: rows.map(scrubBrand) })
     } catch (e) { serverError(res, e) }
   })
 
@@ -214,9 +205,8 @@ module.exports = function setupRouter (sql) {
       const newKey  = generateLicenseKey()
       const newHash = await hashLicenseKey(newKey)
       const prefix  = keyPrefix(newKey)
-      const newEnc  = encryptText(newKey)
-      await sql`UPDATE brands SET license_key_hash=${newHash}, license_prefix=${prefix}, license_key_enc=${newEnc} WHERE id=${id}`
-      res.json({ ok: true, id, new_license_key: newKey })
+      await sql`UPDATE brands SET license_key_hash=${newHash}, license_prefix=${prefix} WHERE id=${id}`
+      res.json({ ok: true, id, new_license_key: newKey, note: 'Save this license key — it is shown only once.' })
     } catch (e) { serverError(res, e) }
   })
 
@@ -240,8 +230,6 @@ module.exports = function setupRouter (sql) {
       if (last_billed_at  !== undefined) updates.last_billed_at = last_billed_at || null
       if (bo_username     !== undefined) updates.bo_username   = bo_username || null
       if (bo_password) {
-        updates.bo_password_enc = encryptText(bo_password)
-        const bcrypt = require('bcryptjs')
         const hash   = await bcrypt.hash(bo_password, 10)
         const [boUser] = await sql`SELECT id FROM bo_users WHERE username = ${bo_username || ''}`
         if (boUser) await sql`UPDATE bo_users SET password = ${hash} WHERE username = ${bo_username || ''}`
@@ -492,8 +480,22 @@ module.exports = function setupRouter (sql) {
         SELECT id FROM terminal_registrations
         WHERE brand_id = ${brand_id} AND machine_id = ${mid}`
 
+      // Per-terminal API key: <prefix>.<secret>. Prefix stored plaintext for
+      // lookup; secret stored as bcrypt hash. Raw key returned to client once.
+      const { randomBytes } = require('crypto')
+      const tkPrefix = randomBytes(6).toString('hex')                 // 12 chars
+      const tkSecret = randomBytes(24).toString('base64url')          // ~32 chars
+      const tkRaw    = `${tkPrefix}.${tkSecret}`
+      const tkHash   = await bcrypt.hash(tkSecret, 10)
+
+      let terminalId
       if (existingTerm) {
-        await sql`UPDATE terminal_registrations SET last_seen=now(), active=true, outlet_id=${outlet_id || null} WHERE id=${existingTerm.id}`
+        terminalId = existingTerm.id
+        await sql`
+          UPDATE terminal_registrations
+          SET last_seen=now(), active=true, outlet_id=${outlet_id || null},
+              api_key_prefix=${tkPrefix}, api_key_hash=${tkHash}, revoked_at=NULL
+          WHERE id=${existingTerm.id}`
       } else {
         const [{ cnt }] = await sql`
           SELECT COUNT(*)::int AS cnt FROM terminal_registrations
@@ -503,18 +505,22 @@ module.exports = function setupRouter (sql) {
             error: `Terminal limit reached (${brand.max_terminals}).`,
             code: 'TERMINAL_LIMIT',
           })
-        const terminalId = `${brand_id}-${mid}-${Date.now().toString(36)}`
-        await sql`INSERT INTO terminal_registrations (id, brand_id, machine_id, outlet_id, last_seen)
-                  VALUES (${terminalId}, ${brand_id}, ${mid}, ${outlet_id || null}, now())`
+        terminalId = `${brand_id}-${mid}-${Date.now().toString(36)}`
+        await sql`
+          INSERT INTO terminal_registrations
+            (id, brand_id, machine_id, outlet_id, last_seen, api_key_prefix, api_key_hash)
+          VALUES
+            (${terminalId}, ${brand_id}, ${mid}, ${outlet_id || null}, now(), ${tkPrefix}, ${tkHash})`
       }
 
       res.json({
         ok: true,
-        machine_id: mid,
+        machine_id:  mid,
+        terminal_id: terminalId,
         brand: { id: brand.id, name: brand.name },
         restaurant: { id: brand.id, name: brand.name }, // legacy alias
         outlet: outlet ? { id: outlet.id, name: outlet.name } : null,
-        api_key: process.env.API_KEY || '',
+        api_key: tkRaw,                  // per-terminal key — store on client, never sent again
       })
     } catch (e) { res.status(500).json({ error: e.message, code: 'SERVER_ERROR' }) }
   })

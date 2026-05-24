@@ -1,61 +1,117 @@
 'use strict'
 
 const express = require('express')
+const { apiKey, requireTenantTerminal } = require('../middleware/apiKey')
+const { jwtAuth } = require('../middleware/jwtAuth')
 const { serverError } = require('../middleware/serverError')
 
 module.exports = function kitchenRouter (sql) {
   const router = express.Router()
 
-  // GET /kitchen/orders?outlet_id= — all active orders with items for KDS
-  router.get('/orders', async (req, res) => {
-    const { outlet_id } = req.query
+  // Auth: terminal API key (KDS) OR JWT (back office "Kitchen View")
+  function authAny (req, res, next) {
+    if (req.headers['authorization']) return jwtAuth(req, res, next)
+    return apiKey(req, res, next)
+  }
+
+  function scope (req) {
+    if (req.terminal) {
+      return { brand_id: req.terminal.brand_id, outlet_id: req.terminal.outlet_id }
+    }
+    return {
+      brand_id:  req.user?.brand_id || '',
+      outlet_id: req.query.outlet_id || null,
+    }
+  }
+
+  // GET /kitchen/orders — active orders + items for caller's outlet
+  router.get('/orders', authAny, async (req, res) => {
+    const { brand_id, outlet_id } = scope(req)
     try {
-      const orders = await sql`
-        SELECT o.id, o.order_number, o.order_type, o.table_name, o.customer_name,
-               o.status, o.created_at, o.terminal_id, o.cashier_name,
-               json_agg(
-                 json_build_object(
-                   'id',         oi.id,
-                   'item_name',  oi.item_name,
-                   'quantity',   oi.quantity,
-                   'notes',      oi.notes,
-                   'done',       COALESCE(oi.done, false)
-                 ) ORDER BY oi.item_name
-               ) AS items
-        FROM orders o
-        JOIN order_items oi ON oi.order_id = o.id
-        WHERE o.status = 'active'
-        ${outlet_id ? sql`AND o.outlet_id = ${outlet_id}` : sql``}
-        GROUP BY o.id
-        ORDER BY o.created_at ASC`
+      // Back-office outlet override must belong to caller's brand
+      if (!req.terminal && outlet_id) {
+        const [owned] = await sql`SELECT id FROM outlets WHERE id = ${outlet_id} AND brand_id = ${brand_id}`
+        if (!owned) return res.status(403).json({ error: 'Outlet not in your brand' })
+      }
+
+      const orders = outlet_id
+        ? await sql`
+            SELECT o.id, o.order_number, o.order_type, o.table_name, o.customer_name,
+                   o.status, o.created_at, o.terminal_id, o.cashier_name, o.outlet_id, o.brand_id,
+                   json_agg(
+                     json_build_object(
+                       'id',         oi.id,
+                       'item_name',  oi.item_name,
+                       'quantity',   oi.quantity,
+                       'notes',      oi.notes,
+                       'done',       COALESCE(oi.done, false)
+                     ) ORDER BY oi.item_name
+                   ) AS items
+            FROM orders o
+            JOIN order_items oi ON oi.order_id = o.id
+            WHERE o.status = 'active'
+              AND o.brand_id  = ${brand_id}
+              AND o.outlet_id = ${outlet_id}
+            GROUP BY o.id
+            ORDER BY o.created_at ASC`
+        : await sql`
+            SELECT o.id, o.order_number, o.order_type, o.table_name, o.customer_name,
+                   o.status, o.created_at, o.terminal_id, o.cashier_name, o.outlet_id, o.brand_id,
+                   json_agg(
+                     json_build_object(
+                       'id',         oi.id,
+                       'item_name',  oi.item_name,
+                       'quantity',   oi.quantity,
+                       'notes',      oi.notes,
+                       'done',       COALESCE(oi.done, false)
+                     ) ORDER BY oi.item_name
+                   ) AS items
+            FROM orders o
+            JOIN order_items oi ON oi.order_id = o.id
+            WHERE o.status = 'active'
+              AND o.brand_id = ${brand_id}
+            GROUP BY o.id
+            ORDER BY o.created_at ASC`
       res.json({ orders })
     } catch (e) { serverError(res, e) }
   })
 
   // PATCH /kitchen/items/:itemId/done — mark one item as prepared
-  router.patch('/items/:itemId/done', async (req, res) => {
+  router.patch('/items/:itemId/done', authAny, async (req, res) => {
     const { itemId } = req.params
     const { done = true } = req.body || {}
+    const { brand_id } = scope(req)
     try {
-      // done column added lazily — handle missing column gracefully
-      await sql`
-        UPDATE order_items SET done = ${done} WHERE id = ${itemId}`
-
+      // Verify item belongs to caller's brand via order
       const [item] = await sql`
-        SELECT id, order_id FROM order_items WHERE id = ${itemId}`
-      if (item) {
-        req.io?.emit('kitchen:item_done', { orderId: item.order_id, itemId, done })
-      }
+        SELECT oi.id, oi.order_id, o.brand_id, o.outlet_id
+        FROM order_items oi
+        JOIN orders o ON o.id = oi.order_id
+        WHERE oi.id = ${itemId} AND o.brand_id = ${brand_id}`
+      if (!item) return res.status(404).json({ error: 'Item not found' })
+      if (req.terminal?.outlet_id && item.outlet_id && item.outlet_id !== req.terminal.outlet_id)
+        return res.status(403).json({ error: 'Item belongs to another outlet' })
+
+      await sql`UPDATE order_items SET done = ${done} WHERE id = ${itemId}`
+      req.io?.to('rest:' + brand_id).emit('kitchen:item_done', { orderId: item.order_id, itemId, done })
       res.json({ ok: true })
     } catch (e) { serverError(res, e) }
   })
 
   // PATCH /kitchen/orders/:id/done — mark entire order as ready
-  router.patch('/orders/:id/done', async (req, res) => {
+  router.patch('/orders/:id/done', authAny, async (req, res) => {
     const { id } = req.params
+    const { brand_id } = scope(req)
     try {
+      const [order] = await sql`
+        SELECT id, brand_id, outlet_id FROM orders
+        WHERE id = ${id} AND brand_id = ${brand_id}`
+      if (!order) return res.status(404).json({ error: 'Order not found' })
+      if (req.terminal?.outlet_id && order.outlet_id && order.outlet_id !== req.terminal.outlet_id)
+        return res.status(403).json({ error: 'Order belongs to another outlet' })
+
       await sql`UPDATE order_items SET done = true WHERE order_id = ${id}`
-      req.io?.emit('order:done', { orderId: id })
+      req.io?.to('rest:' + brand_id).emit('order:done', { orderId: id })
       res.json({ ok: true })
     } catch (e) { serverError(res, e) }
   })

@@ -2,7 +2,7 @@
 
 const express = require('express')
 const { jwtAuth } = require('../middleware/jwtAuth')
-const { apiKey }  = require('../middleware/apiKey')
+const { apiKey, requireTenantTerminal } = require('../middleware/apiKey')
 const { serverError } = require('../middleware/serverError')
 
 module.exports = function auditRouter (sql) {
@@ -37,10 +37,10 @@ module.exports = function auditRouter (sql) {
     } catch (e) { serverError(res, e) }
   })
 
-  // POST /audit/sync — POS terminal bulk upsert (API key required, ?brand_id= required)
-  router.post('/sync', apiKey, async (req, res) => {
-    const bId = (req.query.brand_id || '').trim()
-    if (!bId) return res.status(400).json({ error: 'brand_id query param required' })
+  // POST /audit/sync — POS terminal bulk upsert (per-terminal API key).
+  // brand_id derived from terminal, never from request.
+  router.post('/sync', apiKey, requireTenantTerminal, async (req, res) => {
+    const brand_id = req.terminal.brand_id
     const rows = req.body
     if (!Array.isArray(rows) || rows.length === 0) return res.json({ ok: true, inserted: 0 })
     try {
@@ -51,7 +51,7 @@ module.exports = function auditRouter (sql) {
                                  approved_by, details, terminal_id, created_at, brand_id)
           VALUES (${r.id}, ${r.action}, ${r.entity_type || null}, ${r.entity_id || null},
                   ${r.cashier_id || null}, ${r.cashier_name || null}, ${r.approved_by || null},
-                  ${r.details || null}, ${r.terminal_id || null}, ${r.created_at}, ${bId})
+                  ${r.details || null}, ${r.terminal_id || null}, ${r.created_at}, ${brand_id})
           ON CONFLICT (id) DO NOTHING
         `
         inserted++
@@ -60,10 +60,9 @@ module.exports = function auditRouter (sql) {
     } catch (e) { serverError(res, e) }
   })
 
-  // POST /audit/no-sale/sync — POS terminal (API key required, ?brand_id= required)
-  router.post('/no-sale/sync', apiKey, async (req, res) => {
-    const bId = (req.query.brand_id || '').trim()
-    if (!bId) return res.status(400).json({ error: 'brand_id query param required' })
+  // POST /audit/no-sale/sync — POS terminal (per-terminal API key).
+  router.post('/no-sale/sync', apiKey, requireTenantTerminal, async (req, res) => {
+    const brand_id = req.terminal.brand_id
     const rows = req.body
     if (!Array.isArray(rows) || rows.length === 0) return res.json({ ok: true, inserted: 0 })
     try {
@@ -71,7 +70,7 @@ module.exports = function auditRouter (sql) {
         await sql`
           INSERT INTO no_sale_log (id, reason, cashier_id, cashier_name, terminal_id, created_at, brand_id)
           VALUES (${r.id}, ${r.reason}, ${r.cashier_id || null}, ${r.cashier_name || null},
-                  ${r.terminal_id || null}, ${r.created_at}, ${bId})
+                  ${r.terminal_id || null}, ${r.created_at}, ${brand_id})
           ON CONFLICT (id) DO NOTHING
         `
       }

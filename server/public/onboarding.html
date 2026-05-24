@@ -270,14 +270,15 @@
 
 <script>
 const rid = window.location.pathname.split('/').pop();
+const _onboardingToken = new URLSearchParams(window.location.search).get('t') || '';
 let _step = 0;
 
 async function loadRestaurant() {
   try {
-    const resp = await fetch('/api/onboarding/' + rid);
+    const resp = await fetch('/api/signup/onboarding/' + rid + '?t=' + encodeURIComponent(_onboardingToken));
     const d    = await resp.json();
-    if (!d.ok) { document.getElementById('rest-name').textContent = 'Invalid Link'; return; }
-    const r = d.restaurant;
+    if (!d.ok) { document.getElementById('rest-name').textContent = 'Invalid or expired link'; return; }
+    const r = d.brand || d.restaurant;
     document.title = r.name + ' — Setup Guide';
     document.getElementById('rest-name').textContent = r.name;
     document.getElementById('c-rid').textContent  = r.id;
@@ -321,10 +322,10 @@ async function markDone(n) {
   _step = Math.max(_step, n);
   updateProgress();
   try {
-    await fetch('/api/onboarding/' + rid + '/step', {
+    await fetch('/api/signup/onboarding/' + rid + '/step?t=' + encodeURIComponent(_onboardingToken), {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ step: _step }),
+      body: JSON.stringify({ step: _step, t: _onboardingToken }),
     });
   } catch {}
   // Auto-open next step
