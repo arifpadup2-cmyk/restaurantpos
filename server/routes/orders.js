@@ -8,13 +8,13 @@ module.exports = function ordersRouter (sql) {
   const router = express.Router()
   router.use(jwtAuth)
 
-  // GET /orders?date=YYYY-MM-DD&outlet_id=
+  // GET /orders?date=YYYY-MM-DD&from=YYYY-MM-DD&to=YYYY-MM-DD&outlet_id=
   router.get('/', async (req, res) => {
     const rid = req.user.brand_id || ''
-    const { date, outlet_id } = req.query
-    const d     = date || new Date().toISOString().split('T')[0]
+    const { date, from, to, outlet_id } = req.query
+    const d     = from || date || new Date().toISOString().split('T')[0]
     const start = new Date(d).getTime()
-    const end   = start + 86400000
+    const end   = to ? new Date(to).getTime() + 86400000 : start + 86400000
     try {
       if (outlet_id) {
         const [owned] = await sql`SELECT id FROM outlets WHERE id = ${outlet_id} AND brand_id = ${rid}`
