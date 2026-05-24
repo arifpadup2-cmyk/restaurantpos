@@ -3519,23 +3519,26 @@ function ssUpdateProgress () {
   const first  = (document.getElementById('ss-first-name')?.value || '').trim()
   const last   = (document.getElementById('ss-last-name')?.value || '').trim()
   const phone  = (document.getElementById('ss-phone')?.value || '').trim()
+  const market = (document.getElementById('ss-market-name')?.value || '').trim()
   const outlet = (document.getElementById('ss-outlet-name')?.value || '').trim()
 
   const s1done = !!(first && last && phone)
   const s2done = !!brand
-  const s3done = !!outlet
+  const s3done = !!market
+  const s4done = !!outlet
 
   const setStep = (id, done, active) => {
     const el = document.getElementById(id)
     if (!el) return
     el.className = 'ss-step' + (done ? ' done' : active ? ' active' : '')
     const num = el.querySelector('.ss-step-num')
-    if (num) num.textContent = done ? '✓' : id.slice(-1)
+    if (num) num.textContent = done ? '✓' : id.replace('ss-step', '')
   }
   setStep('ss-step1', s1done, !s1done)
   setStep('ss-step2', s2done, s1done && !s2done)
   setStep('ss-step3', s3done, s1done && s2done && !s3done)
-  setStep('ss-step4', false, s1done && s2done && s3done)
+  setStep('ss-step4', s4done, s1done && s2done && s3done && !s4done)
+  setStep('ss-step5', false, s1done && s2done && s3done && s4done)
 
   const setCheck = (id, done, active) => {
     const el = document.getElementById(id)
@@ -3546,8 +3549,9 @@ function ssUpdateProgress () {
   setCheck('ssc-1', s1done, !s1done)
   setCheck('ssc-2', s2done, s1done && !s2done)
   setCheck('ssc-3', s3done, s1done && s2done && !s3done)
-  setCheck('ssc-4', false, s3done)
-  setCheck('ssc-5', false, false)
+  setCheck('ssc-4', s4done, s1done && s2done && s3done && !s4done)
+  setCheck('ssc-5', false, s4done)
+  setCheck('ssc-6', false, false)
 }
 
 function ssWatchInputs () {
@@ -7883,10 +7887,15 @@ const _origShowView = showView
       <div class="ss-step-connector"></div>
       <div id="ss-step3" class="ss-step">
         <div class="ss-step-num">3</div>
-        <div><div class="ss-step-label">Market &amp; Outlet</div><div class="ss-step-desc">Location &amp; operations</div></div>
+        <div><div class="ss-step-label">Market Details</div><div class="ss-step-desc">Geographic grouping</div></div>
       </div>
       <div class="ss-step-connector"></div>
       <div id="ss-step4" class="ss-step">
+        <div class="ss-step-num">4</div>
+        <div><div class="ss-step-label">Outlet Details</div><div class="ss-step-desc">First outlet setup</div></div>
+      </div>
+      <div class="ss-step-connector"></div>
+      <div id="ss-step5" class="ss-step">
         <div class="ss-step-num">✓</div>
         <div><div class="ss-step-label">Complete Setup</div><div class="ss-step-desc">Review and finish</div></div>
       </div>
@@ -7977,23 +7986,30 @@ const _origShowView = showView
         </div>
       </div>
 
-      <!-- Card 3: Outlet Details -->
+      <!-- Card 3: Market Details -->
       <div class="ss-card">
         <div class="ss-card-header">
           <div class="ss-card-num">3</div>
-          <div class="ss-card-title">Market &amp; Outlet Details</div>
+          <div class="ss-card-title">Market Details</div>
         </div>
         <div class="ss-card-body">
           <div class="ss-row">
             <div class="ss-field">
               <label>Market Name <span style="color:#ef4444">*</span></label>
               <input id="ss-market-name" type="text" placeholder="e.g. Kuala Lumpur, Penang, Main City">
-            </div>
-            <div class="ss-field">
-              <label style="opacity:0">—</label>
-              <div style="padding:10px 12px;background:#f8fafc;border:1.5px solid #e2e8f0;border-radius:8px;font-size:12px;color:#64748b">A market groups your outlets geographically. You can add more markets later.</div>
+              <span style="font-size:11px;color:#64748b;margin-top:2px">A market groups your outlets geographically. You can add more markets later.</span>
             </div>
           </div>
+        </div>
+      </div>
+
+      <!-- Card 4: Outlet Details -->
+      <div class="ss-card">
+        <div class="ss-card-header">
+          <div class="ss-card-num">4</div>
+          <div class="ss-card-title">Outlet Details</div>
+        </div>
+        <div class="ss-card-body">
           <div class="ss-row">
             <div class="ss-field">
               <label>Outlet Name <span style="color:#ef4444">*</span></label>
@@ -8156,14 +8172,18 @@ const _origShowView = showView
         </div>
         <div class="ss-check-item">
           <div class="ss-check-num" id="ssc-3">3</div>
-          <div><div class="ss-check-label">Outlet Configuration</div><div class="ss-check-desc">Location &amp; hours</div></div>
+          <div><div class="ss-check-label">Market Setup</div><div class="ss-check-desc">Geographic grouping</div></div>
         </div>
         <div class="ss-check-item">
           <div class="ss-check-num" id="ssc-4">4</div>
-          <div><div class="ss-check-label">Initialize POS Access</div><div class="ss-check-desc">Setup your POS terminal</div></div>
+          <div><div class="ss-check-label">Outlet Configuration</div><div class="ss-check-desc">Location &amp; hours</div></div>
         </div>
         <div class="ss-check-item">
           <div class="ss-check-num" id="ssc-5">5</div>
+          <div><div class="ss-check-label">Initialize POS Access</div><div class="ss-check-desc">Setup your POS terminal</div></div>
+        </div>
+        <div class="ss-check-item">
+          <div class="ss-check-num" id="ssc-6">6</div>
           <div><div class="ss-check-label">Open Back Office</div><div class="ss-check-desc">Manage your brand</div></div>
         </div>
       </div>
