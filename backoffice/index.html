@@ -555,6 +555,9 @@ input:checked+.toggle-slider:before{transform:translateX(17px)}
   .cfg-content{padding:12px 0;max-width:100%}
   /* Staff/Audit/Reports: table scroll hint */
   .table-wrap{-webkit-overflow-scrolling:touch}
+  /* Staff: hide Created column so Actions isn't clipped */
+  #v-staff .data-table th:nth-child(5),
+  #v-staff .data-table td:nth-child(5){display:none}
   /* ─── Item Editor: mobile ─── */
   #v-item-editor.active{padding-bottom:calc(58px + env(safe-area-inset-bottom,0px))}
   .ie-topbar{padding:10px 12px;gap:8px}
