@@ -555,6 +555,9 @@ input:checked+.toggle-slider:before{transform:translateX(17px)}
   .cfg-content{padding:12px 0;max-width:100%}
   /* Staff/Audit/Reports: table scroll hint */
   .table-wrap{-webkit-overflow-scrolling:touch}
+  /* Audit: stack card-header filters vertically on mobile */
+  #v-audit .card-header{flex-direction:column;align-items:flex-start;gap:10px}
+  #v-audit .card-header>div{width:100%}
   /* Staff: hide Created column so Actions isn't clipped */
   #v-staff .data-table th:nth-child(5),
   #v-staff .data-table td:nth-child(5){display:none}
@@ -5220,7 +5223,7 @@ async function loadAuditLog () {
     const rows = await apiFetch('GET', `/audit?${params}`)
     document.getElementById('audit-tbody').innerHTML = rows.length
       ? rows.map(r => `<tr>
-          <td>${new Date(r.created_at).toLocaleString()}</td>
+          <td>${new Date(Number(r.created_at)).toLocaleString()}</td>
           <td><span style="padding:2px 8px;border-radius:10px;background:#fef3c7;color:#92400e;font-size:11px;font-weight:700">${r.action}</span></td>
           <td>${r.entity_type||'—'}</td>
           <td>${r.cashier_name||'—'}</td>
@@ -5233,7 +5236,7 @@ async function loadAuditLog () {
     const nsRows = await apiFetch('GET', `/audit/no-sale?from=${fromTs}&to=${toTs}`)
     document.getElementById('nosale-audit-tbody').innerHTML = nsRows.length
       ? nsRows.map(r => `<tr>
-          <td>${new Date(r.created_at).toLocaleString()}</td>
+          <td>${new Date(Number(r.created_at)).toLocaleString()}</td>
           <td>${r.cashier_name||'—'}</td>
           <td>${r.terminal_id||'—'}</td>
           <td>${r.reason}</td>
@@ -5304,7 +5307,7 @@ async function loadVoidReport () {
     const filtered = rows.filter(r => ['ORDER_CANCELLED','ITEM_VOIDED','DISCOUNT_MGR_APPROVED','MGR_APPROVAL'].includes(r.action))
     document.getElementById('void-rep-tbody').innerHTML = filtered.length
       ? filtered.map(r => `<tr>
-          <td>${new Date(r.created_at).toLocaleString()}</td>
+          <td>${new Date(Number(r.created_at)).toLocaleString()}</td>
           <td><span style="padding:2px 8px;border-radius:10px;background:#fef2f2;color:var(--danger);font-size:11px;font-weight:700">${r.action}</span></td>
           <td>${r.entity_type||'—'}</td>
           <td>${r.cashier_name||'—'}</td>
