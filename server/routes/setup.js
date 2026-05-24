@@ -267,15 +267,15 @@ module.exports = function setupRouter (sql) {
     try {
       const [totals] = await sql`
         SELECT
-          COUNT(*)::int                                                       AS total,
-          COUNT(*) FILTER (WHERE status='trial')::int                        AS trial,
-          COUNT(*) FILTER (WHERE status='active')::int                       AS active,
-          COUNT(*) FILTER (WHERE status='expired')::int                      AS expired,
-          COUNT(*) FILTER (WHERE status='suspended')::int                    AS suspended,
-          COUNT(*) FILTER (WHERE created_at > now()-interval '7 days')::int  AS new_7d,
-          COUNT(*) FILTER (WHERE created_at > now()-interval '30 days')::int AS new_30d,
+          COUNT(*)::int                                                                     AS total,
+          COUNT(*) FILTER (WHERE status='trial')::int                                      AS trial,
+          COUNT(*) FILTER (WHERE status='active')::int                                     AS active,
+          COUNT(*) FILTER (WHERE status='expired')::int                                    AS expired,
+          COUNT(*) FILTER (WHERE status='suspended')::int                                  AS suspended,
+          COUNT(*) FILTER (WHERE to_timestamp(created_at/1000) > now()-interval '7 days')::int  AS new_7d,
+          COUNT(*) FILTER (WHERE to_timestamp(created_at/1000) > now()-interval '30 days')::int AS new_30d,
           COUNT(*) FILTER (WHERE trial_ends_at < now()+interval '3 days'
-            AND trial_ends_at > now() AND status='trial')::int               AS expiring_3d
+            AND trial_ends_at > now() AND status='trial')::int                             AS expiring_3d
         FROM brands`
 
       const byCountry = await sql`
@@ -291,8 +291,8 @@ module.exports = function setupRouter (sql) {
         FROM brands GROUP BY reseller ORDER BY cnt DESC`
 
       const monthly = await sql`
-        SELECT TO_CHAR(created_at,'YYYY-MM') AS month, COUNT(*)::int AS cnt
-        FROM brands WHERE created_at > now()-interval '6 months'
+        SELECT TO_CHAR(to_timestamp(created_at/1000),'YYYY-MM') AS month, COUNT(*)::int AS cnt
+        FROM brands WHERE to_timestamp(created_at/1000) > now()-interval '6 months'
         GROUP BY month ORDER BY month`
 
       res.json({ ok: true, totals, byCountry, byOnboarding, byReseller, monthly })
