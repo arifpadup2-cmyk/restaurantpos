@@ -558,6 +558,15 @@ input:checked+.toggle-slider:before{transform:translateX(17px)}
   /* Staff: hide Created column so Actions isn't clipped */
   #v-staff .data-table th:nth-child(5),
   #v-staff .data-table td:nth-child(5){display:none}
+  /* Orders: keep Order#, Type, Customer/Table, Total, Status — hide rest */
+  #v-orders .data-table th,
+  #v-orders .data-table td{white-space:nowrap}
+  #v-orders .data-table th:nth-child(4),#v-orders .data-table td:nth-child(4),
+  #v-orders .data-table th:nth-child(5),#v-orders .data-table td:nth-child(5),
+  #v-orders .data-table th:nth-child(6),#v-orders .data-table td:nth-child(6),
+  #v-orders .data-table th:nth-child(8),#v-orders .data-table td:nth-child(8),
+  #v-orders .data-table th:nth-child(9),#v-orders .data-table td:nth-child(9),
+  #v-orders .data-table th:nth-child(11),#v-orders .data-table td:nth-child(11){display:none}
   /* ─── Item Editor: mobile ─── */
   #v-item-editor.active{padding-bottom:calc(58px + env(safe-area-inset-bottom,0px))}
   .ie-topbar{padding:10px 12px;gap:8px}
