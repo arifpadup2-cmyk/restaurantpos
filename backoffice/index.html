@@ -1994,7 +1994,7 @@ input:checked+.toggle-slider:before{transform:translateX(17px)}
       <div class="card-header"><h3>Restaurant Info</h3></div>
       <div class="card-body">
         <div class="form-group">
-          <label for="bos-name">Restaurant Name</label>
+          <label for="bos-name">Brand Name</label>
           <input id="bos-name" type="text">
         </div>
         <div class="form-group">
@@ -3432,7 +3432,7 @@ async function ssSubmit () {
   if (!outletName) { showToast('Outlet name is required', 'error'); return }
 
   const btn = document.getElementById('ss-submit-btn')
-  if (btn) { btn.disabled = true; btn.textContent = 'Setting up your restaurant...' }
+  if (btn) { btn.disabled = true; btn.textContent = 'Setting up your brand...' }
 
   // Animate checklist completion
   const animCheck = (id, delay) => setTimeout(() => {
@@ -3480,7 +3480,7 @@ async function ssSubmit () {
     showToast(e.message || 'Setup failed. Please try again.', 'error')
     if (btn) {
       btn.disabled = false
-      btn.innerHTML = 'Create Restaurant &amp; Continue <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>'
+      btn.innerHTML = 'Create Brand &amp; Continue <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>'
     }
   }
 }
@@ -3577,7 +3577,7 @@ function startClock () {
     if (dateEl) dateEl.textContent = now.toLocaleDateString([], {weekday:'long',month:'short',day:'numeric'})
     const hr = now.getHours()
     const greet = hr < 12 ? 'Good morning' : hr < 17 ? 'Good afternoon' : 'Good evening'
-    const greetName = currentUser ? (currentUser.owner_name || currentUser.email?.split('@')[0] || 'Restaurant Admin') : null
+    const greetName = currentUser ? (currentUser.owner_name || currentUser.email?.split('@')[0] || 'Brand Admin') : null
     if (greetEl) greetEl.textContent = greet + (greetName ? ', ' + greetName : '') + '!'
   }
   tick(); setInterval(tick, 30000)
@@ -3585,7 +3585,7 @@ function startClock () {
 
 function updateSidebarUser () {
   if (!currentUser) return
-  const displayName = currentUser.owner_name || currentUser.email?.split('@')[0] || 'Restaurant Admin'
+  const displayName = currentUser.owner_name || currentUser.email?.split('@')[0] || 'Brand Admin'
   const nameEl    = document.getElementById('sb-user-name')
   const roleEl    = document.getElementById('sb-user-role')
   const avatarEl  = document.getElementById('hdr-avatar-text')
@@ -3626,7 +3626,7 @@ function updateSidebarUser () {
 async function initApp () {
   updateSidebarUser()
   await loadBOSettings()
-  if (currentUser?.restaurant_id && !boSettings.setup_done) {
+  if (currentUser?.brand_id && !boSettings.setup_done) {
     showOnboarding()
     return
   }
@@ -5907,7 +5907,7 @@ async function submitRegistration () {
   const name  = document.getElementById('reg-name').value.trim()
   const errEl = document.getElementById('reg-error')
   errEl.textContent = ''
-  if (!name) { errEl.textContent = 'Restaurant name is required.'; return }
+  if (!name) { errEl.textContent = 'Brand name is required.'; return }
 
   const btn = document.getElementById('btn-reg-submit')
   btn.disabled = true; btn.textContent = 'Registering…'
@@ -5919,10 +5919,10 @@ async function submitRegistration () {
       expires_days:  document.getElementById('reg-days').value || null,
       notes:         document.getElementById('reg-notes').value,
     })
-    document.getElementById('res-id').textContent  = r.restaurant.id
-    document.getElementById('res-key').textContent = r.restaurant.license_key
-    document.getElementById('res-expires').textContent = r.restaurant.expires_at
-      ? new Date(r.restaurant.expires_at).toLocaleDateString() : 'Never'
+    document.getElementById('res-id').textContent  = r.brand.id
+    document.getElementById('res-key').textContent = r.brand.license_key
+    document.getElementById('res-expires').textContent = r.brand.expires_at
+      ? new Date(r.brand.expires_at).toLocaleDateString() : 'Never'
     document.getElementById('reg-result').style.display = 'block'
     btn.textContent = 'Register Another'
     btn.disabled = false
@@ -7380,7 +7380,7 @@ const _origShowView = showView
       <div class="ss-progress-title">Setup Progress</div>
       <div id="ss-step1" class="ss-step active">
         <div class="ss-step-num">1</div>
-        <div><div class="ss-step-label">Brand Details</div><div class="ss-step-desc">Tell us about your restaurant</div></div>
+        <div><div class="ss-step-label">Brand Details</div><div class="ss-step-desc">Tell us about your brand</div></div>
       </div>
       <div class="ss-step-connector"></div>
       <div id="ss-step2" class="ss-step">
@@ -7405,8 +7405,8 @@ const _origShowView = showView
 
     <!-- Main Content -->
     <div class="ss-main">
-      <p class="ss-page-title">New Restaurant Setup</p>
-      <p class="ss-page-sub">Complete the information below to setup your restaurant and get started</p>
+      <p class="ss-page-title">New Brand Setup</p>
+      <p class="ss-page-sub">Complete the information below to setup your brand and get started</p>
 
       <!-- Card 1: Brand Details -->
       <div class="ss-card">
@@ -7421,7 +7421,7 @@ const _origShowView = showView
               <input id="ss-brand-name" type="text" placeholder="e.g. Mama's Kitchen" autocomplete="organization">
             </div>
             <div class="ss-field">
-              <label>Restaurant Logo <span style="color:#64748b;font-weight:400">(optional)</span></label>
+              <label>Brand Logo <span style="color:#64748b;font-weight:400">(optional)</span></label>
               <div class="ss-logo-drop" id="ss-logo-drop" onclick="document.getElementById('ss-logo-input').click()">
                 <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#475569" stroke-width="1.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
                 <span>Click to upload logo</span>
@@ -7541,7 +7541,7 @@ const _origShowView = showView
           <div class="ss-row">
             <div class="ss-field">
               <label>Outlet Email Address</label>
-              <input id="ss-outlet-email" type="email" placeholder="outlet@restaurant.com">
+              <input id="ss-outlet-email" type="email" placeholder="outlet@yourbrand.com">
             </div>
             <div class="ss-field">
               <label>Tax Rate (%)</label>
@@ -7577,7 +7577,7 @@ const _origShowView = showView
       <!-- Submit -->
       <div class="ss-submit-bar">
         <button id="ss-submit-btn" class="ss-submit-btn" onclick="ssSubmit()">
-          Create Restaurant &amp; Continue
+          Create Brand &amp; Continue
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
         </button>
       </div>
@@ -7586,11 +7586,11 @@ const _origShowView = showView
     <!-- Right Panel: Setup Completion -->
     <div class="ss-panel">
       <div class="ss-panel-title">Setup Completion</div>
-      <div class="ss-panel-sub">Fill in all required fields below and click Create Restaurant to get started</div>
+      <div class="ss-panel-sub">Fill in all required fields below and click Create Brand to get started</div>
       <div class="ss-checklist">
         <div class="ss-check-item">
           <div class="ss-check-num active" id="ssc-1">1</div>
-          <div><div class="ss-check-label">Create Restaurant</div><div class="ss-check-desc">Brand &amp; basic info</div></div>
+          <div><div class="ss-check-label">Create Brand</div><div class="ss-check-desc">Brand &amp; basic info</div></div>
         </div>
         <div class="ss-check-item">
           <div class="ss-check-num" id="ssc-2">2</div>
@@ -7606,7 +7606,7 @@ const _origShowView = showView
         </div>
         <div class="ss-check-item">
           <div class="ss-check-num" id="ssc-5">5</div>
-          <div><div class="ss-check-label">Open Back Office</div><div class="ss-check-desc">Manage your restaurant</div></div>
+          <div><div class="ss-check-label">Open Back Office</div><div class="ss-check-desc">Manage your brand</div></div>
         </div>
       </div>
       <div style="margin-top:20px;background:#0f172a;border-radius:8px;padding:10px 12px;font-size:11px;color:#475569;border:1px solid #1e3a5f;line-height:1.5">
