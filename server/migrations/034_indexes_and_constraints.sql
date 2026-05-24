@@ -31,6 +31,11 @@ ALTER TABLE table_sections ADD COLUMN IF NOT EXISTS outlet_id TEXT;
 CREATE INDEX IF NOT EXISTS idx_table_sections_outlet ON table_sections(outlet_id) WHERE outlet_id IS NOT NULL;
 CREATE INDEX IF NOT EXISTS idx_tables_outlet         ON tables_layout(outlet_id)  WHERE outlet_id IS NOT NULL;
 
+-- ── pos_button_config: rename restaurant_id → brand_id (missed in 032) ───────
+DO $$ BEGIN ALTER TABLE pos_button_config RENAME COLUMN restaurant_id TO brand_id; EXCEPTION WHEN undefined_column THEN NULL; END $$;
+ALTER TABLE pos_button_config ADD COLUMN IF NOT EXISTS brand_id TEXT;
+ALTER TABLE pos_button_config DROP CONSTRAINT IF EXISTS pos_button_config_restaurant_id_button_key_key;
+
 -- ── outlet_id column on pos_button_config ────────────────────────────────────
 ALTER TABLE pos_button_config ADD COLUMN IF NOT EXISTS outlet_id TEXT;
 -- Drop old PK, re-create with outlet_id support
