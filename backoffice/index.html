@@ -302,67 +302,67 @@ input:checked+.toggle-slider:before{transform:translateX(17px)}
 .empty-state{text-align:center;padding:40px 20px;color:var(--muted)}
 .empty-state .es-icon{width:48px;height:48px;margin:0 auto 10px;background:#f1f5f9;border-radius:12px;display:flex;align-items:center;justify-content:center;opacity:.7}
 /* Setup screen (full-page restaurant registration) */
-#onboard-overlay{position:fixed;inset:0;z-index:9000;display:none;background:#0f172a}
+#onboard-overlay{position:fixed;inset:0;z-index:9000;display:none;background:#f1f5f9}
 #onboard-overlay.open{display:flex}
 .ss-layout{display:flex;min-height:100vh;width:100%}
-/* Left sidebar */
-.ss-sidebar{width:260px;background:#1a2744;padding:28px 20px;display:flex;flex-direction:column;gap:0;flex-shrink:0;border-right:1px solid #1e3a5f}
+/* Left sidebar — dark navy, consistent with back office sidebar */
+.ss-sidebar{width:260px;background:#0f172a;padding:28px 20px;display:flex;flex-direction:column;gap:0;flex-shrink:0;border-right:1px solid rgba(255,255,255,.06)}
 .ss-sidebar-logo{font-size:17px;font-weight:800;color:#f1f5f9;margin-bottom:2px;letter-spacing:-.3px}
 .ss-sidebar-sub{font-size:11px;color:#64748b;margin-bottom:24px}
-.ss-progress-title{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:#475569;margin-bottom:12px}
+.ss-progress-title{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:#334155;margin-bottom:12px}
 .ss-step{display:flex;align-items:flex-start;gap:12px;padding:10px 10px;border-radius:8px;cursor:default}
-.ss-step.active{background:rgba(59,130,246,.12)}
+.ss-step.active{background:rgba(249,115,22,.12)}
 .ss-step.done{opacity:.7}
-.ss-step-num{width:30px;height:30px;border-radius:50%;background:#1e3a5f;color:#64748b;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0;transition:.2s}
-.ss-step.active .ss-step-num{background:#3b82f6;color:#fff}
+.ss-step-num{width:30px;height:30px;border-radius:50%;background:#1e293b;color:#64748b;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0;transition:.2s}
+.ss-step.active .ss-step-num{background:#f97316;color:#fff}
 .ss-step.done .ss-step-num{background:#10b981;color:#fff}
 .ss-step-label{font-size:13px;font-weight:600;color:#64748b;line-height:1.2;margin-top:2px}
-.ss-step.active .ss-step-label{color:#e2e8f0}
+.ss-step.active .ss-step-label{color:#f1f5f9}
 .ss-step.done .ss-step-label{color:#10b981}
 .ss-step-desc{font-size:11px;color:#475569;margin-top:2px}
-.ss-step-connector{width:1px;height:18px;background:#1e3a5f;margin-left:24px}
-.ss-sidebar-note{margin-top:auto;background:#0f172a;border-radius:10px;padding:14px;border:1px solid #1e3a5f}
+.ss-step-connector{width:1px;height:18px;background:rgba(255,255,255,.07);margin-left:24px}
+.ss-sidebar-note{margin-top:auto;background:#0a0f1a;border-radius:10px;padding:14px;border:1px solid rgba(255,255,255,.06)}
 .ss-sidebar-note-title{font-size:12px;font-weight:700;color:#f59e0b;margin-bottom:4px}
 .ss-sidebar-note-body{font-size:11px;color:#64748b;line-height:1.5}
-/* Main scroll area */
-.ss-main{flex:1;overflow-y:auto;padding:32px 36px}
-.ss-page-title{font-size:22px;font-weight:800;color:#f1f5f9;margin:0 0 4px}
+/* Main scroll area — light, matches back office content */
+.ss-main{flex:1;overflow-y:auto;padding:32px 36px;background:#f1f5f9}
+.ss-page-title{font-size:22px;font-weight:800;color:#0f172a;margin:0 0 4px}
 .ss-page-sub{font-size:13px;color:#64748b;margin:0 0 24px}
-/* Section cards */
-.ss-card{background:#162032;border:1px solid #1e3a5f;border-radius:14px;margin-bottom:20px;overflow:hidden}
-.ss-card-header{display:flex;align-items:center;gap:12px;padding:14px 20px;background:#0f172a;border-bottom:1px solid #1e3a5f}
-.ss-card-num{width:28px;height:28px;border-radius:50%;background:#3b82f6;color:#fff;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;flex-shrink:0}
-.ss-card-title{font-size:14px;font-weight:700;color:#e2e8f0}
+/* Section cards — white, matches back office .card */
+.ss-card{background:#fff;border:1px solid #e2e8f0;border-radius:14px;margin-bottom:20px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,.05)}
+.ss-card-header{display:flex;align-items:center;gap:12px;padding:14px 20px;background:#fafafa;border-bottom:1px solid #e2e8f0}
+.ss-card-num{width:28px;height:28px;border-radius:50%;background:#f97316;color:#fff;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;flex-shrink:0}
+.ss-card-title{font-size:14px;font-weight:700;color:#0f172a}
 .ss-card-body{padding:20px}
 .ss-row{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px}
 .ss-row:last-child{margin-bottom:0}
 .ss-field{display:flex;flex-direction:column;gap:6px}
-.ss-field label{font-size:12px;font-weight:600;color:#94a3b8;letter-spacing:.2px}
-.ss-field input,.ss-field select,.ss-field textarea{padding:10px 12px;background:#0d1a2d;border:1.5px solid #1e3a5f;border-radius:8px;color:#e2e8f0;font-size:13px;outline:none;transition:.15s;box-sizing:border-box;width:100%}
-.ss-field input:focus,.ss-field select:focus,.ss-field textarea:focus{border-color:#3b82f6;background:#0f2040}
-.ss-field input[readonly]{opacity:.6;cursor:default}
-.ss-field select option{background:#162032}
+.ss-field label{font-size:12px;font-weight:600;color:#475569;letter-spacing:.2px}
+.ss-field input,.ss-field select,.ss-field textarea{padding:10px 12px;background:#f8fafc;border:1.5px solid #e2e8f0;border-radius:8px;color:#0f172a;font-size:13px;outline:none;transition:.15s;box-sizing:border-box;width:100%}
+.ss-field input:focus,.ss-field select:focus,.ss-field textarea:focus{border-color:#f97316;background:#fff;box-shadow:0 0 0 3px rgba(249,115,22,.1)}
+.ss-field input[readonly]{opacity:.6;cursor:default;background:#f1f5f9}
+.ss-field select option{background:#fff}
 .ss-field textarea{resize:vertical;min-height:64px;font-family:inherit}
 .ss-phone-row{display:flex;gap:8px}
 .ss-phone-row select{width:110px;flex-shrink:0}
 .ss-phone-row input{flex:1}
-.ss-logo-drop{border:2px dashed #1e3a5f;border-radius:8px;padding:18px;text-align:center;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:6px;background:#0d1a2d;transition:.2s;min-height:80px;justify-content:center}
-.ss-logo-drop:hover{border-color:#3b82f6;background:#0f2040}
+.ss-logo-drop{border:2px dashed #e2e8f0;border-radius:8px;padding:18px;text-align:center;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:6px;background:#f8fafc;transition:.2s;min-height:80px;justify-content:center}
+.ss-logo-drop:hover{border-color:#f97316;background:#fff7ed}
 .ss-logo-drop span{font-size:12px;color:#64748b}
 /* Submit bar */
 .ss-submit-bar{display:flex;justify-content:flex-end;align-items:center;gap:12px;padding-top:8px}
-.ss-submit-btn{padding:13px 28px;background:linear-gradient(135deg,#1d4ed8,#3b82f6);border:none;border-radius:10px;color:#fff;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:8px;transition:.2s}
-.ss-submit-btn:hover{opacity:.9}
-.ss-submit-btn:disabled{opacity:.5;cursor:not-allowed}
-/* Right completion panel */
-.ss-panel{width:240px;background:#1a2744;padding:24px 18px;flex-shrink:0;border-left:1px solid #1e3a5f;overflow-y:auto}
-.ss-panel-title{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:#475569;margin-bottom:6px}
+.ss-submit-btn{padding:13px 28px;background:linear-gradient(135deg,#ea6c00,#f97316);border:none;border-radius:10px;color:#fff;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:8px;transition:.2s;box-shadow:0 4px 12px rgba(249,115,22,.25)}
+.ss-submit-btn:hover{background:linear-gradient(135deg,#dc6200,#ef8020);box-shadow:0 6px 18px rgba(249,115,22,.35);transform:translateY(-1px)}
+.ss-submit-btn:disabled{opacity:.5;cursor:not-allowed;transform:none;box-shadow:none}
+/* Right completion panel — dark navy, matches back office sidebar tone */
+.ss-panel{width:240px;background:#0f172a;padding:24px 18px;flex-shrink:0;border-left:1px solid rgba(255,255,255,.06);overflow-y:auto}
+.ss-panel-title{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:#334155;margin-bottom:6px}
 .ss-panel-sub{font-size:11px;color:#475569;margin-bottom:20px;line-height:1.5}
 .ss-checklist{display:flex;flex-direction:column;gap:14px}
 .ss-check-item{display:flex;align-items:flex-start;gap:10px}
-.ss-check-num{width:26px;height:26px;border-radius:50%;background:#1e3a5f;color:#64748b;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0;transition:.3s}
+.ss-check-num{width:26px;height:26px;border-radius:50%;background:#1e293b;color:#64748b;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0;transition:.3s}
 .ss-check-num.done{background:#10b981;color:#fff}
-.ss-check-num.active{background:#3b82f6;color:#fff}
+.ss-check-num.active{background:#f97316;color:#fff}
 .ss-check-label{font-size:12px;font-weight:600;color:#94a3b8;margin-top:2px}
 .ss-check-desc{font-size:11px;color:#475569;margin-top:1px}
 /* Responsive */
@@ -7991,7 +7991,7 @@ const _origShowView = showView
             </div>
             <div class="ss-field">
               <label style="opacity:0">—</label>
-              <div style="padding:10px 12px;background:#0d1a2d;border:1.5px solid #1e3a5f;border-radius:8px;font-size:12px;color:#94a3b8">A market groups your outlets geographically. You can add more markets later.</div>
+              <div style="padding:10px 12px;background:#f8fafc;border:1.5px solid #e2e8f0;border-radius:8px;font-size:12px;color:#64748b">A market groups your outlets geographically. You can add more markets later.</div>
             </div>
           </div>
           <div class="ss-row">
@@ -8123,9 +8123,9 @@ const _origShowView = showView
             </div>
             <div class="ss-field" style="margin:0">
               <label style="opacity:0">Hours</label>
-              <label style="display:flex;align-items:center;gap:10px;padding:10px 14px;background:#0d1a2d;border:1.5px solid #1e3a5f;border-radius:8px;cursor:pointer;user-select:none">
-                <input type="checkbox" id="ss-24h" onchange="ss24hToggle(this.checked)" style="width:16px;height:16px;accent-color:#3b82f6;cursor:pointer">
-                <span style="font-size:13px;color:#e2e8f0;font-weight:500">Open 24 Hours</span>
+              <label style="display:flex;align-items:center;gap:10px;padding:10px 14px;background:#f8fafc;border:1.5px solid #e2e8f0;border-radius:8px;cursor:pointer;user-select:none">
+                <input type="checkbox" id="ss-24h" onchange="ss24hToggle(this.checked)" style="width:16px;height:16px;accent-color:#f97316;cursor:pointer">
+                <span style="font-size:13px;color:#0f172a;font-weight:500">Open 24 Hours</span>
               </label>
             </div>
           </div>
@@ -8167,7 +8167,7 @@ const _origShowView = showView
           <div><div class="ss-check-label">Open Back Office</div><div class="ss-check-desc">Manage your brand</div></div>
         </div>
       </div>
-      <div style="margin-top:20px;background:#0f172a;border-radius:8px;padding:10px 12px;font-size:11px;color:#475569;border:1px solid #1e3a5f;line-height:1.5">
+      <div style="margin-top:20px;background:#1e293b;border-radius:8px;padding:10px 12px;font-size:11px;color:#64748b;border:1px solid rgba(255,255,255,.06);line-height:1.5">
         Your data is 100% secure and encrypted
       </div>
     </div>
