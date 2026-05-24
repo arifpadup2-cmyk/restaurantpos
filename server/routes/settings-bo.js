@@ -24,8 +24,8 @@ module.exports = function settingsRouter (sql) {
       const rows = await sql`SELECT key, value FROM settings WHERE key = ANY(${KEYS}) AND brand_id = ${rid}`
       const settings = Object.fromEntries(rows.map(r => [r.key, r.value]))
       if (req.user?.brand_id) {
-        const [r] = await sql`SELECT setup_done FROM restaurants WHERE id = ${req.user.brand_id}`
-        settings.setup_done = r?.setup_done ?? false
+        const [b] = await sql`SELECT setup_done FROM brands WHERE id = ${req.user.brand_id}`
+        settings.setup_done = b?.setup_done ?? (settings.setup_done === 'true' || settings.setup_done === true)
       } else {
         settings.setup_done = true
       }
@@ -50,11 +50,10 @@ module.exports = function settingsRouter (sql) {
         const business_type = (body.business_type || '').trim() || null
         const country       = (body.country || '').trim() || null
         const setupDone     = body.setup_done ? true : undefined
-        if (name || owner || business_type || country || setupDone) {
+        if (name || owner || business_type || country || setupDone !== undefined) {
           await sql`
-            UPDATE restaurants
+            UPDATE brands
             SET name          = COALESCE(${name}, name),
-                brand_name    = COALESCE(${name}, brand_name),
                 owner_name    = COALESCE(${owner}, owner_name),
                 business_type = COALESCE(${business_type}, business_type),
                 country       = COALESCE(${country}, country),

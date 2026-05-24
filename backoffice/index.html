@@ -3506,6 +3506,7 @@ function obClose () {
   loadMenu()
   loadDashboard()
   loadStaff()
+  loadBrandContext()
   showView('dashboard')
 }
 
@@ -6744,15 +6745,13 @@ async function cfgDeleteBrand (id, name) {
 
 function cfgAddMarketForBrand (brandId) {
   cfgOpenMarketModal(null)
-  setTimeout(() => { const s = document.getElementById('mkt-brand'); if (s) s.value = brandId }, 120)
+  setTimeout(() => { const s = document.getElementById('mkt-brand'); if (s) s.value = brandId }, 150)
 }
 
-function cfgAddOutletInMarket (marketId, brandId) {
-  cfgOpenOutletModal(null)
-  setTimeout(() => {
-    const ms = document.getElementById('outlet-market-id'); if (ms) ms.value = marketId
-    const bs = document.getElementById('outlet-brand-id');  if (bs)  bs.value = brandId
-  }, 350)
+async function cfgAddOutletInMarket (marketId, brandId) {
+  await cfgOpenOutletModal(null)
+  const ms = document.getElementById('outlet-market-id'); if (ms) ms.value = marketId
+  const bs = document.getElementById('outlet-brand-id');  if (bs)  bs.value = brandId
 }
 
 // ─── MARKETS ─────────────────────────────────────────────────────────────────
