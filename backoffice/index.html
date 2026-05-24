@@ -4014,6 +4014,18 @@ function updateSidebarUser () {
 
 // Check saved token on load
 ;(async function checkSession () {
+  // Owner portal brand-switch: ?switched_token=xxx&brand_name=yyy
+  const _sp = new URLSearchParams(window.location.search)
+  const _switchedToken = _sp.get('switched_token')
+  if (_switchedToken) {
+    localStorage.setItem('bo_token', _switchedToken)
+    token = _switchedToken
+    const _bn = _sp.get('brand_name')
+    if (_bn) document.title = _bn + ' — Backoffice'
+    // Clean URL without reloading
+    window.history.replaceState({}, '', window.location.pathname)
+  }
+
   const savedUser = localStorage.getItem('bo_remember_user')
   if (savedUser) {
     const uEl = document.getElementById('auth-username')
