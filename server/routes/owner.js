@@ -5,6 +5,22 @@ const bcrypt   = require('bcryptjs')
 const { sign, jwtAuth } = require('../middleware/jwtAuth')
 const { serverError }   = require('../middleware/serverError')
 
+// Simple in-memory rate limiter for owner login
+const _ownerRateBuckets = new Map()
+setInterval(() => {
+  const now = Date.now()
+  for (const [k, v] of _ownerRateBuckets) if (now > v.reset) _ownerRateBuckets.delete(k)
+}, 600000)
+function isOwnerRateLimited (ip) {
+  const key = ip + ':owner_login'
+  const now = Date.now()
+  let e = _ownerRateBuckets.get(key)
+  if (!e || now > e.reset) e = { count: 0, reset: now + 15 * 60 * 1000 }
+  e.count++
+  _ownerRateBuckets.set(key, e)
+  return e.count > 10
+}
+
 // Owner JWT carry { owner_id, username, role:'owner', brand_ids:[] }
 function ownerAuth (req, res, next) {
   if (!req.user?.owner_id)
@@ -23,6 +39,8 @@ module.exports = function ownerRouter (sql) {
 
   // ── POST /owner/login ──────────────────────────────────────────────
   router.post('/login', async (req, res) => {
+    if (isOwnerRateLimited(req.ip || 'unknown'))
+      return res.status(429).json({ error: 'Too many login attempts. Try again in 15 minutes.' })
     const { username, password } = req.body || {}
     if (!username || !password)
       return res.status(400).json({ error: 'username and password required' })
@@ -270,7 +288,11 @@ module.exports = function ownerRouter (sql) {
       return res.status(403).json({ error: 'Brand not in your portfolio' })
     const { name, password, email, outlet_ids, permissions, app_access, designation_id, active } = req.body || {}
     try {
-      const hash  = password && password.length >= 6 ? await bcrypt.hash(password, 10) : null
+      const [target] = await sql`SELECT is_protected FROM bo_users WHERE id = ${user_id} AND brand_id = ${brand_id}`
+      if (!target) return res.status(404).json({ error: 'User not found' })
+      if (target.is_protected)
+        return res.status(403).json({ error: 'Owner account cannot be modified' })
+      const hash  = password && password.length >= 8 ? await bcrypt.hash(password, 10) : null
       const oIds  = Array.isArray(outlet_ids) ? (outlet_ids.length ? outlet_ids : null) : undefined
       const desId = designation_id !== undefined ? (designation_id || null) : undefined
       const [row] = await sql`

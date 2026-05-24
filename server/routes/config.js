@@ -56,9 +56,27 @@ const DEFAULT_DESIGNATIONS = [
   },
 ]
 
+async function auditLog (sql, brand_id, actor, action, target, changes, ip) {
+  try {
+    await sql`
+      INSERT INTO bo_user_audit_log (id, brand_id, actor_id, actor_name, action, target_id, target_name, changes, ip, created_at)
+      VALUES (${randomUUID().replace(/-/g,'').slice(0,20)}, ${brand_id},
+              ${actor?.id || null}, ${actor?.username || null}, ${action},
+              ${target?.id || null}, ${target?.username || null},
+              ${changes ? sql.json(changes) : null}, ${ip || null}, ${Date.now()})`
+  } catch (_) {}
+}
+
 module.exports = function configRouter (sql) {
   const router = express.Router()
   router.use(jwtAuth)
+
+  // Block users whose backoffice app_access was explicitly revoked
+  router.use((req, res, next) => {
+    if (req.user?.app_access?.backoffice === false)
+      return res.status(403).json({ error: 'No backoffice access. Contact your administrator.' })
+    next()
+  })
 
   // ── BRAND ──────────────────────────────────────────────────────────────────
   router.get('/brand', async (req, res) => {
@@ -772,10 +790,12 @@ module.exports = function configRouter (sql) {
     if (!canManageUsers(req)) return res.status(403).json({ error: 'Not allowed' })
     const rid = req.user.brand_id
     try {
-      const rows         = await sql`SELECT id, name, username, email, role, active, outlet_ids, permissions, app_access, designation_id, created_at FROM bo_users WHERE brand_id = ${rid} ORDER BY created_at`
+      const rows         = await sql`SELECT id, name, username, email, role, active, outlet_ids, permissions, app_access, designation_id, is_protected, last_login_at, created_at FROM bo_users WHERE brand_id = ${rid} ORDER BY created_at`
       const outlets      = await sql`SELECT id, name FROM outlets WHERE brand_id = ${rid} ORDER BY created_at`
       const designations = await sql`SELECT id, name, access_level FROM designations WHERE brand_id = ${rid} ORDER BY access_level, name`
-      res.json({ rows, outlets, designations })
+      // Non-owners cannot see protected (owner-role) accounts
+      const visibleRows  = req.user.role === 'owner' ? rows : rows.filter(u => !u.is_protected)
+      res.json({ rows: visibleRows, outlets, designations })
     } catch (e) { serverError(res, e) }
   })
 
@@ -783,9 +803,9 @@ module.exports = function configRouter (sql) {
     if (!canManageUsers(req)) return res.status(403).json({ error: 'Not allowed' })
     const rid = req.user.brand_id
     if (!rid) return res.status(400).json({ error: 'No brand linked' })
-    const { name, username, password, email, outlet_ids, permissions, app_access, designation_id } = req.body || {}
+    const { name, username, password, email, outlet_ids, permissions, app_access, designation_id, pos_pin } = req.body || {}
     if (!username || !password) return res.status(400).json({ error: 'username and password required' })
-    if (password.length < 6) return res.status(400).json({ error: 'Password must be at least 6 characters' })
+    if (password.length < 8) return res.status(400).json({ error: 'Password must be at least 8 characters' })
     if (!/^[a-z0-9_]+$/i.test(username)) return res.status(400).json({ error: 'username: letters, numbers and _ only' })
     try {
       const existing = await sql`SELECT id FROM bo_users WHERE LOWER(username) = ${username.toLowerCase()}`
@@ -793,14 +813,18 @@ module.exports = function configRouter (sql) {
       const id   = newId()
       const hash = await (require('bcryptjs')).hash(password, 10)
       const perms  = { ...DEFAULT_BO_PERMISSIONS, ...(permissions || {}) }
+      // Only owner can grant manage_users — prevent privilege escalation
+      if (req.user.role !== 'owner') perms.manage_users = false
       const access = { pos: false, captain_app: false, kds: false, backoffice: true, owner_app: false, ...(app_access || {}) }
       const oIds   = Array.isArray(outlet_ids) && outlet_ids.length ? outlet_ids : null
       const desId  = designation_id || null
+      const pin    = pos_pin ? String(pos_pin).replace(/\D/g,'').slice(0,8) || null : null
       const [row]  = await sql`
-        INSERT INTO bo_users (id, brand_id, name, username, password, email, role, outlet_ids, permissions, app_access, designation_id)
+        INSERT INTO bo_users (id, brand_id, name, username, password, email, role, outlet_ids, permissions, app_access, designation_id, pos_pin, created_by)
         VALUES (${id}, ${rid}, ${name || null}, ${username.toLowerCase()}, ${hash},
-                ${email || null}, 'staff', ${oIds ? sql.array(oIds) : null}, ${sql.json(perms)}, ${sql.json(access)}, ${desId})
-        RETURNING id, name, username, email, role, active, outlet_ids, permissions, app_access, designation_id, created_at`
+                ${email || null}, 'staff', ${oIds ? sql.array(oIds) : null}, ${sql.json(perms)}, ${sql.json(access)}, ${desId}, ${pin}, ${req.user.id || null})
+        RETURNING id, name, username, email, role, active, outlet_ids, permissions, app_access, designation_id, is_protected, last_login_at, created_at`
+      await auditLog(sql, rid, req.user, 'user.create', row, { username: row.username, permissions: perms, app_access: access }, req.ip)
       res.json({ ok: true, user: row })
     } catch (e) { serverError(res, e) }
   })
@@ -808,11 +832,19 @@ module.exports = function configRouter (sql) {
   router.put('/users/:id', async (req, res) => {
     if (!canManageUsers(req)) return res.status(403).json({ error: 'Not allowed' })
     const rid = req.user.brand_id
-    const { name, password, email, outlet_ids, permissions, app_access, designation_id, active } = req.body || {}
+    const { name, password, email, outlet_ids, permissions, app_access, designation_id, active, pos_pin } = req.body || {}
     try {
-      const hash  = password && password.length >= 6 ? await (require('bcryptjs')).hash(password, 10) : null
+      const [target] = await sql`SELECT role, is_protected, username FROM bo_users WHERE id = ${req.params.id} AND brand_id = ${rid}`
+      if (!target) return res.status(404).json({ error: 'User not found' })
+      // Protected accounts (owner) can only be edited by the owner themselves
+      if (target.is_protected && req.user.id !== req.params.id)
+        return res.status(403).json({ error: 'Owner account cannot be modified by other users' })
+      const hash  = password && password.length >= 8 ? await (require('bcryptjs')).hash(password, 10) : null
       const oIds  = Array.isArray(outlet_ids) ? (outlet_ids.length ? outlet_ids : null) : undefined
       const desId = designation_id !== undefined ? (designation_id || null) : undefined
+      const pin   = pos_pin !== undefined ? (pos_pin ? String(pos_pin).replace(/\D/g,'').slice(0,8) || null : null) : undefined
+      // Prevent manage_users escalation by non-owners
+      if (permissions !== undefined && req.user.role !== 'owner') permissions.manage_users = false
       const [row] = await sql`
         UPDATE bo_users SET
           name           = COALESCE(${name !== undefined ? (name || null) : null}, name),
@@ -822,10 +854,13 @@ module.exports = function configRouter (sql) {
           permissions    = CASE WHEN ${permissions !== undefined} THEN ${permissions ? sql.json(permissions) : sql.json({})} ELSE permissions END,
           app_access     = CASE WHEN ${app_access !== undefined} THEN ${app_access ? sql.json(app_access) : sql.json({})} ELSE app_access END,
           designation_id = CASE WHEN ${desId !== undefined} THEN ${desId} ELSE designation_id END,
+          pos_pin        = CASE WHEN ${pin !== undefined} THEN ${pin} ELSE pos_pin END,
           active         = COALESCE(${active !== undefined ? !!active : null}, active)
         WHERE id = ${req.params.id} AND brand_id = ${rid}
-        RETURNING id, name, username, email, role, active, outlet_ids, permissions, app_access, designation_id, created_at`
+        RETURNING id, name, username, email, role, active, outlet_ids, permissions, app_access, designation_id, is_protected, last_login_at, created_at`
       if (!row) return res.status(404).json({ error: 'User not found' })
+      await auditLog(sql, rid, req.user, 'user.edit', { id: req.params.id, username: target.username },
+        { name, email, active, permissions, app_access }, req.ip)
       res.json({ ok: true, user: row })
     } catch (e) { serverError(res, e) }
   })
@@ -835,7 +870,12 @@ module.exports = function configRouter (sql) {
     const rid = req.user.brand_id
     if (req.params.id === req.user.id) return res.status(400).json({ error: 'Cannot deactivate yourself' })
     try {
+      const [target] = await sql`SELECT role, is_protected, username FROM bo_users WHERE id = ${req.params.id} AND brand_id = ${rid}`
+      if (!target) return res.status(404).json({ error: 'User not found' })
+      if (target.is_protected)
+        return res.status(403).json({ error: 'Owner account cannot be disabled' })
       await sql`UPDATE bo_users SET active = false WHERE id = ${req.params.id} AND brand_id = ${rid}`
+      await auditLog(sql, rid, req.user, 'user.disable', { id: req.params.id, username: target.username }, null, req.ip)
       res.json({ ok: true })
     } catch (e) { serverError(res, e) }
   })

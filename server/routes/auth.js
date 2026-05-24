@@ -103,8 +103,11 @@ module.exports = function authRouter (sql) {
 
       const outlet_ids  = user.outlet_ids  || null
       const permissions = user.permissions || {}
-      const token = sign({ id: user.id, username: user.username, role: user.role, brand_id: user.brand_id || null, outlet_ids, permissions })
+      const app_access  = user.app_access  || {}
+      const token = sign({ id: user.id, username: user.username, role: user.role, brand_id: user.brand_id || null, outlet_ids, permissions, app_access })
       const refresh = await issueRefreshToken(sql, user, req)
+      // Track login
+      try { await sql`UPDATE bo_users SET last_login_at = ${Date.now()}, login_count = login_count + 1 WHERE id = ${user.id}` } catch (_) {}
       let owner_name = null
       if (user.brand_id) {
         try {
@@ -112,7 +115,7 @@ module.exports = function authRouter (sql) {
           owner_name = b?.owner_name || null
         } catch (_) {}
       }
-      res.json({ ok: true, token, refresh, user: { id: user.id, name: user.name || null, username: user.username, role: user.role, brand_id: user.brand_id || null, owner_name, outlet_ids, permissions } })
+      res.json({ ok: true, token, refresh, user: { id: user.id, name: user.name || null, username: user.username, role: user.role, brand_id: user.brand_id || null, owner_name, outlet_ids, permissions, app_access } })
     } catch (e) {
       serverError(res, e)
     }
@@ -136,12 +139,13 @@ module.exports = function authRouter (sql) {
       if (row.active === false)
         return res.status(401).json({ error: 'Account disabled' })
 
-      // Rotate: revoke old, issue new — re-fetch user to get latest outlet_ids/permissions
-      const [freshUser] = await sql`SELECT outlet_ids, permissions FROM bo_users WHERE id = ${row.uid}`
+      // Rotate: revoke old, issue new — re-fetch user to get latest outlet_ids/permissions/app_access
+      const [freshUser] = await sql`SELECT outlet_ids, permissions, app_access FROM bo_users WHERE id = ${row.uid}`
       await sql`UPDATE refresh_tokens SET revoked_at = now() WHERE id = ${row.id}`
       const newRefresh = await issueRefreshToken(sql, { id: row.uid, brand_id: row.brand_id }, req)
       const newAccess  = sign({ id: row.uid, username: row.username, role: row.role, brand_id: row.brand_id || null,
-        outlet_ids: freshUser?.outlet_ids || null, permissions: freshUser?.permissions || {} })
+        outlet_ids: freshUser?.outlet_ids || null, permissions: freshUser?.permissions || {},
+        app_access: freshUser?.app_access || {} })
       res.json({ ok: true, token: newAccess, refresh: newRefresh })
     } catch (e) { serverError(res, e) }
   })
@@ -220,7 +224,9 @@ module.exports = function authRouter (sql) {
 
       const outlet_ids2  = user.outlet_ids  || null
       const permissions2 = user.permissions || {}
-      const token = sign({ id: user.id, username: user.username, role: user.role, brand_id: user.brand_id || null, outlet_ids: outlet_ids2, permissions: permissions2 })
+      const app_access2  = user.app_access  || {}
+      const token = sign({ id: user.id, username: user.username, role: user.role, brand_id: user.brand_id || null, outlet_ids: outlet_ids2, permissions: permissions2, app_access: app_access2 })
+      try { await sql`UPDATE bo_users SET last_login_at = ${Date.now()}, login_count = login_count + 1 WHERE id = ${user.id}` } catch (_) {}
       let owner_name = null
       if (user.brand_id) {
         try {
