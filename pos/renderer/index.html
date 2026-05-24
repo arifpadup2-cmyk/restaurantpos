@@ -1038,7 +1038,11 @@ textarea:focus-visible {
     <details class="setup-advanced" id="setup-adv" style="margin-bottom:14px">
       <summary>▸ Advanced Options (for IT technicians)</summary>
       <div style="margin-top:10px;padding:12px;background:#f8fafc;border-radius:8px;font-size:12px;color:#64748b;margin-bottom:10px">
-        Leave blank to use server defaults. Only fill these if your provider gave you custom DB settings.
+        Required for cloud/hosted setups. Your POS provider supplies these credentials.
+      </div>
+      <div class="setup-field">
+        <label>DB Host</label>
+        <input id="setup-dbhost" type="text" placeholder="e.g. ep-xxx.us-east-2.aws.neon.tech">
       </div>
       <div class="setup-field">
         <label>DB Port</label>
@@ -1054,7 +1058,7 @@ textarea:focus-visible {
       </div>
       <div class="setup-field">
         <label>DB Password</label>
-        <input id="setup-dbpass" type="password" placeholder="Leave blank to use server credentials">
+        <input id="setup-dbpass" type="password" placeholder="Database password">
       </div>
     </details>
 
@@ -2685,14 +2689,16 @@ async function syncUnsyncedData() {
     // Sync audit log
     const auditRes = await db.all('SELECT * FROM audit_log WHERE synced=0');
     if (auditRes.ok && auditRes.data.length > 0) {
-      await apiFetch('POST', '/audit/sync', auditRes.data);
+      const bId = encodeURIComponent((window._posConfig?.restaurantId || ''));
+      await apiFetch('POST', '/audit/sync?brand_id=' + bId, auditRes.data);
       for (const a of auditRes.data) await db.run('UPDATE audit_log SET synced=1 WHERE id=?', [a.id]);
     }
 
     // Sync no-sale log
     const nosaleRes = await db.all('SELECT * FROM no_sale_log WHERE synced=0');
     if (nosaleRes.ok && nosaleRes.data.length > 0) {
-      await apiFetch('POST', '/audit/no-sale/sync', nosaleRes.data);
+      const bId = encodeURIComponent((window._posConfig?.restaurantId || ''));
+      await apiFetch('POST', '/audit/no-sale/sync?brand_id=' + bId, nosaleRes.data);
       for (const n of nosaleRes.data) await db.run('UPDATE no_sale_log SET synced=1 WHERE id=?', [n.id]);
     }
 
@@ -2805,7 +2811,8 @@ function showSetupScreen(subtitle) {
   if (cfg.machineId)     document.getElementById('setup-mid').value    = cfg.machineId;
   if (cfg.restaurantId)  document.getElementById('setup-rid').value    = cfg.restaurantId;
   if (cfg.licenseKey)    document.getElementById('setup-lkey').value   = cfg.licenseKey;
-  // Advanced — only fill if they were custom (not server-provided)
+  // Pre-fill advanced DB fields from saved config
+  if (cfg.dbHost)  document.getElementById('setup-dbhost').value  = cfg.dbHost;
   if (cfg._advancedDb) {
     if (cfg.dbPort)  document.getElementById('setup-port').value   = cfg.dbPort;
     if (cfg.dbName)  document.getElementById('setup-dbname').value = cfg.dbName;
@@ -2904,30 +2911,42 @@ async function setupSave() {
 
   setupSetProgress(50, `License valid — ${connectData.restaurant.name}`);
 
-  // ── Step 2: Build DB config (server credentials, unless advanced overridden) ──
+  // ── Step 2: Build DB config ──
+  const advHost = document.getElementById('setup-dbhost').value.trim();
   const advPort = document.getElementById('setup-port').value.trim();
   const advName = document.getElementById('setup-dbname').value.trim();
   const advUser = document.getElementById('setup-dbuser').value.trim();
   const advPass = document.getElementById('setup-dbpass').value.trim();
-  const hasAdvanced = !!(advPort || advName || advUser || advPass);
+  const hasAdvanced = !!(advHost || advPort || advName || advUser || advPass);
 
-  const dbCfg = connectData.db;
+  const existCfg = window._posConfig || {};
+  const dbCfg    = connectData.db || {};  // server no longer returns db credentials
   const cfg = {
-    ...(window._posConfig || {}),
-    serverIp:     ip,
-    machineId:    connectData.machine_id,
-    restaurantId: rid,
-    licenseKey:   key,
+    ...existCfg,
+    serverIp:       ip,
+    machineId:      connectData.machine_id,
+    restaurantId:   rid,
+    licenseKey:     key,
     restaurantName: connectData.restaurant.name,
-    outletId:     connectData.outlet?.id || outId || '',
-    outletName:   connectData.outlet?.name || '',
-    dbPort:       hasAdvanced && advPort ? advPort : String(dbCfg.port),
-    dbName:       hasAdvanced && advName ? advName : dbCfg.database,
-    dbUser:       hasAdvanced && advUser ? advUser : dbCfg.user,
-    dbPass:       hasAdvanced && advPass ? advPass : dbCfg.password,
-    _advancedDb:  hasAdvanced,
-    apiKey:       connectData.api_key || '',
+    outletId:       connectData.outlet?.id || outId || '',
+    outletName:     connectData.outlet?.name || '',
+    dbHost:         advHost || dbCfg.host || existCfg.dbHost || '',
+    dbPort:         advPort || (dbCfg.port ? String(dbCfg.port) : (existCfg.dbPort || '5432')),
+    dbName:         advName || dbCfg.database || existCfg.dbName || 'restaurant_pos_central',
+    dbUser:         advUser || dbCfg.user || existCfg.dbUser || 'pos_central_user',
+    dbPass:         advPass !== '' ? advPass : (dbCfg.password !== undefined ? dbCfg.password : (existCfg.dbPass || '')),
+    _advancedDb:    hasAdvanced,
+    apiKey:         connectData.api_key || existCfg.apiKey || '',
   };
+
+  // For cloud setups the DB host differs from the API server — require it if not already in config
+  if (!cfg.dbHost && !existCfg.dbHost) {
+    errEl.textContent = '❌ DB Host required for cloud setup. Expand Advanced Options and enter the database host provided by your POS provider.';
+    document.getElementById('setup-adv').open = true;
+    btn.disabled = false;
+    document.getElementById('setup-progress').style.display = 'none';
+    return;
+  }
 
   // ── Step 3: Connect to DB ──
   setupSetProgress(70, 'Connecting to database…');

@@ -61,7 +61,7 @@ async function initDB(cfg = {}) {
 
   const useSSL = (cfg.dbSsl ?? process.env.DB_SSL) === 'true'
   sql = postgres({
-    host:     cfg.serverIp || process.env.DB_HOST || '127.0.0.1',
+    host:     cfg.dbHost  || cfg.serverIp || process.env.DB_HOST || '127.0.0.1',
     port:     parseInt(cfg.dbPort || process.env.DB_PORT || '5432', 10),
     database: cfg.dbName   || process.env.DB_NAME || 'restaurant_pos_central',
     user:     cfg.dbUser   || process.env.DB_USER || 'pos_central_user',

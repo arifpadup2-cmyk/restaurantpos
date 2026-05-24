@@ -514,6 +514,7 @@ module.exports = function setupRouter (sql) {
         brand: { id: brand.id, name: brand.name },
         restaurant: { id: brand.id, name: brand.name }, // legacy alias
         outlet: outlet ? { id: outlet.id, name: outlet.name } : null,
+        api_key: process.env.API_KEY || '',
       })
     } catch (e) { res.status(500).json({ error: e.message, code: 'SERVER_ERROR' }) }
   })
