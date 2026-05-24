@@ -504,10 +504,15 @@ input:checked+.toggle-slider:before{transform:translateX(17px)}
   .kpi-card{padding:12px;gap:5px}
   .kpi-value{font-size:17px}
   /* Dashboard header + filters */
-  #v-dashboard>div:first-child{flex-direction:column;align-items:flex-start;gap:8px;margin-bottom:12px}
+  #v-dashboard .dash-header{flex-direction:column;align-items:flex-start;gap:8px;margin-bottom:12px}
   .date-filter{overflow-x:auto;flex-wrap:nowrap !important;padding-bottom:4px;-ms-overflow-style:none;scrollbar-width:none;width:100%;max-width:100%}
   .date-filter::-webkit-scrollbar{display:none}
+  .date-filter select,.date-filter input[type=date]{flex-shrink:0}
   .dash-preset{flex-shrink:0;font-size:11px;padding:5px 10px}
+  /* Reports date presets: horizontal scroll on mobile */
+  .rpt-preset-bar{overflow-x:auto;flex-wrap:nowrap;padding-bottom:4px;scrollbar-width:none}
+  .rpt-preset-bar::-webkit-scrollbar{display:none}
+  .rpt-preset-btn{flex-shrink:0}
   /* Dash content: single col */
   .dash-row-2,.dash-row-3{grid-template-columns:1fr}
   /* Forms */
@@ -541,6 +546,8 @@ input:checked+.toggle-slider:before{transform:translateX(17px)}
   .filter-bar{overflow-x:auto;flex-wrap:nowrap;scrollbar-width:none;padding-bottom:2px}
   .filter-bar::-webkit-scrollbar{display:none}
   .filter-chip{flex-shrink:0}
+  /* Live Orders: shrink board to avoid overlap with bottom nav */
+  #v-live .live-wrap{height:calc(100dvh - var(--hdr-h) - 56px - env(safe-area-inset-bottom,0px))}
   /* ─── Item Editor: mobile ─── */
   #v-item-editor.active{padding-bottom:calc(58px + env(safe-area-inset-bottom,0px))}
   .ie-topbar{padding:10px 12px;gap:8px}
@@ -554,6 +561,14 @@ input:checked+.toggle-slider:before{transform:translateX(17px)}
   .ie-channel-price input{width:100%}
   .ie-img-box{width:80px;height:80px}
   #ie-var-table{display:block;overflow-x:auto}
+}
+/* ─── MOBILE REPORTS & CONFIG TAB BARS ─────────────────── */
+.mob-rpt-tabs,.mob-cfg-tabs{display:none}
+@media(max-width:768px){
+  .mob-rpt-tabs,.mob-cfg-tabs{display:flex;overflow-x:auto;flex-wrap:nowrap;border-bottom:2px solid var(--border);margin-bottom:14px;scrollbar-width:none;padding:0 0 0 0;background:var(--card);border-radius:10px 10px 0 0;margin-top:-4px}
+  .mob-rpt-tabs::-webkit-scrollbar,.mob-cfg-tabs::-webkit-scrollbar{display:none}
+  .mob-rpt-tab,.mob-cfg-tab{flex-shrink:0;padding:10px 14px;background:none;border:none;border-bottom:2px solid transparent;font-size:12px;font-weight:600;color:var(--muted);cursor:pointer;margin-bottom:-2px;white-space:nowrap;transition:color .12s,border-color .12s;min-height:40px}
+  .mob-rpt-tab.active,.mob-cfg-tab.active{color:var(--primary);border-bottom-color:var(--primary)}
 }
 /* ─── REPORT TABS ───────────────────────────────────────── */
 .rpt-tabs{display:flex;gap:3px;border-bottom:2px solid var(--border);margin-bottom:18px;padding-bottom:0}
@@ -1215,7 +1230,7 @@ input:checked+.toggle-slider:before{transform:translateX(17px)}
       </button>
     </div>
 
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
+    <div class="dash-header" style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
       <div>
         <h2 style="font-size:18px;font-weight:800">Dashboard</h2>
         <p style="font-size:12px;color:var(--muted)" id="dash-subtitle">Here's what's happening today</p>
@@ -1402,10 +1417,10 @@ input:checked+.toggle-slider:before{transform:translateX(17px)}
     <div class="filter-bar">
       <button class="filter-chip active" onclick="filterOrdersView('all',this)">All</button>
       <button class="filter-chip" onclick="filterOrdersView('dine-in',this)"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="vertical-align:-2px;margin-right:3px"><path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 002-2V2"/><path d="M7 2v20"/><path d="M21 15V2v0a5 5 0 00-5 5v6c0 1.1.9 2 2 2h3zm0 0v7"/></svg>Dine-in</button>
-      <button class="filter-chip" onclick="filterOrdersView('takeaway',this)">🥡 Takeaway</button>
-      <button class="filter-chip" onclick="filterOrdersView('delivery',this)">🛵 Delivery</button>
-      <button class="filter-chip" onclick="filterOrdersView('online',this)">📱 Online</button>
-      <button class="filter-chip" onclick="filterOrdersView('vehicle',this)">🚗 Vehicle</button>
+      <button class="filter-chip" onclick="filterOrdersView('takeaway',this)"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:-2px;margin-right:3px"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 01-8 0"/></svg>Takeaway</button>
+      <button class="filter-chip" onclick="filterOrdersView('delivery',this)"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:-2px;margin-right:3px"><rect x="1" y="3" width="15" height="13"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>Delivery</button>
+      <button class="filter-chip" onclick="filterOrdersView('online',this)"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:-2px;margin-right:3px"><rect x="5" y="2" width="14" height="20" rx="2"/><line x1="12" y1="18" x2="12" y2="18.01"/></svg>Online</button>
+      <button class="filter-chip" onclick="filterOrdersView('vehicle',this)"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:-2px;margin-right:3px"><path d="M5 17H3a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v9a2 2 0 01-2 2h-2"/><circle cx="7" cy="19" r="2"/><circle cx="17" cy="19" r="2"/></svg>Vehicle</button>
     </div>
     <div class="card">
       <div class="table-wrap">
@@ -1420,6 +1435,17 @@ input:checked+.toggle-slider:before{transform:translateX(17px)}
   <!-- ── REPORTS ── -->
   <div class="view" id="v-reports">
     <div class="page-header"><h2 id="rpt-page-title">Sales Report</h2></div>
+    <!-- Mobile: report sub-section tab bar -->
+    <div class="mob-rpt-tabs">
+      <button class="mob-rpt-tab active" id="mobrpt-sales" onclick="showRptTab('sales');mobSetRptTab('sales')">Sales</button>
+      <button class="mob-rpt-tab" id="mobrpt-expenses" onclick="showRptTab('expenses');mobSetRptTab('expenses')">Expenses</button>
+      <button class="mob-rpt-tab" id="mobrpt-cashier" onclick="showRptTab('cashier');mobSetRptTab('cashier')">Cashier</button>
+      <button class="mob-rpt-tab" id="mobrpt-voids" onclick="showRptTab('voids');mobSetRptTab('voids')">Voids</button>
+      <button class="mob-rpt-tab" id="mobrpt-consumption" onclick="showRptTab('consumption');mobSetRptTab('consumption')">Items</button>
+      <button class="mob-rpt-tab" id="mobrpt-wastage" onclick="showRptTab('wastage');mobSetRptTab('wastage')">Wastage</button>
+      <button class="mob-rpt-tab" id="mobrpt-devices" onclick="showRptTab('devices');mobSetRptTab('devices')">Devices</button>
+      <button class="mob-rpt-tab" id="mobrpt-security" onclick="showRptTab('security');mobSetRptTab('security')">Audit</button>
+    </div>
 
     <!-- ─── SALES PANE ─── -->
     <div id="rpt-pane-sales">
@@ -2171,6 +2197,20 @@ input:checked+.toggle-slider:before{transform:translateX(17px)}
 
 <!-- ═══ CONFIGURATION VIEW ═══════════════════════════════════════════════════ -->
 <div id="v-config" class="view">
+  <!-- Mobile: config sub-section tab bar -->
+  <div class="mob-cfg-tabs">
+    <button class="mob-cfg-tab active" id="mobcfg-brand" onclick="showCfgTab('brand');mobSetCfgTab('brand')">Brand</button>
+    <button class="mob-cfg-tab" id="mobcfg-markets" onclick="showCfgTab('markets');mobSetCfgTab('markets')">Markets</button>
+    <button class="mob-cfg-tab" id="mobcfg-outlet" onclick="showCfgTab('outlet');mobSetCfgTab('outlet')">Outlets</button>
+    <button class="mob-cfg-tab" id="mobcfg-tables" onclick="showCfgTab('tables');mobSetCfgTab('tables')">Tables</button>
+    <button class="mob-cfg-tab" id="mobcfg-order-types" onclick="showCfgTab('order-types');mobSetCfgTab('order-types')">Order Types</button>
+    <button class="mob-cfg-tab" id="mobcfg-payment" onclick="showCfgTab('payment');mobSetCfgTab('payment')">Payment</button>
+    <button class="mob-cfg-tab" id="mobcfg-delivery" onclick="showCfgTab('delivery');mobSetCfgTab('delivery')">Delivery</button>
+    <button class="mob-cfg-tab" id="mobcfg-kitchens" onclick="showCfgTab('kitchens');mobSetCfgTab('kitchens')">Kitchens</button>
+    <button class="mob-cfg-tab" id="mobcfg-designations" onclick="showCfgTab('designations');mobSetCfgTab('designations')">Designations</button>
+    <button class="mob-cfg-tab" id="mobcfg-tax" onclick="showCfgTab('tax');mobSetCfgTab('tax')">Tax</button>
+    <button class="mob-cfg-tab" id="mobcfg-modifier-groups" onclick="showCfgTab('modifier-groups');mobSetCfgTab('modifier-groups')">Modifiers</button>
+  </div>
   <div class="cfg-layout">
     <div class="cfg-content">
 
@@ -3846,6 +3886,16 @@ function mobSetTab (id) {
   document.querySelectorAll('.mob-tab').forEach(t => t.classList.remove('active'))
   const el = document.getElementById('mobt-' + id)
   if (el) el.classList.add('active')
+}
+function mobSetRptTab (id) {
+  document.querySelectorAll('.mob-rpt-tab').forEach(t => t.classList.remove('active'))
+  const el = document.getElementById('mobrpt-' + id)
+  if (el) { el.classList.add('active'); el.scrollIntoView({behavior:'smooth',block:'nearest',inline:'center'}) }
+}
+function mobSetCfgTab (id) {
+  document.querySelectorAll('.mob-cfg-tab').forEach(t => t.classList.remove('active'))
+  const el = document.getElementById('mobcfg-' + id)
+  if (el) { el.classList.add('active'); el.scrollIntoView({behavior:'smooth',block:'nearest',inline:'center'}) }
 }
 
 const MOB_TAB_MAP = {dashboard:'dashboard',live:'live',orders:'orders',reports:'reports',menu:'orders',kds:'live',staff:'more',config:'more','bo-settings':'more',audit:'more',downloads:'more'}
