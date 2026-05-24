@@ -2,17 +2,11 @@
 
 const express = require('express')
 const { jwtAuth } = require('../middleware/jwtAuth')
+const { serverError } = require('../middleware/serverError')
 
-function newId () {
-  return Date.now().toString(36) + Math.random().toString(36).slice(2, 7)
-}
-
-function outletId () {
-  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'
-  let id = ''
-  for (let i = 0; i < 10; i++) id += chars[Math.floor(Math.random() * chars.length)]
-  return id
-}
+const { randomUUID } = require('crypto')
+function newId () { return randomUUID().replace(/-/g, '').slice(0, 20) }
+function outletId () { return randomUUID().replace(/-/g, '').slice(0, 10).toUpperCase() }
 
 const DEFAULT_PAYMENT_METHODS = [
   { name: 'Cash',                type: 'cash',    sort_order: 0 },
@@ -72,27 +66,26 @@ module.exports = function configRouter (sql) {
     if (!rid) return res.json({ brand: {} })
     try {
       const [r] = await sql`
-        SELECT name, owner_name, business_type, country, logo_url FROM restaurants WHERE id = ${rid}`
+        SELECT name, owner_name, business_type, country, logo_url FROM brands WHERE id = ${rid}`
       res.json({ brand: r || {} })
-    } catch (e) { res.status(500).json({ error: e.message }) }
+    } catch (e) { serverError(res, e) }
   })
 
   router.put('/brand', async (req, res) => {
     const { name, owner_name, business_type, country, logo_url } = req.body || {}
     const rid = req.user.brand_id
-    if (!rid) return res.status(400).json({ error: 'No restaurant' })
+    if (!rid) return res.status(400).json({ error: 'No brand linked to this account' })
     try {
       await sql`
-        UPDATE restaurants SET
+        UPDATE brands SET
           name          = COALESCE(NULLIF(${(name || '').trim()}, ''), name),
-          brand_name    = COALESCE(NULLIF(${(name || '').trim()}, ''), brand_name),
           owner_name    = COALESCE(NULLIF(${(owner_name || '').trim()}, ''), owner_name),
           business_type = COALESCE(NULLIF(${business_type || ''}, ''), business_type),
           country       = COALESCE(NULLIF(${country || ''}, ''), country),
           logo_url      = COALESCE(NULLIF(${logo_url || ''}, ''), logo_url)
         WHERE id = ${rid}`
       res.json({ ok: true })
-    } catch (e) { res.status(500).json({ error: e.message }) }
+    } catch (e) { serverError(res, e) }
   })
 
   // ── OUTLET ─────────────────────────────────────────────────────────────────
@@ -106,7 +99,7 @@ module.exports = function configRouter (sql) {
     try {
       const rows = await sql`SELECT key, value FROM settings WHERE key = ANY(${OUTLET_KEYS}) AND brand_id = ${rid}`
       res.json({ outlet: Object.fromEntries(rows.map(r => [r.key, r.value])) })
-    } catch (e) { res.status(500).json({ error: e.message }) }
+    } catch (e) { serverError(res, e) }
   })
 
   router.put('/outlet', async (req, res) => {
@@ -120,7 +113,7 @@ module.exports = function configRouter (sql) {
           ON CONFLICT (brand_id, key) DO UPDATE SET value = EXCLUDED.value`
       }
       res.json({ ok: true })
-    } catch (e) { res.status(500).json({ error: e.message }) }
+    } catch (e) { serverError(res, e) }
   })
 
   // ── BRANDS — brand IS the root tenant; user can only see/edit their own brand ──
@@ -130,7 +123,7 @@ module.exports = function configRouter (sql) {
     try {
       const rows = await sql`SELECT * FROM brands WHERE id = ${rid} ORDER BY created_at`
       res.json({ rows })
-    } catch (e) { res.status(500).json({ error: e.message }) }
+    } catch (e) { serverError(res, e) }
   })
 
   // Brand owners cannot create new brands — admin panel creates tenants
@@ -154,7 +147,7 @@ module.exports = function configRouter (sql) {
         RETURNING *`
       if (!row) return res.status(404).json({ error: 'Brand not found' })
       res.json(row)
-    } catch (e) { res.status(500).json({ error: e.message }) }
+    } catch (e) { serverError(res, e) }
   })
 
   router.delete('/brands/:id', (_req, res) => {
@@ -173,7 +166,7 @@ module.exports = function configRouter (sql) {
         WHERE m.brand_id = ${rid}
         ORDER BY m.created_at`
       res.json({ rows })
-    } catch (e) { res.status(500).json({ error: e.message }) }
+    } catch (e) { serverError(res, e) }
   })
 
   router.post('/markets', async (req, res) => {
@@ -189,7 +182,7 @@ module.exports = function configRouter (sql) {
                 ${country||null}, ${currency_code||'USD'}, ${currency_symbol||'$'}, ${Date.now()})
         RETURNING *`
       res.json(row)
-    } catch (e) { res.status(500).json({ error: e.message }) }
+    } catch (e) { serverError(res, e) }
   })
 
   router.patch('/markets/:id', async (req, res) => {
@@ -207,7 +200,7 @@ module.exports = function configRouter (sql) {
         RETURNING *`
       if (!row) return res.status(404).json({ error: 'Market not found' })
       res.json(row)
-    } catch (e) { res.status(500).json({ error: e.message }) }
+    } catch (e) { serverError(res, e) }
   })
 
   router.delete('/markets/:id', async (req, res) => {
@@ -218,7 +211,7 @@ module.exports = function configRouter (sql) {
       if (linked > 0) return res.status(409).json({ error: 'This market has outlets linked. Remove the outlets first.' })
       await sql`DELETE FROM markets WHERE id = ${req.params.id} AND brand_id = ${rid}`
       res.json({ ok: true })
-    } catch (e) { res.status(500).json({ error: e.message }) }
+    } catch (e) { serverError(res, e) }
   })
 
   // ── OUTLETS (list, multi-outlet per owner) ────────────────────────────────
@@ -235,7 +228,7 @@ module.exports = function configRouter (sql) {
         WHERE o.brand_id = ${rid}
         ORDER BY o.created_at`
       res.json({ rows })
-    } catch (e) { res.status(500).json({ error: e.message }) }
+    } catch (e) { serverError(res, e) }
   })
 
   router.post('/outlets', async (req, res) => {
@@ -254,7 +247,7 @@ module.exports = function configRouter (sql) {
                 ${mkt?.country||country||null}, ${mkt?.currency_code||currency_code||'USD'}, ${mkt?.currency_symbol||currency_symbol||'$'}, ${Date.now()})
         RETURNING *`
       res.json(row)
-    } catch (e) { res.status(500).json({ error: e.message }) }
+    } catch (e) { serverError(res, e) }
   })
 
   router.patch('/outlets/:id', async (req, res) => {
@@ -279,7 +272,7 @@ module.exports = function configRouter (sql) {
         RETURNING *`
       if (!row) return res.status(404).json({ error: 'Outlet not found' })
       res.json(row)
-    } catch (e) { res.status(500).json({ error: e.message }) }
+    } catch (e) { serverError(res, e) }
   })
 
   router.delete('/outlets/:id', async (req, res) => {
@@ -287,31 +280,34 @@ module.exports = function configRouter (sql) {
     try {
       await sql`DELETE FROM outlets WHERE id = ${req.params.id} AND brand_id = ${rid}`
       res.json({ ok: true })
-    } catch (e) { res.status(500).json({ error: e.message }) }
+    } catch (e) { serverError(res, e) }
   })
 
   // ── TABLE SECTIONS ─────────────────────────────────────────────────────────
   router.get('/table-sections', async (req, res) => {
     const rid = req.user.brand_id
+    const oid = req.query.outlet_id || null
     try {
-      const rows = await sql`SELECT * FROM table_sections WHERE brand_id = ${rid} ORDER BY sort_order, name`
+      const rows = oid
+        ? await sql`SELECT * FROM table_sections WHERE brand_id = ${rid} AND (outlet_id = ${oid} OR outlet_id IS NULL) ORDER BY sort_order, name`
+        : await sql`SELECT * FROM table_sections WHERE brand_id = ${rid} ORDER BY sort_order, name`
       res.json({ rows })
-    } catch (e) { res.status(500).json({ error: e.message }) }
+    } catch (e) { serverError(res, e) }
   })
 
   router.post('/table-sections', async (req, res) => {
-    const { name } = req.body || {}
+    const { name, outlet_id } = req.body || {}
     const rid = req.user.brand_id
     if (!name?.trim()) return res.status(400).json({ error: 'name required' })
     try {
       const [row] = await sql`
-        INSERT INTO table_sections (id, brand_id, name, sort_order, created_at)
-        VALUES (${newId()}, ${rid}, ${name.trim()},
+        INSERT INTO table_sections (id, brand_id, outlet_id, name, sort_order, created_at)
+        VALUES (${newId()}, ${rid}, ${outlet_id || null}, ${name.trim()},
           (SELECT COALESCE(MAX(sort_order),0)+1 FROM table_sections WHERE brand_id = ${rid}),
           ${Date.now()})
         RETURNING *`
       res.json(row)
-    } catch (e) { res.status(500).json({ error: e.message }) }
+    } catch (e) { serverError(res, e) }
   })
 
   router.patch('/table-sections/:id', async (req, res) => {
@@ -326,7 +322,7 @@ module.exports = function configRouter (sql) {
         RETURNING *`
       if (!row) return res.status(404).json({ error: 'not found' })
       res.json(row)
-    } catch (e) { res.status(500).json({ error: e.message }) }
+    } catch (e) { serverError(res, e) }
   })
 
   router.delete('/table-sections/:id', async (req, res) => {
@@ -336,7 +332,7 @@ module.exports = function configRouter (sql) {
       await sql`UPDATE tables_layout SET section_id = NULL WHERE section_id = ${req.params.id} AND brand_id = ${rid}`
       await sql`DELETE FROM table_sections WHERE id = ${req.params.id} AND brand_id = ${rid}`
       res.json({ ok: true })
-    } catch (e) { res.status(500).json({ error: e.message }) }
+    } catch (e) { serverError(res, e) }
   })
 
   // ── TABLES (layout management) ─────────────────────────────────────────────
@@ -358,7 +354,7 @@ module.exports = function configRouter (sql) {
           WHERE t.brand_id = ${rid}
           ORDER BY s.sort_order NULLS LAST, t.name`
       res.json({ rows })
-    } catch (e) { res.status(500).json({ error: e.message }) }
+    } catch (e) { serverError(res, e) }
   })
 
   router.post('/tables', async (req, res) => {
@@ -371,7 +367,7 @@ module.exports = function configRouter (sql) {
         VALUES (${newId()}, ${name.trim()}, ${parseInt(capacity) || 4}, 'available', ${rid}, ${section_id || null}, ${outlet_id || null})
         RETURNING *`
       res.json(row)
-    } catch (e) { res.status(500).json({ error: e.message }) }
+    } catch (e) { serverError(res, e) }
   })
 
   router.patch('/tables/:id', async (req, res) => {
@@ -387,7 +383,7 @@ module.exports = function configRouter (sql) {
         RETURNING *`
       if (!row) return res.status(404).json({ error: 'not found' })
       res.json(row)
-    } catch (e) { res.status(500).json({ error: e.message }) }
+    } catch (e) { serverError(res, e) }
   })
 
   router.delete('/tables/:id', async (req, res) => {
@@ -395,7 +391,7 @@ module.exports = function configRouter (sql) {
     try {
       await sql`DELETE FROM tables_layout WHERE id = ${req.params.id} AND brand_id = ${rid}`
       res.json({ ok: true })
-    } catch (e) { res.status(500).json({ error: e.message }) }
+    } catch (e) { serverError(res, e) }
   })
 
   // ── POS BUTTON CONFIG ─────────────────────────────────────────────────────
@@ -414,35 +410,42 @@ module.exports = function configRouter (sql) {
 
   router.get('/pos-buttons', async (req, res) => {
     const rid = req.user.brand_id
+    const oid = req.query.outlet_id || null
     try {
-      const saved = await sql`SELECT button_key, visible, sort_order FROM pos_button_config WHERE brand_id = ${rid}`
-      const savedMap = Object.fromEntries(saved.map(r => [r.button_key, r]))
+      // Brand-wide defaults first, then outlet-specific overrides on top
+      const brandSaved = await sql`SELECT button_key, visible, sort_order FROM pos_button_config WHERE brand_id = ${rid} AND outlet_id IS NULL`
+      const savedMap = Object.fromEntries(brandSaved.map(r => [r.button_key, r]))
+      if (oid) {
+        const outletSaved = await sql`SELECT button_key, visible, sort_order FROM pos_button_config WHERE brand_id = ${rid} AND outlet_id = ${oid}`
+        outletSaved.forEach(r => { savedMap[r.button_key] = r })
+      }
       const rows = POS_BUTTONS_DEF.map(d => ({
-        key:         d.key,
-        label:       d.label,
-        visible:     savedMap[d.key] ? savedMap[d.key].visible : d.default_visible,
-        sort_order:  savedMap[d.key] ? savedMap[d.key].sort_order : d.sort_order,
+        key:        d.key,
+        label:      d.label,
+        visible:    savedMap[d.key] ? savedMap[d.key].visible : d.default_visible,
+        sort_order: savedMap[d.key] ? savedMap[d.key].sort_order : d.sort_order,
       }))
       rows.sort((a, b) => a.sort_order - b.sort_order)
       res.json({ rows })
-    } catch (e) { res.status(500).json({ error: e.message }) }
+    } catch (e) { serverError(res, e) }
   })
 
   router.patch('/pos-buttons', async (req, res) => {
     const rid = req.user.brand_id
     if (!rid) return res.status(400).json({ error: 'No restaurant linked to this account' })
-    const { buttons } = req.body || {}
+    const { buttons, outlet_id } = req.body || {}
+    const oid = outlet_id || null
     if (!Array.isArray(buttons)) return res.status(400).json({ error: 'buttons array required' })
     try {
       for (const b of buttons) {
         await sql`
-          INSERT INTO pos_button_config (id, brand_id, button_key, visible, sort_order)
-          VALUES (${newId()}, ${rid}, ${b.key}, ${!!b.visible}, ${parseInt(b.sort_order) || 0})
-          ON CONFLICT (brand_id, button_key)
+          INSERT INTO pos_button_config (id, brand_id, outlet_id, button_key, visible, sort_order)
+          VALUES (${newId()}, ${rid}, ${oid}, ${b.key}, ${!!b.visible}, ${parseInt(b.sort_order) || 0})
+          ON CONFLICT (brand_id, COALESCE(outlet_id, ''), button_key)
           DO UPDATE SET visible = EXCLUDED.visible, sort_order = EXCLUDED.sort_order`
       }
       res.json({ ok: true })
-    } catch (e) { res.status(500).json({ error: e.message }) }
+    } catch (e) { serverError(res, e) }
   })
 
   // ── TAX GROUPS ─────────────────────────────────────────────────────────────
@@ -454,7 +457,7 @@ module.exports = function configRouter (sql) {
         ? await sql`SELECT * FROM tax_groups WHERE brand_id = ${rid} AND (outlet_id = ${oid} OR outlet_id IS NULL) ORDER BY created_at`
         : await sql`SELECT * FROM tax_groups WHERE brand_id = ${rid} ORDER BY created_at`
       res.json({ rows })
-    } catch (e) { res.status(500).json({ error: e.message }) }
+    } catch (e) { serverError(res, e) }
   })
 
   router.post('/tax-groups', async (req, res) => {
@@ -468,7 +471,7 @@ module.exports = function configRouter (sql) {
         VALUES (${newId()}, ${rid}, ${outlet_id || null}, ${name.trim()}, ${parseFloat(rate) || 0}, ${!!is_default}, ${Date.now()})
         RETURNING *`
       res.json(row)
-    } catch (e) { res.status(500).json({ error: e.message }) }
+    } catch (e) { serverError(res, e) }
   })
 
   router.patch('/tax-groups/:id', async (req, res) => {
@@ -485,7 +488,7 @@ module.exports = function configRouter (sql) {
         RETURNING *`
       if (!row) return res.status(404).json({ error: 'not found' })
       res.json(row)
-    } catch (e) { res.status(500).json({ error: e.message }) }
+    } catch (e) { serverError(res, e) }
   })
 
   router.delete('/tax-groups/:id', async (req, res) => {
@@ -493,7 +496,7 @@ module.exports = function configRouter (sql) {
     try {
       await sql`DELETE FROM tax_groups WHERE id = ${req.params.id} AND brand_id = ${rid}`
       res.json({ ok: true })
-    } catch (e) { res.status(500).json({ error: e.message }) }
+    } catch (e) { serverError(res, e) }
   })
 
   // ── PAYMENT METHODS (global — outlet toggle only) ─────────────────────────
@@ -508,7 +511,7 @@ module.exports = function configRouter (sql) {
         WHERE g.active = true
         ORDER BY g.sort_order, g.name`
       res.json({ rows })
-    } catch (e) { res.status(500).json({ error: e.message }) }
+    } catch (e) { serverError(res, e) }
   })
 
   // Toggle visibility: hidden=true → hide from this outlet, hidden=false → show
@@ -524,7 +527,7 @@ module.exports = function configRouter (sql) {
         await sql`DELETE FROM outlet_hidden_payments WHERE brand_id = ${rid} AND method_id = ${req.params.id}`
       }
       res.json({ ok: true })
-    } catch (e) { res.status(500).json({ error: e.message }) }
+    } catch (e) { serverError(res, e) }
   })
 
   // ── DELIVERY PARTNERS (global — outlet toggle only) ────────────────────────
@@ -539,7 +542,7 @@ module.exports = function configRouter (sql) {
         WHERE g.active = true
         ORDER BY g.sort_order, g.name`
       res.json({ rows })
-    } catch (e) { res.status(500).json({ error: e.message }) }
+    } catch (e) { serverError(res, e) }
   })
 
   router.patch('/delivery-partners/:id', async (req, res) => {
@@ -554,7 +557,7 @@ module.exports = function configRouter (sql) {
         await sql`DELETE FROM outlet_hidden_partners WHERE brand_id = ${rid} AND partner_id = ${req.params.id}`
       }
       res.json({ ok: true })
-    } catch (e) { res.status(500).json({ error: e.message }) }
+    } catch (e) { serverError(res, e) }
   })
 
   // ── ORDER TYPES ────────────────────────────────────────────────────────────
@@ -573,7 +576,7 @@ module.exports = function configRouter (sql) {
         rows = await sql`SELECT * FROM order_types WHERE brand_id = ${rid} ORDER BY sort_order, name`
       }
       res.json({ rows })
-    } catch (e) { res.status(500).json({ error: e.message }) }
+    } catch (e) { serverError(res, e) }
   })
 
   router.post('/order-types', async (req, res) => {
@@ -587,7 +590,7 @@ module.exports = function configRouter (sql) {
           (SELECT COALESCE(MAX(sort_order),0)+1 FROM order_types WHERE brand_id = ${rid}))
         RETURNING *`
       res.json(row)
-    } catch (e) { res.status(500).json({ error: e.message }) }
+    } catch (e) { serverError(res, e) }
   })
 
   router.patch('/order-types/:id', async (req, res) => {
@@ -603,7 +606,7 @@ module.exports = function configRouter (sql) {
         RETURNING *`
       if (!row) return res.status(404).json({ error: 'not found' })
       res.json(row)
-    } catch (e) { res.status(500).json({ error: e.message }) }
+    } catch (e) { serverError(res, e) }
   })
 
   router.delete('/order-types/:id', async (req, res) => {
@@ -611,7 +614,7 @@ module.exports = function configRouter (sql) {
     try {
       await sql`DELETE FROM order_types WHERE id = ${req.params.id} AND brand_id = ${rid}`
       res.json({ ok: true })
-    } catch (e) { res.status(500).json({ error: e.message }) }
+    } catch (e) { serverError(res, e) }
   })
 
   // ── KITCHENS ───────────────────────────────────────────────────────────────
@@ -623,7 +626,7 @@ module.exports = function configRouter (sql) {
         ? await sql`SELECT * FROM kitchens WHERE brand_id = ${rid} AND (outlet_id = ${oid} OR outlet_id IS NULL) ORDER BY sort_order, name`
         : await sql`SELECT * FROM kitchens WHERE brand_id = ${rid} ORDER BY sort_order, name`
       res.json({ rows })
-    } catch (e) { res.status(500).json({ error: e.message }) }
+    } catch (e) { serverError(res, e) }
   })
 
   router.post('/kitchens', async (req, res) => {
@@ -637,7 +640,7 @@ module.exports = function configRouter (sql) {
           (SELECT COALESCE(MAX(sort_order),0)+1 FROM kitchens WHERE brand_id = ${rid}))
         RETURNING *`
       res.json(row)
-    } catch (e) { res.status(500).json({ error: e.message }) }
+    } catch (e) { serverError(res, e) }
   })
 
   router.patch('/kitchens/:id', async (req, res) => {
@@ -653,7 +656,7 @@ module.exports = function configRouter (sql) {
         RETURNING *`
       if (!row) return res.status(404).json({ error: 'not found' })
       res.json(row)
-    } catch (e) { res.status(500).json({ error: e.message }) }
+    } catch (e) { serverError(res, e) }
   })
 
   router.delete('/kitchens/:id', async (req, res) => {
@@ -661,7 +664,7 @@ module.exports = function configRouter (sql) {
     try {
       await sql`DELETE FROM kitchens WHERE id = ${req.params.id} AND brand_id = ${rid}`
       res.json({ ok: true })
-    } catch (e) { res.status(500).json({ error: e.message }) }
+    } catch (e) { serverError(res, e) }
   })
 
   // ── DESIGNATIONS ───────────────────────────────────────────────────────────
@@ -680,7 +683,7 @@ module.exports = function configRouter (sql) {
         rows = await sql`SELECT * FROM designations WHERE brand_id = ${rid} ORDER BY access_level, name`
       }
       res.json({ rows })
-    } catch (e) { res.status(500).json({ error: e.message }) }
+    } catch (e) { serverError(res, e) }
   })
 
   router.post('/designations', async (req, res) => {
@@ -693,7 +696,7 @@ module.exports = function configRouter (sql) {
         VALUES (${newId()}, ${rid}, ${outlet_id || null}, ${name.trim()}, ${parseInt(access_level) || 1}, ${sql.json(permissions || {})})
         RETURNING *`
       res.json(row)
-    } catch (e) { res.status(500).json({ error: e.message }) }
+    } catch (e) { serverError(res, e) }
   })
 
   router.patch('/designations/:id', async (req, res) => {
@@ -713,7 +716,7 @@ module.exports = function configRouter (sql) {
         RETURNING *`
       if (!row) return res.status(404).json({ error: 'not found' })
       res.json(row)
-    } catch (e) { res.status(500).json({ error: e.message }) }
+    } catch (e) { serverError(res, e) }
   })
 
   router.delete('/designations/:id', async (req, res) => {
@@ -721,7 +724,7 @@ module.exports = function configRouter (sql) {
     try {
       await sql`DELETE FROM designations WHERE id = ${req.params.id} AND brand_id = ${rid}`
       res.json({ ok: true })
-    } catch (e) { res.status(500).json({ error: e.message }) }
+    } catch (e) { serverError(res, e) }
   })
 
   return router

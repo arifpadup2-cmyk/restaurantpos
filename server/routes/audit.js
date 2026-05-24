@@ -2,40 +2,45 @@
 
 const express = require('express')
 const { jwtAuth } = require('../middleware/jwtAuth')
+const { apiKey }  = require('../middleware/apiKey')
+const { serverError } = require('../middleware/serverError')
 
 module.exports = function auditRouter (sql) {
   const router = express.Router()
 
-  // GET /audit?from=&to=&action=&limit=  (back office — JWT protected)
+  // GET /audit?from=&to=&action=&limit=  — back office, brand-scoped
   router.get('/', jwtAuth, async (req, res) => {
+    const rid    = req.user.brand_id || ''
+    const from   = Number(req.query.from)  || 0
+    const to     = Number(req.query.to)    || 9999999999999
+    const limit  = Math.min(Number(req.query.limit) || 500, 2000)
+    const action = req.query.action || null
     try {
-      const from  = Number(req.query.from)  || 0
-      const to    = Number(req.query.to)    || 9999999999999
-      const limit = Number(req.query.limit) || 500
-      const action = req.query.action || null
       const rows = action
-        ? await sql`SELECT * FROM audit_log WHERE created_at >= ${from} AND created_at <= ${to} AND action = ${action} ORDER BY created_at DESC LIMIT ${limit}`
-        : await sql`SELECT * FROM audit_log WHERE created_at >= ${from} AND created_at <= ${to} ORDER BY created_at DESC LIMIT ${limit}`
+        ? await sql`SELECT * FROM audit_log WHERE brand_id = ${rid} AND created_at >= ${from} AND created_at <= ${to} AND action = ${action} ORDER BY created_at DESC LIMIT ${limit}`
+        : await sql`SELECT * FROM audit_log WHERE brand_id = ${rid} AND created_at >= ${from} AND created_at <= ${to} ORDER BY created_at DESC LIMIT ${limit}`
       res.json(rows)
-    } catch (e) {
-      res.status(500).json({ error: e.message })
-    }
+    } catch (e) { serverError(res, e) }
   })
 
-  // GET /audit/no-sale  (back office)
+  // GET /audit/no-sale  — back office, brand-scoped
   router.get('/no-sale', jwtAuth, async (req, res) => {
+    const rid  = req.user.brand_id || ''
+    const from = Number(req.query.from) || 0
+    const to   = Number(req.query.to)   || 9999999999999
     try {
-      const from = Number(req.query.from) || 0
-      const to   = Number(req.query.to)   || 9999999999999
-      const rows = await sql`SELECT * FROM no_sale_log WHERE created_at >= ${from} AND created_at <= ${to} ORDER BY created_at DESC`
+      const rows = await sql`
+        SELECT * FROM no_sale_log
+        WHERE brand_id = ${rid} AND created_at >= ${from} AND created_at <= ${to}
+        ORDER BY created_at DESC`
       res.json(rows)
-    } catch (e) {
-      res.status(500).json({ error: e.message })
-    }
+    } catch (e) { serverError(res, e) }
   })
 
-  // POST /audit/sync  — bulk upsert from Electron terminal (API key protected by outer middleware)
-  router.post('/sync', async (req, res) => {
+  // POST /audit/sync — POS terminal bulk upsert (API key required, ?brand_id= required)
+  router.post('/sync', apiKey, async (req, res) => {
+    const bId = (req.query.brand_id || '').trim()
+    if (!bId) return res.status(400).json({ error: 'brand_id query param required' })
     const rows = req.body
     if (!Array.isArray(rows) || rows.length === 0) return res.json({ ok: true, inserted: 0 })
     try {
@@ -43,37 +48,35 @@ module.exports = function auditRouter (sql) {
       for (const r of rows) {
         await sql`
           INSERT INTO audit_log (id, action, entity_type, entity_id, cashier_id, cashier_name,
-                                 approved_by, details, terminal_id, created_at)
+                                 approved_by, details, terminal_id, created_at, brand_id)
           VALUES (${r.id}, ${r.action}, ${r.entity_type || null}, ${r.entity_id || null},
                   ${r.cashier_id || null}, ${r.cashier_name || null}, ${r.approved_by || null},
-                  ${r.details || null}, ${r.terminal_id || null}, ${r.created_at})
+                  ${r.details || null}, ${r.terminal_id || null}, ${r.created_at}, ${bId})
           ON CONFLICT (id) DO NOTHING
         `
         inserted++
       }
       res.json({ ok: true, inserted })
-    } catch (e) {
-      res.status(500).json({ error: e.message })
-    }
+    } catch (e) { serverError(res, e) }
   })
 
-  // POST /audit/no-sale/sync
-  router.post('/no-sale/sync', async (req, res) => {
+  // POST /audit/no-sale/sync — POS terminal (API key required, ?brand_id= required)
+  router.post('/no-sale/sync', apiKey, async (req, res) => {
+    const bId = (req.query.brand_id || '').trim()
+    if (!bId) return res.status(400).json({ error: 'brand_id query param required' })
     const rows = req.body
     if (!Array.isArray(rows) || rows.length === 0) return res.json({ ok: true, inserted: 0 })
     try {
       for (const r of rows) {
         await sql`
-          INSERT INTO no_sale_log (id, reason, cashier_id, cashier_name, terminal_id, created_at)
+          INSERT INTO no_sale_log (id, reason, cashier_id, cashier_name, terminal_id, created_at, brand_id)
           VALUES (${r.id}, ${r.reason}, ${r.cashier_id || null}, ${r.cashier_name || null},
-                  ${r.terminal_id || null}, ${r.created_at})
+                  ${r.terminal_id || null}, ${r.created_at}, ${bId})
           ON CONFLICT (id) DO NOTHING
         `
       }
       res.json({ ok: true, inserted: rows.length })
-    } catch (e) {
-      res.status(500).json({ error: e.message })
-    }
+    } catch (e) { serverError(res, e) }
   })
 
   return router

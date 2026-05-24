@@ -29,8 +29,10 @@ const signupRouter     = require('./routes/signup')
 const adminAuthRouter  = require('./routes/admin-auth')
 const configRouter     = require('./routes/config')
 
+const { apiKey } = require('./middleware/apiKey')
+const { serverError } = require('./middleware/serverError')
+
 const PORT     = parseInt(process.env.PORT || '3001', 10)
-const API_KEY  = process.env.API_KEY || ''
 const DATA_DIR = process.env.DATA_DIR || path.join(__dirname)
 
 // ── Database ──────────────────────────────────────────────────────────────────
@@ -94,13 +96,14 @@ async function runMigrations () {
 
 // ── Express + Socket.io ───────────────────────────────────────────────────────
 
+const CORS_ORIGIN = process.env.CORS_ORIGIN || '*'
 const app        = express()
 const httpServer = http.createServer(app)
 const io         = new Server(httpServer, {
-  cors: { origin: '*', methods: ['GET', 'POST'] },
+  cors: { origin: CORS_ORIGIN, methods: ['GET', 'POST'] },
 })
 
-app.use(cors())
+app.use(cors({ origin: CORS_ORIGIN }))
 app.use(express.json({ limit: '5mb' }))
 
 // Expose io to route handlers via req.io
@@ -127,20 +130,6 @@ const updatesPath = path.join(DATA_DIR, 'updates')
 if (!fs.existsSync(updatesPath)) fs.mkdirSync(updatesPath, { recursive: true })
 app.use('/updates', express.static(updatesPath))
 
-// ── Auth middleware ───────────────────────────────────────────────────────────
-
-function auth (req, res, next) {
-  if (!API_KEY) {
-    // In production, deny all sync requests when API_KEY is not configured.
-    // In dev, allow through but log a warning.
-    if (process.env.NODE_ENV === 'production')
-      return res.status(503).json({ error: 'Server misconfigured: API_KEY not set.' })
-    return next()
-  }
-  const key = req.headers['x-api-key']
-  if (key !== API_KEY) return res.status(401).json({ error: 'Unauthorized' })
-  next()
-}
 
 // ── Socket.io ─────────────────────────────────────────────────────────────────
 
@@ -158,14 +147,14 @@ app.get('/health', async (_req, res) => {
   try {
     await sql`SELECT 1`
     res.json({ ok: true, version: '2.1.0', db: 'connected', ts: Date.now() })
-  } catch (e) {
-    res.status(503).json({ ok: false, db: 'disconnected', error: e.message })
+  } catch {
+    res.status(503).json({ ok: false, db: 'disconnected' })
   }
 })
 
 // Internal notify — called by Electron POS after direct DB writes
 // so Socket.io can broadcast to KDS / waiter apps.
-app.post('/internal/notify', auth, (req, res) => {
+app.post('/internal/notify', apiKey, (req, res) => {
   const { event, payload, brand_id } = req.body || {}
   if (event && payload) {
     // Scope to restaurant room when brand_id is provided; broadcast otherwise (legacy).
@@ -176,7 +165,7 @@ app.post('/internal/notify', auth, (req, res) => {
 })
 
 // POS config (order types + button config) — API-key-scoped by outlet_id
-app.get('/sync/pos-config', auth, async (req, res) => {
+app.get('/sync/pos-config', apiKey, async (req, res) => {
   const { outlet_id } = req.query
   try {
     let rid = null
@@ -215,11 +204,11 @@ app.get('/sync/pos-config', auth, async (req, res) => {
     })).sort((a, b) => a.sort_order - b.sort_order)
 
     res.json({ order_types: orderTypes, pos_buttons })
-  } catch (e) { res.status(500).json({ error: e.message }) }
+  } catch (e) { serverError(res, e) }
 })
 
 // POS sync endpoints (Electron terminals → central DB)
-app.get('/sync/menu', auth, async (_req, res) => {
+app.get('/sync/menu', apiKey, async (_req, res) => {
   try {
     const categories = await sql`
       SELECT id, name, sort_order, color, active, synced_at
@@ -228,19 +217,19 @@ app.get('/sync/menu', auth, async (_req, res) => {
       SELECT id, category_id, name, price, description, active, synced_at
       FROM menu_items ORDER BY name`
     res.json({ categories, items })
-  } catch (e) { res.status(500).json({ error: e.message }) }
+  } catch (e) { serverError(res, e) }
 })
 
-app.get('/sync/cashiers', auth, async (_req, res) => {
+app.get('/sync/cashiers', apiKey, async (_req, res) => {
   try {
     const cashiers = await sql`
       SELECT id, name, pin, role, active, created_at
       FROM cashiers WHERE active = 1 ORDER BY name`
     res.json({ cashiers })
-  } catch (e) { res.status(500).json({ error: e.message }) }
+  } catch (e) { serverError(res, e) }
 })
 
-app.post('/sync/orders', auth, async (req, res) => {
+app.post('/sync/orders', apiKey, async (req, res) => {
   const { records } = req.body || {}
   if (!Array.isArray(records) || records.length === 0)
     return res.json({ ok: true, synced: 0 })
@@ -268,10 +257,10 @@ app.post('/sync/orders', auth, async (req, res) => {
       synced++
     }
     res.json({ ok: true, synced })
-  } catch (e) { res.status(500).json({ error: e.message }) }
+  } catch (e) { serverError(res, e) }
 })
 
-app.post('/sync/expenses', auth, async (req, res) => {
+app.post('/sync/expenses', apiKey, async (req, res) => {
   const { records } = req.body || {}
   if (!Array.isArray(records) || records.length === 0)
     return res.json({ ok: true, synced: 0 })
@@ -279,10 +268,10 @@ app.post('/sync/expenses', auth, async (req, res) => {
     for (const e of records)
       await sql`INSERT INTO expenses ${sql(sanitizeExpense(e))} ON CONFLICT (id) DO NOTHING`
     res.json({ ok: true, synced: records.length })
-  } catch (e) { res.status(500).json({ error: e.message }) }
+  } catch (e) { serverError(res, e) }
 })
 
-app.post('/sync/shifts', auth, async (req, res) => {
+app.post('/sync/shifts', apiKey, async (req, res) => {
   const { records } = req.body || {}
   if (!Array.isArray(records) || records.length === 0)
     return res.json({ ok: true, synced: 0 })
@@ -296,10 +285,10 @@ app.post('/sync/shifts', auth, async (req, res) => {
           closed_at    = EXCLUDED.closed_at,
           synced       = 1`
     res.json({ ok: true, synced: records.length })
-  } catch (e) { res.status(500).json({ error: e.message }) }
+  } catch (e) { serverError(res, e) }
 })
 
-app.post('/sync/day_closings', auth, async (req, res) => {
+app.post('/sync/day_closings', apiKey, async (req, res) => {
   const { records } = req.body || {}
   if (!Array.isArray(records) || records.length === 0)
     return res.json({ ok: true, synced: 0 })
@@ -307,7 +296,7 @@ app.post('/sync/day_closings', auth, async (req, res) => {
     for (const d of records)
       await sql`INSERT INTO day_closings ${sql(sanitizeDayClosing(d))} ON CONFLICT (id) DO NOTHING`
     res.json({ ok: true, synced: records.length })
-  } catch (e) { res.status(500).json({ error: e.message }) }
+  } catch (e) { serverError(res, e) }
 })
 
 // ── Sanitizers ────────────────────────────────────────────────────────────────
@@ -317,7 +306,7 @@ const ORDER_COLS = [
   'customer_phone','customer_address','status','subtotal','tax_rate','tax_amount',
   'discount_type','discount_value','discount_amount','total','payment_method',
   'payment_received','change_amount','notes','cashier_id','cashier_name',
-  'shift_id','terminal_id','outlet_id','created_at','updated_at','billed_at','synced',
+  'shift_id','terminal_id','outlet_id','brand_id','created_at','updated_at','billed_at','synced',
   'void_reason','voided_by','approved_by','service_charge_rate','service_charge_amount','customer_id',
 ]
 const ITEM_COLS    = ['id','order_id','item_id','item_name','category_name','quantity','unit_price','total_price','notes','void_reason','voided_by','voided_at','cancelled']
@@ -362,6 +351,10 @@ async function start () {
   if (!process.env.API_KEY) {
     console.error('  ⚠️  WARNING: API_KEY env var not set.')
     console.error('     Set API_KEY on Render to protect /sync/* endpoints from unauthenticated access.\n')
+  }
+  if (CORS_ORIGIN === '*' && process.env.NODE_ENV === 'production') {
+    console.error('  ⚠️  WARNING: CORS_ORIGIN is set to \'*\' in production.')
+    console.error('     Set CORS_ORIGIN to your backoffice domain (e.g. https://pos.yourbrand.com)\n')
   }
 
   try {

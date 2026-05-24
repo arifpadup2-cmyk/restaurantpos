@@ -1,21 +1,22 @@
 'use strict'
 
 const jwt = require('jsonwebtoken')
+const { randomUUID } = require('crypto')
 
-const SECRET = process.env.JWT_SECRET || 'changeme-set-JWT_SECRET-in-env'
+const SECRET = process.env.JWT_SECRET
+const DEFAULT = 'changeme-set-JWT_SECRET-in-env'
 
-if (SECRET === 'changeme-set-JWT_SECRET-in-env') {
-  console.error('\n  ⚠️  CRITICAL SECURITY WARNING: JWT_SECRET is using the default insecure value!')
-  console.error('  Set JWT_SECRET to a random 64-character string in your environment variables.')
+if (!SECRET || SECRET === DEFAULT) {
+  console.error('\n  ✗ FATAL: JWT_SECRET is missing or set to the insecure default value.')
   console.error('  Generate one: node -e "console.log(require(\'crypto\').randomBytes(32).toString(\'hex\'))"\n')
-  if (process.env.NODE_ENV === 'production') process.exit(1)
+  process.exit(1)
 }
 
 let _sql = null
 function initJwtAuth (sql) { _sql = sql }
 
 function sign (payload) {
-  return jwt.sign(payload, SECRET, { expiresIn: '24h' })
+  return jwt.sign({ ...payload, jti: randomUUID() }, SECRET, { expiresIn: '4h' })
 }
 
 async function jwtAuth (req, res, next) {

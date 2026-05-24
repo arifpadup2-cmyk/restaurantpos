@@ -2141,7 +2141,13 @@ input:checked+.toggle-slider:before{transform:translateX(17px)}
 
   <!-- ── SETTINGS ── -->
   <div class="view" id="v-bo-settings">
-    <div class="page-header"><h2>Settings</h2></div>
+    <div class="page-header">
+      <h2>Settings</h2>
+      <div id="settings-outlet-ctx" style="font-size:13px;color:var(--muted);margin-top:4px;display:none">
+        Editing outlet-specific settings for: <strong id="settings-outlet-name"></strong>
+        <span style="color:var(--primary);cursor:pointer;margin-left:8px" onclick="_ctxOutlet='';document.getElementById('ctx-outlet').value='';ctxOutletChange();loadBOSettings()">View Brand-wide</span>
+      </div>
+    </div>
     <div class="card" style="max-width:680px">
       <div class="card-header"><h3>Brand Info</h3></div>
       <div class="card-body">
@@ -3953,7 +3959,8 @@ function setTodayDates () {
 // ─── SETTINGS ────────────────────────────────────────────────────
 async function loadBOSettings () {
   try {
-    const data = await apiFetch('GET', '/settings')
+    const qs = _ctxOutlet ? `?outlet_id=${_ctxOutlet}` : ''
+    const data = await apiFetch('GET', `/settings${qs}`)
     const s = data.settings || {}
     boSettings.restaurant_name       = s.restaurant_name       || boSettings.restaurant_name
     boSettings.currency              = s.currency              || boSettings.currency
@@ -3968,6 +3975,18 @@ async function loadBOSettings () {
   } catch (e) { /* use defaults */ }
   document.getElementById('hdr-name').textContent    = boSettings.restaurant_name
   const sbBranch = document.getElementById('sb-branch'); if (sbBranch) sbBranch.textContent = boSettings.branch_name || 'Back Office'
+  // Show/hide outlet context banner in settings page
+  const ctxBanner = document.getElementById('settings-outlet-ctx')
+  const ctxName   = document.getElementById('settings-outlet-name')
+  if (ctxBanner && ctxName) {
+    if (_ctxOutlet) {
+      const o = (_rptFilterData?.outlets||[]).find(o=>o.id===_ctxOutlet)
+      ctxName.textContent = o?.name || _ctxOutlet
+      ctxBanner.style.display = ''
+    } else {
+      ctxBanner.style.display = 'none'
+    }
+  }
   document.getElementById('bos-name').value          = boSettings.restaurant_name
   document.getElementById('bos-currency').value      = boSettings.currency
   document.getElementById('bos-tax').value           = boSettings.tax_rate
@@ -3995,7 +4014,8 @@ async function saveBOSettings () {
   const txSys = document.getElementById('bos-tax-system'); if (txSys) boSettings.tax_system = txSys.value
   const txLbl = document.getElementById('bos-tax-label');  if (txLbl) boSettings.tax_label  = txLbl.value.trim()
   try {
-    await apiFetch('PUT', '/settings', boSettings)
+    const qs = _ctxOutlet ? `?outlet_id=${_ctxOutlet}` : ''
+    await apiFetch('PUT', `/settings${qs}`, { ...boSettings, outlet_id: _ctxOutlet || undefined })
     document.getElementById('hdr-name').textContent = boSettings.restaurant_name
     const sbBr = document.getElementById('sb-branch'); if (sbBr) sbBr.textContent = boSettings.branch_name || 'Back Office'
     showToast('Settings saved!','success')
@@ -4022,6 +4042,7 @@ function initCtxBar () {
   bSel.innerHTML = '<option value="">All Brands</option>' + brands.map(b=>`<option value="${b.id}"${b.id===prevB?' selected':''}>${b.name}</option>`).join('')
   autoSelectSingle('ctx-brand')
   ctxCascade()
+  restoreCtxOutlet()
 }
 
 function ctxCascade () {
@@ -4048,6 +4069,7 @@ function ctxCascade () {
 
 function ctxOutletChange () {
   _ctxOutlet = document.getElementById('ctx-outlet')?.value || ''
+  try { localStorage.setItem('pos_ctx_outlet', _ctxOutlet) } catch (_) {}
   const badge = document.getElementById('ctx-outlet-badge')
   if (badge) {
     if (_ctxOutlet) {
@@ -4058,6 +4080,18 @@ function ctxOutletChange () {
       badge.style.display = 'none'
     }
   }
+}
+
+function restoreCtxOutlet () {
+  try {
+    const saved = localStorage.getItem('pos_ctx_outlet')
+    if (!saved) return
+    const sel = document.getElementById('ctx-outlet')
+    if (sel && [...sel.options].some(o => o.value === saved)) {
+      sel.value = saved
+      ctxOutletChange()
+    }
+  } catch (_) {}
 }
 
 // ─── DASHBOARD FILTERS ───────────────────────────────────────────
@@ -4169,7 +4203,7 @@ async function cfgSaveOrderTypeModal () {
     if (id) {
       await apiFetch('PATCH', `/config/order-types/${id}`, { name, logo_url })
     } else {
-      await apiFetch('POST', '/config/order-types', { name, logo_url })
+      await apiFetch('POST', '/config/order-types', { name, logo_url, outlet_id: _ctxOutlet || null })
     }
     closeModal('modal-order-type')
     cfgLoadOrderTypes()
@@ -4519,6 +4553,7 @@ async function saveCategory () {
     name,
     color:      document.getElementById('cat-color').value,
     sort_order: parseInt(document.getElementById('cat-sort').value) || 0,
+    outlet_id:  _ctxOutlet || null,
   }
   try {
     if (id) await apiFetch('PUT', `/menu/categories/${id}`, payload)
@@ -4876,6 +4911,7 @@ async function saveItemEditor (addAnother) {
     takeaway_active:  document.getElementById('ie-ch-takeaway-active').checked,
     delivery_active:  document.getElementById('ie-ch-delivery-active').checked,
     online_active:    document.getElementById('ie-ch-online-active').checked,
+    outlet_id:        _ctxOutlet || null,
   }
 
   try {
@@ -5494,7 +5530,7 @@ async function saveStaff () {
   const pin  = document.getElementById('staff-pin').value.trim()
   if (!name) { showToast('Name is required.','error'); return }
   if (!pin || !/^\d{4}$/.test(pin)) { showToast('PIN must be exactly 4 digits.','error'); return }
-  const payload = { name, pin, role: document.getElementById('staff-role').value, active: 1 }
+  const payload = { name, pin, role: document.getElementById('staff-role').value, active: 1, outlet_id: _ctxOutlet || null }
   try {
     if (id) await apiFetch('PUT', `/staff/cashiers/${id}`, payload)
     else     await apiFetch('POST', '/staff/cashiers', payload)
@@ -7447,7 +7483,7 @@ async function cfgSaveTableModal () {
     if (id) {
       await apiFetch('PATCH', '/config/tables/' + id, { name, capacity, section_id })
     } else {
-      await apiFetch('POST', '/config/tables', { name, capacity, section_id })
+      await apiFetch('POST', '/config/tables', { name, capacity, section_id, outlet_id: _ctxOutlet || null })
     }
     closeModal('modal-table')
     showToast(id ? 'Table updated' : 'Table added', 'success')
@@ -7659,7 +7695,7 @@ function cfgAddKitchen () {
   const name = prompt('Kitchen name (e.g. Main Kitchen, Bar, Grill):')
   if (!name) return
   const color = prompt('Color (hex, e.g. #6366f1):') || '#6366f1'
-  apiFetch('POST', '/config/kitchens', { name, color })
+  apiFetch('POST', '/config/kitchens', { name, color, outlet_id: _ctxOutlet || null })
     .then(() => { showToast('Kitchen added', 'success'); cfgLoadKitchens() })
     .catch(e => showToast(friendlyError(e.message), 'error'))
 }
@@ -7784,7 +7820,7 @@ async function cfgSaveDesignation () {
     if (id) {
       await apiFetch('PATCH', '/config/designations/' + id, { name, access_level: level, permissions: perms })
     } else {
-      await apiFetch('POST', '/config/designations', { name, access_level: level, permissions: perms })
+      await apiFetch('POST', '/config/designations', { name, access_level: level, permissions: perms, outlet_id: _ctxOutlet || null })
     }
     closeModal('modal-designation')
     showToast(id ? 'Designation updated' : 'Designation added', 'success')
@@ -7815,7 +7851,7 @@ function cfgAddTax () {
   if (!name) return
   const rate = prompt('Tax rate %:') || '0'
   const isDef = confirm('Set as default tax group?')
-  apiFetch('POST', '/config/tax-groups', { name, rate: parseFloat(rate), is_default: isDef })
+  apiFetch('POST', '/config/tax-groups', { name, rate: parseFloat(rate), is_default: isDef, outlet_id: _ctxOutlet || null })
     .then(() => { showToast('Tax group added', 'success'); cfgLoadTax() })
     .catch(e => showToast(friendlyError(e.message), 'error'))
 }
@@ -7842,7 +7878,8 @@ let _posLayoutBtns = []
 
 async function cfgLoadPosLayout () {
   try {
-    const { rows } = await apiFetch('GET', '/config/pos-buttons')
+    const qs = _ctxOutlet ? `?outlet_id=${_ctxOutlet}` : ''
+    const { rows } = await apiFetch('GET', `/config/pos-buttons${qs}`)
     _posLayoutBtns = rows
     const list = document.getElementById('cfg-pos-btns-list')
     if (!list) return
@@ -7875,7 +7912,7 @@ function posLayoutToggle (key, checked) {
 
 async function cfgSavePosLayout () {
   try {
-    await apiFetch('PATCH', '/config/pos-buttons', { buttons: _posLayoutBtns })
+    await apiFetch('PATCH', '/config/pos-buttons', { buttons: _posLayoutBtns, outlet_id: _ctxOutlet || null })
     showToast('POS layout saved', 'success')
   } catch (e) { showToast(friendlyError(e.message), 'error') }
 }

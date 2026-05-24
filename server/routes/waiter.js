@@ -3,6 +3,7 @@
 const express          = require('express')
 const bcrypt           = require('bcryptjs')
 const { sign, jwtAuth } = require('../middleware/jwtAuth')
+const { serverError } = require('../middleware/serverError')
 const { printKOT }     = require('../lib/printer')
 
 module.exports = function waiterRouter (sql) {
@@ -49,7 +50,7 @@ module.exports = function waiterRouter (sql) {
         token,
         cashier: { id: cashier.id, name: cashier.name, role: cashier.role },
       })
-    } catch (e) { res.status(500).json({ error: e.message }) }
+    } catch (e) { serverError(res, e) }
   })
 
   // POST /waiter/auth/refresh — re-issue token (called on app resume)
@@ -81,7 +82,7 @@ module.exports = function waiterRouter (sql) {
         GROUP BY o.id
         ORDER BY o.created_at DESC`
       res.json({ orders })
-    } catch (e) { res.status(500).json({ error: e.message }) }
+    } catch (e) { serverError(res, e) }
   })
 
   // POST /waiter/orders — create new order from waiter app
@@ -189,7 +190,7 @@ module.exports = function waiterRouter (sql) {
       printKOT(sql, req.io, kotData).catch(() => {})
 
       res.status(201).json({ ok: true, orderId, orderNumber })
-    } catch (e) { res.status(500).json({ error: e.message }) }
+    } catch (e) { serverError(res, e) }
   })
 
   // PATCH /waiter/orders/:id/items — replace items on an active order
@@ -230,7 +231,7 @@ module.exports = function waiterRouter (sql) {
 
       req.io?.emit('order:updated', { orderId: id, items })
       res.json({ ok: true })
-    } catch (e) { res.status(500).json({ error: e.message }) }
+    } catch (e) { serverError(res, e) }
   })
 
   return router

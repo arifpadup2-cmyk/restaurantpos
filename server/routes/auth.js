@@ -2,7 +2,10 @@
 
 const express  = require('express')
 const bcrypt   = require('bcryptjs')
+const { randomUUID } = require('crypto')
+const { OAuth2Client } = require('google-auth-library')
 const { sign, jwtAuth } = require('../middleware/jwtAuth')
+const { serverError } = require('../middleware/serverError')
 
 // ── Simple in-memory rate limiter ─────────────────────────────────────────────
 const _rateBuckets = new Map()
@@ -41,14 +44,14 @@ module.exports = function authRouter (sql) {
       if (existing.length > 0)
         return res.status(409).json({ error: 'username already exists' })
 
-      const id   = Date.now().toString(36) + Math.random().toString(36).slice(2, 8)
+      const id   = randomUUID().replace(/-/g, '').slice(0, 20)
       const hash = await bcrypt.hash(password, 10)
       await sql`INSERT INTO bo_users (id, username, password, role) VALUES (${id}, ${username.toLowerCase()}, ${hash}, 'admin')`
 
       const token = sign({ id, username: username.toLowerCase(), role: 'admin' })
       res.json({ ok: true, token, user: { id, username: username.toLowerCase(), role: 'admin' } })
     } catch (e) {
-      res.status(500).json({ error: e.message })
+      serverError(res, e)
     }
   })
 
@@ -85,7 +88,7 @@ module.exports = function authRouter (sql) {
       }
       res.json({ ok: true, token, user: { id: user.id, username: user.username, role: user.role, brand_id: user.brand_id || null, owner_name } })
     } catch (e) {
-      res.status(500).json({ error: e.message })
+      serverError(res, e)
     }
   })
 
@@ -120,17 +123,17 @@ module.exports = function authRouter (sql) {
     if (!clientId) return res.status(503).json({ error: 'Google sign-in not configured on this server' })
 
     try {
-      const r    = await fetch(`https://oauth2.googleapis.com/tokeninfo?id_token=${encodeURIComponent(credential)}`)
-      const info = await r.json()
+      const client = new OAuth2Client(clientId)
+      let payload
+      try {
+        const ticket = await client.verifyIdToken({ idToken: credential, audience: clientId })
+        payload = ticket.getPayload()
+      } catch {
+        return res.status(401).json({ error: 'Invalid or expired Google token' })
+      }
 
-      if (info.error_description || !info.sub)
-        return res.status(401).json({ error: 'Invalid Google token: ' + (info.error_description || 'verification failed') })
-
-      if (info.aud !== clientId)
-        return res.status(401).json({ error: 'Token audience mismatch — wrong Google client ID' })
-
-      const googleId = info.sub
-      const email    = (info.email || '').toLowerCase()
+      const googleId = payload.sub
+      const email    = (payload.email || '').toLowerCase()
 
       let rows = await sql`SELECT * FROM bo_users WHERE google_id = ${googleId} LIMIT 1`
 
@@ -143,7 +146,7 @@ module.exports = function authRouter (sql) {
 
       if (!rows.length) {
         return res.status(403).json({
-          error: `No Back Office account linked to ${info.email || 'this Google account'}. Contact your administrator.`,
+          error: `No Back Office account linked to ${payload.email || 'this Google account'}. Contact your administrator.`,
         })
       }
 
@@ -160,9 +163,7 @@ module.exports = function authRouter (sql) {
         } catch (_) {}
       }
       res.json({ ok: true, token, user: { id: user.id, username: user.username, role: user.role, brand_id: user.brand_id || null, owner_name } })
-    } catch (e) {
-      res.status(500).json({ error: e.message })
-    }
+    } catch (e) { serverError(res, e) }
   })
 
   // POST /auth/signup — self-service 7-day trial signup (email + password)
@@ -199,7 +200,7 @@ module.exports = function authRouter (sql) {
           ${email.toLowerCase()}, ${true}, ${'trial'}, ${'trial'}, ${trialEnds}, ${'self_signup'}
         )`
 
-      const uid      = Date.now().toString(36) + Math.random().toString(36).slice(2, 8)
+      const uid      = randomUUID().replace(/-/g, '').slice(0, 20)
       const username = (placeholder.replace(/[^a-z0-9_]/g, '_').slice(0, 16) + '_' + id.slice(-4)).toLowerCase()
       const hash     = await bcrypt.hash(password, 10)
 
@@ -210,7 +211,7 @@ module.exports = function authRouter (sql) {
       const token = sign({ id: uid, username, role: 'owner', brand_id: id, email: email.toLowerCase() })
       res.json({ ok: true, token, user: { id: uid, username, role: 'owner', brand_id: id, email: email.toLowerCase() }, trialEndsAt: trialEnds })
     } catch (e) {
-      res.status(500).json({ error: e.message })
+      serverError(res, e)
     }
   })
 
@@ -227,16 +228,17 @@ module.exports = function authRouter (sql) {
     if (!clientId) return res.status(503).json({ error: 'Google sign-in not configured on this server' })
 
     try {
-      const r    = await fetch(`https://oauth2.googleapis.com/tokeninfo?id_token=${encodeURIComponent(credential)}`)
-      const info = await r.json()
+      const client2 = new OAuth2Client(clientId)
+      let payload2
+      try {
+        const ticket = await client2.verifyIdToken({ idToken: credential, audience: clientId })
+        payload2 = ticket.getPayload()
+      } catch {
+        return res.status(401).json({ error: 'Invalid or expired Google token' })
+      }
 
-      if (info.error_description || !info.sub)
-        return res.status(401).json({ error: 'Invalid Google token: ' + (info.error_description || 'verification failed') })
-      if (info.aud !== clientId)
-        return res.status(401).json({ error: 'Token audience mismatch — wrong Google client ID' })
-
-      const googleId = info.sub
-      const email    = (info.email || '').toLowerCase()
+      const googleId = payload2.sub
+      const email    = (payload2.email || '').toLowerCase()
 
       if (email) {
         const existing = await sql`SELECT id FROM bo_users WHERE google_id = ${googleId} OR LOWER(email) = ${email} LIMIT 1`
@@ -261,7 +263,7 @@ module.exports = function authRouter (sql) {
           ${email}, ${true}, ${'trial'}, ${'trial'}, ${trialEnds}, ${'self_signup'}
         )`
 
-      const uid      = Date.now().toString(36) + Math.random().toString(36).slice(2, 8)
+      const uid      = randomUUID().replace(/-/g, '').slice(0, 20)
       const username = (placeholder.replace(/[^a-z0-9_]/g, '_').slice(0, 16) + '_' + id.slice(-4)).toLowerCase()
 
       await sql`
@@ -270,9 +272,7 @@ module.exports = function authRouter (sql) {
 
       const token = sign({ id: uid, username, role: 'owner', brand_id: id, email })
       res.json({ ok: true, token, user: { id: uid, username, role: 'owner', brand_id: id, email }, trialEndsAt: trialEnds })
-    } catch (e) {
-      res.status(500).json({ error: e.message })
-    }
+    } catch (e) { serverError(res, e) }
   })
 
   return router

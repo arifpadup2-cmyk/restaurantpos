@@ -1,44 +1,47 @@
-﻿'use strict'
+'use strict'
 
 const express = require('express')
 const { jwtAuth } = require('../middleware/jwtAuth')
+const { apiKey }  = require('../middleware/apiKey')
+const { serverError } = require('../middleware/serverError')
 
 module.exports = function customersRouter (sql) {
   const router = express.Router()
 
-  // GET /customers?q=  (search by name or phone)
-  router.get('/', async (req, res) => {
+  // GET /customers?q=  — back-office search, scoped to caller's brand
+  router.get('/', jwtAuth, async (req, res) => {
+    const rid = req.user.brand_id || ''
     try {
       const q = `%${req.query.q || ''}%`
       const rows = await sql`
         SELECT * FROM customers
-        WHERE name ILIKE ${q} OR phone ILIKE ${q}
+        WHERE brand_id = ${rid}
+          AND (name ILIKE ${q} OR phone ILIKE ${q})
         ORDER BY name LIMIT 50`
       res.json(rows)
-    } catch (e) {
-      res.status(500).json({ error: e.message })
-    }
+    } catch (e) { serverError(res, e) }
   })
 
-  // GET /customers/:id
-  router.get('/:id', async (req, res) => {
+  // GET /customers/:id — back-office, scoped to caller's brand
+  router.get('/:id', jwtAuth, async (req, res) => {
+    const rid = req.user.brand_id || ''
     try {
-      const [row] = await sql`SELECT * FROM customers WHERE id = ${req.params.id}`
-      if (!row) return res.status(404).json({ error: 'not found' })
+      const [row] = await sql`
+        SELECT * FROM customers
+        WHERE id = ${req.params.id} AND brand_id = ${rid}`
+      if (!row) return res.status(404).json({ error: 'Not found' })
       res.json(row)
-    } catch (e) {
-      res.status(500).json({ error: e.message })
-    }
+    } catch (e) { serverError(res, e) }
   })
 
-  // POST /customers  (back office — create/update)
+  // POST /customers — back-office create/update, brand-scoped
   router.post('/', jwtAuth, async (req, res) => {
     const { id, name, phone, email, notes } = req.body
     if (!name) return res.status(400).json({ error: 'name required' })
+    const rid = req.user.brand_id || null
     try {
-      const now = Date.now()
+      const now   = Date.now()
       const newId = id || require('crypto').randomUUID()
-      const rid = req.user?.brand_id || null
       const [row] = await sql`
         INSERT INTO customers (id, name, phone, email, notes, created_at, updated_at, brand_id)
         VALUES (${newId}, ${name}, ${phone || null}, ${email || null}, ${notes || null}, ${now}, ${now}, ${rid})
@@ -48,16 +51,17 @@ module.exports = function customersRouter (sql) {
           email      = EXCLUDED.email,
           notes      = EXCLUDED.notes,
           updated_at = EXCLUDED.updated_at
+        WHERE customers.brand_id = EXCLUDED.brand_id
         RETURNING *`
+      if (!row) return res.status(403).json({ error: 'Customer belongs to another brand' })
       res.json(row)
-    } catch (e) {
-      res.status(500).json({ error: e.message })
-    }
+    } catch (e) { serverError(res, e) }
   })
 
-  // PATCH /customers/:id/loyalty
-  router.patch('/:id/loyalty', async (req, res) => {
-    const { delta = 0, spent = 0 } = req.body
+  // PATCH /customers/:id/loyalty — POS terminal (API key + brand_id in body)
+  router.patch('/:id/loyalty', apiKey, async (req, res) => {
+    const { delta = 0, spent = 0, brand_id } = req.body
+    if (!brand_id) return res.status(400).json({ error: 'brand_id required' })
     try {
       const [row] = await sql`
         UPDATE customers SET
@@ -65,26 +69,27 @@ module.exports = function customersRouter (sql) {
           total_spent    = total_spent    + ${spent},
           visit_count    = visit_count    + ${spent > 0 ? 1 : 0},
           updated_at     = ${Date.now()}
-        WHERE id = ${req.params.id}
+        WHERE id = ${req.params.id} AND brand_id = ${brand_id}
         RETURNING *`
+      if (!row) return res.status(404).json({ error: 'Customer not found' })
       res.json(row)
-    } catch (e) {
-      res.status(500).json({ error: e.message })
-    }
+    } catch (e) { serverError(res, e) }
   })
 
-  // POST /customers/sync — bulk upsert from Electron terminal
-  router.post('/sync', async (req, res) => {
+  // POST /customers/sync — POS terminal bulk upsert (API key required, ?brand_id= required)
+  router.post('/sync', apiKey, async (req, res) => {
+    const bId = (req.query.brand_id || '').trim()
+    if (!bId) return res.status(400).json({ error: 'brand_id query param required' })
     const rows = req.body
     if (!Array.isArray(rows) || rows.length === 0) return res.json({ ok: true })
     try {
       for (const r of rows) {
         await sql`
           INSERT INTO customers (id, name, phone, email, loyalty_points, total_spent,
-                                 visit_count, notes, created_at, updated_at)
+                                 visit_count, notes, created_at, updated_at, brand_id)
           VALUES (${r.id}, ${r.name}, ${r.phone || null}, ${r.email || null},
                   ${r.loyalty_points || 0}, ${r.total_spent || 0},
-                  ${r.visit_count || 0}, ${r.notes || null}, ${r.created_at}, ${r.updated_at})
+                  ${r.visit_count || 0}, ${r.notes || null}, ${r.created_at}, ${r.updated_at}, ${bId})
           ON CONFLICT (id) DO UPDATE SET
             name           = EXCLUDED.name,
             phone          = EXCLUDED.phone,
@@ -94,12 +99,11 @@ module.exports = function customersRouter (sql) {
             visit_count    = GREATEST(customers.visit_count,    EXCLUDED.visit_count),
             notes          = EXCLUDED.notes,
             updated_at     = EXCLUDED.updated_at
+          WHERE customers.brand_id = EXCLUDED.brand_id
         `
       }
       res.json({ ok: true })
-    } catch (e) {
-      res.status(500).json({ error: e.message })
-    }
+    } catch (e) { serverError(res, e) }
   })
 
   return router

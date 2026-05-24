@@ -2,12 +2,14 @@
 
 const express = require('express')
 const { jwtAuth } = require('../middleware/jwtAuth')
+const { serverError } = require('../middleware/serverError')
 
 module.exports = function menuRouter (sql) {
   const router = express.Router()
   router.use(jwtAuth)
 
-  function uid () { return Date.now().toString(36) + Math.random().toString(36).slice(2, 8) }
+  const { randomUUID } = require('crypto')
+  function uid () { return randomUUID().replace(/-/g, '').slice(0, 20) }
 
   // ── CATEGORIES ─────────────────────────────────────────────────────────────
 
@@ -32,21 +34,21 @@ module.exports = function menuRouter (sql) {
       variants.forEach(v => { (varMap[v.item_id] = varMap[v.item_id] || []).push(v) })
       items.forEach(i => { i.variants = varMap[i.id] || [] })
       res.json({ categories, items })
-    } catch (e) { res.status(500).json({ error: e.message }) }
+    } catch (e) { serverError(res, e) }
   })
 
   router.post('/categories', async (req, res) => {
-    const { name, color, sort_order } = req.body || {}
+    const { name, color, sort_order, outlet_id } = req.body || {}
     if (!name) return res.status(400).json({ error: 'name required' })
     try {
       const id  = uid()
       const rid = req.user?.brand_id || null
       const row = await sql`
-        INSERT INTO categories (id, name, color, sort_order, active, synced_at, brand_id)
-        VALUES (${id}, ${name}, ${color || '#f97316'}, ${sort_order || 0}, 1, ${Date.now()}, ${rid})
+        INSERT INTO categories (id, name, color, sort_order, active, synced_at, brand_id, outlet_id)
+        VALUES (${id}, ${name}, ${color || '#f97316'}, ${sort_order || 0}, 1, ${Date.now()}, ${rid}, ${outlet_id || null})
         RETURNING *`
       res.json({ ok: true, category: row[0] })
-    } catch (e) { res.status(500).json({ error: e.message }) }
+    } catch (e) { serverError(res, e) }
   })
 
   router.put('/categories/:id', async (req, res) => {
@@ -65,7 +67,7 @@ module.exports = function menuRouter (sql) {
         RETURNING *`
       if (!row.length) return res.status(404).json({ error: 'not found' })
       res.json({ ok: true, category: row[0] })
-    } catch (e) { res.status(500).json({ error: e.message }) }
+    } catch (e) { serverError(res, e) }
   })
 
   router.delete('/categories/:id', async (req, res) => {
@@ -74,7 +76,7 @@ module.exports = function menuRouter (sql) {
       await sql`DELETE FROM categories WHERE id = ${req.params.id}
         AND (brand_id = ${rid} OR (${rid} IS NULL AND brand_id IS NULL))`
       res.json({ ok: true })
-    } catch (e) { res.status(500).json({ error: e.message }) }
+    } catch (e) { serverError(res, e) }
   })
 
   // ── MENU ITEMS ──────────────────────────────────────────────────────────────
@@ -100,12 +102,12 @@ module.exports = function menuRouter (sql) {
       item.variants   = variants
       item.mod_groups = modGroups
       res.json({ item })
-    } catch (e) { res.status(500).json({ error: e.message }) }
+    } catch (e) { serverError(res, e) }
   })
 
   router.post('/items', async (req, res) => {
     const {
-      name, price, category_id, description, item_code,
+      name, price, category_id, description, item_code, outlet_id,
       sub_category, image_url, item_type, preparation_time, tax_group_id,
       barcode, kitchen_name, internal_note, printer_group, tags,
       dine_in_price, takeaway_price, delivery_price, online_price,
@@ -117,20 +119,20 @@ module.exports = function menuRouter (sql) {
       const rid = req.user?.brand_id || null
       const row = await sql`
         INSERT INTO menu_items (
-          id, category_id, name, price, description, item_code, active, synced_at, brand_id,
+          id, category_id, name, price, description, item_code, active, synced_at, brand_id, outlet_id,
           sub_category, image_url, item_type, preparation_time, tax_group_id,
           barcode, kitchen_name, internal_note, printer_group, tags,
           dine_in_price, takeaway_price, delivery_price, online_price,
           dine_in_active, takeaway_active, delivery_active, online_active
         ) VALUES (
-          ${id}, ${category_id}, ${name}, ${price}, ${description || ''}, ${item_code || null}, 1, ${Date.now()}, ${rid},
+          ${id}, ${category_id}, ${name}, ${price}, ${description || ''}, ${item_code || null}, 1, ${Date.now()}, ${rid}, ${outlet_id || null},
           ${sub_category || null}, ${image_url || null}, ${item_type || 'single'}, ${preparation_time || 0}, ${tax_group_id || null},
           ${barcode || null}, ${kitchen_name || null}, ${internal_note || null}, ${printer_group || null}, ${tags || null},
           ${dine_in_price ?? null}, ${takeaway_price ?? null}, ${delivery_price ?? null}, ${online_price ?? null},
           ${dine_in_active !== false}, ${takeaway_active !== false}, ${delivery_active !== false}, ${online_active !== false}
         ) RETURNING *`
       res.json({ ok: true, item: row[0] })
-    } catch (e) { res.status(500).json({ error: e.message }) }
+    } catch (e) { serverError(res, e) }
   })
 
   router.put('/items/:id', async (req, res) => {
@@ -175,7 +177,7 @@ module.exports = function menuRouter (sql) {
         RETURNING *`
       if (!row.length) return res.status(404).json({ error: 'not found' })
       res.json({ ok: true, item: row[0] })
-    } catch (e) { res.status(500).json({ error: e.message }) }
+    } catch (e) { serverError(res, e) }
   })
 
   router.delete('/items/:id', async (req, res) => {
@@ -184,7 +186,7 @@ module.exports = function menuRouter (sql) {
       await sql`DELETE FROM menu_items WHERE id = ${req.params.id}
         AND (brand_id = ${rid} OR (${rid} IS NULL AND brand_id IS NULL))`
       res.json({ ok: true })
-    } catch (e) { res.status(500).json({ error: e.message }) }
+    } catch (e) { serverError(res, e) }
   })
 
   // ── VARIANTS ───────────────────────────────────────────────────────────────
@@ -198,7 +200,7 @@ module.exports = function menuRouter (sql) {
           AND iv.item_id IN (SELECT id FROM menu_items WHERE brand_id = ${rid} OR (${rid} IS NULL AND brand_id IS NULL))
         ORDER BY iv.sort_order, iv.name`
       res.json({ variants: rows })
-    } catch (e) { res.status(500).json({ error: e.message }) }
+    } catch (e) { serverError(res, e) }
   })
 
   router.post('/items/:id/variants', async (req, res) => {
@@ -214,7 +216,7 @@ module.exports = function menuRouter (sql) {
         VALUES (${uid()}, ${req.params.id}, ${name}, ${size || ''}, ${price}, ${active !== false}, ${sort_order || 0})
         RETURNING *`
       res.json({ ok: true, variant: row[0] })
-    } catch (e) { res.status(500).json({ error: e.message }) }
+    } catch (e) { serverError(res, e) }
   })
 
   router.put('/items/:itemId/variants/:vid', async (req, res) => {
@@ -234,7 +236,7 @@ module.exports = function menuRouter (sql) {
         RETURNING *`
       if (!row.length) return res.status(404).json({ error: 'not found' })
       res.json({ ok: true, variant: row[0] })
-    } catch (e) { res.status(500).json({ error: e.message }) }
+    } catch (e) { serverError(res, e) }
   })
 
   router.delete('/items/:itemId/variants/:vid', async (req, res) => {
@@ -245,7 +247,7 @@ module.exports = function menuRouter (sql) {
           AND item_id = ${req.params.itemId}
           AND item_id IN (SELECT id FROM menu_items WHERE brand_id = ${rid} OR (${rid} IS NULL AND brand_id IS NULL))`
       res.json({ ok: true })
-    } catch (e) { res.status(500).json({ error: e.message }) }
+    } catch (e) { serverError(res, e) }
   })
 
   // ── MODIFIER GROUPS ────────────────────────────────────────────────────────
@@ -261,7 +263,7 @@ module.exports = function menuRouter (sql) {
         GROUP BY mg.id
         ORDER BY mg.name`
       res.json({ groups })
-    } catch (e) { res.status(500).json({ error: e.message }) }
+    } catch (e) { serverError(res, e) }
   })
 
   router.post('/modifier-groups', async (req, res) => {
@@ -274,7 +276,7 @@ module.exports = function menuRouter (sql) {
         VALUES (${uid()}, ${rid}, ${name}, ${min_select || 0}, ${max_select || 1}, ${required || false}, ${Date.now()})
         RETURNING *`
       res.json({ ok: true, group: { ...row[0], options: [] } })
-    } catch (e) { res.status(500).json({ error: e.message }) }
+    } catch (e) { serverError(res, e) }
   })
 
   router.put('/modifier-groups/:id', async (req, res) => {
@@ -291,7 +293,7 @@ module.exports = function menuRouter (sql) {
         RETURNING *`
       if (!row.length) return res.status(404).json({ error: 'not found' })
       res.json({ ok: true, group: row[0] })
-    } catch (e) { res.status(500).json({ error: e.message }) }
+    } catch (e) { serverError(res, e) }
   })
 
   router.delete('/modifier-groups/:id', async (req, res) => {
@@ -299,7 +301,7 @@ module.exports = function menuRouter (sql) {
     try {
       await sql`DELETE FROM modifier_groups WHERE id = ${req.params.id} AND brand_id = ${rid}`
       res.json({ ok: true })
-    } catch (e) { res.status(500).json({ error: e.message }) }
+    } catch (e) { serverError(res, e) }
   })
 
   // Modifier options within a group
@@ -315,7 +317,7 @@ module.exports = function menuRouter (sql) {
         VALUES (${uid()}, ${req.params.id}, ${name}, ${price || 0}, ${active !== false}, ${sort_order || 0})
         RETURNING *`
       res.json({ ok: true, option: row[0] })
-    } catch (e) { res.status(500).json({ error: e.message }) }
+    } catch (e) { serverError(res, e) }
   })
 
   router.put('/modifier-groups/:gid/options/:oid', async (req, res) => {
@@ -333,7 +335,7 @@ module.exports = function menuRouter (sql) {
         RETURNING *`
       if (!row.length) return res.status(404).json({ error: 'not found' })
       res.json({ ok: true, option: row[0] })
-    } catch (e) { res.status(500).json({ error: e.message }) }
+    } catch (e) { serverError(res, e) }
   })
 
   router.delete('/modifier-groups/:gid/options/:oid', async (req, res) => {
@@ -344,7 +346,7 @@ module.exports = function menuRouter (sql) {
           AND group_id = ${req.params.gid}
           AND group_id IN (SELECT id FROM modifier_groups WHERE brand_id = ${rid})`
       res.json({ ok: true })
-    } catch (e) { res.status(500).json({ error: e.message }) }
+    } catch (e) { serverError(res, e) }
   })
 
   // ── ITEM ↔ MODIFIER GROUP LINKS ────────────────────────────────────────────
@@ -362,7 +364,7 @@ module.exports = function menuRouter (sql) {
         VALUES (${req.params.id}, ${group_id})
         ON CONFLICT DO NOTHING`
       res.json({ ok: true })
-    } catch (e) { res.status(500).json({ error: e.message }) }
+    } catch (e) { serverError(res, e) }
   })
 
   router.delete('/items/:itemId/modifier-groups/:gid', async (req, res) => {
@@ -373,7 +375,7 @@ module.exports = function menuRouter (sql) {
           AND group_id = ${req.params.gid}
           AND item_id IN (SELECT id FROM menu_items WHERE brand_id = ${rid} OR (${rid} IS NULL AND brand_id IS NULL))`
       res.json({ ok: true })
-    } catch (e) { res.status(500).json({ error: e.message }) }
+    } catch (e) { serverError(res, e) }
   })
 
   return router

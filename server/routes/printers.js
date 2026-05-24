@@ -2,6 +2,7 @@
 
 const express = require('express')
 const { jwtAuth } = require('../middleware/jwtAuth')
+const { serverError } = require('../middleware/serverError')
 
 module.exports = function printersRouter (sql) {
   const router = express.Router()
@@ -22,7 +23,7 @@ module.exports = function printersRouter (sql) {
         ? await sql`SELECT * FROM printers WHERE brand_id = ${rid} ORDER BY area, name`
         : await sql`SELECT * FROM printers ORDER BY area, name`
       res.json({ printers })
-    } catch (e) { res.status(500).json({ error: e.message }) }
+    } catch (e) { serverError(res, e) }
   })
 
   // POST /printers
@@ -34,7 +35,7 @@ module.exports = function printersRouter (sql) {
     try {
       const [printer] = await sql`INSERT INTO printers ${sql(data)} RETURNING *`
       res.status(201).json({ printer })
-    } catch (e) { res.status(500).json({ error: e.message }) }
+    } catch (e) { serverError(res, e) }
   })
 
   // PUT /printers/:id
@@ -51,7 +52,7 @@ module.exports = function printersRouter (sql) {
         : await sql`UPDATE printers SET ${sql(data)} WHERE id = ${req.params.id} RETURNING *`
       if (!printer) return res.status(404).json({ error: 'Not found' })
       res.json({ printer })
-    } catch (e) { res.status(500).json({ error: e.message }) }
+    } catch (e) { serverError(res, e) }
   })
 
   // DELETE /printers/:id
@@ -61,7 +62,7 @@ module.exports = function printersRouter (sql) {
       if (rid) await sql`DELETE FROM printers WHERE id = ${req.params.id} AND brand_id = ${rid}`
       else     await sql`DELETE FROM printers WHERE id = ${req.params.id}`
       res.json({ ok: true })
-    } catch (e) { res.status(500).json({ error: e.message }) }
+    } catch (e) { serverError(res, e) }
   })
 
   return router

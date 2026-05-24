@@ -7,6 +7,7 @@ const {
   encryptText, decryptText,
 } = require('../lib/license')
 const { jwtAuth } = require('../middleware/jwtAuth')
+const { serverError } = require('../middleware/serverError')
 
 function safeDecrypt (enc) {
   if (!enc) return null
@@ -23,7 +24,45 @@ function decryptBrand (r) {
   }
 }
 
-function uid () { return Date.now().toString(36) + Math.random().toString(36).slice(2, 8) }
+const { randomUUID } = require('crypto')
+function uid () { return randomUUID().replace(/-/g, '').slice(0, 16) }
+
+const COUNTRY_CURRENCY = {
+  Malaysia: { code: 'MYR', symbol: 'RM' },
+  Singapore: { code: 'SGD', symbol: 'S$' },
+  Indonesia: { code: 'IDR', symbol: 'Rp' },
+  Thailand: { code: 'THB', symbol: '฿' },
+  Philippines: { code: 'PHP', symbol: '₱' },
+  Vietnam: { code: 'VND', symbol: '₫' },
+  India: { code: 'INR', symbol: '₹' },
+  Pakistan: { code: 'PKR', symbol: '₨' },
+  Bangladesh: { code: 'BDT', symbol: '৳' },
+  'Sri Lanka': { code: 'LKR', symbol: '₨' },
+  China: { code: 'CNY', symbol: '¥' },
+  Japan: { code: 'JPY', symbol: '¥' },
+  'South Korea': { code: 'KRW', symbol: '₩' },
+  'Hong Kong': { code: 'HKD', symbol: 'HK$' },
+  Taiwan: { code: 'TWD', symbol: 'NT$' },
+  'United Kingdom': { code: 'GBP', symbol: '£' },
+  'United States': { code: 'USD', symbol: '$' },
+  Canada: { code: 'CAD', symbol: 'C$' },
+  Australia: { code: 'AUD', symbol: 'A$' },
+  'New Zealand': { code: 'NZD', symbol: 'NZ$' },
+  'United Arab Emirates': { code: 'AED', symbol: 'د.إ' },
+  'Saudi Arabia': { code: 'SAR', symbol: '﷼' },
+  Qatar: { code: 'QAR', symbol: '﷼' },
+  Kuwait: { code: 'KWD', symbol: 'د.ك' },
+  Bahrain: { code: 'BHD', symbol: 'BD' },
+  Oman: { code: 'OMR', symbol: 'ر.ع.' },
+  Jordan: { code: 'JOD', symbol: 'JD' },
+  Egypt: { code: 'EGP', symbol: 'E£' },
+  Nigeria: { code: 'NGN', symbol: '₦' },
+  Kenya: { code: 'KES', symbol: 'KSh' },
+  'South Africa': { code: 'ZAR', symbol: 'R' },
+}
+function currencyForCountry (country) {
+  return COUNTRY_CURRENCY[country] || { code: 'USD', symbol: '$' }
+}
 
 module.exports = function setupRouter (sql) {
   const router = express.Router()
@@ -46,7 +85,7 @@ module.exports = function setupRouter (sql) {
         CASCADE
       `)
       res.json({ ok: true, message: 'All data wiped. System is clean.' })
-    } catch (e) { res.status(500).json({ error: e.message }) }
+    } catch (e) { serverError(res, e) }
   })
 
   // ── Superadmin: register new brand ────────────────────────────────────────
@@ -101,20 +140,22 @@ module.exports = function setupRouter (sql) {
         VALUES (${boId}, ${id}, ${boUsername}, ${boPassHash}, ${email || null}, 'owner')
         ON CONFLICT (username) DO NOTHING`
 
-      // Create default market
+      // Create default market — use country-derived currency, not hardcoded MYR
       const marketId = 'mkt-' + uid()
+      const mktCur = currencyForCountry(country)
       await sql`
         INSERT INTO markets (id, brand_id, name, country, currency_code, currency_symbol)
-        VALUES (${marketId}, ${id}, 'Default Market', ${country || 'Malaysia'}, 'MYR', 'RM')`
+        VALUES (${marketId}, ${id}, 'Default Market', ${country || null}, ${mktCur.code}, ${mktCur.symbol})`
 
       // Create default outlet
       const outletId = 'out-' + uid()
       await sql`
-        INSERT INTO outlets (id, brand_id, market_id, name, phone, email, address, opening_time, closing_time)
+        INSERT INTO outlets (id, brand_id, market_id, name, phone, email, address, opening_time, closing_time, country, currency, currency_code, currency_symbol)
         VALUES (${outletId}, ${id}, ${marketId},
           ${outlet_name || name.trim() + ' - Main'},
           ${outlet_phone || null}, ${outlet_email || null}, ${address || null},
-          ${opening_time || '09:00'}, ${closing_time || '22:00'})`
+          ${opening_time || '09:00'}, ${closing_time || '22:00'},
+          ${country || null}, ${mktCur.code}, ${mktCur.code}, ${mktCur.symbol})`
 
       // Store initial settings (tax, branch name)
       const taxRateVal  = parseFloat(tax_rate) || 0
@@ -132,7 +173,7 @@ module.exports = function setupRouter (sql) {
         outlet: { id: outletId },
         instructions: `Brand ID: ${id}  |  License Key: ${licenseKey}`,
       })
-    } catch (e) { res.status(500).json({ error: e.message }) }
+    } catch (e) { serverError(res, e) }
   })
 
   // ── Superadmin: list all brands ───────────────────────────────────────────
@@ -149,7 +190,7 @@ module.exports = function setupRouter (sql) {
         LEFT JOIN terminal_registrations t ON t.brand_id = b.id AND t.active = true
         GROUP BY b.id ORDER BY b.created_at DESC`
       res.json({ ok: true, restaurants: rows.map(decryptBrand) })
-    } catch (e) { res.status(500).json({ error: e.message }) }
+    } catch (e) { serverError(res, e) }
   })
 
   // ── Superadmin: get single brand ──────────────────────────────────────────
@@ -161,7 +202,7 @@ module.exports = function setupRouter (sql) {
         SELECT COUNT(*)::int AS terminal_count FROM terminal_registrations
         WHERE brand_id = ${req.params.id} AND active = true`
       res.json({ ok: true, restaurant: { ...decryptBrand(r), terminal_count } })
-    } catch (e) { res.status(500).json({ error: e.message }) }
+    } catch (e) { serverError(res, e) }
   })
 
   // ── Superadmin: regenerate license key ───────────────────────────────────
@@ -176,7 +217,7 @@ module.exports = function setupRouter (sql) {
       const newEnc  = encryptText(newKey)
       await sql`UPDATE brands SET license_key_hash=${newHash}, license_prefix=${prefix}, license_key_enc=${newEnc} WHERE id=${id}`
       res.json({ ok: true, id, new_license_key: newKey })
-    } catch (e) { res.status(500).json({ error: e.message }) }
+    } catch (e) { serverError(res, e) }
   })
 
   // ── Superadmin: update brand ──────────────────────────────────────────────
@@ -217,7 +258,7 @@ module.exports = function setupRouter (sql) {
       if (Object.keys(updates).length)
         await sql`UPDATE brands SET ${sql(updates)} WHERE id = ${id}`
       res.json({ ok: true })
-    } catch (e) { res.status(500).json({ error: e.message }) }
+    } catch (e) { serverError(res, e) }
   })
 
   // ── Superadmin: delete brand + all data ───────────────────────────────────
@@ -252,7 +293,7 @@ module.exports = function setupRouter (sql) {
       await sql`DELETE FROM brands                  WHERE id = ${id}`
 
       res.json({ ok: true, deleted: r.name })
-    } catch (e) { res.status(500).json({ error: e.message }) }
+    } catch (e) { serverError(res, e) }
   })
 
   // ── Superadmin: mark billed ───────────────────────────────────────────────
@@ -268,7 +309,7 @@ module.exports = function setupRouter (sql) {
       }
       await sql`UPDATE brands SET ${sql(updates)} WHERE id = ${id}`
       res.json({ ok: true })
-    } catch (e) { res.status(500).json({ error: e.message }) }
+    } catch (e) { serverError(res, e) }
   })
 
   // ── Superadmin: stats ─────────────────────────────────────────────────────
@@ -305,7 +346,7 @@ module.exports = function setupRouter (sql) {
         GROUP BY month ORDER BY month`
 
       res.json({ ok: true, totals, byCountry, byOnboarding, byReseller, monthly })
-    } catch (e) { res.status(500).json({ error: e.message }) }
+    } catch (e) { serverError(res, e) }
   })
 
   // ── Superadmin: seed sample data for a specific outlet ───────────────────
@@ -412,7 +453,7 @@ module.exports = function setupRouter (sql) {
       }
 
       res.json({ ok: true, message: `Sample data seeded for outlet: ${outlet.name}` })
-    } catch (e) { res.status(500).json({ error: e.message }) }
+    } catch (e) { serverError(res, e) }
   })
 
   // ── Public: POS terminal connects ────────────────────────────────────────
@@ -473,14 +514,6 @@ module.exports = function setupRouter (sql) {
         brand: { id: brand.id, name: brand.name },
         restaurant: { id: brand.id, name: brand.name }, // legacy alias
         outlet: outlet ? { id: outlet.id, name: outlet.name } : null,
-        db: {
-          host:     process.env.DB_HOST || '127.0.0.1',
-          port:     parseInt(process.env.DB_PORT || '5432', 10),
-          database: process.env.DB_NAME || 'restaurant_pos_central',
-          user:     process.env.DB_USER || 'pos_central_user',
-          password: process.env.DB_PASS || '',
-        },
-        api_key: process.env.API_KEY || '',
       })
     } catch (e) { res.status(500).json({ error: e.message, code: 'SERVER_ERROR' }) }
   })
@@ -499,7 +532,7 @@ module.exports = function setupRouter (sql) {
       const valid = await verifyLicenseKey(license_key, brand.license_key_hash)
       if (!valid) return res.json({ ok: false, code: 'INVALID_KEY', error: 'Invalid license key' })
       res.json({ ok: true, brand: { id: brand.id, name: brand.name }, expires_at: brand.expires_at })
-    } catch (e) { res.status(500).json({ error: e.message }) }
+    } catch (e) { serverError(res, e) }
   })
 
   // ── Superadmin: all markets ───────────────────────────────────────────────
@@ -511,7 +544,7 @@ module.exports = function setupRouter (sql) {
         LEFT JOIN brands b ON b.id = m.brand_id
         ORDER BY b.name, m.name`
       res.json({ ok: true, markets: rows })
-    } catch (e) { res.status(500).json({ error: e.message }) }
+    } catch (e) { serverError(res, e) }
   })
 
   // ── Superadmin: all outlets ───────────────────────────────────────────────
@@ -524,7 +557,7 @@ module.exports = function setupRouter (sql) {
         LEFT JOIN markets m ON m.id = o.market_id
         ORDER BY o.created_at DESC`
       res.json({ ok: true, outlets: rows })
-    } catch (e) { res.status(500).json({ error: e.message }) }
+    } catch (e) { serverError(res, e) }
   })
 
   // ── Superadmin: update outlet license date ────────────────────────────────
@@ -533,7 +566,7 @@ module.exports = function setupRouter (sql) {
     try {
       await sql`UPDATE outlets SET license_end_date = ${license_end_date || null} WHERE id = ${req.params.id}`
       res.json({ ok: true })
-    } catch (e) { res.status(500).json({ error: e.message }) }
+    } catch (e) { serverError(res, e) }
   })
 
   // ── Superadmin: terminals for a brand ────────────────────────────────────
@@ -544,14 +577,14 @@ module.exports = function setupRouter (sql) {
         WHERE brand_id = ${req.params.id}
         ORDER BY registered_at DESC`
       res.json({ ok: true, terminals: rows })
-    } catch (e) { res.status(500).json({ error: e.message }) }
+    } catch (e) { serverError(res, e) }
   })
 
   router.delete('/terminals/:id', jwtAuth, async (req, res) => {
     try {
       await sql`UPDATE terminal_registrations SET active=false WHERE id=${req.params.id}`
       res.json({ ok: true })
-    } catch (e) { res.status(500).json({ error: e.message }) }
+    } catch (e) { serverError(res, e) }
   })
 
   // ── Global payment methods ────────────────────────────────────────────────
@@ -559,7 +592,7 @@ module.exports = function setupRouter (sql) {
     try {
       const rows = await sql`SELECT * FROM global_payment_methods ORDER BY sort_order, name`
       res.json({ ok: true, rows })
-    } catch (e) { res.status(500).json({ error: e.message }) }
+    } catch (e) { serverError(res, e) }
   })
 
   router.post('/global-payment-methods', jwtAuth, async (req, res) => {
@@ -573,7 +606,7 @@ module.exports = function setupRouter (sql) {
           (SELECT COALESCE(MAX(sort_order),0)+1 FROM global_payment_methods))
         RETURNING *`
       res.json({ ok: true, row })
-    } catch (e) { res.status(500).json({ error: e.message }) }
+    } catch (e) { serverError(res, e) }
   })
 
   router.patch('/global-payment-methods/:id', jwtAuth, async (req, res) => {
@@ -588,7 +621,7 @@ module.exports = function setupRouter (sql) {
         WHERE id = ${req.params.id} RETURNING *`
       if (!row) return res.status(404).json({ error: 'Not found' })
       res.json({ ok: true, row })
-    } catch (e) { res.status(500).json({ error: e.message }) }
+    } catch (e) { serverError(res, e) }
   })
 
   router.delete('/global-payment-methods/:id', jwtAuth, async (req, res) => {
@@ -596,7 +629,7 @@ module.exports = function setupRouter (sql) {
       await sql`DELETE FROM outlet_hidden_payments WHERE method_id = ${req.params.id}`
       await sql`DELETE FROM global_payment_methods WHERE id = ${req.params.id}`
       res.json({ ok: true })
-    } catch (e) { res.status(500).json({ error: e.message }) }
+    } catch (e) { serverError(res, e) }
   })
 
   // ── Global delivery partners ──────────────────────────────────────────────
@@ -604,7 +637,7 @@ module.exports = function setupRouter (sql) {
     try {
       const rows = await sql`SELECT * FROM global_delivery_partners ORDER BY sort_order, name`
       res.json({ ok: true, rows })
-    } catch (e) { res.status(500).json({ error: e.message }) }
+    } catch (e) { serverError(res, e) }
   })
 
   router.post('/global-delivery-partners', jwtAuth, async (req, res) => {
@@ -618,7 +651,7 @@ module.exports = function setupRouter (sql) {
           (SELECT COALESCE(MAX(sort_order),0)+1 FROM global_delivery_partners))
         RETURNING *`
       res.json({ ok: true, row })
-    } catch (e) { res.status(500).json({ error: e.message }) }
+    } catch (e) { serverError(res, e) }
   })
 
   router.patch('/global-delivery-partners/:id', jwtAuth, async (req, res) => {
@@ -633,7 +666,7 @@ module.exports = function setupRouter (sql) {
         WHERE id = ${req.params.id} RETURNING *`
       if (!row) return res.status(404).json({ error: 'Not found' })
       res.json({ ok: true, row })
-    } catch (e) { res.status(500).json({ error: e.message }) }
+    } catch (e) { serverError(res, e) }
   })
 
   router.delete('/global-delivery-partners/:id', jwtAuth, async (req, res) => {
@@ -641,7 +674,7 @@ module.exports = function setupRouter (sql) {
       await sql`DELETE FROM outlet_hidden_partners WHERE partner_id = ${req.params.id}`
       await sql`DELETE FROM global_delivery_partners WHERE id = ${req.params.id}`
       res.json({ ok: true })
-    } catch (e) { res.status(500).json({ error: e.message }) }
+    } catch (e) { serverError(res, e) }
   })
 
   return router

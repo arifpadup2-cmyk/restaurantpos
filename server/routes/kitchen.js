@@ -1,6 +1,7 @@
 'use strict'
 
 const express = require('express')
+const { serverError } = require('../middleware/serverError')
 
 module.exports = function kitchenRouter (sql) {
   const router = express.Router()
@@ -28,7 +29,7 @@ module.exports = function kitchenRouter (sql) {
         GROUP BY o.id
         ORDER BY o.created_at ASC`
       res.json({ orders })
-    } catch (e) { res.status(500).json({ error: e.message }) }
+    } catch (e) { serverError(res, e) }
   })
 
   // PATCH /kitchen/items/:itemId/done — mark one item as prepared
@@ -46,7 +47,7 @@ module.exports = function kitchenRouter (sql) {
         req.io?.emit('kitchen:item_done', { orderId: item.order_id, itemId, done })
       }
       res.json({ ok: true })
-    } catch (e) { res.status(500).json({ error: e.message }) }
+    } catch (e) { serverError(res, e) }
   })
 
   // PATCH /kitchen/orders/:id/done — mark entire order as ready
@@ -56,7 +57,7 @@ module.exports = function kitchenRouter (sql) {
       await sql`UPDATE order_items SET done = true WHERE order_id = ${id}`
       req.io?.emit('order:done', { orderId: id })
       res.json({ ok: true })
-    } catch (e) { res.status(500).json({ error: e.message }) }
+    } catch (e) { serverError(res, e) }
   })
 
   return router

@@ -4,6 +4,7 @@ const express  = require('express')
 const fs       = require('fs')
 const path     = require('path')
 const { jwtAuth } = require('../middleware/jwtAuth')
+const { serverError } = require('../middleware/serverError')
 
 const DATA_DIR    = process.env.DATA_DIR || path.join(__dirname, '..')
 const BACKUPS_DIR = path.join(DATA_DIR, 'backups')
@@ -39,7 +40,7 @@ module.exports = function downloadsRouter (sql) {
         },
         counts,
       })
-    } catch (e) { res.status(500).json({ error: e.message }) }
+    } catch (e) { serverError(res, e) }
   })
 
   // GET /downloads/local-backups — list auto-backup files
@@ -55,7 +56,7 @@ module.exports = function downloadsRouter (sql) {
         .sort((a, b) => new Date(b.modified) - new Date(a.modified))
         .slice(0, 30)
       res.json({ files })
-    } catch (e) { res.status(500).json({ error: e.message }) }
+    } catch (e) { serverError(res, e) }
   })
 
   // GET /downloads/local-backups/:filename — download specific auto-backup
@@ -69,7 +70,7 @@ module.exports = function downloadsRouter (sql) {
       res.setHeader('Content-Type', 'application/json')
       res.setHeader('Content-Disposition', `attachment; filename="${safe}"`)
       fs.createReadStream(filepath).pipe(res)
-    } catch (e) { res.status(500).json({ error: e.message }) }
+    } catch (e) { serverError(res, e) }
   })
 
   // GET /downloads/files — list installer files in /updates/
@@ -84,7 +85,7 @@ module.exports = function downloadsRouter (sql) {
         })
         .sort((a, b) => new Date(b.modified) - new Date(a.modified))
       res.json({ files })
-    } catch (e) { res.status(500).json({ error: e.message }) }
+    } catch (e) { serverError(res, e) }
   })
 
   // GET /downloads/backup — full JSON export; ?outlet_id=X scopes to one outlet
@@ -139,7 +140,7 @@ module.exports = function downloadsRouter (sql) {
       res.setHeader('Content-Type', 'application/json')
       res.setHeader('Content-Disposition', `attachment; filename="${filename}"`)
       res.send(JSON.stringify(backup, null, 2))
-    } catch (e) { res.status(500).json({ error: e.message }) }
+    } catch (e) { serverError(res, e) }
   })
 
   // POST /downloads/restore — restore from JSON backup (danger: clears existing data)
@@ -182,7 +183,7 @@ module.exports = function downloadsRouter (sql) {
       })
 
       res.json({ ok: true, message: 'Restore complete' })
-    } catch (e) { res.status(500).json({ error: e.message }) }
+    } catch (e) { serverError(res, e) }
   })
 
   return router

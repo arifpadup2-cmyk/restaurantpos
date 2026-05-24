@@ -3,12 +3,14 @@
 const express = require('express')
 const bcrypt  = require('bcryptjs')
 const { jwtAuth } = require('../middleware/jwtAuth')
+const { serverError } = require('../middleware/serverError')
 
 module.exports = function staffRouter (sql) {
   const router = express.Router()
   router.use(jwtAuth)
 
-  function uid () { return Date.now().toString(36) + Math.random().toString(36).slice(2, 8) }
+  const { randomUUID } = require('crypto')
+  function uid () { return randomUUID().replace(/-/g, '').slice(0, 20) }
 
   // Strip sensitive fields from cashier rows before sending to client
   function safeCashier (row) {
@@ -27,7 +29,7 @@ module.exports = function staffRouter (sql) {
           : await sql`SELECT * FROM cashiers WHERE brand_id = ${rid} ORDER BY name`
         : await sql`SELECT * FROM cashiers WHERE brand_id IS NULL ORDER BY name`
       res.json({ cashiers: cashiers.map(safeCashier) })
-    } catch (e) { res.status(500).json({ error: e.message }) }
+    } catch (e) { serverError(res, e) }
   })
 
   // POST /staff/cashiers
@@ -44,7 +46,7 @@ module.exports = function staffRouter (sql) {
         VALUES (${id}, ${name}, ${pin}, ${pinHash}, ${role || 'cashier'}, 1, ${Date.now()}, ${rid}, ${outlet_id || null})
         RETURNING *`
       res.json({ ok: true, cashier: safeCashier(row) })
-    } catch (e) { res.status(500).json({ error: e.message }) }
+    } catch (e) { serverError(res, e) }
   })
 
   // PUT /staff/cashiers/:id
@@ -66,7 +68,7 @@ module.exports = function staffRouter (sql) {
         RETURNING *`
       if (!row) return res.status(404).json({ error: 'not found' })
       res.json({ ok: true, cashier: safeCashier(row) })
-    } catch (e) { res.status(500).json({ error: e.message }) }
+    } catch (e) { serverError(res, e) }
   })
 
   return router

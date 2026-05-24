@@ -1,6 +1,7 @@
 'use strict'
 
 const express = require('express')
+const { serverError } = require('../middleware/serverError')
 
 module.exports = function tablesRouter (sql) {
   const router = express.Router()
@@ -12,7 +13,7 @@ module.exports = function tablesRouter (sql) {
         SELECT id, name, capacity, status, current_order_id, locked_by
         FROM tables_layout ORDER BY name`
       res.json({ tables })
-    } catch (e) { res.status(500).json({ error: e.message }) }
+    } catch (e) { serverError(res, e) }
   })
 
   // POST /tables/:id/lock — waiter app claims a table before building order
@@ -39,7 +40,7 @@ module.exports = function tablesRouter (sql) {
         locked_by: result[0].locked_by,
       })
       res.json({ ok: true, table: result[0] })
-    } catch (e) { res.status(500).json({ error: e.message }) }
+    } catch (e) { serverError(res, e) }
   })
 
   // DELETE /tables/:id/lock — release table lock
@@ -57,7 +58,7 @@ module.exports = function tablesRouter (sql) {
 
       req.io?.emit('table:status', { tableId: id, locked_by: null })
       res.json({ ok: true })
-    } catch (e) { res.status(500).json({ error: e.message }) }
+    } catch (e) { serverError(res, e) }
   })
 
   return router

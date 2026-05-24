@@ -3,6 +3,7 @@
 const express  = require('express')
 const crypto   = require('crypto')
 const { jwtAuth } = require('../middleware/jwtAuth')
+const { serverError } = require('../middleware/serverError')
 
 module.exports = function seedRouter (sql) {
   const router = express.Router()
@@ -356,7 +357,7 @@ module.exports = function seedRouter (sql) {
       await sql`DELETE FROM no_sale_log WHERE brand_id = ${rid}`
       res.json({ ok: true, message: 'Transaction data cleared. Menu and staff retained.' })
     } catch (e) {
-      res.status(500).json({ error: e.message })
+      serverError(res, e)
     }
   })
 
