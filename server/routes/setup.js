@@ -447,13 +447,15 @@ module.exports = function setupRouter (sql) {
 
   // ── Superadmin: seed historical orders for a specific outlet ─────────────
   router.post('/outlets/:id/seed-orders', jwtAuth, async (req, res) => {
-    if (!req.user.admin) return res.status(403).json({ error: 'Superadmin only' })
     const outletId = req.params.id
     const { days = 30 } = req.body || {}
     try {
       const [outlet] = await sql`SELECT * FROM outlets WHERE id = ${outletId}`
       if (!outlet) return res.status(404).json({ error: 'Outlet not found' })
       const bid = outlet.brand_id
+      // Allow admin OR BO user who owns this brand
+      if (!req.user.admin && req.user.brand_id !== bid)
+        return res.status(403).json({ error: 'Not authorized' })
 
       const items = await sql`SELECT id, name, price FROM menu_items WHERE brand_id = ${bid} AND outlet_id = ${outletId} AND active = 1`
       if (!items.length) return res.status(400).json({ error: 'No menu items found — run /seed first' })
