@@ -3,6 +3,10 @@
 
 BEGIN;
 
+-- printers: restaurant_id → brand_id (missed by 032 and 033)
+DO $$ BEGIN ALTER TABLE printers RENAME COLUMN restaurant_id TO brand_id; EXCEPTION WHEN undefined_column THEN NULL; END $$;
+ALTER TABLE printers ADD COLUMN IF NOT EXISTS brand_id TEXT;
+
 ALTER TABLE printers          ADD COLUMN IF NOT EXISTS outlet_id TEXT;
 ALTER TABLE delivery_partners ADD COLUMN IF NOT EXISTS outlet_id TEXT;
 
