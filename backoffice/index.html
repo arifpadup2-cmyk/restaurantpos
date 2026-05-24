@@ -3628,6 +3628,23 @@ async function ssSubmit () {
       setup_done:          true,
     })
 
+    // Create / update outlet record in outlets table
+    try {
+      const { rows: markets } = await apiFetch('GET', '/config/markets')
+      const mktId = markets?.[0]?.id
+      if (mktId) {
+        const symMap = { USD:'$', MYR:'RM', SGD:'S$', GBP:'£', EUR:'€', AUD:'A$', CAD:'C$', AED:'د.إ', SAR:'﷼', INR:'₹', JPY:'¥', CNY:'¥', KRW:'₩', THB:'฿', IDR:'Rp', PHP:'₱', VND:'₫', PKR:'₨', BDT:'৳', LKR:'₨', QAR:'﷼', KWD:'د.ك', BHD:'BD', OMR:'ر.ع.', JOD:'JD', EGP:'E£', NGN:'₦', KES:'KSh', ZAR:'R', NZD:'NZ$', HKD:'HK$', TWD:'NT$', NPR:'₨', MMK:'K' }
+        const currencySymbol = symMap[currency] || currency
+        const outletPayload = { market_id: mktId, name: outletName, phone: outletPhone || null, email: outletEmail || null, address: address || null, opening_time: openTime, closing_time: closeTime, currency, country, currency_code: currency, currency_symbol: currencySymbol }
+        const { rows: existingOutlets } = await apiFetch('GET', '/config/outlets')
+        if (existingOutlets?.length > 0) {
+          await apiFetch('PATCH', '/config/outlets/' + existingOutlets[0].id, outletPayload)
+        } else {
+          await apiFetch('POST', '/config/outlets', outletPayload)
+        }
+      }
+    } catch (outletErr) { console.warn('Outlet sync failed:', outletErr.message) }
+
     animCheck('ssc-1', 0)
     animCheck('ssc-2', 400)
     animCheck('ssc-3', 800)
