@@ -208,7 +208,7 @@ module.exports = function ownerRouter (sql) {
 
       // Issue a brand-scoped token valid for 2h (enough to review reports)
       const token = sign(
-        { id: req.user.owner_id, username: req.user.username, role: 'owner', brand_id, switched_from_owner: true },
+        { id: req.user.owner_id, owner_id: req.user.owner_id, username: req.user.username, role: 'owner', brand_id, switched_from_owner: true },
         { expiresIn: '2h' }
       )
       res.json({ ok: true, token, brand_id, brand_name: brand.name })
