@@ -492,7 +492,8 @@ module.exports = function setupRouter (sql) {
             const orderType = orderTypes[Math.floor(Math.random() * orderTypes.length)]
             const payMethod = payMethods[Math.floor(Math.random() * payMethods.length)]
             const createdAt = sh.start.getTime() + Math.floor(Math.random() * (sh.end.getTime() - sh.start.getTime()))
-            const orderNum  = `${dateStr.replace(/-/g, '')}-${String(totalOrders + 1).padStart(4, '0')}`
+            const outPfx    = outletId.replace(/[^A-Z0-9]/gi, '').slice(-4).toUpperCase()
+            const orderNum  = `${outPfx}-${dateStr.replace(/-/g, '')}-${String(totalOrders + 1).padStart(4, '0')}`
 
             const picked = shuffleArr([...items]).slice(0, 1 + Math.floor(Math.random() * 4))
             let subtotal = 0
@@ -525,7 +526,7 @@ module.exports = function setupRouter (sql) {
                 ${total}, ${payMethod}, ${received}, ${change},
                 ${sh.cashier}, ${sh.cashier}, ${shiftId}, 'POS-SEED',
                 ${createdAt}, ${createdAt}, ${createdAt}, 1)
-              ON CONFLICT (id) DO NOTHING`
+              ON CONFLICT DO NOTHING`
 
             for (const i of orderItems)
               await sql`
@@ -539,7 +540,7 @@ module.exports = function setupRouter (sql) {
       }
 
       res.json({ ok: true, message: `Seeded ${totalOrders} orders for outlet: ${outlet.name}`, total_orders: totalOrders })
-    } catch (e) { res.status(500).json({ error: e.message || String(e) }) }
+    } catch (e) { serverError(res, e) }
   })
 
   // ── Public: POS terminal connects ────────────────────────────────────────
