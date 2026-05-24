@@ -24,8 +24,9 @@ module.exports = function settingsRouter (sql) {
       const rows = await sql`SELECT key, value FROM settings WHERE key = ANY(${KEYS}) AND brand_id = ${rid}`
       const settings = Object.fromEntries(rows.map(r => [r.key, r.value]))
       if (req.user?.brand_id) {
-        const [b] = await sql`SELECT setup_done FROM brands WHERE id = ${req.user.brand_id}`
+        const [b] = await sql`SELECT setup_done, name FROM brands WHERE id = ${req.user.brand_id}`
         settings.setup_done = b?.setup_done ?? (settings.setup_done === 'true' || settings.setup_done === true)
+        if (!settings.restaurant_name && b?.name) settings.restaurant_name = b.name
       } else {
         settings.setup_done = true
       }
