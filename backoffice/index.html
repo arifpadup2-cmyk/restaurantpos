@@ -558,6 +558,13 @@ input:checked+.toggle-slider:before{transform:translateX(17px)}
   /* Audit: stack card-header filters vertically on mobile */
   #v-audit .card-header{flex-direction:column;align-items:flex-start;gap:10px}
   #v-audit .card-header>div{width:100%}
+  /* Downloads: single-col server info, word-wrap for long hostnames */
+  #server-info-body{grid-template-columns:1fr !important}
+  #server-info-body>div{word-break:break-all}
+  /* Downloads: web app links full-width for proper touch targets */
+  #web-app-links a{width:100%;box-sizing:border-box}
+  /* Downloads: outlet backup row stack vertically */
+  #backup-outlet-sel{width:100%}
   /* Staff: hide Created column so Actions isn't clipped */
   #v-staff .data-table th:nth-child(5),
   #v-staff .data-table td:nth-child(5){display:none}
