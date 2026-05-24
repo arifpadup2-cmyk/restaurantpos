@@ -62,6 +62,63 @@ function currencyForCountry (country) {
 module.exports = function setupRouter (sql) {
   const router = express.Router()
 
+  // ── Admin: create owner account ───────────────────────────────────
+  router.post('/owners', jwtAuth, async (req, res) => {
+    if (!req.user.admin) return res.status(403).json({ error: 'Superadmin only' })
+    const { name, username, password, email } = req.body || {}
+    if (!name || !username || !password)
+      return res.status(400).json({ error: 'name, username, password required' })
+    try {
+      const existing = await sql`SELECT id FROM owners WHERE LOWER(username) = ${username.toLowerCase()}`
+      if (existing.length) return res.status(409).json({ error: 'Username already taken' })
+      const id   = 'own-' + uid()
+      const hash = await bcrypt.hash(password, 10)
+      const [owner] = await sql`
+        INSERT INTO owners (id, name, username, password, email)
+        VALUES (${id}, ${name}, ${username.toLowerCase()}, ${hash}, ${email || null})
+        RETURNING id, name, username, email, created_at`
+      res.json({ ok: true, owner })
+    } catch (e) { serverError(res, e) }
+  })
+
+  // ── Admin: list owners ────────────────────────────────────────────
+  router.get('/owners', jwtAuth, async (req, res) => {
+    if (!req.user.admin) return res.status(403).json({ error: 'Superadmin only' })
+    try {
+      const owners = await sql`
+        SELECT o.*, ARRAY_AGG(ob.brand_id) FILTER (WHERE ob.brand_id IS NOT NULL) AS brand_ids
+        FROM owners o LEFT JOIN owner_brands ob ON ob.owner_id = o.id
+        GROUP BY o.id ORDER BY o.created_at DESC`
+      res.json({ owners })
+    } catch (e) { serverError(res, e) }
+  })
+
+  // ── Admin: link brand to owner ────────────────────────────────────
+  router.post('/owners/:id/brands', jwtAuth, async (req, res) => {
+    if (!req.user.admin) return res.status(403).json({ error: 'Superadmin only' })
+    const { brand_id } = req.body || {}
+    if (!brand_id) return res.status(400).json({ error: 'brand_id required' })
+    try {
+      const [owner] = await sql`SELECT id FROM owners WHERE id = ${req.params.id}`
+      if (!owner) return res.status(404).json({ error: 'Owner not found' })
+      const [brand] = await sql`SELECT id, name FROM brands WHERE id = ${brand_id}`
+      if (!brand) return res.status(404).json({ error: 'Brand not found' })
+      await sql`
+        INSERT INTO owner_brands (owner_id, brand_id) VALUES (${req.params.id}, ${brand_id})
+        ON CONFLICT DO NOTHING`
+      res.json({ ok: true, owner_id: req.params.id, brand_id, brand_name: brand.name })
+    } catch (e) { serverError(res, e) }
+  })
+
+  // ── Admin: unlink brand from owner ────────────────────────────────
+  router.delete('/owners/:id/brands/:brand_id', jwtAuth, async (req, res) => {
+    if (!req.user.admin) return res.status(403).json({ error: 'Superadmin only' })
+    try {
+      await sql`DELETE FROM owner_brands WHERE owner_id = ${req.params.id} AND brand_id = ${req.params.brand_id}`
+      res.json({ ok: true })
+    } catch (e) { serverError(res, e) }
+  })
+
   // ── Superadmin: wipe ALL data (keeps admin_users + backup_log) ───────────
   router.post('/wipe-all-data', jwtAuth, async (req, res) => {
     if (!req.user.admin) return res.status(403).json({ error: 'Superadmin only' })
