@@ -543,6 +543,67 @@ module.exports = function setupRouter (sql) {
     } catch (e) { serverError(res, e) }
   })
 
+  // ── Clear all categories + items for a specific outlet ───────────────────
+  router.delete('/outlets/:id/menu', jwtAuth, async (req, res) => {
+    const outletId = req.params.id
+    try {
+      const [outlet] = await sql`SELECT * FROM outlets WHERE id = ${outletId}`
+      if (!outlet) return res.status(404).json({ error: 'Outlet not found' })
+      const bid = outlet.brand_id
+      if (!req.user.admin && req.user.brand_id !== bid)
+        return res.status(403).json({ error: 'Not authorized' })
+
+      const items = await sql`SELECT id FROM menu_items WHERE brand_id = ${bid} AND outlet_id = ${outletId}`
+      const itemIds = items.map(i => i.id)
+
+      if (itemIds.length) {
+        await sql`DELETE FROM item_modifier_groups WHERE item_id = ANY(${sql.array(itemIds)})`
+        await sql`DELETE FROM item_variants WHERE item_id = ANY(${sql.array(itemIds)})`
+        await sql`DELETE FROM menu_items WHERE brand_id = ${bid} AND outlet_id = ${outletId}`
+      }
+      await sql`DELETE FROM categories WHERE brand_id = ${bid} AND outlet_id = ${outletId}`
+
+      res.json({ ok: true, deleted_items: itemIds.length, outlet: outlet.name })
+    } catch (e) { serverError(res, e) }
+  })
+
+  // ── Seed custom menu for a specific outlet ───────────────────────────────
+  // Body: { categories: [{ name, color, items: [{ name, price }] }] }
+  router.post('/outlets/:id/seed-menu', jwtAuth, async (req, res) => {
+    const outletId = req.params.id
+    const { categories = [] } = req.body || {}
+    if (!categories.length) return res.status(400).json({ error: 'categories array required' })
+    try {
+      const [outlet] = await sql`SELECT * FROM outlets WHERE id = ${outletId}`
+      if (!outlet) return res.status(404).json({ error: 'Outlet not found' })
+      const bid = outlet.brand_id
+      if (!req.user.admin && req.user.brand_id !== bid)
+        return res.status(403).json({ error: 'Not authorized' })
+
+      let catCount = 0, itemCount = 0
+      for (let ci = 0; ci < categories.length; ci++) {
+        const cat   = categories[ci]
+        const catId = 'cat-' + uid()
+        await sql`
+          INSERT INTO categories (id, brand_id, outlet_id, name, color, sort_order, active)
+          VALUES (${catId}, ${bid}, ${outletId}, ${cat.name}, ${cat.color || '#f97316'}, ${ci}, 1)
+          ON CONFLICT DO NOTHING`
+        catCount++
+        for (const itm of (cat.items || [])) {
+          const itemId = 'itm-' + uid()
+          const name   = typeof itm === 'object' ? itm.name  : String(itm)
+          const price  = typeof itm === 'object' ? itm.price : parseFloat(itm)
+          await sql`
+            INSERT INTO menu_items (id, brand_id, outlet_id, category_id, name, price, active)
+            VALUES (${itemId}, ${bid}, ${outletId}, ${catId}, ${name}, ${price}, 1)
+            ON CONFLICT DO NOTHING`
+          itemCount++
+        }
+      }
+      res.json({ ok: true, categories: catCount, items: itemCount, outlet: outlet.name })
+    } catch (e) { serverError(res, e) }
+  })
+
   // ── Public: POS terminal connects ────────────────────────────────────────
   // Accepts brand_id (new) or restaurant_id (legacy alias)
   router.post('/connect', async (req, res) => {
