@@ -31,16 +31,21 @@ const ownerLogin0 = await api('POST', '/owner/login', { username: 'mkhalid', pas
 const ownerPortalToken0 = ownerLogin0.json.token
 const brands0 = ownerLogin0.json.brands || []
 if (ownerPortalToken0 && brands0.length) {
-  // Get BO users and unlock chillzoneice218 if locked
-  const switchR = await api('POST', `/owner/switch/${brands0[0].brand_id}`, {}, ownerPortalToken0)
-  const switchToken = switchR.json.token
-  if (switchToken) {
+  // Search all brands to find chillzoneice218 (may not be in brands[0])
+  for (const brand of brands0) {
+    const switchR = await api('POST', `/owner/switch/${brand.brand_id}`, {}, ownerPortalToken0)
+    const switchToken = switchR.json.token
+    if (!switchToken) continue
     const usersR0 = await api('GET', '/config/users', null, switchToken)
-    const locked = (usersR0.json.rows || []).find(u => u.username === 'chillzoneice218')
-    if (locked?.id) {
-      await api('PUT', `/config/users/${locked.id}`, { unlock_account: true }, switchToken)
-      console.log('  unlocked chillzoneice218')
+    const target = (usersR0.json.rows || []).find(u => u.username === 'chillzoneice218')
+    if (target?.id) {
+      const r = await api('PUT', `/config/users/${target.id}`, { unlock_account: true }, switchToken)
+      console.log('  unlock chillzoneice218 →', r.status)
+      break
     }
+    // Also unlock locktest_user in the same brand if found
+    const lt = (usersR0.json.rows || []).find(u => u.username === 'locktest_user')
+    if (lt?.id) await api('PUT', `/config/users/${lt.id}`, { unlock_account: true }, switchToken)
   }
 }
 await new Promise(r => setTimeout(r, 1000))

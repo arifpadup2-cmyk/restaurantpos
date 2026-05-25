@@ -846,7 +846,9 @@ module.exports = function configRouter (sql) {
       const [target] = await sql`SELECT role, is_protected, username FROM bo_users WHERE id = ${req.params.id} AND brand_id = ${rid}`
       if (!target) return res.status(404).json({ error: 'User not found' })
       // Protected accounts (owner) can only be edited by the owner themselves
-      if (target.is_protected && req.user.id !== req.params.id)
+      // Exception: unlock_account (clearing lockout only) is allowed by anyone with canManageUsers
+      const isUnlockOnly = !!unlock_account && !password && !permissions && !app_access && active === undefined && !name && !email
+      if (target.is_protected && req.user.id !== req.params.id && !isUnlockOnly)
         return res.status(403).json({ error: 'Owner account cannot be modified by other users' })
       const hash  = password && password.length >= 8 ? await (require('bcryptjs')).hash(password, 10) : null
       if (hash) {
