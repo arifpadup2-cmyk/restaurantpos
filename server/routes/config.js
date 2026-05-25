@@ -870,8 +870,8 @@ module.exports = function configRouter (sql) {
           outlet_ids      = ${oIds !== undefined ? (oIds ? sql.array(oIds) : null) : sql`outlet_ids`},
           permissions     = CASE WHEN ${permissions !== undefined} THEN ${permissions ? sql.json(permissions) : sql.json({})} ELSE permissions END,
           app_access      = CASE WHEN ${app_access !== undefined} THEN ${app_access ? sql.json(app_access) : sql.json({})} ELSE app_access END,
-          designation_id  = CASE WHEN ${desId !== undefined} THEN ${desId} ELSE designation_id END,
-          pos_pin         = CASE WHEN ${pin !== undefined} THEN ${pin} ELSE pos_pin END,
+          designation_id  = CASE WHEN ${desId !== undefined} THEN ${desId ?? null} ELSE designation_id END,
+          pos_pin         = CASE WHEN ${pin !== undefined} THEN ${pin ?? null} ELSE pos_pin END,
           active          = COALESCE(${active !== undefined ? !!active : null}, active),
           failed_attempts = CASE WHEN ${doUnlock} THEN 0 ELSE failed_attempts END,
           locked_until    = CASE WHEN ${doUnlock} THEN NULL ELSE locked_until END
