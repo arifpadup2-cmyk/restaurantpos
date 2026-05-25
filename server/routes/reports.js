@@ -79,17 +79,23 @@ module.exports = function reportsRouter (sql) {
     } catch (e) { serverError(res, e) }
   })
 
-  // GET /reports/expenses?from=YYYY-MM-DD&to=YYYY-MM-DD
+  // GET /reports/expenses?from=YYYY-MM-DD&to=YYYY-MM-DD&outlet_id=
   router.get('/expenses', async (req, res) => {
-    const { from, to } = req.query
+    const { from, to, outlet_id } = req.query
     const { start, end } = dateRange(from, to)
     const rid = req.user.brand_id
     try {
-      const exps = await sql`
-        SELECT * FROM expenses
-        WHERE created_at >= ${start} AND created_at < ${end}
-          AND (brand_id = ${rid} OR brand_id IS NULL)
-        ORDER BY created_at DESC`
+      const exps = outlet_id
+        ? await sql`
+            SELECT * FROM expenses
+            WHERE created_at >= ${start} AND created_at < ${end}
+              AND outlet_id = ${outlet_id}
+            ORDER BY created_at DESC`
+        : await sql`
+            SELECT * FROM expenses
+            WHERE created_at >= ${start} AND created_at < ${end}
+              AND (brand_id = ${rid} OR brand_id IS NULL)
+            ORDER BY created_at DESC`
       res.json({ expenses: exps })
     } catch (e) { serverError(res, e) }
   })
@@ -133,29 +139,47 @@ module.exports = function reportsRouter (sql) {
     } catch (e) { serverError(res, e) }
   })
 
-  // GET /reports/wastage?from=YYYY-MM-DD&to=YYYY-MM-DD
+  // GET /reports/wastage?from=YYYY-MM-DD&to=YYYY-MM-DD&outlet_id=
   router.get('/wastage', async (req, res) => {
-    const { from, to } = req.query
+    const { from, to, outlet_id } = req.query
     const { start, end } = dateRange(from, to)
     const rid = req.user.brand_id
     try {
-      const rows = await sql`
-        SELECT o.order_number, o.order_type, o.cashier_name, o.total,
-               o.void_reason, o.voided_by, o.created_at, o.status,
-               json_agg(
-                 json_build_object(
-                   'item_name',  oi.item_name,
-                   'quantity',   oi.quantity,
-                   'total_price',oi.total_price
-                 )
-               ) AS items
-        FROM orders o
-        LEFT JOIN order_items oi ON oi.order_id = o.id
-        WHERE o.created_at >= ${start} AND o.created_at < ${end}
-          AND o.status IN ('void','cancelled')
-          AND o.outlet_id IN (SELECT id FROM outlets WHERE brand_id = ${rid})
-        GROUP BY o.id
-        ORDER BY o.created_at DESC`
+      const rows = outlet_id
+        ? await sql`
+            SELECT o.order_number, o.order_type, o.cashier_name, o.total,
+                   o.void_reason, o.voided_by, o.created_at, o.status,
+                   json_agg(
+                     json_build_object(
+                       'item_name',  oi.item_name,
+                       'quantity',   oi.quantity,
+                       'total_price',oi.total_price
+                     )
+                   ) AS items
+            FROM orders o
+            LEFT JOIN order_items oi ON oi.order_id = o.id
+            WHERE o.created_at >= ${start} AND o.created_at < ${end}
+              AND o.status IN ('void','cancelled')
+              AND o.outlet_id = ${outlet_id}
+            GROUP BY o.id
+            ORDER BY o.created_at DESC`
+        : await sql`
+            SELECT o.order_number, o.order_type, o.cashier_name, o.total,
+                   o.void_reason, o.voided_by, o.created_at, o.status,
+                   json_agg(
+                     json_build_object(
+                       'item_name',  oi.item_name,
+                       'quantity',   oi.quantity,
+                       'total_price',oi.total_price
+                     )
+                   ) AS items
+            FROM orders o
+            LEFT JOIN order_items oi ON oi.order_id = o.id
+            WHERE o.created_at >= ${start} AND o.created_at < ${end}
+              AND o.status IN ('void','cancelled')
+              AND o.outlet_id IN (SELECT id FROM outlets WHERE brand_id = ${rid})
+            GROUP BY o.id
+            ORDER BY o.created_at DESC`
       res.json({ rows })
     } catch (e) { serverError(res, e) }
   })

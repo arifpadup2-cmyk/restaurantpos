@@ -1610,9 +1610,9 @@ input:checked+.toggle-slider:before{transform:translateX(17px)}
       <button class="mob-rpt-tab" id="mobrpt-wastage" onclick="showRptTab('wastage');mobSetRptTab('wastage')">Wastage</button>
       <button class="mob-rpt-tab" id="mobrpt-devices" onclick="showRptTab('devices');mobSetRptTab('devices')">Devices</button>
       <button class="mob-rpt-tab" id="mobrpt-security" onclick="showRptTab('security');mobSetRptTab('security')">Audit</button>
-      <button class="mob-rpt-tab" id="mobrpt-item-sales" onclick="showRptTab('item-sales');mobSetRptTab('item-sales')">Item Rpt</button>
-      <button class="mob-rpt-tab" id="mobrpt-canceled-items" onclick="showRptTab('canceled-items');mobSetRptTab('canceled-items')">Cancel'd Items</button>
-      <button class="mob-rpt-tab" id="mobrpt-canceled-bills" onclick="showRptTab('canceled-bills');mobSetRptTab('canceled-bills')">Cancel'd Bills</button>
+      <button class="mob-rpt-tab" id="mobrpt-item-sales" onclick="showRptTab('item-sales');mobSetRptTab('item-sales')">Item Sales</button>
+      <button class="mob-rpt-tab" id="mobrpt-canceled-items" onclick="showRptTab('canceled-items');mobSetRptTab('canceled-items')">Canceled Items</button>
+      <button class="mob-rpt-tab" id="mobrpt-canceled-bills" onclick="showRptTab('canceled-bills');mobSetRptTab('canceled-bills')">Canceled Bills</button>
       <button class="mob-rpt-tab" id="mobrpt-comp-bills" onclick="showRptTab('comp-bills');mobSetRptTab('comp-bills')">Comp Bills</button>
       <button class="mob-rpt-tab" id="mobrpt-comp-items" onclick="showRptTab('comp-items');mobSetRptTab('comp-items')">Comp Items</button>
     </div>
@@ -1655,7 +1655,7 @@ input:checked+.toggle-slider:before{transform:translateX(17px)}
               <option value="">All Outlets</option>
             </select>
           </div>
-          <button class="btn btn-primary" id="rpt-generate-btn" onclick="loadReport()" style="align-self:flex-end"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="5 3 19 12 5 21 5 3"/></svg> Generate</button>
+          <button class="btn btn-primary" id="rpt-generate-btn" onclick="loadReport()" style="align-self:flex-end"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="5 3 19 12 5 21 5 3"/></svg> Apply Filter</button>
           <button class="btn btn-outline" id="rpt-export-desktop" onclick="exportCSV()" style="align-self:flex-end"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> Export CSV</button>
         </div>
         <div id="report-placeholder" style="text-align:center;padding:48px 20px">
@@ -1663,7 +1663,7 @@ input:checked+.toggle-slider:before{transform:translateX(17px)}
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="21" x2="9" y2="9"/></svg>
           </div>
           <div style="font-size:14px;font-weight:700;color:var(--text);margin-bottom:4px">No report generated</div>
-          <div style="font-size:13px;color:var(--muted)">Select a period and click <strong>Generate</strong></div>
+          <div style="font-size:13px;color:var(--muted)">Select a period above — data loads automatically</div>
         </div>
         <div id="report-summary" style="display:none">
           <div id="sales-chart-wrap" style="display:none;margin-bottom:16px;background:#fafbfc;border:1px solid var(--border);border-radius:10px;padding:12px 16px">
@@ -1698,10 +1698,15 @@ input:checked+.toggle-slider:before{transform:translateX(17px)}
             <button class="rpt-preset-btn" onclick="setSubPreset('exp-rep-from','exp-rep-to','this-month',this,loadExpReport)">This Month</button>
             <button class="rpt-preset-btn" onclick="setSubPreset('exp-rep-from','exp-rep-to','custom',this,null)">Custom</button>
           </div>
+          <div style="display:flex;align-items:center;gap:6px;margin-top:8px">
+            <span style="font-size:11px;font-weight:700;color:var(--muted);white-space:nowrap">Outlet</span>
+            <select id="exp-outlet" onchange="loadExpReport()" style="font-size:13px;padding:6px 10px;border:1.5px solid var(--border);border-radius:7px;color:var(--text);background:var(--bg)"><option value="">All Outlets</option></select>
+          </div>
           <div class="sub-date-range" id="exp-rep-custom">
             <label>From</label><input type="date" id="exp-rep-from">
             <label>To</label><input type="date" id="exp-rep-to">
-            <button class="btn btn-primary btn-sm" onclick="loadExpReport()"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="5 3 19 12 5 21 5 3"/></svg> Generate</button>
+            <button class="btn btn-primary btn-sm" onclick="loadExpReport()"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="5 3 19 12 5 21 5 3"/></svg> Apply</button>
+            <button class="btn btn-outline btn-sm" onclick="exportExpReportCSV()"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> CSV</button>
           </div>
         </div>
         <div id="exp-report-content">
@@ -1730,10 +1735,14 @@ input:checked+.toggle-slider:before{transform:translateX(17px)}
             <button class="rpt-preset-btn" onclick="setSubPreset('perf-from','perf-to','this-month',this,loadCashierPerformance)">This Month</button>
             <button class="rpt-preset-btn" onclick="setSubPreset('perf-from','perf-to','custom',this,null)">Custom</button>
           </div>
+          <div style="display:flex;align-items:center;gap:6px;margin-top:8px">
+            <span style="font-size:11px;font-weight:700;color:var(--muted);white-space:nowrap">Outlet</span>
+            <select id="perf-outlet" onchange="loadCashierPerformance()" style="font-size:13px;padding:6px 10px;border:1.5px solid var(--border);border-radius:7px;color:var(--text);background:var(--bg)"><option value="">All Outlets</option></select>
+          </div>
           <div class="sub-date-range" id="perf-custom">
             <label>From</label><input type="date" id="perf-from">
             <label>To</label><input type="date" id="perf-to">
-            <button class="btn btn-primary btn-sm" onclick="loadCashierPerformance()"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="5 3 19 12 5 21 5 3"/></svg> Generate</button>
+            <button class="btn btn-primary btn-sm" onclick="loadCashierPerformance()"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="5 3 19 12 5 21 5 3"/></svg> Apply</button>
             <button class="btn btn-outline btn-sm" onclick="exportCashierPerformanceCSV()"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> CSV</button>
           </div>
         </div>
@@ -1794,10 +1803,14 @@ input:checked+.toggle-slider:before{transform:translateX(17px)}
             <button class="rpt-preset-btn" onclick="setSubPreset('ic-from','ic-to','this-month',this,loadItemConsumption)">This Month</button>
             <button class="rpt-preset-btn" onclick="setSubPreset('ic-from','ic-to','custom',this,null)">Custom</button>
           </div>
+          <div style="display:flex;align-items:center;gap:6px;margin-top:8px">
+            <span style="font-size:11px;font-weight:700;color:var(--muted);white-space:nowrap">Outlet</span>
+            <select id="ic-outlet" onchange="loadItemConsumption()" style="font-size:13px;padding:6px 10px;border:1.5px solid var(--border);border-radius:7px;color:var(--text);background:var(--bg)"><option value="">All Outlets</option></select>
+          </div>
           <div class="sub-date-range" id="ic-custom">
             <label>From</label><input type="date" id="ic-from">
             <label>To</label><input type="date" id="ic-to">
-            <button class="btn btn-primary btn-sm" onclick="loadItemConsumption()"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="5 3 19 12 5 21 5 3"/></svg> Generate</button>
+            <button class="btn btn-primary btn-sm" onclick="loadItemConsumption()"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="5 3 19 12 5 21 5 3"/></svg> Apply</button>
             <button class="btn btn-outline btn-sm" onclick="exportItemConsumptionCSV()"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> CSV</button>
           </div>
         </div>
@@ -1827,10 +1840,14 @@ input:checked+.toggle-slider:before{transform:translateX(17px)}
             <button class="rpt-preset-btn" onclick="setSubPreset('wast-from','wast-to','this-month',this,loadWastageReport)">This Month</button>
             <button class="rpt-preset-btn" onclick="setSubPreset('wast-from','wast-to','custom',this,null)">Custom</button>
           </div>
+          <div style="display:flex;align-items:center;gap:6px;margin-top:8px">
+            <span style="font-size:11px;font-weight:700;color:var(--muted);white-space:nowrap">Outlet</span>
+            <select id="wast-outlet" onchange="loadWastageReport()" style="font-size:13px;padding:6px 10px;border:1.5px solid var(--border);border-radius:7px;color:var(--text);background:var(--bg)"><option value="">All Outlets</option></select>
+          </div>
           <div class="sub-date-range" id="wast-custom">
             <label>From</label><input type="date" id="wast-from">
             <label>To</label><input type="date" id="wast-to">
-            <button class="btn btn-primary btn-sm" onclick="loadWastageReport()"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="5 3 19 12 5 21 5 3"/></svg> Generate</button>
+            <button class="btn btn-primary btn-sm" onclick="loadWastageReport()"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="5 3 19 12 5 21 5 3"/></svg> Apply</button>
             <button class="btn btn-outline btn-sm" onclick="exportWastageCSV()"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> CSV</button>
           </div>
         </div>
@@ -2039,12 +2056,14 @@ input:checked+.toggle-slider:before{transform:translateX(17px)}
             <button class="rpt-preset-btn" onclick="setSubPreset('isr-from','isr-to','this-month',this,loadItemSalesReport)">This Month</button>
             <button class="rpt-preset-btn" onclick="setSubPreset('isr-from','isr-to','custom',this,null)">Custom</button>
           </div>
+          <div style="display:flex;align-items:center;gap:6px;margin-top:8px">
+            <span style="font-size:11px;font-weight:700;color:var(--muted);white-space:nowrap">Outlet</span>
+            <select id="isr-outlet" onchange="loadItemSalesReport()" style="font-size:13px;padding:6px 10px;border:1.5px solid var(--border);border-radius:7px;color:var(--text);background:var(--bg)"><option value="">All Outlets</option></select>
+          </div>
           <div class="sub-date-range" id="isr-custom">
             <label>From</label><input type="date" id="isr-from">
             <label>To</label><input type="date" id="isr-to">
-            <span class="fs-label" style="margin-left:4px">Outlet</span>
-            <select id="isr-outlet" style="font-size:13px;padding:6px 10px;border:1.5px solid var(--border);border-radius:7px;color:var(--text);background:var(--bg)"><option value="">All Outlets</option></select>
-            <button class="btn btn-primary btn-sm" onclick="loadItemSalesReport()"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="5 3 19 12 5 21 5 3"/></svg> Generate</button>
+            <button class="btn btn-primary btn-sm" onclick="loadItemSalesReport()"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="5 3 19 12 5 21 5 3"/></svg> Apply</button>
             <button class="btn btn-outline btn-sm" onclick="exportItemSalesCSV()"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> CSV</button>
           </div>
         </div>
@@ -2074,12 +2093,14 @@ input:checked+.toggle-slider:before{transform:translateX(17px)}
             <button class="rpt-preset-btn" onclick="setSubPreset('ci-from','ci-to','this-month',this,loadCanceledItemsReport)">This Month</button>
             <button class="rpt-preset-btn" onclick="setSubPreset('ci-from','ci-to','custom',this,null)">Custom</button>
           </div>
+          <div style="display:flex;align-items:center;gap:6px;margin-top:8px">
+            <span style="font-size:11px;font-weight:700;color:var(--muted);white-space:nowrap">Outlet</span>
+            <select id="ci-outlet" onchange="loadCanceledItemsReport()" style="font-size:13px;padding:6px 10px;border:1.5px solid var(--border);border-radius:7px;color:var(--text);background:var(--bg)"><option value="">All Outlets</option></select>
+          </div>
           <div class="sub-date-range" id="ci-custom">
             <label>From</label><input type="date" id="ci-from">
             <label>To</label><input type="date" id="ci-to">
-            <span class="fs-label" style="margin-left:4px">Outlet</span>
-            <select id="ci-outlet" style="font-size:13px;padding:6px 10px;border:1.5px solid var(--border);border-radius:7px;color:var(--text);background:var(--bg)"><option value="">All Outlets</option></select>
-            <button class="btn btn-primary btn-sm" onclick="loadCanceledItemsReport()"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="5 3 19 12 5 21 5 3"/></svg> Generate</button>
+            <button class="btn btn-primary btn-sm" onclick="loadCanceledItemsReport()"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="5 3 19 12 5 21 5 3"/></svg> Apply</button>
             <button class="btn btn-outline btn-sm" onclick="exportCanceledItemsCSV()"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> CSV</button>
           </div>
         </div>
@@ -2109,12 +2130,14 @@ input:checked+.toggle-slider:before{transform:translateX(17px)}
             <button class="rpt-preset-btn" onclick="setSubPreset('cb-from','cb-to','this-month',this,loadCanceledBillsReport)">This Month</button>
             <button class="rpt-preset-btn" onclick="setSubPreset('cb-from','cb-to','custom',this,null)">Custom</button>
           </div>
+          <div style="display:flex;align-items:center;gap:6px;margin-top:8px">
+            <span style="font-size:11px;font-weight:700;color:var(--muted);white-space:nowrap">Outlet</span>
+            <select id="cb-outlet" onchange="loadCanceledBillsReport()" style="font-size:13px;padding:6px 10px;border:1.5px solid var(--border);border-radius:7px;color:var(--text);background:var(--bg)"><option value="">All Outlets</option></select>
+          </div>
           <div class="sub-date-range" id="cb-custom">
             <label>From</label><input type="date" id="cb-from">
             <label>To</label><input type="date" id="cb-to">
-            <span class="fs-label" style="margin-left:4px">Outlet</span>
-            <select id="cb-outlet" style="font-size:13px;padding:6px 10px;border:1.5px solid var(--border);border-radius:7px;color:var(--text);background:var(--bg)"><option value="">All Outlets</option></select>
-            <button class="btn btn-primary btn-sm" onclick="loadCanceledBillsReport()"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="5 3 19 12 5 21 5 3"/></svg> Generate</button>
+            <button class="btn btn-primary btn-sm" onclick="loadCanceledBillsReport()"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="5 3 19 12 5 21 5 3"/></svg> Apply</button>
             <button class="btn btn-outline btn-sm" onclick="exportCanceledBillsCSV()"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> CSV</button>
           </div>
         </div>
@@ -2144,12 +2167,14 @@ input:checked+.toggle-slider:before{transform:translateX(17px)}
             <button class="rpt-preset-btn" onclick="setSubPreset('cob-from','cob-to','this-month',this,loadCompBillsReport)">This Month</button>
             <button class="rpt-preset-btn" onclick="setSubPreset('cob-from','cob-to','custom',this,null)">Custom</button>
           </div>
+          <div style="display:flex;align-items:center;gap:6px;margin-top:8px">
+            <span style="font-size:11px;font-weight:700;color:var(--muted);white-space:nowrap">Outlet</span>
+            <select id="cob-outlet" onchange="loadCompBillsReport()" style="font-size:13px;padding:6px 10px;border:1.5px solid var(--border);border-radius:7px;color:var(--text);background:var(--bg)"><option value="">All Outlets</option></select>
+          </div>
           <div class="sub-date-range" id="cob-custom">
             <label>From</label><input type="date" id="cob-from">
             <label>To</label><input type="date" id="cob-to">
-            <span class="fs-label" style="margin-left:4px">Outlet</span>
-            <select id="cob-outlet" style="font-size:13px;padding:6px 10px;border:1.5px solid var(--border);border-radius:7px;color:var(--text);background:var(--bg)"><option value="">All Outlets</option></select>
-            <button class="btn btn-primary btn-sm" onclick="loadCompBillsReport()"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="5 3 19 12 5 21 5 3"/></svg> Generate</button>
+            <button class="btn btn-primary btn-sm" onclick="loadCompBillsReport()"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="5 3 19 12 5 21 5 3"/></svg> Apply</button>
             <button class="btn btn-outline btn-sm" onclick="exportCompBillsCSV()"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> CSV</button>
           </div>
         </div>
@@ -2179,12 +2204,14 @@ input:checked+.toggle-slider:before{transform:translateX(17px)}
             <button class="rpt-preset-btn" onclick="setSubPreset('coi-from','coi-to','this-month',this,loadCompItemsReport)">This Month</button>
             <button class="rpt-preset-btn" onclick="setSubPreset('coi-from','coi-to','custom',this,null)">Custom</button>
           </div>
+          <div style="display:flex;align-items:center;gap:6px;margin-top:8px">
+            <span style="font-size:11px;font-weight:700;color:var(--muted);white-space:nowrap">Outlet</span>
+            <select id="coi-outlet" onchange="loadCompItemsReport()" style="font-size:13px;padding:6px 10px;border:1.5px solid var(--border);border-radius:7px;color:var(--text);background:var(--bg)"><option value="">All Outlets</option></select>
+          </div>
           <div class="sub-date-range" id="coi-custom">
             <label>From</label><input type="date" id="coi-from">
             <label>To</label><input type="date" id="coi-to">
-            <span class="fs-label" style="margin-left:4px">Outlet</span>
-            <select id="coi-outlet" style="font-size:13px;padding:6px 10px;border:1.5px solid var(--border);border-radius:7px;color:var(--text);background:var(--bg)"><option value="">All Outlets</option></select>
-            <button class="btn btn-primary btn-sm" onclick="loadCompItemsReport()"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="5 3 19 12 5 21 5 3"/></svg> Generate</button>
+            <button class="btn btn-primary btn-sm" onclick="loadCompItemsReport()"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="5 3 19 12 5 21 5 3"/></svg> Apply</button>
             <button class="btn btn-outline btn-sm" onclick="exportCompItemsCSV()"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> CSV</button>
           </div>
         </div>
@@ -4477,7 +4504,7 @@ function populateOutletSelectors () {
   const outlets = permittedIds && permittedIds.length
     ? allOutlets.filter(o => permittedIds.includes(o.id))
     : allOutlets
-  const selectors = ['orders-outlet','kds-outlet-filter','isr-outlet','ci-outlet','cb-outlet','cob-outlet','coi-outlet']
+  const selectors = ['orders-outlet','kds-outlet-filter','isr-outlet','ci-outlet','cb-outlet','cob-outlet','coi-outlet','exp-outlet','perf-outlet','ic-outlet','wast-outlet']
   selectors.forEach(id => {
     const sel = document.getElementById(id); if (!sel) return
     const cur = sel.value
@@ -4495,6 +4522,7 @@ const RPT_TAB_TITLES = {
   'canceled-bills': 'Canceled Bills', 'comp-bills': 'Complementary Bills',
   'comp-items': 'Complementary Items',
 }
+let _rptTabTimer = null
 function showRptTab (tab) {
   document.querySelectorAll('[id^="rpt-pane-"]').forEach(p => p.style.display = 'none')
   const pane = document.getElementById('rpt-pane-' + tab)
@@ -4505,6 +4533,16 @@ function showRptTab (tab) {
   const titleEl = document.getElementById('rpt-page-title')
   if (titleEl) titleEl.textContent = RPT_TAB_TITLES[tab] || 'Reports'
   mobSetRptTab(tab)
+  clearTimeout(_rptTabTimer)
+  _rptTabTimer = setTimeout(() => {
+    if (!pane) return
+    if (tab === 'security') {
+      pane.querySelectorAll('.sub-filter-bar .rpt-preset-btn.active').forEach(b => b.click())
+    } else {
+      const btn = pane.querySelector('.rpt-preset-btn.active')
+      if (btn) btn.click()
+    }
+  }, 80)
 }
 
 // ─── BRAND LOGO FILE UPLOAD ───────────────────────────────────────
@@ -5668,6 +5706,12 @@ async function loadRptFilterOptions () {
     initCtxBar()
     updateCtxBreadcrumb()
     refreshForceOutletGate()
+    const brandSel  = document.getElementById('rpt-brand')
+    const marketSel = document.getElementById('rpt-market')
+    const brandWrap  = brandSel?.closest('.form-group')
+    const marketWrap = marketSel?.closest('.form-group')
+    if (brandWrap)  brandWrap.style.display  = (brandSel.options.length  <= 2) ? 'none' : ''
+    if (marketWrap) marketWrap.style.display = (marketSel.options.length <= 2) ? 'none' : ''
   } catch (_) {}
 }
 
@@ -5734,6 +5778,7 @@ function setRptPreset (preset, btn) {
   const toEl = document.getElementById('rep-to')
   if (frEl) frEl.value = from
   if (toEl) toEl.value = to
+  if (from && to) loadReport()
 }
 
 // ─── REPORTS ─────────────────────────────────────────────────────
@@ -5853,11 +5898,13 @@ async function loadReport () {
 }
 
 async function loadExpReport () {
-  const from = document.getElementById('exp-rep-from').value
-  const to   = document.getElementById('exp-rep-to').value
-  const cur  = boSettings.currency
+  const from      = document.getElementById('exp-rep-from').value
+  const to        = document.getElementById('exp-rep-to').value
+  const outlet_id = document.getElementById('exp-outlet')?.value || ''
+  const cur       = boSettings.currency
   try {
-    const { expenses: rows } = await apiFetch('GET', `/reports/expenses?from=${from}&to=${to}`)
+    const qs = `from=${from}&to=${to}${outlet_id ? `&outlet_id=${outlet_id}` : ''}`
+    const { expenses: rows } = await apiFetch('GET', `/reports/expenses?${qs}`)
     const total = rows.reduce((s, e) => s + (parseFloat(e.amount) || 0), 0)
     document.getElementById('exp-rep-total').textContent = `${cur} ${total.toFixed(2)}`
     document.getElementById('exp-rep-tbody').innerHTML = rows.length
@@ -5869,7 +5916,17 @@ async function loadExpReport () {
           <td style="font-weight:700;color:var(--danger)">${cur} ${parseFloat(e.amount||0).toFixed(2)}</td>
         </tr>`).join('')
       : `<tr><td colspan="5" class="empty-state">No expenses</td></tr>`
+    window._expRows = rows
   } catch (e) { console.error(e) }
+}
+
+function exportExpReportCSV () {
+  if (!window._expRows?.length) { showToast('No expenses data to export.', 'error'); return }
+  const cur = boSettings.currency
+  const header = 'Date,Category,Description,Cashier,Amount'
+  const rows = window._expRows.map(e =>
+    `"${new Date(parseInt(e.created_at)).toLocaleString()}","${(e.category||'').replace(/"/g,'""')}","${(e.description||'').replace(/"/g,'""')}","${(e.cashier_name||'').replace(/"/g,'""')}",${parseFloat(e.amount||0).toFixed(2)}`)
+  downloadCSV([header, ...rows].join('\n'), `expenses_${todayStr()}.csv`)
 }
 
 function exportCSV () {
@@ -6002,10 +6059,12 @@ function exportAuditCSV () {
 
 // ─── CASHIER PERFORMANCE ─────────────────────────────────────────
 async function loadCashierPerformance () {
-  const from  = document.getElementById('perf-from').value
-  const to    = document.getElementById('perf-to').value
+  const from      = document.getElementById('perf-from').value
+  const to        = document.getElementById('perf-to').value
+  const outlet_id = document.getElementById('perf-outlet')?.value || ''
   try {
-    const { orders } = await apiFetch('GET', `/reports?from=${from}&to=${to}`) || { orders: [] }
+    const qs = `from=${from}&to=${to}${outlet_id ? `&outlet_id=${outlet_id}` : ''}`
+    const { orders } = await apiFetch('GET', `/reports?${qs}`) || { orders: [] }
     const perf = {}
     for (const o of (orders||[])) {
       const k = o.cashier_name || 'Unknown'
@@ -6109,11 +6168,13 @@ let _icRows = []
 async function loadItemConsumption () {
   initRptDates('ic-from','ic-to')
   const { from, to } = rptDateRange('ic-from','ic-to')
+  const outlet_id = document.getElementById('ic-outlet')?.value || ''
   const cur = boSettings.currency
   const tbody = document.getElementById('ic-tbody')
   tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:20px;color:var(--muted)">Loading…</td></tr>'
   try {
-    const { rows } = await apiFetch('GET', `/reports/item-consumption?from=${from}&to=${to}`)
+    const qs = `from=${from}&to=${to}${outlet_id ? `&outlet_id=${outlet_id}` : ''}`
+    const { rows } = await apiFetch('GET', `/reports/item-consumption?${qs}`)
     _icRows = rows || []
     if (!_icRows.length) {
       tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:20px;color:var(--muted)">No paid orders in range</td></tr>'
@@ -6153,11 +6214,13 @@ let _wastRows = []
 async function loadWastageReport () {
   initRptDates('wast-from','wast-to')
   const { from, to } = rptDateRange('wast-from','wast-to')
+  const outlet_id = document.getElementById('wast-outlet')?.value || ''
   const cur = boSettings.currency
   const tbody = document.getElementById('wast-tbody')
   tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:20px;color:var(--muted)">Loading…</td></tr>'
   try {
-    const { rows } = await apiFetch('GET', `/reports/wastage?from=${from}&to=${to}`)
+    const qs = `from=${from}&to=${to}${outlet_id ? `&outlet_id=${outlet_id}` : ''}`
+    const { rows } = await apiFetch('GET', `/reports/wastage?${qs}`)
     _wastRows = rows || []
     if (!_wastRows.length) {
       tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:20px;color:var(--muted)">No voided / cancelled orders in range</td></tr>'
