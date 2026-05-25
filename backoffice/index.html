@@ -4435,7 +4435,7 @@ function refreshForceOutletGate () {
   const banner = document.getElementById('force-outlet-banner')
   if (!banner) return
   const view = document.querySelector('.view.active')?.id?.replace('v-','') || ''
-  const needs = ['dashboard','reports','live','kds','orders','menu','staff'].includes(view)
+  const needs = ['dashboard','live','kds','orders','menu','staff'].includes(view)
   banner.style.display = (needs && shouldForceOutletSelection()) ? 'flex' : 'none'
 }
 
