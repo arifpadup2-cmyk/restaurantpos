@@ -859,7 +859,7 @@ module.exports = function configRouter (sql) {
       // Prevent manage_users escalation by non-owners
       if (permissions !== undefined && req.user.role !== 'owner') permissions.manage_users = false
       // unlock_account: owner can clear lockout (failed_attempts + locked_until) on any non-protected user
-      const doUnlock = !!unlock_account && req.user.role === 'owner'
+      const doUnlock = !!unlock_account && canManageUsers(req)
       const [row] = await sql`
         UPDATE bo_users SET
           name            = COALESCE(${name !== undefined ? (name || null) : null}, name),
