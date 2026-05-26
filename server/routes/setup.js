@@ -795,6 +795,42 @@ module.exports = function setupRouter (sql) {
     } catch (e) { serverError(res, e) }
   })
 
+  // ── Auto-detect: localhost-only, returns outlets + api_key for POS first-time setup ──
+  router.get('/auto-detect', async (req, res) => {
+    const ip = req.ip || req.socket?.remoteAddress || ''
+    const isLocal = ['127.0.0.1', '::1', '::ffff:127.0.0.1'].includes(ip) || ip === 'localhost'
+    if (!isLocal) return res.status(403).json({ error: 'Auto-detect only available from localhost' })
+    try {
+      const outlets = await sql`
+        SELECT o.id, o.name, o.brand_id,
+               b.name AS brand_name,
+               m.name AS market_name
+        FROM outlets o
+        JOIN brands b ON b.id = o.brand_id
+        JOIN markets m ON m.id = o.market_id
+        WHERE b.active = true
+        ORDER BY b.name, m.name, o.name`
+      // Return DB connection info so POS can connect directly
+      let db = {
+        host: process.env.DB_HOST || '127.0.0.1',
+        port: parseInt(process.env.DB_PORT || '5432', 10),
+        database: process.env.DB_NAME || 'restaurant_pos_central',
+        user: process.env.DB_USER || 'pos_central_user',
+        password: process.env.DB_PASS || '',
+        ssl: 'false',
+      }
+      if (process.env.DATABASE_URL) {
+        try {
+          const u = new URL(process.env.DATABASE_URL)
+          db = { host: u.hostname, port: parseInt(u.port || '5432', 10),
+                 database: u.pathname.replace(/^\//, ''), user: u.username,
+                 password: u.password, ssl: 'true' }
+        } catch (_) {}
+      }
+      res.json({ ok: true, outlets, api_key: process.env.API_KEY || '', db })
+    } catch (e) { serverError(res, e) }
+  })
+
   // ── Superadmin: terminals for a brand ────────────────────────────────────
   router.get('/restaurants/:id/terminals', jwtAuth, async (req, res) => {
     try {

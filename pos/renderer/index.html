@@ -70,11 +70,11 @@ textarea:focus-visible {
 /* ── SCREEN SETUP ───────────────────────────── */
 #screen-setup{position:fixed;inset:0;background:linear-gradient(135deg,#1e293b 0%,#0f172a 100%);
   display:none;align-items:center;justify-content:center;z-index:1100;flex-direction:column;gap:20px}
-.setup-box{background:#fff;border-radius:16px;padding:28px;width:360px;box-shadow:0 20px 60px rgba(0,0,0,.5)}
+.setup-box{background:#fff;border-radius:16px;padding:28px;width:380px;box-shadow:0 20px 60px rgba(0,0,0,.5)}
 .setup-field{margin-bottom:14px}
 .setup-field label{display:block;font-size:11px;font-weight:700;color:var(--muted);margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px}
-.setup-field input{width:100%;padding:11px 14px;border:1.5px solid var(--border);border-radius:8px;font-size:15px;color:var(--text);background:#fff}
-.setup-field input:focus{border-color:var(--primary);outline:none}
+.setup-field input,.setup-field select{width:100%;padding:11px 14px;border:1.5px solid var(--border);border-radius:8px;font-size:15px;color:var(--text);background:#fff}
+.setup-field input:focus,.setup-field select:focus{border-color:var(--primary);outline:none}
 .setup-hint{font-size:11px;color:var(--muted);margin-top:4px;display:block;line-height:1.4}
 .setup-advanced{margin-bottom:14px}
 .setup-advanced summary{font-size:12px;color:var(--muted);cursor:pointer;user-select:none;padding:4px 0}
@@ -84,6 +84,20 @@ textarea:focus-visible {
 .setup-version{font-size:11px;color:#94a3b8;text-align:center;margin-top:8px}
 .btn-reconfigure{background:none;border:none;color:#475569;font-size:11px;cursor:pointer;text-decoration:underline;margin-top:10px}
 .btn-reconfigure:hover{color:#fff}
+/* auto-detect step */
+.detect-spinner{width:44px;height:44px;border:4px solid rgba(249,115,22,.2);border-top-color:var(--primary);border-radius:50%;animation:spin .8s linear infinite;margin:0 auto 16px}
+@keyframes spin{to{transform:rotate(360deg)}}
+.detect-status{font-size:15px;font-weight:600;color:#374151;text-align:center;margin-bottom:6px}
+.detect-sub{font-size:12px;color:#6b7280;text-align:center;margin-bottom:20px}
+.outlet-pick-item{display:flex;align-items:center;gap:12px;padding:12px 14px;border:2px solid var(--border);border-radius:10px;cursor:pointer;margin-bottom:8px;transition:.15s;background:#fff}
+.outlet-pick-item:hover{border-color:var(--primary);background:#fff7ed}
+.outlet-pick-item.selected{border-color:var(--primary);background:#fff7ed}
+.outlet-pick-icon{width:36px;height:36px;background:#fee2e2;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
+.outlet-pick-icon.selected{background:var(--primary)}
+.outlet-pick-name{font-size:14px;font-weight:700;color:#111827}
+.outlet-pick-sub{font-size:11px;color:#6b7280;margin-top:2px}
+.setup-step{display:none}
+.setup-step.active{display:block}
 
 /* ── APP SHELL ──────────────────────────────── */
 #app{display:none;flex-direction:column;height:100vh}
@@ -963,138 +977,92 @@ textarea:focus-visible {
   <div class="login-header">
     <div style="width:56px;height:56px;color:var(--primary)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="56" height="56"><path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 002-2V2"/><path d="M7 2v20"/><path d="M21 15V2a5 5 0 00-5 5v6c0 1.1.9 2 2 2h3zm0 0v7"/></svg></div>
     <h1>POS Terminal Setup</h1>
-    <p id="setup-subtitle">Connect this terminal to your restaurant server</p>
+    <p id="setup-subtitle">First-time configuration — takes less than a minute</p>
   </div>
 
-  <div class="setup-box" style="width:400px">
+  <div class="setup-box">
 
-    <!-- Mode tabs -->
-    <div style="display:flex;gap:0;margin-bottom:20px;border:1.5px solid #e2e8f0;border-radius:10px;overflow:hidden">
-      <button id="tab-new" onclick="setSetupMode('new')"
-        style="flex:1;padding:10px;border:none;font-size:13px;font-weight:700;cursor:pointer;background:#f97316;color:#fff;transition:.15s">
-        🆕 New Installation
-      </button>
-      <button id="tab-restore" onclick="setSetupMode('restore')"
-        style="flex:1;padding:10px;border:none;font-size:13px;font-weight:700;cursor:pointer;background:#fff;color:#64748b;transition:.15s">
-        ♻️ Restore Existing
-      </button>
-    </div>
-
-    <!-- Core fields (always shown) -->
-    <div class="setup-field">
-      <label>Server IP Address</label>
-      <input id="setup-ip" type="text" placeholder="192.168.1.100" autocomplete="off"
-        onkeydown="if(event.key==='Enter')document.getElementById('setup-rid').focus()"
-        style="font-size:16px;letter-spacing:.5px">
-      <span class="setup-hint">IP of the server PC on your network</span>
-    </div>
-
-    <div class="setup-field">
-      <label>Restaurant ID</label>
-      <input id="setup-rid" type="text" placeholder="REST-AB3X9K" autocomplete="off"
-        oninput="this.value=this.value.toUpperCase()"
-        onkeydown="if(event.key==='Enter')document.getElementById('setup-lkey').focus()"
-        style="font-size:16px;font-family:monospace;letter-spacing:1px">
-      <span class="setup-hint">Provided by your software provider</span>
-    </div>
-
-    <div class="setup-field">
-      <label>License Key</label>
-      <input id="setup-lkey" type="text" placeholder="ABCDE-12345-FGHIJ-67890" autocomplete="off"
-        oninput="this.value=this.value.toUpperCase()"
-        onkeydown="if(event.key==='Enter')document.getElementById('setup-mid').focus()"
-        style="font-size:14px;font-family:monospace;letter-spacing:1px">
-      <span class="setup-hint">Provided by your software provider</span>
-    </div>
-
-    <div class="setup-field">
-      <label>Terminal Name <span style="font-weight:400;color:#94a3b8">(auto-generated if blank)</span></label>
-      <input id="setup-mid" type="text" placeholder="POS-01" autocomplete="off"
-        onkeydown="if(event.key==='Enter')document.getElementById('setup-outlet').focus()">
-      <span class="setup-hint">E.g. POS-01, POS-02, WAITER-01</span>
-    </div>
-
-    <div class="setup-field">
-      <label>Outlet ID <span style="font-weight:400;color:#94a3b8">(from Back Office → Configuration → Outlet)</span></label>
-      <input id="setup-outlet" type="text" placeholder="outlet-ABC123" autocomplete="off"
-        oninput="this.value=this.value.toLowerCase().replace(/\s/g,'')"
-        onkeydown="if(event.key==='Enter')setupSave()"
-        style="font-family:monospace;letter-spacing:.5px">
-      <span class="setup-hint">Leave blank if not using multi-outlet</span>
-    </div>
-
-    <!-- Restore: file upload -->
-    <div id="setup-restore-section" style="display:none">
-      <div style="border-top:1.5px dashed #e2e8f0;margin:16px 0;padding-top:16px">
-        <label style="font-size:12px;font-weight:700;color:#64748b;display:block;margin-bottom:8px">BACKUP FILE (optional — restores all data)</label>
-        <div style="display:flex;gap:8px;align-items:center">
-          <input type="file" id="setup-backup-file" accept=".json" style="font-size:12px;flex:1">
+    <!-- Step 1: Auto-detect connecting -->
+    <div class="setup-step active" id="setup-step-detect">
+      <div class="detect-spinner" id="detect-spinner"></div>
+      <div class="detect-status" id="detect-status-text">Connecting to local server…</div>
+      <div class="detect-sub" id="detect-sub-text">Looking for server at localhost</div>
+      <!-- Manual fallback (shown if auto-detect fails) -->
+      <div id="detect-manual" style="display:none">
+        <div style="border-top:1px solid #e5e7eb;margin:16px 0;padding-top:16px"></div>
+        <div class="setup-field">
+          <label>Server IP Address</label>
+          <input id="setup-ip" type="text" placeholder="192.168.1.100" autocomplete="off"
+            style="font-size:16px;letter-spacing:.5px"
+            onkeydown="if(event.key==='Enter')setupManualConnect()">
+          <span class="setup-hint">IP address of the server PC on your network</span>
         </div>
-        <span class="setup-hint" style="margin-top:4px">Select the .json backup file to restore all orders, menu and settings</span>
+        <!-- Advanced DB options (for remote/cloud setups) -->
+        <details class="setup-advanced" id="setup-adv">
+          <summary>▸ Advanced (cloud / remote DB)</summary>
+          <div class="setup-field" style="margin-top:10px">
+            <label>Restaurant ID</label>
+            <input id="setup-rid" type="text" placeholder="REST-AB3X9K" autocomplete="off"
+              oninput="this.value=this.value.toUpperCase()" style="font-family:monospace;letter-spacing:1px">
+          </div>
+          <div class="setup-field">
+            <label>License Key</label>
+            <input id="setup-lkey" type="text" placeholder="ABCDE-12345-FGHIJ-67890" autocomplete="off"
+              oninput="this.value=this.value.toUpperCase()" style="font-family:monospace;letter-spacing:1px">
+          </div>
+          <div class="setup-field">
+            <label>DB Host</label>
+            <input id="setup-dbhost" type="text" placeholder="e.g. ep-xxx.us-east-2.aws.neon.tech">
+          </div>
+          <div class="setup-field"><label>DB Port</label><input id="setup-port" type="number" placeholder="5432"></div>
+          <div class="setup-field"><label>DB Name</label><input id="setup-dbname" type="text" placeholder="restaurant_pos_central"></div>
+          <div class="setup-field"><label>DB User</label><input id="setup-dbuser" type="text" placeholder="pos_central_user"></div>
+          <div class="setup-field"><label>DB Password</label><input id="setup-dbpass" type="password"></div>
+        </details>
+        <div class="setup-error" id="setup-error"></div>
+        <button class="btn-login" onclick="setupManualConnect()">🔌 Connect</button>
       </div>
     </div>
 
-    <!-- Advanced options (collapsed) -->
-    <details class="setup-advanced" id="setup-adv" style="margin-bottom:14px">
-      <summary>▸ Advanced Options (for IT technicians)</summary>
-      <div style="margin-top:10px;padding:12px;background:#f8fafc;border-radius:8px;font-size:12px;color:#64748b;margin-bottom:10px">
-        Required for cloud/hosted setups. Your POS provider supplies these credentials.
+    <!-- Step 2: Outlet selection -->
+    <div class="setup-step" id="setup-step-outlet">
+      <div style="font-size:13px;font-weight:700;color:#111827;margin-bottom:4px">✅ Server connected!</div>
+      <div style="font-size:12px;color:#6b7280;margin-bottom:18px">Select the outlet this terminal belongs to:</div>
+      <div id="outlet-pick-list" style="max-height:260px;overflow-y:auto"></div>
+      <div class="setup-field" style="margin-top:14px">
+        <label>Terminal Name</label>
+        <input id="setup-mid" type="text" placeholder="POS-01" autocomplete="off">
+        <span class="setup-hint">E.g. POS-01, CASHIER-2 — identifies this device</span>
       </div>
-      <div class="setup-field">
-        <label>DB Host</label>
-        <input id="setup-dbhost" type="text" placeholder="e.g. ep-xxx.us-east-2.aws.neon.tech">
-      </div>
-      <div class="setup-field">
-        <label>DB Port</label>
-        <input id="setup-port" type="number" placeholder="5432 (default)">
-      </div>
-      <div class="setup-field">
-        <label>DB Name</label>
-        <input id="setup-dbname" type="text" placeholder="restaurant_pos_central (default)">
-      </div>
-      <div class="setup-field">
-        <label>DB User</label>
-        <input id="setup-dbuser" type="text" placeholder="pos_central_user (default)">
-      </div>
-      <div class="setup-field">
-        <label>DB Password</label>
-        <input id="setup-dbpass" type="password" placeholder="Database password">
-      </div>
-    </details>
-
-    <div class="setup-error" id="setup-error"></div>
-    <div id="setup-progress" style="display:none;margin-bottom:10px">
-      <div style="height:4px;background:#e2e8f0;border-radius:4px;overflow:hidden">
-        <div id="setup-progress-bar" style="height:100%;background:var(--primary);width:0%;transition:width .4s"></div>
-      </div>
-      <div id="setup-progress-msg" style="font-size:12px;color:#64748b;text-align:center;margin-top:6px"></div>
+      <div class="setup-error" id="setup-outlet-error"></div>
+      <button class="btn-login" id="btn-setup-confirm" onclick="setupFinalize()" disabled>✔ Confirm &amp; Start</button>
     </div>
 
-    <div style="display:flex;gap:8px;margin-bottom:4px">
-      <button onclick="setupTestLicense()" style="padding:10px 14px;border:1.5px solid #e2e8f0;border-radius:10px;background:#f8fafc;font-size:13px;font-weight:600;cursor:pointer;color:#475569;white-space:nowrap">🔌 Test</button>
-      <button class="btn-login" id="btn-setup-save" onclick="setupSave()" style="flex:1">▶ Connect &amp; Save</button>
+    <!-- Hidden fields kept for legacy setupSave() compatibility -->
+    <input type="hidden" id="setup-outlet">
+    <input type="hidden" id="setup-backup-file">
+    <div style="display:none" id="setup-restore-section"></div>
+    <div style="display:none" id="setup-progress">
+      <div><div id="setup-progress-bar"></div></div>
+      <div id="setup-progress-msg"></div>
     </div>
-    <div id="setup-test-msg" style="font-size:12px;text-align:center;min-height:16px;margin-bottom:4px"></div>
+    <div style="display:none" id="setup-test-msg"></div>
     <div class="setup-version" id="setup-ver"></div>
   </div>
 </div>
 
 <!-- ═══════ LOGIN SCREEN ═══════ -->
 <div id="screen-login">
-  <!-- Step 1: Select cashier -->
   <div class="login-header">
-    <div style="width:64px;height:64px;color:var(--primary)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="64" height="64"><path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 002-2V2"/><path d="M7 2v20"/><path d="M21 15V2a5 5 0 00-5 5v6c0 1.1.9 2 2 2h3zm0 0v7"/></svg></div>
+    <div style="width:60px;height:60px;color:var(--primary)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="60" height="60"><path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 002-2V2"/><path d="M7 2v20"/><path d="M21 15V2a5 5 0 00-5 5v6c0 1.1.9 2 2 2h3zm0 0v7"/></svg></div>
     <h1 id="login-rest-name">Restaurant POS</h1>
-    <p>Select your name to continue</p>
+    <p id="login-outlet-name" style="color:#f97316;font-weight:600;font-size:13px;margin-top:2px"></p>
     <button class="btn-reconfigure" onclick="showSetupScreen()" title="Reconfigure terminal">⚙ Reconfigure terminal</button>
   </div>
-  <div class="cashier-grid" id="cashier-grid">
-    <div class="cashier-none">Loading cashiers…</div>
-  </div>
 
-  <!-- Step 2: PIN pad -->
-  <div class="pin-box" id="pin-box">
-    <div class="pin-cashier" id="pin-cashier-name">Enter PIN</div>
+  <!-- PIN pad (direct — no cashier selection step) -->
+  <div class="pin-box show" id="pin-box">
+    <div class="pin-cashier">Enter your PIN</div>
     <div class="pin-dots" id="pin-dots">
       <div class="pin-dot" id="pd0"></div>
       <div class="pin-dot" id="pd1"></div>
@@ -1113,19 +1081,20 @@ textarea:focus-visible {
       <button class="pp-btn" onclick="pinKey('9')">9</button>
       <button class="pp-btn" onclick="pinBack()" style="color:var(--danger)">⌫</button>
       <button class="pp-btn" onclick="pinKey('0')">0</button>
-      <button class="pp-btn" onclick="cancelPin()" style="font-size:13px;color:var(--muted)">✕</button>
+      <button class="pp-btn" onclick="pinBuffer='';updatePinDots();" style="font-size:13px;color:var(--muted)">✕</button>
     </div>
     <div class="pin-error" id="pin-error"></div>
   </div>
 
-  <!-- Step 3: Opening cash -->
+  <!-- Opening cash (only shown for new shift) -->
   <div class="cash-box" id="cash-box">
-    <h3 id="cash-cashier-name">Good morning!</h3>
-    <label>Opening Cash (RM)</label>
+    <h3 id="cash-cashier-name">Good day!</h3>
+    <label id="cash-currency-label">Opening Cash</label>
     <input id="login-cash" type="number" placeholder="0.00" min="0" step="0.01"
       onkeydown="if(event.key==='Enter')startShift()">
     <button class="btn-login" onclick="startShift()">▶ Start Shift</button>
-    <p class="login-note" onclick="cancelPin()" style="cursor:pointer;margin-top:10px">← Back</p>
+    <p class="login-note" onclick="pinBuffer='';updatePinDots();document.getElementById('pin-box').classList.add('show');document.getElementById('cash-box').classList.remove('show');"
+      style="cursor:pointer;margin-top:10px">← Back</p>
   </div>
 </div>
 
@@ -2377,6 +2346,8 @@ let shift     = null; // { id, cashier_name, opening_cash, opened_at }
 let loginCashiers  = [];
 let selectedCashier = null;
 let pinBuffer  = '';
+let _setupAutoData     = null; // data returned by /setup/auto-detect
+let _setupSelectedOutlet = null; // outlet chosen in step 2 of setup
 let settings  = {
   restaurant_name:'Restaurant POS', tax_rate:10, currency:'RM',
   receipt_footer:'Thank you!', kot_stay_seconds:10,
@@ -2426,9 +2397,14 @@ async function init() {
   document.getElementById('login-rest-name').textContent = settings.restaurant_name;
   document.getElementById('hdr-rest-name').textContent  = settings.restaurant_name;
 
-  // Load API config from settings
-  apiUrl = (await getSetting('api_url')) || '';
-  apiKey = (await getSetting('api_key')) || '';
+  // Show outlet name from saved config
+  const _cfg = window._posConfig || {};
+  const outletNameEl = document.getElementById('login-outlet-name');
+  if (outletNameEl && _cfg.outletName) outletNameEl.textContent = _cfg.outletName;
+
+  // Load API config from settings (fall back to config file values)
+  apiUrl = (await getSetting('api_url')) || (_cfg.serverIp ? `http://${_cfg.serverIp}:3001` : '');
+  apiKey = (await getSetting('api_key')) || _cfg.apiKey || '';
   if (document.getElementById('set-api-url')) document.getElementById('set-api-url').value = apiUrl;
   if (document.getElementById('set-api-key')) document.getElementById('set-api-key').value = apiKey;
 
@@ -2849,14 +2825,14 @@ async function acceptOnlineOrder() {
 // ═══════════════════════════════════════════════════════════════
 //  SHIFT / LOGIN — PIN flow
 // ═══════════════════════════════════════════════════════════════
-async function loadCashiersForLogin() {
-  const r = await db.all('SELECT * FROM cashiers WHERE active=1 ORDER BY name');
-  loginCashiers = r.ok ? r.data : [];
-  renderCashierGrid();
-}
+//  LOGIN — PIN-ONLY FLOW
+// ═══════════════════════════════════════════════════════════════
 
+// Not used in new flow but kept for legacy compat
+async function loadCashiersForLogin() {}
 function renderCashierGrid() {
   const grid = document.getElementById('cashier-grid');
+  if (!grid) return;
   if (!loginCashiers.length) {
     grid.innerHTML = `<div class="cashier-none">No cashiers found.<br>Add staff in Back Office first.</div>`;
     return;
@@ -2882,33 +2858,159 @@ function setSetupMode(mode) {
 }
 
 function showSetupScreen(subtitle) {
-  const cfg = window._posConfig || {};
-  if (cfg.serverIp)      document.getElementById('setup-ip').value     = cfg.serverIp;
-  if (cfg.machineId)     document.getElementById('setup-mid').value    = cfg.machineId;
-  if (cfg.restaurantId)  document.getElementById('setup-rid').value    = cfg.restaurantId;
-  if (cfg.licenseKey)    document.getElementById('setup-lkey').value   = cfg.licenseKey;
-  // Pre-fill advanced DB fields from saved config
-  if (cfg.dbHost)  document.getElementById('setup-dbhost').value  = cfg.dbHost;
-  if (cfg._advancedDb) {
-    if (cfg.dbPort)  document.getElementById('setup-port').value   = cfg.dbPort;
-    if (cfg.dbName)  document.getElementById('setup-dbname').value = cfg.dbName;
-    if (cfg.dbUser)  document.getElementById('setup-dbuser').value = cfg.dbUser;
-  }
   if (subtitle) document.getElementById('setup-subtitle').textContent = subtitle;
-  document.getElementById('setup-error').textContent  = '';
-  document.getElementById('setup-test-msg').textContent = '';
-  document.getElementById('setup-progress').style.display = 'none';
-  document.getElementById('btn-setup-save').disabled = false;
+  const cfg = window._posConfig || {};
+  if (cfg.machineId) document.getElementById('setup-mid').value = cfg.machineId;
   document.getElementById('screen-setup').style.display = 'flex';
   document.getElementById('screen-login').style.display  = 'none';
-  setSetupMode('new');
-  setTimeout(() => document.getElementById('setup-ip').focus(), 100);
+  setupAutoDetect();
 }
 
 function setupSetProgress(pct, msg) {
   document.getElementById('setup-progress').style.display = 'block';
   document.getElementById('setup-progress-bar').style.width = pct + '%';
   document.getElementById('setup-progress-msg').textContent = msg;
+}
+
+async function setupAutoDetect() {
+  const spinner   = document.getElementById('detect-spinner');
+  const statusTxt = document.getElementById('detect-status-text');
+  const subTxt    = document.getElementById('detect-sub-text');
+  const manual    = document.getElementById('detect-manual');
+  spinner.style.display = 'block';
+  statusTxt.textContent = 'Connecting to local server…';
+  subTxt.textContent    = 'Looking for server at localhost';
+  manual.style.display  = 'none';
+  document.getElementById('setup-step-detect').classList.add('active');
+  document.getElementById('setup-step-outlet').classList.remove('active');
+  try {
+    const ctrl = new AbortController();
+    const tid  = setTimeout(() => ctrl.abort(), 5000);
+    const resp = await fetch('http://localhost:3001/setup/auto-detect', { signal: ctrl.signal });
+    clearTimeout(tid);
+    const data = await resp.json();
+    if (data.ok && data.outlets) {
+      _setupAutoData = data;
+      renderOutletPicker(data.outlets);
+      spinner.style.display = 'none';
+      document.getElementById('setup-step-detect').classList.remove('active');
+      document.getElementById('setup-step-outlet').classList.add('active');
+      const mid = document.getElementById('setup-mid');
+      if (!mid.value) mid.value = (await posAPI.getMachineId()) || 'POS-01';
+      return;
+    }
+    throw new Error(data.error || 'Auto-detect failed');
+  } catch (_) {
+    spinner.style.display = 'none';
+    statusTxt.textContent = '⚠️ Local server not found';
+    subTxt.textContent    = 'Enter the server IP address manually';
+    manual.style.display  = 'block';
+    document.getElementById('setup-error').textContent = '';
+    setTimeout(() => document.getElementById('setup-ip')?.focus(), 100);
+  }
+}
+
+async function setupManualConnect() {
+  const ip    = document.getElementById('setup-ip').value.trim() || 'localhost';
+  const errEl = document.getElementById('setup-error');
+  errEl.textContent = '';
+  const spinner   = document.getElementById('detect-spinner');
+  const statusTxt = document.getElementById('detect-status-text');
+  spinner.style.display = 'block';
+  statusTxt.textContent = `Connecting to ${ip}…`;
+  try {
+    const ctrl = new AbortController();
+    const tid  = setTimeout(() => ctrl.abort(), 7000);
+    const resp = await fetch(`http://${ip}:3001/setup/auto-detect`, { signal: ctrl.signal });
+    clearTimeout(tid);
+    if (resp.status === 403) {
+      errEl.textContent = '❌ Remote auto-detect not allowed. POS must be installed on the same PC as the server.';
+      spinner.style.display = 'none';
+      return;
+    }
+    const data = await resp.json();
+    if (data.ok && data.outlets) {
+      _setupAutoData = { ...data, _ip: ip };
+      renderOutletPicker(data.outlets);
+      spinner.style.display = 'none';
+      document.getElementById('setup-step-detect').classList.remove('active');
+      document.getElementById('setup-step-outlet').classList.add('active');
+      const mid = document.getElementById('setup-mid');
+      if (!mid.value) mid.value = (await posAPI.getMachineId()) || 'POS-01';
+      return;
+    }
+    errEl.textContent = '❌ ' + (data.error || 'Server error');
+  } catch (e) {
+    errEl.textContent = `❌ Cannot reach ${ip}:3001 — ${e.message}`;
+  }
+  spinner.style.display = 'none';
+}
+
+function renderOutletPicker(outlets) {
+  _setupSelectedOutlet = null;
+  document.getElementById('btn-setup-confirm').disabled = true;
+  const list = document.getElementById('outlet-pick-list');
+  if (!outlets || !outlets.length) {
+    list.innerHTML = '<div style="text-align:center;color:#64748b;padding:20px 0">No outlets found. Create one in Back Office first.</div>';
+    return;
+  }
+  list.innerHTML = outlets.map(o => `
+    <div class="outlet-pick-item" id="opick-${o.id}"
+         onclick="pickOutlet('${o.id}',${JSON.stringify(o.name)},${JSON.stringify(o.brand_name||'')},${JSON.stringify(o.market_name||'')})">
+      <div class="outlet-pick-icon">&#127978;</div>
+      <div>
+        <div class="outlet-pick-name">${esc(o.name)}</div>
+        <div class="outlet-pick-sub">${esc(o.brand_name||'')}${o.market_name ? ' · ' + esc(o.market_name) : ''}</div>
+      </div>
+    </div>`).join('');
+  if (outlets.length === 1) {
+    pickOutlet(outlets[0].id, outlets[0].name, outlets[0].brand_name || '', outlets[0].market_name || '');
+  }
+}
+
+function pickOutlet(id, name, brand, market) {
+  document.querySelectorAll('.outlet-pick-item').forEach(x => x.classList.remove('selected'));
+  const el = document.getElementById('opick-' + id);
+  if (el) el.classList.add('selected');
+  _setupSelectedOutlet = { id, name, brand, market };
+  document.getElementById('btn-setup-confirm').disabled = false;
+}
+
+async function setupFinalize() {
+  const errEl = document.getElementById('setup-outlet-error');
+  if (!_setupSelectedOutlet) { errEl.textContent = '❌ Please select an outlet.'; return; }
+  const mid  = document.getElementById('setup-mid').value.trim() || 'POS-01';
+  const data = _setupAutoData || {};
+  const ip   = data._ip || 'localhost';
+  const btn  = document.getElementById('btn-setup-confirm');
+  btn.disabled = true;
+  errEl.textContent = '';
+  const dbInfo = data.db || {};
+  const cfg = {
+    serverIp:       ip,
+    machineId:      mid,
+    outletId:       _setupSelectedOutlet.id,
+    outletName:     _setupSelectedOutlet.name,
+    apiKey:         data.api_key || '',
+    dbHost:         dbInfo.host || '127.0.0.1',
+    dbPort:         String(dbInfo.port || '5432'),
+    dbName:         dbInfo.database || 'restaurant_pos_central',
+    dbUser:         dbInfo.user || 'pos_central_user',
+    dbPass:         dbInfo.password || '',
+    dbSsl:          String(dbInfo.ssl || 'false'),
+    restaurantName: _setupSelectedOutlet.brand || '',
+    restaurantId:   '',
+    licenseKey:     '',
+  };
+  const res = await posAPI.saveConfig(cfg);
+  if (!res.ok) {
+    errEl.textContent = `❌ DB connection failed: ${res.error}`;
+    btn.disabled = false;
+    return;
+  }
+  window._posConfig = cfg;
+  document.getElementById('screen-setup').style.display = 'none';
+  await init();
 }
 
 async function setupTestLicense() {
@@ -3068,19 +3170,8 @@ async function setupSave() {
   await init();
 }
 
-function selectCashierForPin(c) {
-  selectedCashier = c;
-  pinBuffer = '';
-  updatePinDots();
-  document.getElementById('pin-cashier-name').innerHTML = `<span style="display:inline-flex;align-items:center;gap:6px">${ic('user',16)} ${esc(c.name)}</span>`;
-  document.getElementById('pin-error').textContent = '';
-  document.getElementById('pin-box').classList.add('show');
-  document.getElementById('cash-box').classList.remove('show');
-  document.querySelectorAll('.cashier-chip').forEach(el => el.classList.remove('selected'));
-  document.querySelectorAll('.cashier-chip').forEach(el => {
-    if (el.textContent.trim() === c.name) el.classList.add('selected');
-  });
-}
+// Legacy — kept so old cashier-chip onclick still compiles
+function selectCashierForPin(c) { selectedCashier = c; }
 
 function pinKey(k) {
   if (pinBuffer.length >= 4) return;
@@ -3097,64 +3188,74 @@ function pinBack() {
 
 function cancelPin() {
   pinBuffer = ''; selectedCashier = null;
-  document.getElementById('pin-box').classList.remove('show');
-  document.getElementById('cash-box').classList.remove('show');
-  document.querySelectorAll('.cashier-chip').forEach(el => el.classList.remove('selected'));
   updatePinDots();
 }
 
 function updatePinDots() {
   for (let i = 0; i < 4; i++) {
     const dot = document.getElementById('pd' + i);
+    if (!dot) continue;
     dot.classList.toggle('filled', i < pinBuffer.length);
     dot.classList.remove('error');
   }
 }
 
+function pinError(msg) {
+  document.getElementById('pin-error').textContent = msg;
+  for (let i = 0; i < 4; i++) {
+    const dot = document.getElementById('pd' + i);
+    if (dot) { dot.classList.add('error'); dot.classList.remove('filled'); }
+  }
+  setTimeout(() => { pinBuffer = ''; updatePinDots(); document.getElementById('pin-error').textContent = ''; }, 900);
+}
+
+async function checkTodayShift(cashierId) {
+  const midnight = new Date(); midnight.setHours(0, 0, 0, 0);
+  const r = await db.all(
+    'SELECT * FROM shifts WHERE cashier_id=? AND status=? AND opened_at>=? ORDER BY opened_at DESC LIMIT 1',
+    [cashierId, 'open', midnight.getTime()]
+  );
+  return (r.ok && r.data.length > 0) ? r.data[0] : null;
+}
+
 async function verifyPin() {
-  const stored = selectedCashier.pin || '';
-  if (stored && pinBuffer !== stored) {
-    document.getElementById('pin-error').textContent = 'Incorrect PIN. Try again.';
-    for (let i = 0; i < 4; i++) {
-      const dot = document.getElementById('pd' + i);
-      dot.classList.add('error'); dot.classList.remove('filled');
-    }
-    setTimeout(() => { pinBuffer = ''; updatePinDots(); }, 800);
+  // Look up cashier by PIN in local DB
+  const r = await db.all('SELECT * FROM cashiers WHERE pin=? AND active=1 LIMIT 1', [pinBuffer]);
+  if (!r.ok || !r.data.length) {
+    pinError('Invalid PIN. Try again.');
     return;
   }
-  // PIN correct (or no PIN set) → show opening cash step
-  document.getElementById('pin-box').classList.remove('show');
-  document.getElementById('cash-box').classList.add('show');
-  document.getElementById('cash-cashier-name').textContent = `Good day, ${selectedCashier.name}! 👋`;
-  document.getElementById('login-cash').value = '';
-  document.getElementById('login-cash').focus();
+  selectedCashier = r.data[0];
+
+  // Check if cashier already has an open shift today
+  const existingShift = await checkTodayShift(selectedCashier.id || selectedCashier.name);
+  if (existingShift) {
+    // Shift already open — go straight to POS
+    cashier = selectedCashier;
+    shift   = existingShift;
+    enterPOS();
+  } else {
+    // New shift — ask opening cash
+    const cur = settings.currency || 'RM';
+    document.getElementById('cash-cashier-name').textContent = `Welcome, ${selectedCashier.name}! 👋`;
+    document.getElementById('cash-currency-label').textContent = `Opening Cash (${cur})`;
+    document.getElementById('login-cash').value = '';
+    document.getElementById('pin-box').classList.remove('show');
+    document.getElementById('cash-box').classList.add('show');
+    setTimeout(() => document.getElementById('login-cash').focus(), 100);
+  }
 }
 
 async function startShift() {
-  if (!selectedCashier) { alert('Select a cashier first.'); return; }
+  if (!selectedCashier) { pinError('No cashier selected.'); return; }
   const cash = parseFloat(document.getElementById('login-cash').value) || 0;
-
   cashier = selectedCashier;
   const shiftId = uid();
   const now = Date.now();
   await db.run(`INSERT INTO shifts (id,cashier_id,cashier_name,opening_cash,status,terminal_id,opened_at)
     VALUES (?,?,?,?,?,?,?)`, [shiftId, cashier.id||cashier.name, cashier.name, cash, 'open', MACHINE_ID, now]);
   shift = { id: shiftId, cashier_name: cashier.name, opening_cash: cash, opened_at: now };
-
-  document.getElementById('hdr-cashier').textContent    = cashier.name;
-  document.getElementById('hdr-shift').textContent      = shiftId.substring(0,6).toUpperCase();
-  document.getElementById('hdr-shift-time').textContent = new Date(now).toLocaleTimeString();
-
-  document.getElementById('screen-login').style.display = 'none';
-  document.getElementById('app').style.display = 'flex';
-
-  applyRoleRestrictions(cashier.role);
-
-  await loadMenu();
-  await loadTables();
-  await loadActiveOrders();
-  renderEntryTableChips();
-  showView('pos');
+  enterPOS();
 }
 
 function applyRoleRestrictions(role) {
@@ -3168,18 +3269,37 @@ function applyRoleRestrictions(role) {
   });
 }
 
+function enterPOS() {
+  document.getElementById('hdr-cashier').textContent    = cashier.name;
+  document.getElementById('hdr-shift').textContent      = (shift.id || '').substring(0,6).toUpperCase();
+  document.getElementById('hdr-shift-time').textContent = new Date(shift.opened_at).toLocaleTimeString();
+  document.getElementById('screen-login').style.display = 'none';
+  document.getElementById('app').style.display = 'flex';
+  applyRoleRestrictions(cashier.role);
+  loadMenu();
+  loadTables();
+  loadActiveOrders();
+  renderEntryTableChips();
+  showView('pos');
+}
+
 async function confirmLogout() {
   if (!confirm('Are you sure you want to end this shift?')) return;
   await db.run('UPDATE shifts SET status=?,closed_at=? WHERE id=?',
     ['closed', Date.now(), shift.id]);
   await syncUnsyncedData();
-  applyRoleRestrictions('cashier'); // restore all nav items
-  cashier = null; shift = null;
+  applyRoleRestrictions('cashier');
+  cashier = null; shift = null; selectedCashier = null;
   cart = { type:'dine-in', tableId:null, tableName:'', customerName:'', customerPhone:'',
     customerAddress:'', items:[], discountType:'none', discountValue:0, notes:'' };
+  pinBuffer = '';
+  updatePinDots();
   document.getElementById('app').style.display = 'none';
   document.getElementById('screen-login').style.display = 'flex';
   document.getElementById('login-cash').value = '';
+  document.getElementById('pin-error').textContent = '';
+  document.getElementById('pin-box').classList.add('show');
+  document.getElementById('cash-box').classList.remove('show');
   showPosOrders();
 }
 
@@ -5762,14 +5882,14 @@ async function toggleFullscreen() {
 (async () => {
   const cfg = await posAPI.getConfig();
   window._posConfig = cfg || {};
-  if (!cfg || !cfg.serverIp) {
-    showSetupScreen('Configure this POS terminal before first use');
+  if (!cfg || !cfg.outletId) {
+    showSetupScreen('First-time setup — takes less than a minute');
   } else {
     try {
       await init();
     } catch (e) {
-      // DB init failed (wrong IP etc.) — go back to setup with error hint
-      showSetupScreen('Connection failed — check server IP and try again');
+      // DB init failed — go back to setup
+      showSetupScreen('Connection failed — reconfigure terminal');
       document.getElementById('setup-error').textContent = String(e.message || e);
     }
   }
