@@ -5784,7 +5784,7 @@ function cfgEditModifierGroup (g) { cfgOpenModGroupModal(g) }
 function cfgOpenModGroupModal (g) {
   const isEdit = !!g
   const html = `
-    <div class="modal-overlay active" id="modal-mod-group" onclick="if(event.target===this)this.remove()">
+    <div class="modal-overlay show" id="modal-mod-group" onclick="if(event.target===this)this.remove()">
       <div class="modal" style="max-width:520px">
         <h3>${isEdit?'Edit':'Add'} Modifier Group</h3>
         <input type="hidden" id="mgm-id" value="${g?.id||''}">
