@@ -619,17 +619,24 @@ input:checked+.toggle-slider:before{transform:translateX(17px)}
   #v-orders .data-table th:nth-child(11),#v-orders .data-table td:nth-child(11){display:none}
   /* ─── Item Editor: mobile ─── */
   #v-item-editor.active{padding-bottom:calc(58px + env(safe-area-inset-bottom,0px))}
-  .ie-topbar{padding:10px 12px;gap:8px}
+  .ie-topbar{padding:8px 12px;gap:8px}
+  .ie-tabs{padding:0 12px;top:49px;overflow-x:auto;scrollbar-width:none}
+  .ie-tabs::-webkit-scrollbar{display:none}
+  .ie-tab-btn{padding:10px 12px;font-size:11px}
   .ie-btn-add-another{display:none}
   .ie-body{flex-direction:column;padding:12px 12px 20px;gap:12px}
   .ie-sidebar{flex:none;width:100%}
   .ie-sidebar-inner{position:static}
   .ie-card-body{padding:12px}
+  .ie-details-row{flex-direction:column;align-items:stretch}
+  .ie-img-col{flex-direction:row;align-items:center;gap:12px}
+  .ie-img-box{width:80px;height:80px}
   .ie-channel-row{flex-wrap:wrap;gap:6px}
   .ie-channel-price{width:100%}
   .ie-channel-price input{width:100%}
-  .ie-img-box{width:80px;height:80px}
-  #ie-var-table{display:block;overflow-x:auto}
+  .ie-var-fields{flex-wrap:wrap}
+  .ie-var-size-input{width:50px}
+  .ie-var-price-input{width:80px}
 }
 /* ─── MOBILE REPORTS & CONFIG TAB BARS ─────────────────── */
 .mob-rpt-tabs,.mob-cfg-tabs{display:none}
@@ -671,43 +678,96 @@ input:checked+.toggle-slider:before{transform:translateX(17px)}
 .btn-pick-img:hover{background:#dcfce7;border-color:#86efac}
 
 /* ─── ITEM EDITOR ──────────────────────────────────────── */
-/* Item editor is outside #app in DOM — use fixed overlay to show correctly */
 #v-item-editor{display:none;position:fixed;inset:0;z-index:250;background:#f1f5f9;overflow-y:auto;max-width:none!important;padding:0}
 #v-item-editor.active{display:block}
-.ie-topbar{background:#fff;border-bottom:1.5px solid var(--border);padding:12px 24px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:200;gap:16px;flex-wrap:wrap}
-.ie-topbar-left{display:flex;flex-direction:column;gap:2px;flex:1;min-width:0}
+/* Top bar */
+.ie-topbar{background:#fff;border-bottom:1.5px solid var(--border);padding:10px 24px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:200;gap:12px;flex-wrap:wrap}
+.ie-topbar-left{display:flex;flex-direction:column;gap:1px;flex:1;min-width:0}
 .ie-topbar-actions{display:flex;gap:8px;flex-wrap:wrap;align-items:center;flex-shrink:0}
-.ie-breadcrumb{font-size:11px;color:var(--muted);margin-bottom:2px}
+.ie-breadcrumb{font-size:11px;color:var(--muted)}
 .ie-breadcrumb a{color:var(--primary);text-decoration:none;cursor:pointer}
-.ie-title{font-size:17px;font-weight:800;color:var(--text);margin:0}
-.ie-body{display:flex;gap:18px;padding:20px 24px;max-width:1400px;margin:0 auto;padding-bottom:40px}
-.ie-main{flex:1;display:flex;flex-direction:column;gap:14px;min-width:0}
-.ie-sidebar{flex:0 0 260px;min-width:0}
-.ie-sidebar-inner{position:sticky;top:72px;display:flex;flex-direction:column;gap:14px}
+.ie-title{font-size:16px;font-weight:800;color:var(--text);margin:0}
+/* Tab nav */
+.ie-tabs{background:#fff;border-bottom:1.5px solid var(--border);padding:0 24px;display:flex;gap:0;position:sticky;top:53px;z-index:199}
+.ie-tab-btn{padding:11px 18px;background:none;border:none;border-bottom:2.5px solid transparent;font-size:12px;font-weight:600;color:var(--muted);cursor:pointer;margin-bottom:-1.5px;transition:color .12s,border-color .12s;display:flex;align-items:center;gap:6px;white-space:nowrap}
+.ie-tab-btn:hover{color:var(--text)}
+.ie-tab-btn.active{color:var(--primary);border-bottom-color:var(--primary)}
+.ie-tab-dot{width:6px;height:6px;border-radius:50%;background:#22c55e;display:none}
+.ie-tab-btn.has-data .ie-tab-dot{display:inline-block}
+/* Body layout */
+.ie-body{display:flex;gap:20px;padding:20px 24px 40px;max-width:1440px;margin:0 auto}
+.ie-main{flex:1;min-width:0}
+.ie-tab-panel{display:none;flex-direction:column;gap:14px}
+.ie-tab-panel.active{display:flex}
+.ie-sidebar{flex:0 0 290px;min-width:0}
+.ie-sidebar-inner{position:sticky;top:108px;display:flex;flex-direction:column;gap:12px}
+/* Cards */
 .ie-card{background:#fff;border:1.5px solid var(--border);border-radius:12px;overflow:hidden}
 .ie-card-hdr{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-bottom:1px solid #f1f5f9}
-.ie-card-hdr h3{font-size:13px;font-weight:700;margin:0}
+.ie-card-hdr h3{font-size:13px;font-weight:700;margin:0;display:flex;align-items:center;gap:8px}
 .ie-card-body{padding:16px}
-.ie-img-box{width:110px;height:110px;border-radius:10px;background:#f8fafc;border:2px dashed #cbd5e1;display:flex;align-items:center;justify-content:center;flex-shrink:0;overflow:hidden}
+/* Details tab: image + fields side by side */
+.ie-details-row{display:flex;gap:20px;align-items:flex-start}
+.ie-img-col{display:flex;flex-direction:column;align-items:center;gap:8px;flex-shrink:0}
+.ie-img-box{width:130px;height:130px;border-radius:12px;background:#f8fafc;border:2px dashed #cbd5e1;display:flex;align-items:center;justify-content:center;overflow:hidden;cursor:pointer;transition:.15s}
+.ie-img-box:hover{border-color:var(--primary);background:#fff7ed}
 .ie-img-box img{width:100%;height:100%;object-fit:cover}
-.ie-type-pill{display:inline-flex;align-items:center;gap:6px;padding:6px 14px;border:1.5px solid var(--border);border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;transition:.12s;color:var(--muted)}
+.ie-img-hint{font-size:10px;color:var(--muted);text-align:center;max-width:130px;line-height:1.4}
+.ie-fields-col{flex:1;min-width:0;display:flex;flex-direction:column;gap:0}
+/* Type pills */
+.ie-type-pill{display:inline-flex;align-items:center;gap:6px;padding:7px 16px;border:1.5px solid var(--border);border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;transition:.12s;color:var(--muted);user-select:none}
 .ie-type-pill input[type=radio]{display:none}
 .ie-type-pill.selected{border-color:var(--primary);background:#fff7ed;color:var(--primary)}
-.ie-channel-row{display:flex;align-items:center;gap:12px;padding:10px 14px;border-radius:10px;background:#f8fafc;border:1.5px solid transparent;transition:.12s}
-.ie-channel-row.active{background:#fff7ed;border-color:rgba(249,115,22,.2)}
-.ie-channel-icon{width:32px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:15px}
+/* Channel rows */
+.ie-channel-row{display:flex;align-items:center;gap:12px;padding:11px 14px;border-radius:10px;background:#f8fafc;border:1.5px solid transparent;transition:.15s}
+.ie-channel-row.active{background:#fff7ed;border-color:rgba(249,115,22,.25)}
+.ie-channel-row.inactive{opacity:.55}
+.ie-channel-icon{width:34px;height:34px;border-radius:9px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:16px}
 .ie-channel-lbl{font-size:13px;font-weight:600;flex:1}
-.ie-channel-price{width:110px}
-.ie-channel-price input{width:100%;padding:5px 8px;border:1.5px solid var(--border);border-radius:7px;font-size:12px;text-align:right}
-.ie-var-row td{padding:6px 8px;vertical-align:middle}
-.ie-var-row input{width:100%;padding:5px 8px;border:1.5px solid var(--border);border-radius:7px;font-size:12px}
+.ie-channel-price{width:120px}
+.ie-channel-price input{width:100%;padding:6px 10px;border:1.5px solid var(--border);border-radius:7px;font-size:13px;font-weight:600;text-align:right;background:#fff}
+/* Variant cards */
+.ie-var-cards{display:flex;flex-direction:column;gap:8px}
+.ie-var-card{display:flex;align-items:center;gap:10px;padding:10px 14px;background:#f8fafc;border:1.5px solid var(--border);border-radius:10px;transition:.12s}
+.ie-var-card:hover{border-color:#cbd5e1;background:#f1f5f9}
+.ie-var-badge{width:34px;height:34px;border-radius:8px;background:var(--primary);color:#fff;font-size:11px;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0;text-transform:uppercase}
+.ie-var-fields{flex:1;display:flex;gap:8px;align-items:center;min-width:0}
+.ie-var-fields input{padding:6px 10px;border:1.5px solid var(--border);border-radius:7px;font-size:12px;background:#fff}
+.ie-var-name-input{flex:1;min-width:80px}
+.ie-var-size-input{width:60px;text-transform:uppercase}
+.ie-var-price-input{width:90px;text-align:right}
+/* Mod group chips */
+.ie-mod-chip{display:flex;align-items:center;gap:10px;padding:10px 14px;background:#f8fafc;border:1.5px solid var(--border);border-radius:10px;margin-bottom:8px;transition:.12s}
+.ie-mod-chip:hover{border-color:#cbd5e1}
+.ie-mod-chip-icon{width:34px;height:34px;border-radius:8px;background:#fdf4ff;color:#a855f7;font-size:16px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.ie-mod-chip-name{font-size:13px;font-weight:700}
+.ie-mod-chip-opts{font-size:11px;color:var(--muted);margin-top:1px}
+/* Sidebar */
+.ie-sb-img{width:100%;aspect-ratio:1;border-radius:10px;overflow:hidden;background:#f8fafc;border:1.5px solid var(--border);display:flex;align-items:center;justify-content:center;margin-bottom:10px}
+.ie-sb-img img{width:100%;height:100%;object-fit:cover}
+.ie-sb-name{font-size:15px;font-weight:800;color:var(--text);margin:0 0 6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ie-sb-badges{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px}
+.ie-sb-badge{padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700}
+.ie-sb-price{font-size:22px;font-weight:900;color:var(--primary);margin:4px 0 12px}
+.ie-sb-divider{height:1px;background:#f1f5f9;margin:8px 0}
+.ie-sb-channels{display:flex;flex-direction:column;gap:5px}
+.ie-sb-ch-row{display:flex;align-items:center;justify-content:space-between;font-size:11px}
+.ie-sb-ch-lbl{color:var(--muted);display:flex;align-items:center;gap:5px}
+/* Completion bar */
+.ie-complete-wrap{margin-top:10px}
+.ie-complete-lbl{display:flex;justify-content:space-between;font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:5px}
+.ie-complete-bar{height:5px;background:#f1f5f9;border-radius:3px;overflow:hidden}
+.ie-complete-fill{height:100%;border-radius:3px;background:linear-gradient(90deg,#f97316,#fb923c);transition:width .4s}
+/* Summary rows */
 .ie-summary-row{display:flex;align-items:center;justify-content:space-between;padding:5px 0;border-bottom:1px solid #f1f5f9;font-size:12px}
 .ie-summary-row:last-child{border-bottom:none}
 .ie-summary-lbl{color:var(--muted)}
 .ie-summary-val{font-weight:700;color:var(--text)}
-.ie-mod-chip{display:flex;align-items:center;gap:8px;padding:8px 12px;background:#f8fafc;border:1px solid var(--border);border-radius:8px;margin-bottom:6px}
-.ie-mod-chip-name{flex:1;font-size:12px;font-weight:600}
-.ie-mod-chip-opts{font-size:10px;color:var(--muted)}
+/* Empty states */
+.ie-empty-state{text-align:center;padding:28px 16px;color:var(--muted)}
+.ie-empty-state-icon{font-size:28px;margin-bottom:8px}
+.ie-empty-state-title{font-size:13px;font-weight:700;color:var(--text);margin-bottom:4px}
+.ie-empty-state-sub{font-size:12px;line-height:1.5}
 /* Modifier group picker modal */
 #modal-mod-picker .modal{max-width:480px}
 .mod-pick-item{display:flex;align-items:center;gap:10px;padding:10px 14px;border-radius:8px;cursor:pointer;transition:.1s;border:1px solid transparent}
@@ -2837,6 +2897,7 @@ input:checked+.toggle-slider:before{transform:translateX(17px)}
 
 <!-- ══ ITEM EDITOR (full-page view) ══════════════════════════════════════════ -->
 <div class="view" id="v-item-editor" style="padding:0;max-width:none">
+
   <!-- Sticky top bar -->
   <div class="ie-topbar">
     <div class="ie-topbar-left">
@@ -2854,207 +2915,322 @@ input:checked+.toggle-slider:before{transform:translateX(17px)}
     </div>
   </div>
 
+  <!-- Tab navigation -->
+  <div class="ie-tabs" id="ie-tabs">
+    <button class="ie-tab-btn active" onclick="ieShowTab('details')" id="ietab-details">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+      Details<span class="ie-tab-dot"></span>
+    </button>
+    <button class="ie-tab-btn" onclick="ieShowTab('pricing')" id="ietab-pricing">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>
+      Pricing &amp; Channels<span class="ie-tab-dot"></span>
+    </button>
+    <button class="ie-tab-btn" onclick="ieShowTab('variants')" id="ietab-variants">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 001.98 1.61h9.72a2 2 0 001.98-1.61L23 6H6"/></svg>
+      Variants &amp; Mods <span class="cfg-badge" id="ie-var-count" style="font-size:10px;min-width:16px">0</span>
+    </button>
+    <button class="ie-tab-btn" onclick="ieShowTab('kitchen')" id="ietab-kitchen">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+      Kitchen &amp; POS<span class="ie-tab-dot"></span>
+    </button>
+  </div>
+
   <input type="hidden" id="ie-id">
 
   <div class="ie-body">
     <!-- ── Main column ── -->
     <div class="ie-main">
 
-      <!-- Basic Information -->
-      <div class="ie-card">
-        <div class="ie-card-hdr"><h3>Basic Information</h3></div>
-        <div class="ie-card-body">
-          <div class="form-row">
-            <div class="form-group" style="flex:2">
-              <label>Item Name *</label>
-              <input id="ie-name" type="text" placeholder="e.g. Grilled Chicken" oninput="ieAutoCode();ieUpdateSummary()">
-            </div>
-            <div class="form-group" style="flex:1">
-              <label>Item Code</label>
-              <input id="ie-code" type="text" placeholder="e.g. GC001" style="text-transform:uppercase">
-            </div>
-          </div>
-          <div class="form-row">
-            <div class="form-group">
-              <label>Category *</label>
-              <select id="ie-cat" onchange="ieUpdateSummary()"><option value="">Select category…</option></select>
-            </div>
-            <div class="form-group">
-              <label>Sub Category</label>
-              <input id="ie-subcat" type="text" placeholder="e.g. Grilled, Fried, Signature…">
-            </div>
-          </div>
-          <div class="form-group">
-            <label>Description</label>
-            <textarea id="ie-desc" placeholder="Item description shown on menu and waiter app…" rows="2" style="resize:vertical"></textarea>
-          </div>
-        </div>
-      </div>
 
-      <!-- Item Image -->
-      <div class="ie-card">
-        <div class="ie-card-hdr"><h3>Item Image</h3></div>
-        <div class="ie-card-body" style="display:flex;align-items:flex-start;gap:16px">
-          <div class="ie-img-box" id="ie-img-box">
-            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+      <!-- ══ TAB: Details ═══════════════════════════════════════════ -->
+      <div class="ie-tab-panel active" id="ie-panel-details">
+
+        <!-- Basic Info + Image -->
+        <div class="ie-card">
+          <div class="ie-card-hdr">
+            <h3>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="8" r="4"/><path d="M20 21a8 8 0 10-16 0"/></svg>
+              Basic Information
+            </h3>
           </div>
-          <div style="flex:1">
-            <div class="form-group" style="margin-bottom:8px">
-              <label>Image URL</label>
-              <div class="img-input-wrap">
-                <input id="ie-image" type="url" placeholder="https://example.com/burger.jpg" oninput="ieUpdateImgPreview()">
-                <button type="button" class="btn-pick-img" onclick="openImagePicker(url=>{document.getElementById('ie-image').value=url;ieUpdateImgPreview()}, document.getElementById('ie-name').value||'food')">
-                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="vertical-align:-1px;margin-right:3px"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>Pick Image
+          <div class="ie-card-body">
+            <div class="ie-details-row">
+              <!-- Image column -->
+              <div class="ie-img-col">
+                <div class="ie-img-box" id="ie-img-box" onclick="openImagePicker(url=>{document.getElementById('ie-image').value=url;ieUpdateImgPreview()}, document.getElementById('ie-name').value||'food')" title="Click to pick image">
+                  <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#cbd5e1" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+                </div>
+                <button type="button" class="btn-pick-img" style="width:130px;text-align:center" onclick="openImagePicker(url=>{document.getElementById('ie-image').value=url;ieUpdateImgPreview()}, document.getElementById('ie-name').value||'food')">
+                  <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="vertical-align:-1px;margin-right:3px"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>Pick Image
                 </button>
+                <div class="ie-img-hint">Click image to search or paste URL below</div>
               </div>
-            </div>
-            <div style="font-size:11px;color:var(--muted)">Search Google Images, Unsplash, or paste a direct URL.</div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Pricing & Tax -->
-      <div class="ie-card">
-        <div class="ie-card-hdr"><h3>Pricing &amp; Tax</h3></div>
-        <div class="ie-card-body">
-          <div class="form-row" style="align-items:flex-end">
-            <div class="form-group">
-              <label>Base Price *</label>
-              <input id="ie-price" type="number" placeholder="0.00" min="0" step="0.01" oninput="ieUpdateFinalPrice();ieUpdateSummary()">
-            </div>
-            <div class="form-group">
-              <label>Tax Group</label>
-              <select id="ie-tax" onchange="ieUpdateFinalPrice();ieUpdateSummary()">
-                <option value="">No Tax</option>
-              </select>
-            </div>
-            <div class="form-group">
-              <label>Final Price (incl. tax)</label>
-              <div id="ie-final-price" style="padding:8px 12px;background:#f8fafc;border:1.5px solid var(--border);border-radius:8px;font-size:15px;font-weight:800;color:var(--primary);min-height:38px;display:flex;align-items:center">—</div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Type, Tags & Availability -->
-      <div class="ie-card">
-        <div class="ie-card-hdr"><h3>Type, Tags &amp; Availability</h3></div>
-        <div class="ie-card-body">
-          <div class="form-row" style="gap:20px;flex-wrap:wrap">
-            <div class="form-group" style="flex:2">
-              <label>Item Type</label>
-              <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:4px">
-                <label class="ie-type-pill selected" id="ietype-single"><input type="radio" name="ie-type" value="single" checked onchange="ieUpdateSummary()"> Single</label>
-                <label class="ie-type-pill" id="ietype-combo"><input type="radio" name="ie-type" value="combo" onchange="ieUpdateSummary()"> Combo</label>
-                <label class="ie-type-pill" id="ietype-modifier"><input type="radio" name="ie-type" value="modifier" onchange="ieUpdateSummary()"> Modifier</label>
-              </div>
-            </div>
-            <div class="form-group" style="flex:1">
-              <label>Preparation Time (min)</label>
-              <input id="ie-prep" type="number" placeholder="0" min="0" step="1" style="max-width:120px">
-            </div>
-            <div class="form-group" style="flex:1">
-              <label>Status</label>
-              <div style="display:flex;align-items:center;gap:10px;padding:6px 0">
-                <label class="toggle-switch"><input type="checkbox" id="ie-active" checked onchange="ieUpdateSummary()"><span class="toggle-slider"></span></label>
-                <span id="ie-active-lbl" style="font-size:13px;font-weight:600">Active</span>
+              <!-- Fields column -->
+              <div class="ie-fields-col">
+                <div class="form-row">
+                  <div class="form-group" style="flex:2">
+                    <label>Item Name *</label>
+                    <input id="ie-name" type="text" placeholder="e.g. Grilled Chicken" oninput="ieAutoCode();ieUpdateSummary()">
+                  </div>
+                  <div class="form-group" style="flex:1">
+                    <label>Item Code</label>
+                    <input id="ie-code" type="text" placeholder="GC001" style="text-transform:uppercase">
+                  </div>
+                </div>
+                <div class="form-row">
+                  <div class="form-group">
+                    <label>Category *</label>
+                    <select id="ie-cat" onchange="ieUpdateSummary()"><option value="">Select category…</option></select>
+                  </div>
+                  <div class="form-group">
+                    <label>Sub Category</label>
+                    <input id="ie-subcat" type="text" placeholder="e.g. Grilled, Fried, Signature…">
+                  </div>
+                </div>
+                <div class="form-group">
+                  <label>Image URL</label>
+                  <input id="ie-image" type="url" placeholder="https://example.com/food.jpg" oninput="ieUpdateImgPreview()">
+                </div>
+                <div class="form-group">
+                  <label>Description</label>
+                  <textarea id="ie-desc" placeholder="Shown on the menu and waiter app…" rows="2" style="resize:vertical"></textarea>
+                </div>
               </div>
             </div>
           </div>
-          <div class="form-group" style="margin-top:4px">
-            <label>Tags <span style="font-size:11px;color:var(--muted);font-weight:400">(comma-separated)</span></label>
-            <input id="ie-tags" type="text" placeholder="e.g. spicy, popular, new, vegan, bestseller">
+        </div>
+
+      </div><!-- /panel-details -->
+
+      <!-- ══ TAB: Pricing & Channels ════════════════════════════════ -->
+      <div class="ie-tab-panel" id="ie-panel-pricing">
+
+        <!-- Base Price & Tax -->
+        <div class="ie-card">
+          <div class="ie-card-hdr">
+            <h3>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>
+              Base Price &amp; Tax
+            </h3>
           </div>
-        </div>
-      </div>
-
-      <!-- Channel Availability -->
-      <div class="ie-card">
-        <div class="ie-card-hdr"><h3>Channel Availability &amp; Pricing</h3><span style="font-size:11px;color:var(--muted)">Leave price blank to use base price</span></div>
-        <div class="ie-card-body" style="display:flex;flex-direction:column;gap:8px" id="ie-channels-wrap">
-          <!-- Rendered by ieRenderChannels() -->
-        </div>
-      </div>
-
-      <!-- Variants -->
-      <div class="ie-card">
-        <div class="ie-card-hdr">
-          <h3>Variants <span class="cfg-badge" id="ie-var-count" style="margin-left:6px">0</span></h3>
-          <button class="btn btn-outline btn-sm" onclick="ieAddVariantRow()">+ Add Variant</button>
-        </div>
-        <div class="ie-card-body" style="padding:0">
-          <div id="ie-var-empty" style="padding:20px;text-align:center;color:var(--muted);font-size:12px">No variants added. Use variants for sizes (S/M/L) or option sets with different prices.</div>
-          <table class="data-table" id="ie-var-table" style="display:none">
-            <thead><tr><th>Size / Label</th><th>Variant Name</th><th>Price</th><th>Active</th><th></th></tr></thead>
-            <tbody id="ie-var-tbody"></tbody>
-          </table>
-        </div>
-      </div>
-
-      <!-- Additional Settings -->
-      <div class="ie-card">
-        <div class="ie-card-hdr"><h3>Additional Settings</h3></div>
-        <div class="ie-card-body">
-          <div class="form-row">
-            <div class="form-group">
-              <label>Barcode</label>
-              <input id="ie-barcode" type="text" placeholder="EAN-13, UPC, QR code…">
-            </div>
-            <div class="form-group">
-              <label>Kitchen Display Name <span style="font-size:11px;color:var(--muted);font-weight:400">(KDS)</span></label>
-              <input id="ie-kds-name" type="text" placeholder="Short name shown on kitchen screen">
+          <div class="ie-card-body">
+            <div class="form-row" style="align-items:flex-end">
+              <div class="form-group">
+                <label>Base Price *</label>
+                <input id="ie-price" type="number" placeholder="0.00" min="0" step="0.01" oninput="ieUpdateFinalPrice();ieUpdateSummary()">
+              </div>
+              <div class="form-group">
+                <label>Tax Group</label>
+                <select id="ie-tax" onchange="ieUpdateFinalPrice();ieUpdateSummary()">
+                  <option value="">No Tax</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label>Final Price (incl. tax)</label>
+                <div id="ie-final-price" style="padding:9px 14px;background:#fff7ed;border:1.5px solid rgba(249,115,22,.3);border-radius:8px;font-size:16px;font-weight:900;color:var(--primary);min-height:40px;display:flex;align-items:center">—</div>
+              </div>
             </div>
           </div>
-          <div class="form-row">
+        </div>
+
+        <!-- Channel Availability & Pricing -->
+        <div class="ie-card">
+          <div class="ie-card-hdr">
+            <h3>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+              Channel Availability &amp; Pricing
+            </h3>
+            <span style="font-size:11px;color:var(--muted)">Leave blank to use base price</span>
+          </div>
+          <div class="ie-card-body" style="display:flex;flex-direction:column;gap:8px" id="ie-channels-wrap">
+            <!-- Rendered by ieRenderChannels() -->
+          </div>
+        </div>
+
+      </div><!-- /panel-pricing -->
+
+      <!-- ══ TAB: Variants & Modifiers ══════════════════════════════ -->
+      <div class="ie-tab-panel" id="ie-panel-variants">
+
+        <!-- Variants -->
+        <div class="ie-card">
+          <div class="ie-card-hdr">
+            <h3>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 001.98 1.61h9.72a2 2 0 001.98-1.61L23 6H6"/></svg>
+              Variants
+            </h3>
+            <button class="btn btn-outline btn-sm" onclick="ieAddVariantRow()">
+              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg> Add Variant
+            </button>
+          </div>
+          <div class="ie-card-body">
+            <div id="ie-var-empty" class="ie-empty-state">
+              <div class="ie-empty-state-icon">🎯</div>
+              <div class="ie-empty-state-title">No variants yet</div>
+              <div class="ie-empty-state-sub">Add variants for sizes (S / M / L) or options like<br>Spicy / Mild with different prices.</div>
+            </div>
+            <!-- Hidden table kept for JS compatibility; visual display uses ie-var-cards -->
+            <table id="ie-var-table" style="display:none"><thead></thead><tbody id="ie-var-tbody"></tbody></table>
+            <div class="ie-var-cards" id="ie-var-cards"></div>
+          </div>
+        </div>
+
+        <!-- Modifier Groups -->
+        <div class="ie-card">
+          <div class="ie-card-hdr">
+            <h3>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+              Modifier Groups
+              <span class="cfg-badge" id="ie-mod-count" style="font-size:10px;min-width:16px">0</span>
+            </h3>
+            <button class="btn btn-outline btn-sm" onclick="ieShowModPicker()">
+              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71"/></svg> Link Group
+            </button>
+          </div>
+          <div class="ie-card-body">
+            <div id="ie-mods-list"></div>
+            <div id="ie-mods-empty" class="ie-empty-state">
+              <div class="ie-empty-state-icon">🧩</div>
+              <div class="ie-empty-state-title">No modifier groups linked</div>
+              <div class="ie-empty-state-sub">Modifier groups let customers customise their order — add-ons, spice levels, sauces.<br><a href="#" onclick="showConfigTab('modifier-groups');return false" style="color:var(--primary)">Create a group in Configuration →</a></div>
+            </div>
+          </div>
+        </div>
+
+      </div><!-- /panel-variants -->
+
+      <!-- ══ TAB: Kitchen & POS ═════════════════════════════════════ -->
+      <div class="ie-tab-panel" id="ie-panel-kitchen">
+
+        <!-- Item type, status, prep time -->
+        <div class="ie-card">
+          <div class="ie-card-hdr">
+            <h3>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+              Item Type &amp; Status
+            </h3>
+          </div>
+          <div class="ie-card-body">
+            <div class="form-row" style="align-items:flex-end;flex-wrap:wrap;gap:20px">
+              <div class="form-group" style="flex:2">
+                <label>Item Type</label>
+                <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:6px">
+                  <label class="ie-type-pill selected" id="ietype-single"><input type="radio" name="ie-type" value="single" checked onchange="ieUpdateSummary()">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/></svg> Single
+                  </label>
+                  <label class="ie-type-pill" id="ietype-combo"><input type="radio" name="ie-type" value="combo" onchange="ieUpdateSummary()">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v16"/></svg> Combo
+                  </label>
+                  <label class="ie-type-pill" id="ietype-modifier"><input type="radio" name="ie-type" value="modifier" onchange="ieUpdateSummary()">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/></svg> Modifier
+                  </label>
+                </div>
+              </div>
+              <div class="form-group" style="flex:1;min-width:120px">
+                <label>Prep Time (min)</label>
+                <input id="ie-prep" type="number" placeholder="0" min="0" step="1">
+              </div>
+              <div class="form-group" style="flex:1;min-width:120px">
+                <label>Status</label>
+                <div style="display:flex;align-items:center;gap:10px;padding-top:6px">
+                  <label class="toggle-switch"><input type="checkbox" id="ie-active" checked onchange="ieUpdateSummary()"><span class="toggle-slider"></span></label>
+                  <span id="ie-active-lbl" style="font-size:13px;font-weight:700">Active</span>
+                </div>
+              </div>
+            </div>
+            <div class="form-group" style="margin-top:4px">
+              <label>Tags <span style="font-size:11px;color:var(--muted);font-weight:400">(comma-separated)</span></label>
+              <input id="ie-tags" type="text" placeholder="e.g. spicy, popular, new, vegan, bestseller">
+            </div>
+          </div>
+        </div>
+
+        <!-- Kitchen Display Settings -->
+        <div class="ie-card">
+          <div class="ie-card-hdr">
+            <h3>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+              Kitchen Display (KDS)
+            </h3>
+          </div>
+          <div class="ie-card-body">
+            <div class="form-row">
+              <div class="form-group">
+                <label>Kitchen Display Name <span style="font-size:11px;color:var(--muted);font-weight:400">Short name on KDS screen</span></label>
+                <input id="ie-kds-name" type="text" placeholder="e.g. GRLD CHKN">
+              </div>
+              <div class="form-group">
+                <label>Printer Group / Kitchen Station</label>
+                <select id="ie-printer-grp">
+                  <option value="">— Default (all KOT printers) —</option>
+                </select>
+              </div>
+            </div>
             <div class="form-group">
-              <label>Internal Note <span style="font-size:11px;color:var(--muted);font-weight:400">(for kitchen staff)</span></label>
+              <label>Internal Note <span style="font-size:11px;color:var(--muted);font-weight:400">Shown to kitchen staff</span></label>
               <input id="ie-note" type="text" placeholder="e.g. Always serve with dipping sauce">
             </div>
+          </div>
+        </div>
+
+        <!-- System Fields -->
+        <div class="ie-card">
+          <div class="ie-card-hdr">
+            <h3>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>
+              System
+            </h3>
+          </div>
+          <div class="ie-card-body">
             <div class="form-group">
-              <label>Printer Group / Kitchen Station</label>
-              <select id="ie-printer-grp">
-                <option value="">— Default (all KOT printers) —</option>
-              </select>
+              <label>Barcode <span style="font-size:11px;color:var(--muted);font-weight:400">EAN-13, UPC, QR code…</span></label>
+              <input id="ie-barcode" type="text" placeholder="Scan or enter barcode">
             </div>
           </div>
         </div>
-      </div>
 
-      <!-- Modifier Groups -->
-      <div class="ie-card" style="margin-bottom:32px">
-        <div class="ie-card-hdr">
-          <h3>Modifier Groups <span class="cfg-badge" id="ie-mod-count" style="margin-left:6px">0</span></h3>
-          <button class="btn btn-outline btn-sm" onclick="ieShowModPicker()">+ Link Group</button>
-        </div>
-        <div class="ie-card-body">
-          <div id="ie-mods-list"></div>
-          <div id="ie-mods-empty" style="text-align:center;padding:8px;color:var(--muted);font-size:12px">No modifier groups linked. <a href="#" onclick="showConfigTab('modifier-groups');return false" style="color:var(--primary)">Create one in Configuration → Modifier Groups</a>.</div>
-        </div>
-      </div>
+      </div><!-- /panel-kitchen -->
 
     </div><!-- /ie-main -->
 
-    <!-- ── Sidebar summary ── -->
+    <!-- ── Sidebar ── -->
     <div class="ie-sidebar">
       <div class="ie-sidebar-inner">
+
+        <!-- Live preview card -->
         <div class="ie-card">
-          <div class="ie-card-hdr"><h3>Item Summary</h3></div>
-          <div class="ie-card-body" id="ie-summary-body" style="display:flex;flex-direction:column;gap:2px">
-            <div class="ie-summary-row"><span class="ie-summary-lbl">Name</span><span class="ie-summary-val" id="ies-name">—</span></div>
-            <div class="ie-summary-row"><span class="ie-summary-lbl">Type</span><span class="ie-summary-val" id="ies-type">Single</span></div>
-            <div class="ie-summary-row"><span class="ie-summary-lbl">Status</span><span class="ie-summary-val" id="ies-status" style="color:#22c55e">Active</span></div>
-            <div class="ie-summary-row"><span class="ie-summary-lbl">Price</span><span class="ie-summary-val" id="ies-price">—</span></div>
-            <div class="ie-summary-row"><span class="ie-summary-lbl">Tax</span><span class="ie-summary-val" id="ies-tax">None</span></div>
-            <div class="ie-summary-row"><span class="ie-summary-lbl">Variants</span><span class="ie-summary-val" id="ies-variants">0</span></div>
-            <div class="ie-summary-row"><span class="ie-summary-lbl">Mod Groups</span><span class="ie-summary-val" id="ies-mods">0</span></div>
-            <div style="padding-top:8px;border-top:1px solid #f1f5f9;margin-top:4px">
-              <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);margin-bottom:6px">Channels</div>
-              <div id="ies-channels" style="display:flex;flex-direction:column;gap:4px"></div>
+          <div class="ie-card-hdr"><h3>Live Preview</h3></div>
+          <div class="ie-card-body" id="ie-summary-body">
+            <!-- Image preview -->
+            <div class="ie-sb-img" id="ie-sb-img">
+              <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#cbd5e1" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+            </div>
+            <!-- Name + badges -->
+            <p class="ie-sb-name" id="ies-name">—</p>
+            <div class="ie-sb-badges">
+              <span class="ie-sb-badge" id="ies-type" style="background:#f1f5f9;color:#475569">Single</span>
+              <span class="ie-sb-badge" id="ies-status" style="background:#dcfce7;color:#16a34a">Active</span>
+            </div>
+            <!-- Price -->
+            <div class="ie-sb-price" id="ies-price">—</div>
+            <!-- Tax + extras -->
+            <div style="font-size:11px;color:var(--muted);margin-bottom:4px">Tax: <span id="ies-tax" style="font-weight:600;color:var(--text)">None</span></div>
+            <div style="font-size:11px;color:var(--muted);margin-bottom:2px">Variants: <span id="ies-variants" style="font-weight:700;color:var(--text)">0</span> &nbsp;|&nbsp; Mod Groups: <span id="ies-mods" style="font-weight:700;color:var(--text)">0</span></div>
+            <!-- Channels -->
+            <div class="ie-sb-divider"></div>
+            <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);margin-bottom:7px">Channels</div>
+            <div class="ie-sb-channels" id="ies-channels"></div>
+            <!-- Completion -->
+            <div class="ie-complete-wrap">
+              <div class="ie-complete-lbl"><span>Completeness</span><span id="ies-complete-pct">0%</span></div>
+              <div class="ie-complete-bar"><div class="ie-complete-fill" id="ies-complete-fill" style="width:0%"></div></div>
             </div>
           </div>
         </div>
+
       </div>
     </div>
+
   </div><!-- /ie-body -->
 </div>
 
@@ -5074,14 +5250,29 @@ function ieAutoCode () {
   }
 }
 
+function ieShowTab (name) {
+  document.querySelectorAll('.ie-tab-btn').forEach(b => b.classList.remove('active'))
+  document.querySelectorAll('.ie-tab-panel').forEach(p => p.classList.remove('active'))
+  const btn = document.getElementById('ietab-' + name)
+  const panel = document.getElementById('ie-panel-' + name)
+  if (btn) btn.classList.add('active')
+  if (panel) panel.classList.add('active')
+}
+
 function ieUpdateImgPreview () {
   const url = document.getElementById('ie-image').value.trim()
+  const placeholder = `<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#cbd5e1" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>`
+  const placeholderSb = `<svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#cbd5e1" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>`
+  const errAttr = `onerror="this.style.display='none';this.parentElement.insertAdjacentHTML('beforeend','${placeholder.replace(/"/g,"'")}')" `
+  const errAttrSb = `onerror="this.style.display='none';this.parentElement.insertAdjacentHTML('beforeend','${placeholderSb.replace(/"/g,"'")}')" `
   const box = document.getElementById('ie-img-box')
-  if (!box) return
+  const sbImg = document.getElementById('ie-sb-img')
   if (url) {
-    box.innerHTML = `<img src="${url}" onerror="this.parentElement.innerHTML='<svg width=28 height=28 viewBox=&quot;0 0 24 24&quot; fill=none stroke=&quot;#94a3b8&quot; stroke-width=1.5><rect x=3 y=3 width=18 height=18 rx=2/><circle cx=8.5 cy=8.5 r=1.5/><polyline points=&quot;21 15 16 10 5 21&quot;/></svg>'">`
+    if (box) box.innerHTML = `<img src="${url}" ${errAttr} style="width:100%;height:100%;object-fit:cover">`
+    if (sbImg) sbImg.innerHTML = `<img src="${url}" ${errAttrSb} style="width:100%;height:100%;object-fit:cover">`
   } else {
-    box.innerHTML = `<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>`
+    if (box) box.innerHTML = placeholder
+    if (sbImg) sbImg.innerHTML = placeholderSb
   }
 }
 
@@ -5096,19 +5287,42 @@ function ieUpdateFinalPrice () {
 }
 
 function ieUpdateSummary () {
-  const name   = document.getElementById('ie-name')?.value || '—'
+  const name   = document.getElementById('ie-name')?.value || ''
   const price  = parseFloat(document.getElementById('ie-price')?.value) || 0
   const type   = document.querySelector('input[name="ie-type"]:checked')?.value || 'single'
   const active = document.getElementById('ie-active')?.checked
   const taxId  = document.getElementById('ie-tax')?.value
   const tax    = _ieTaxRates.find(t => t.id === taxId)
+  const cur    = boSettings?.currency || ''
 
-  const set = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val }
-  set('ies-name', name || '—')
-  set('ies-type', type.charAt(0).toUpperCase() + type.slice(1))
+  // Name
+  const nameEl = document.getElementById('ies-name')
+  if (nameEl) nameEl.textContent = name || '—'
+
+  // Type badge
+  const typeEl = document.getElementById('ies-type')
+  if (typeEl) {
+    typeEl.textContent = type.charAt(0).toUpperCase() + type.slice(1)
+    typeEl.style.background = type === 'combo' ? '#eff6ff' : type === 'modifier' ? '#fdf4ff' : '#f1f5f9'
+    typeEl.style.color = type === 'combo' ? '#2563eb' : type === 'modifier' ? '#9333ea' : '#475569'
+  }
+
+  // Status badge
   const statusEl = document.getElementById('ies-status')
-  if (statusEl) { statusEl.textContent = active ? 'Active' : 'Inactive'; statusEl.style.color = active ? '#22c55e' : '#ef4444' }
-  set('ies-price', price > 0 ? `${boSettings.currency || ''} ${price.toFixed(2)}` : '—')
+  if (statusEl) {
+    statusEl.textContent = active ? 'Active' : 'Inactive'
+    statusEl.style.background = active ? '#dcfce7' : '#fee2e2'
+    statusEl.style.color      = active ? '#16a34a' : '#dc2626'
+  }
+  const activeLbl = document.getElementById('ie-active-lbl')
+  if (activeLbl) activeLbl.textContent = active ? 'Active' : 'Inactive'
+
+  // Price
+  const priceEl = document.getElementById('ies-price')
+  if (priceEl) priceEl.textContent = price > 0 ? `${cur} ${price.toFixed(2)}` : '—'
+
+  // Tax + variants + mods
+  const set = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val }
   set('ies-tax', tax ? `${tax.name} (${tax.rate}%)` : 'None')
   set('ies-variants', _ieVariants.filter(v => !v._deleted).length)
   set('ies-mods', _ieLinkedMods.length)
@@ -5125,14 +5339,32 @@ function ieUpdateSummary () {
       { key:'dine_in', label:'Dine-in', icon:'🍽️' },
       { key:'takeaway', label:'Takeaway', icon:'🥡' },
       { key:'delivery', label:'Delivery', icon:'🛵' },
-      { key:'online', label:'Online', icon:'📱' },
+      { key:'online',   label:'Online',   icon:'📱' },
     ]
     chWrap.innerHTML = channels.map(ch => {
       const tog = document.getElementById(`ie-ch-${ch.key}-active`)
       const on  = tog ? tog.checked : true
-      return `<div style="display:flex;align-items:center;justify-content:space-between;font-size:11px"><span style="color:var(--muted)">${ch.icon} ${ch.label}</span><span style="font-weight:700;color:${on ? '#22c55e' : '#ef4444'}">${on ? 'On' : 'Off'}</span></div>`
+      const price_ch = document.getElementById(`ie-ch-${ch.key}-price`)?.value
+      const priceStr = price_ch ? ` · ${cur} ${parseFloat(price_ch).toFixed(2)}` : ''
+      return `<div class="ie-sb-ch-row"><span class="ie-sb-ch-lbl">${ch.icon} ${ch.label}${priceStr}</span><span style="font-weight:700;font-size:11px;color:${on ? '#22c55e' : '#94a3b8'}">${on ? '●' : '○'}</span></div>`
     }).join('')
   }
+
+  // Completion bar
+  const fields = [
+    document.getElementById('ie-name')?.value?.trim(),
+    document.getElementById('ie-price')?.value,
+    document.getElementById('ie-cat')?.value,
+    document.getElementById('ie-desc')?.value?.trim(),
+    document.getElementById('ie-image')?.value?.trim(),
+    document.getElementById('ie-kds-name')?.value?.trim(),
+  ]
+  const filled = fields.filter(Boolean).length
+  const pct = Math.round((filled / fields.length) * 100)
+  const pctEl = document.getElementById('ies-complete-pct')
+  const fillEl = document.getElementById('ies-complete-fill')
+  if (pctEl) pctEl.textContent = pct + '%'
+  if (fillEl) fillEl.style.width = pct + '%'
 }
 
 function ieRenderChannels () {
@@ -5166,29 +5398,37 @@ function ieToggleChannelRow (key) {
 }
 
 function ieRenderVariants () {
-  const tbody  = document.getElementById('ie-var-tbody')
   const empty  = document.getElementById('ie-var-empty')
-  const table  = document.getElementById('ie-var-table')
+  const cards  = document.getElementById('ie-var-cards')
   const count  = document.getElementById('ie-var-count')
   const active = _ieVariants.filter(v => !v._deleted)
   if (count) count.textContent = active.length
-  document.getElementById('ies-variants').textContent = active.length
+  const varsEl = document.getElementById('ies-variants')
+  if (varsEl) varsEl.textContent = active.length
   if (!active.length) {
     if (empty) empty.style.display = ''
-    if (table) table.style.display = 'none'
-    if (tbody) tbody.innerHTML = ''
+    if (cards) cards.innerHTML = ''
     return
   }
   if (empty) empty.style.display = 'none'
-  if (table) table.style.display = ''
-  tbody.innerHTML = active.map((v, idx) => `
-    <tr class="ie-var-row">
-      <td><input value="${v.size||''}" placeholder="S / M / L…" onchange="_ieVariants.find(x=>x._key==='${v._key}').size=this.value"></td>
-      <td><input value="${v.name||''}" placeholder="Small Portion…" onchange="_ieVariants.find(x=>x._key==='${v._key}').name=this.value"></td>
-      <td><input type="number" value="${v.price||0}" min="0" step="0.01" style="width:90px" onchange="_ieVariants.find(x=>x._key==='${v._key}').price=parseFloat(this.value)||0"></td>
-      <td><label class="toggle-switch"><input type="checkbox" ${v.active!==false?'checked':''} onchange="_ieVariants.find(x=>x._key==='${v._key}').active=this.checked"><span class="toggle-slider"></span></label></td>
-      <td><button class="btn btn-danger btn-sm btn-icon" onclick="ieRemoveVariant('${v._key}')"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/></svg></button></td>
-    </tr>`).join('')
+  if (cards) cards.innerHTML = active.map(v => {
+    const badge = (v.size || v.name || '?').slice(0,3).toUpperCase()
+    return `<div class="ie-var-card">
+      <div class="ie-var-badge">${badge}</div>
+      <div class="ie-var-fields">
+        <input class="ie-var-size-input" value="${esc(v.size||'')}" placeholder="S/M/L" title="Size label" onchange="_ieVariants.find(x=>x._key==='${v._key}').size=this.value;ieRenderVariants()">
+        <input class="ie-var-name-input" value="${esc(v.name||'')}" placeholder="Variant name…" onchange="_ieVariants.find(x=>x._key==='${v._key}').name=this.value">
+        <input class="ie-var-price-input" type="number" value="${v.price||0}" min="0" step="0.01" title="Price" onchange="_ieVariants.find(x=>x._key==='${v._key}').price=parseFloat(this.value)||0">
+      </div>
+      <label class="toggle-switch" title="${v.active!==false?'Active':'Inactive'}">
+        <input type="checkbox" ${v.active!==false?'checked':''} onchange="_ieVariants.find(x=>x._key==='${v._key}').active=this.checked">
+        <span class="toggle-slider"></span>
+      </label>
+      <button class="btn btn-danger btn-sm btn-icon" onclick="ieRemoveVariant('${v._key}')" title="Remove">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>`
+  }).join('')
 }
 
 function ieAddVariantRow () {
