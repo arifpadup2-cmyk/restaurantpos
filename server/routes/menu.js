@@ -219,15 +219,16 @@ module.exports = function menuRouter (sql) {
     if (!Array.isArray(rows) || !rows.length) return res.status(400).json({ error: 'rows array required' })
 
     try {
+      let created = 0, updated = 0
+      const errors = []
+
+      await sql.begin(async sql => {
       const cats    = await sql`SELECT id, name FROM categories WHERE brand_id = ${rid}`
       const catMap  = new Map(cats.map(c => [c.name.toLowerCase().trim(), c.id]))
 
       const existing  = await sql`SELECT id, item_code, name, category_id FROM menu_items WHERE brand_id = ${rid}`
       const byCode    = new Map(existing.filter(i => i.item_code).map(i => [i.item_code.toLowerCase().trim(), i.id]))
       const byNameCat = new Map(existing.map(i => [`${i.name.toLowerCase().trim()}|${i.category_id}`, i.id]))
-
-      let created = 0, updated = 0
-      const errors = []
 
       for (const row of rows) {
         const name    = row.name?.toString().trim()
@@ -304,6 +305,8 @@ module.exports = function menuRouter (sql) {
           created++
         }
       }
+
+      }) // end sql.begin
 
       res.json({ ok: true, created, updated, errors })
     } catch (e) { serverError(res, e) }

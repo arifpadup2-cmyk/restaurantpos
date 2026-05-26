@@ -74,6 +74,9 @@ async function initDB(cfg = {}) {
 
   await sql`SELECT 1`;
 
+  // Run pending migrations
+  await runMigrations();
+
   // Seed default tables layout (runs once — skips if rows exist)
   const [{ c }] = await sql`SELECT COUNT(*)::int AS c FROM tables_layout`;
   if (c === 0) {
@@ -106,6 +109,33 @@ async function initDB(cfg = {}) {
     await sql`
       INSERT INTO settings (key, value) VALUES (${row.key}, ${row.value})
       ON CONFLICT (key) DO NOTHING`;
+  }
+}
+
+// ── Migrations ────────────────────────────────────────────────────────────────
+
+async function runMigrations() {
+  const migrationsDir = path.join(__dirname, 'migrations');
+  const files = fs.readdirSync(migrationsDir)
+    .filter(f => f.endsWith('.sql'))
+    .sort();
+
+  await sql`
+    CREATE TABLE IF NOT EXISTS schema_migrations (
+      filename TEXT PRIMARY KEY,
+      ran_at   BIGINT NOT NULL DEFAULT 0
+    )`;
+
+  const ran = new Set((await sql`SELECT filename FROM schema_migrations`).map(r => r.filename));
+
+  for (const file of files) {
+    if (ran.has(file)) continue;
+    const sqlText = fs.readFileSync(path.join(migrationsDir, file), 'utf8');
+    const statements = sqlText.split(';').map(s => s.trim()).filter(Boolean);
+    for (const stmt of statements) {
+      await sql.unsafe(stmt);
+    }
+    await sql`INSERT INTO schema_migrations (filename, ran_at) VALUES (${file}, ${Date.now()})`;
   }
 }
 
@@ -353,9 +383,18 @@ app.on('window-all-closed', async () => {
 // ── Receipt / KOT HTML builders ───────────────────────────────────────────────
 
 function buildKOTHTML(d) {
-  const rows = (d.items || []).map(i =>
-    `<tr><td class="item">${i.name || i.item_name}</td><td class="qty">x${i.qty || i.quantity}</td></tr>`
-  ).join('');
+  const rows = (d.items || []).map(i => {
+    const name     = i.name || i.item_name;
+    const variant  = i.variantName ? ` [${i.variantName}]` : '';
+    const mods     = Array.isArray(i.modifiers) && i.modifiers.length
+      ? i.modifiers.map(m => `+ ${m.name}`).join(', ')
+      : '';
+    const noteText = i.notes || '';
+    return `<tr>
+      <td class="item">${name}${variant}${mods ? `<br><span style="font-size:11px;font-weight:normal">${mods}</span>` : ''}${noteText ? `<br><span style="font-size:11px;font-style:italic">* ${noteText}</span>` : ''}</td>
+      <td class="qty">x${i.qty || i.quantity}</td>
+    </tr>`;
+  }).join('');
   const type = (d.orderType || '').toUpperCase().replace('-', ' ');
   return `<!DOCTYPE html><html><head><meta charset="UTF-8">
 <style>
@@ -381,9 +420,13 @@ ${d.customerName ? `<p>${d.customerName}</p>` : ''}
 }
 
 function buildReceiptHTML(d) {
-  const rows = d.items.map(i =>
-    `<tr><td>${i.item_name}</td><td>${i.quantity}</td><td>${d.currency}${parseFloat(i.unit_price).toFixed(2)}</td><td>${d.currency}${parseFloat(i.total_price).toFixed(2)}</td></tr>`
-  ).join('');
+  const rows = d.items.map(i => {
+    const variant = i.variantName ? ` [${i.variantName}]` : '';
+    const mods    = Array.isArray(i.modifiers) && i.modifiers.length
+      ? `<br><span style="font-size:11px">${i.modifiers.map(m => `+ ${m.name}`).join(', ')}</span>`
+      : '';
+    return `<tr><td>${i.item_name}${variant}${mods}</td><td>${i.quantity}</td><td>${d.currency}${parseFloat(i.unit_price).toFixed(2)}</td><td>${d.currency}${parseFloat(i.total_price).toFixed(2)}</td></tr>`;
+  }).join('');
   const draftHeader = d.isDraft
     ? `<p style="font-size:14px;font-weight:bold;border:2px dashed #000;padding:4px;margin:6px 0">** DRAFT BILL **</p>`
     : '';

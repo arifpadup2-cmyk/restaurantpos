@@ -34,21 +34,26 @@ module.exports = function kitchenRouter (sql) {
         if (!owned) return res.status(403).json({ error: 'Outlet not in your brand' })
       }
 
+      const itemFields = sql`
+        json_build_object(
+          'id',           oi.id,
+          'item_name',    oi.item_name,
+          'kitchen_name', mi.kitchen_name,
+          'variant_name', oi.variant_name,
+          'modifiers',    oi.modifiers,
+          'quantity',     oi.quantity,
+          'notes',        oi.notes,
+          'done',         COALESCE(oi.done, false)
+        )`
+
       const orders = outlet_id
         ? await sql`
             SELECT o.id, o.order_number, o.order_type, o.table_name, o.customer_name,
                    o.status, o.created_at, o.terminal_id, o.cashier_name, o.outlet_id, o.brand_id,
-                   json_agg(
-                     json_build_object(
-                       'id',         oi.id,
-                       'item_name',  oi.item_name,
-                       'quantity',   oi.quantity,
-                       'notes',      oi.notes,
-                       'done',       COALESCE(oi.done, false)
-                     ) ORDER BY oi.item_name
-                   ) AS items
+                   json_agg(${itemFields} ORDER BY oi.item_name) AS items
             FROM orders o
             JOIN order_items oi ON oi.order_id = o.id
+            LEFT JOIN menu_items mi ON mi.id = oi.item_id
             WHERE o.status = 'active'
               AND o.brand_id  = ${brand_id}
               AND o.outlet_id = ${outlet_id}
@@ -57,17 +62,10 @@ module.exports = function kitchenRouter (sql) {
         : await sql`
             SELECT o.id, o.order_number, o.order_type, o.table_name, o.customer_name,
                    o.status, o.created_at, o.terminal_id, o.cashier_name, o.outlet_id, o.brand_id,
-                   json_agg(
-                     json_build_object(
-                       'id',         oi.id,
-                       'item_name',  oi.item_name,
-                       'quantity',   oi.quantity,
-                       'notes',      oi.notes,
-                       'done',       COALESCE(oi.done, false)
-                     ) ORDER BY oi.item_name
-                   ) AS items
+                   json_agg(${itemFields} ORDER BY oi.item_name) AS items
             FROM orders o
             JOIN order_items oi ON oi.order_id = o.id
+            LEFT JOIN menu_items mi ON mi.id = oi.item_id
             WHERE o.status = 'active'
               AND o.brand_id = ${brand_id}
             GROUP BY o.id

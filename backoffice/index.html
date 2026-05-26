@@ -3011,8 +3011,10 @@ input:checked+.toggle-slider:before{transform:translateX(17px)}
               <input id="ie-note" type="text" placeholder="e.g. Always serve with dipping sauce">
             </div>
             <div class="form-group">
-              <label>Printer Group</label>
-              <input id="ie-printer-grp" type="text" placeholder="e.g. Kitchen, Bar, Dessert Station">
+              <label>Printer Group / Kitchen Station</label>
+              <select id="ie-printer-grp">
+                <option value="">— Default (all KOT printers) —</option>
+              </select>
             </div>
           </div>
         </div>
@@ -5288,7 +5290,17 @@ async function showItemEditor (item) {
   document.getElementById('ie-barcode').value  = s(item?.barcode)
   document.getElementById('ie-kds-name').value = s(item?.kitchen_name)
   document.getElementById('ie-note').value     = s(item?.internal_note)
-  document.getElementById('ie-printer-grp').value = s(item?.printer_group)
+  // Populate printer group dropdown from kitchens
+  try {
+    const qs = _ctxOutlet ? `?outlet_id=${_ctxOutlet}` : ''
+    const { rows: kitchens } = await apiFetch('GET', `/config/kitchens${qs}`)
+    const pgSel = document.getElementById('ie-printer-grp')
+    pgSel.innerHTML = '<option value="">— Default (all KOT printers) —</option>' +
+      (kitchens || []).map(k => `<option value="${esc(k.name)}">${esc(k.name)}</option>`).join('')
+    pgSel.value = s(item?.printer_group)
+  } catch (_) {
+    document.getElementById('ie-printer-grp').value = s(item?.printer_group)
+  }
   if (catSel) catSel.value = s(item?.category_id)
   if (taxSel) taxSel.value = s(item?.tax_group_id)
 
@@ -5313,26 +5325,19 @@ async function showItemEditor (item) {
     ieToggleChannelRow(key)
   })
 
-  // Variants
+  // Variants + modifier groups — single API call
   _ieVariants = []
-  if (item?.variants?.length) {
-    _ieVariants = item.variants.map(v => ({ ...v, _key: v.id, _deleted: false }))
-  } else if (item?.id) {
-    try {
-      const r = await apiFetch('GET', `/menu/items/${item.id}`)
-      _ieVariants = (r.item?.variants || []).map(v => ({ ...v, _key: v.id, _deleted: false }))
-    } catch (_) {}
-  }
-  ieRenderVariants()
-
-  // Modifier groups
   _ieLinkedMods = []
   if (item?.id) {
     try {
       const r = await apiFetch('GET', `/menu/items/${item.id}`)
-      _ieLinkedMods = r.item?.mod_groups || []
+      _ieVariants   = (r.item?.variants   || []).map(v => ({ ...v, _key: v.id, _deleted: false }))
+      _ieLinkedMods = r.item?.mod_groups  || []
     } catch (_) {}
+  } else if (item?.variants?.length) {
+    _ieVariants = item.variants.map(v => ({ ...v, _key: v.id, _deleted: false }))
   }
+  ieRenderVariants()
   ieRenderModGroups()
 
   // Image preview + title
@@ -7430,15 +7435,22 @@ function renderKdsCard (order) {
       <span>Items (${items.length})</span>
       <span>${done}/${items.length} done</span>
     </div>
-    ${items.map(it => `
-      <div class="kds-item ${it.done ? 'kds-item-done' : ''}">
+    ${items.map(it => {
+      const displayName = it.kitchen_name || it.item_name;
+      let mods = [];
+      try { if (it.modifiers) mods = JSON.parse(it.modifiers); } catch (_) {}
+      const variantLine = it.variant_name ? `<div style="font-size:10px;color:#f97316;padding:0 0 2px 28px">${it.variant_name}</div>` : '';
+      const modsLine    = mods.length ? `<div style="font-size:10px;color:#8b5cf6;padding:0 0 2px 28px">${mods.map(m => m.name).join(', ')}</div>` : '';
+      return `<div class="kds-item ${it.done ? 'kds-item-done' : ''}">
         <span class="kds-item-qty">${it.quantity}×</span>
-        <span class="kds-item-name">${it.item_name}</span>
+        <span class="kds-item-name">${displayName}</span>
         <div class="kds-item-status ${it.done ? 'done' : 'pending'}">
           ${it.done ? '<svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="#4ade80" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>' : ''}
         </div>
       </div>
-      ${it.notes ? `<div class="kds-item-notes">Note: ${it.notes}</div>` : ''}`).join('')}
+      ${variantLine}${modsLine}
+      ${it.notes ? `<div class="kds-item-notes">Note: ${it.notes}</div>` : ''}`;
+    }).join('')}
     <div class="kds-card-foot">
       <span class="kds-done-lbl">${pct}%</span>
       <div class="kds-progress"><div class="kds-progress-fill" style="width:${pct}%;background:${progressColor}"></div></div>
