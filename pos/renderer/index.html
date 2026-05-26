@@ -6193,6 +6193,17 @@ async function getNextOrderNumber() {
 function uid() {
   return Date.now().toString(36) + Math.random().toString(36).substring(2,8);
 }
+function showToast(msg, type = 'info') {
+  const colors = { success:'#22c55e', error:'#ef4444', info:'#475569', warning:'#f59e0b' };
+  const t = document.createElement('div');
+  t.style.cssText = `position:fixed;bottom:88px;left:50%;transform:translateX(-50%) translateY(0);
+    background:${colors[type]||colors.info};color:#fff;padding:10px 20px;border-radius:10px;
+    font-size:14px;font-weight:600;z-index:99999;max-width:340px;text-align:center;
+    box-shadow:0 4px 16px rgba(0,0,0,.25);white-space:nowrap;pointer-events:none`;
+  t.textContent = msg;
+  document.body.appendChild(t);
+  setTimeout(() => { t.style.transition='opacity .4s'; t.style.opacity='0'; setTimeout(()=>t.remove(),400); }, 2600);
+}
 function todayStr() {
   return new Date().toISOString().split('T')[0];
 }
