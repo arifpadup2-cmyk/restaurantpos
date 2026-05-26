@@ -616,13 +616,15 @@ module.exports = function configRouter (sql) {
   })
 
   router.post('/order-types', async (req, res) => {
-    const { name, icon, logo_url, outlet_id } = req.body || {}
+    const { name, icon, logo_url, outlet_id, channel_category } = req.body || {}
     const rid = req.user.brand_id
     if (!name) return res.status(400).json({ error: 'name required' })
+    const validCats = ['offline','online','aggregator','other']
+    const cat = validCats.includes(channel_category) ? channel_category : 'offline'
     try {
       const [row] = await sql`
-        INSERT INTO order_types (id, brand_id, outlet_id, name, enabled, icon, logo_url, sort_order)
-        VALUES (${newId()}, ${rid}, ${outlet_id || null}, ${name.trim()}, true, ${icon || ''}, ${logo_url || null},
+        INSERT INTO order_types (id, brand_id, outlet_id, name, enabled, icon, logo_url, channel_category, sort_order)
+        VALUES (${newId()}, ${rid}, ${outlet_id || null}, ${name.trim()}, true, ${icon || ''}, ${logo_url || null}, ${cat},
           (SELECT COALESCE(MAX(sort_order),0)+1 FROM order_types WHERE brand_id = ${rid}))
         RETURNING *`
       res.json(row)
@@ -630,14 +632,17 @@ module.exports = function configRouter (sql) {
   })
 
   router.patch('/order-types/:id', async (req, res) => {
-    const { name, enabled, logo_url } = req.body || {}
+    const { name, enabled, logo_url, channel_category } = req.body || {}
     const rid = req.user.brand_id
+    const validCats = ['offline','online','aggregator','other']
+    const cat = validCats.includes(channel_category) ? channel_category : undefined
     try {
       const [row] = await sql`
         UPDATE order_types SET
-          name     = COALESCE(NULLIF(${(name || '').trim()}, ''), name),
-          enabled  = COALESCE(${enabled !== undefined ? !!enabled : null}, enabled),
-          logo_url = CASE WHEN ${logo_url !== undefined} THEN ${logo_url ?? null} ELSE logo_url END
+          name             = COALESCE(NULLIF(${(name || '').trim()}, ''), name),
+          enabled          = COALESCE(${enabled !== undefined ? !!enabled : null}, enabled),
+          logo_url         = CASE WHEN ${logo_url !== undefined} THEN ${logo_url ?? null} ELSE logo_url END,
+          channel_category = COALESCE(${cat ?? null}, channel_category)
         WHERE id = ${req.params.id} AND brand_id = ${rid}
         RETURNING *`
       if (!row) return res.status(404).json({ error: 'not found' })

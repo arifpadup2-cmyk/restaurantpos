@@ -87,7 +87,8 @@ async function initDB(cfg = {}) {
     await sql`INSERT INTO tables_layout ${sql(tableRows)}`;
   }
 
-  // Seed default settings
+  // Seed default settings — use brand_id='' outlet_id='' for global defaults
+  // (settings table has composite PK: brand_id, outlet_id, key)
   const defaults = [
     { key: 'restaurant_name',         value: 'My Restaurant' },
     { key: 'tax_rate',                value: '10' },
@@ -107,8 +108,8 @@ async function initDB(cfg = {}) {
   ];
   for (const row of defaults) {
     await sql`
-      INSERT INTO settings (key, value) VALUES (${row.key}, ${row.value})
-      ON CONFLICT (key) DO NOTHING`;
+      INSERT INTO settings (brand_id, outlet_id, key, value) VALUES ('', '', ${row.key}, ${row.value})
+      ON CONFLICT (brand_id, outlet_id, key) DO NOTHING`;
   }
 }
 

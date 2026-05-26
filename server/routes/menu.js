@@ -112,24 +112,28 @@ module.exports = function menuRouter (sql) {
       barcode, kitchen_name, internal_note, printer_group, tags,
       dine_in_price, takeaway_price, delivery_price, online_price,
       dine_in_active, takeaway_active, delivery_active, online_active,
+      partner_prices,
     } = req.body || {}
     if (!name || !price || !category_id) return res.status(400).json({ error: 'name, price, category_id required' })
     try {
       const id  = uid()
       const rid = req.user?.brand_id || null
+      const ppJson = partner_prices && typeof partner_prices === 'object' ? JSON.stringify(partner_prices) : '{}'
       const row = await sql`
         INSERT INTO menu_items (
           id, category_id, name, price, description, item_code, active, synced_at, brand_id, outlet_id,
           sub_category, image_url, item_type, preparation_time, tax_group_id,
           barcode, kitchen_name, internal_note, printer_group, tags,
           dine_in_price, takeaway_price, delivery_price, online_price,
-          dine_in_active, takeaway_active, delivery_active, online_active
+          dine_in_active, takeaway_active, delivery_active, online_active,
+          partner_prices
         ) VALUES (
           ${id}, ${category_id}, ${name}, ${price}, ${description || ''}, ${item_code || null}, 1, ${Date.now()}, ${rid}, ${outlet_id || null},
           ${sub_category || null}, ${image_url || null}, ${item_type || 'single'}, ${preparation_time || 0}, ${tax_group_id || null},
           ${barcode || null}, ${kitchen_name || null}, ${internal_note || null}, ${printer_group || null}, ${tags || null},
           ${dine_in_price ?? null}, ${takeaway_price ?? null}, ${delivery_price ?? null}, ${online_price ?? null},
-          ${dine_in_active !== false}, ${takeaway_active !== false}, ${delivery_active !== false}, ${online_active !== false}
+          ${dine_in_active !== false}, ${takeaway_active !== false}, ${delivery_active !== false}, ${online_active !== false},
+          ${ppJson}
         ) RETURNING *`
       res.json({ ok: true, item: row[0] })
     } catch (e) { serverError(res, e) }
@@ -142,8 +146,12 @@ module.exports = function menuRouter (sql) {
       barcode, kitchen_name, internal_note, printer_group, tags,
       dine_in_price, takeaway_price, delivery_price, online_price,
       dine_in_active, takeaway_active, delivery_active, online_active,
+      partner_prices,
     } = req.body || {}
     const rid = req.user?.brand_id
+    const ppJson = partner_prices !== undefined
+      ? (typeof partner_prices === 'object' ? JSON.stringify(partner_prices) : partner_prices)
+      : undefined
     try {
       const row = await sql`
         UPDATE menu_items SET
@@ -171,6 +179,7 @@ module.exports = function menuRouter (sql) {
           takeaway_active = CASE WHEN ${takeaway_active !== undefined} THEN ${takeaway_active} ELSE takeaway_active END,
           delivery_active = CASE WHEN ${delivery_active !== undefined} THEN ${delivery_active} ELSE delivery_active END,
           online_active   = CASE WHEN ${online_active !== undefined} THEN ${online_active} ELSE online_active END,
+          partner_prices  = CASE WHEN ${ppJson !== undefined} THEN ${ppJson ?? '{}'}::jsonb ELSE partner_prices END,
           synced_at      = ${Date.now()}
         WHERE id = ${req.params.id}
           AND (brand_id = ${rid} OR (${rid} IS NULL AND brand_id IS NULL))

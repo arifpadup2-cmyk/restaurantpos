@@ -691,8 +691,13 @@ textarea:focus-visible {
 .otab-count{background:var(--bg);border-radius:10px;font-size:11px;font-weight:700;padding:1px 7px;min-width:20px;text-align:center}
 .otab.active .otab-count{background:var(--primary);color:#fff}
 .orders-tabs-spacer{flex:1;min-width:8px}
-.new-order-btn{align-self:center;padding:7px 16px;background:var(--primary);color:#fff;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap;border:none;flex-shrink:0;margin:4px 0;transition:.2s}
-.new-order-btn:hover{background:var(--primary-d)}
+.new-order-btn{align-self:center;padding:12px 28px;background:var(--primary);color:#fff;border-radius:12px;font-size:16px;font-weight:800;cursor:pointer;white-space:nowrap;border:none;flex-shrink:0;margin:4px 0;transition:.15s;box-shadow:0 4px 12px rgba(232,93,4,.35);letter-spacing:.01em;min-height:48px}
+.new-order-btn:hover{background:var(--primary-d);box-shadow:0 6px 18px rgba(232,93,4,.45);transform:translateY(-1px)}
+.new-order-btn:active{transform:translateY(0);box-shadow:0 2px 8px rgba(232,93,4,.3)}
+/* Floating New Order button (visible when in entry panel or always) */
+.new-order-fab{position:fixed;bottom:28px;right:28px;z-index:200;padding:16px 28px;background:var(--primary);color:#fff;border-radius:16px;font-size:17px;font-weight:900;cursor:pointer;border:none;box-shadow:0 6px 24px rgba(232,93,4,.5);display:flex;align-items:center;gap:10px;letter-spacing:.01em;transition:.15s}
+.new-order-fab:hover{background:var(--primary-d);box-shadow:0 8px 28px rgba(232,93,4,.55);transform:translateY(-2px)}
+.new-order-fab:active{transform:translateY(0)}
 .orders-grid-area{flex:1;overflow-y:auto;padding:14px 18px;background:var(--bg)}
 .orders-card-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(195px,1fr));gap:12px;align-content:start}
 /* Order cards */
@@ -860,10 +865,30 @@ textarea:focus-visible {
 .ebb-sub{font-size:11px;color:var(--muted);text-align:center;line-height:1.1}
 /* New order type popup */
 .notp-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:4px}
-.notp-btn{padding:20px 12px;border-radius:12px;border:2px solid var(--border);cursor:pointer;text-align:center;transition:.15s;background:var(--bg);display:flex;flex-direction:column;align-items:center;gap:8px}
+.notp-btn{padding:22px 14px;border-radius:14px;border:2px solid var(--border);cursor:pointer;text-align:center;transition:.15s;background:var(--bg);display:flex;flex-direction:column;align-items:center;gap:8px;min-height:110px;position:relative}
 .notp-btn:hover{border-color:var(--primary);background:#fff7ed}
-.notp-icon{font-size:28px;line-height:1}
-.notp-label{font-size:13px;font-weight:700;color:var(--text)}
+.notp-btn:active{transform:scale(.97)}
+.notp-icon{font-size:32px;line-height:1}
+.notp-label{font-size:14px;font-weight:800;color:var(--text)}
+.notp-cat-badge{position:absolute;top:6px;right:8px;font-size:9px;font-weight:700;padding:2px 6px;border-radius:4px;text-transform:uppercase;letter-spacing:.04em}
+.notp-cat-offline{background:#e5e7eb;color:#374151}
+.notp-cat-online{background:#dbeafe;color:#1d4ed8}
+.notp-cat-aggregator{background:#ede9fe;color:#6d28d9}
+.notp-cat-other{background:#f3f4f6;color:#6b7280}
+/* Delivery partner picker */
+.dp-picker-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:10px;margin-top:8px;max-height:320px;overflow-y:auto}
+.dp-picker-btn{padding:16px 10px;border-radius:12px;border:2px solid var(--border);cursor:pointer;text-align:center;background:var(--bg);display:flex;flex-direction:column;align-items:center;gap:8px;transition:.15s;min-height:90px}
+.dp-picker-btn:hover{border-color:#7c3aed;background:#f5f3ff}
+.dp-picker-btn:active{transform:scale(.97)}
+.dp-picker-logo{width:40px;height:40px;object-fit:contain;border-radius:8px}
+.dp-picker-name{font-size:12px;font-weight:700;color:var(--text)}
+/* Table seat chip */
+.ts-seat-chip{display:inline-flex;align-items:center;gap:4px;background:#fff7ed;border:1px solid #fed7aa;color:#c2410c;border-radius:6px;padding:2px 8px;font-size:12px;font-weight:700;margin-left:4px}
+/* Table long-press ripple */
+.ts-btn{position:relative;overflow:hidden}
+.ts-longpress-ring{position:absolute;inset:0;border-radius:inherit;border:3px solid var(--primary);opacity:0;transition:opacity .1s}
+.ts-btn.pressing .ts-longpress-ring{opacity:1;animation:lp-ring .6s linear forwards}
+@keyframes lp-ring{0%{transform:scale(.85);opacity:.7}100%{transform:scale(1.05);opacity:0}}
 /* ── QUICK TENDER ───────────────────────────── */
 .quick-tender-row{display:grid;grid-template-columns:repeat(6,1fr);gap:5px;margin-top:10px;margin-bottom:6px}
 .qt-btn{min-height:48px;padding:9px 4px;border-radius:8px;border:2px solid var(--border);background:var(--bg);font-size:15px;font-weight:800;cursor:pointer;transition:.1s;color:var(--text);text-align:center}
@@ -2018,10 +2043,55 @@ textarea:focus-visible {
 <!-- Table Select Modal -->
 <div class="modal-overlay" id="modal-table-select">
   <div class="modal" style="min-width:520px;max-width:760px;width:90vw">
-    <h3 style="display:flex;align-items:center;gap:8px"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="20" height="20"><path d="M19 9V6a2 2 0 00-2-2H7a2 2 0 00-2 2v3"/><path d="M3 11v5a2 2 0 002 2h14a2 2 0 002-2v-5a1 1 0 00-1-1H4a1 1 0 00-1 1z"/><path d="M5 18v2M19 18v2"/></svg>Select Table — Dine In</h3>
+    <h3 style="display:flex;align-items:center;gap:8px"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="20" height="20"><path d="M19 9V6a2 2 0 00-2-2H7a2 2 0 00-2 2v3"/><path d="M3 11v5a2 2 0 002 2h14a2 2 0 002-2v-5a1 1 0 00-1-1H4a1 1 0 00-1 1z"/><path d="M5 18v2M19 18v2"/></svg>Select Table — Dine In
+      <span style="font-size:12px;color:var(--muted);font-weight:400;margin-left:4px">Hold a table to set seat count</span>
+    </h3>
     <div class="ts-grid" id="ts-grid"></div>
     <div class="modal-footer" style="justify-content:flex-start">
       <button class="btn-outline" onclick="closeModal('modal-table-select')">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- Seat Count Picker Modal -->
+<div class="modal-overlay" id="modal-seat-picker">
+  <div class="modal" style="max-width:340px;text-align:center">
+    <h3 id="seat-picker-title" style="margin-bottom:4px">Table T1</h3>
+    <p style="font-size:13px;color:var(--muted);margin-bottom:20px">How many guests at this table?</p>
+    <div style="display:flex;align-items:center;justify-content:center;gap:16px;margin-bottom:20px">
+      <button onclick="seatAdjust(-1)" style="width:44px;height:44px;border-radius:50%;background:var(--bg);border:2px solid var(--border);font-size:22px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center">−</button>
+      <span id="seat-count-display" style="font-size:42px;font-weight:900;min-width:60px;color:var(--primary)">2</span>
+      <button onclick="seatAdjust(+1)" style="width:44px;height:44px;border-radius:50%;background:var(--bg);border:2px solid var(--border);font-size:22px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center">+</button>
+    </div>
+    <div style="display:flex;gap:8px;justify-content:center;margin-bottom:16px;flex-wrap:wrap">
+      <button onclick="setSeatCount(1)" style="width:44px;height:44px;border-radius:10px;background:var(--bg);border:2px solid var(--border);font-size:15px;font-weight:700;cursor:pointer;transition:.1s" class="seat-quick-btn" data-n="1">1</button>
+      <button onclick="setSeatCount(2)" style="width:44px;height:44px;border-radius:10px;background:var(--bg);border:2px solid var(--border);font-size:15px;font-weight:700;cursor:pointer;transition:.1s" class="seat-quick-btn" data-n="2">2</button>
+      <button onclick="setSeatCount(3)" style="width:44px;height:44px;border-radius:10px;background:var(--bg);border:2px solid var(--border);font-size:15px;font-weight:700;cursor:pointer;transition:.1s" class="seat-quick-btn" data-n="3">3</button>
+      <button onclick="setSeatCount(4)" style="width:44px;height:44px;border-radius:10px;background:var(--bg);border:2px solid var(--border);font-size:15px;font-weight:700;cursor:pointer;transition:.1s" class="seat-quick-btn" data-n="4">4</button>
+      <button onclick="setSeatCount(5)" style="width:44px;height:44px;border-radius:10px;background:var(--bg);border:2px solid var(--border);font-size:15px;font-weight:700;cursor:pointer;transition:.1s" class="seat-quick-btn" data-n="5">5</button>
+      <button onclick="setSeatCount(6)" style="width:44px;height:44px;border-radius:10px;background:var(--bg);border:2px solid var(--border);font-size:15px;font-weight:700;cursor:pointer;transition:.1s" class="seat-quick-btn" data-n="6">6</button>
+      <button onclick="setSeatCount(7)" style="width:44px;height:44px;border-radius:10px;background:var(--bg);border:2px solid var(--border);font-size:15px;font-weight:700;cursor:pointer;transition:.1s" class="seat-quick-btn" data-n="7">7</button>
+      <button onclick="setSeatCount(8)" style="width:44px;height:44px;border-radius:10px;background:var(--bg);border:2px solid var(--border);font-size:15px;font-weight:700;cursor:pointer;transition:.1s" class="seat-quick-btn" data-n="8">8</button>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-outline" onclick="closeModal('modal-seat-picker');showModal('modal-table-select')">Back</button>
+      <button class="btn btn-primary" onclick="confirmSeatAndEnter()">Confirm</button>
+    </div>
+  </div>
+</div>
+
+<!-- Delivery Partner Picker Modal -->
+<div class="modal-overlay" id="modal-dp-picker">
+  <div class="modal" style="max-width:480px;width:94vw">
+    <h3 style="display:flex;align-items:center;gap:8px">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="20" height="20"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+      Select Delivery Partner
+    </h3>
+    <p style="font-size:13px;color:var(--muted);margin-bottom:12px" id="dp-picker-subtitle">Choose the platform this order came from</p>
+    <div class="dp-picker-grid" id="dp-picker-grid"></div>
+    <div class="modal-footer" style="justify-content:flex-start">
+      <button class="btn-outline" onclick="closeModal('modal-dp-picker');showModal('modal-new-order')">Back</button>
+      <button class="btn-outline" onclick="confirmDeliveryPartner(null,'')">Skip / No Partner</button>
     </div>
   </div>
 </div>
@@ -2455,6 +2525,7 @@ async function init() {
   await checkApiConnectivity();
   setInterval(checkApiConnectivity, 60000);   // re-check every 60s
   setInterval(syncUnsyncedData, 300000);      // background sync every 5 min
+  loadDeliveryPartners();                     // pre-load delivery partners for order dialog
 
   await loadCashiersForLogin();
   updateClock();
@@ -2708,44 +2779,207 @@ function buildBottomBar() {
   bar.innerHTML = html
 }
 
-function rebuildNewOrderModal () {
+// Delivery partners loaded from API
+let _posDeliveryPartners = []
+
+async function loadDeliveryPartners () {
+  try {
+    const data = await apiFetch('GET', '/config/delivery-partners')
+    _posDeliveryPartners = (data.rows || []).filter(p => !p.hidden)
+  } catch (_) {}
+}
+
+function otTypeFromIconKey (t) {
   const OT_ICONS = {
-    'dine':    { icon: '🍽️', type: 'dine-in'   },
-    'takeaway':{ icon: '🛍️', type: 'takeaway'  },
-    'delivery':{ icon: '🚗', type: 'delivery'  },
-    'drive':   { icon: '🚘', type: 'drive-thru'},
-    'online':  { icon: '📱', type: 'online'    },
+    'dine':    'dine-in',
+    'takeaway':'takeaway',
+    'delivery':'delivery',
+    'drive':   'drive-thru',
+    'online':  'online',
   }
+  return OT_ICONS[t.icon] || t.name.toLowerCase().replace(/\s+/g,'-')
+}
+
+function otIconEmoji (t) {
+  const OT_ICONS = {
+    'dine':    '🍽️',
+    'takeaway':'🛍️',
+    'delivery':'🚗',
+    'drive':   '🚘',
+    'online':  '📱',
+  }
+  return (t.icon && t.icon.length > 2) ? t.icon : (OT_ICONS[t.icon] || '📋')
+}
+
+function rebuildNewOrderModal () {
   const grid = document.querySelector('#modal-new-order .notp-grid')
   if (!grid) return
+  const catLabel = { offline:'In-store', online:'Online', aggregator:'3rd Party', other:'Other' }
+  const catCls   = { offline:'offline',  online:'online',  aggregator:'aggregator', other:'other' }
   grid.innerHTML = _posOrderTypes.map(t => {
-    const meta = OT_ICONS[t.icon] || { icon: '📋', type: t.name.toLowerCase().replace(/\s+/g,'-') }
-    const type = meta.type
+    const type   = otTypeFromIconKey(t)
+    const cat    = t.channel_category || 'offline'
+    const badge  = catLabel[cat] || cat
+    const bCls   = catCls[cat] || 'other'
+    const isAggregator = cat === 'aggregator'
     const action = type === 'dine-in'
       ? `closeModal('modal-new-order');showTableSelectPopup()`
-      : `closeModal('modal-new-order');showPosEntry('${type}')`
+      : isAggregator
+        ? `closeModal('modal-new-order');showDeliveryPartnerPicker('${type}','${t.name.replace(/'/g,"\\'")}',this)`
+        : `closeModal('modal-new-order');showPosEntry('${type}')`
     return `<button class="notp-btn" onclick="${action}">
-      <span class="notp-icon">${t.icon && t.icon.length > 2 ? t.icon : meta.icon}</span>
+      <span class="notp-cat-badge notp-cat-${bCls}">${badge}</span>
+      <span class="notp-icon">${otIconEmoji(t)}</span>
       <span class="notp-label">${t.name}</span>
     </button>`
   }).join('')
 }
 
-function showNewOrderDialog() {
+function showNewOrderDialog () {
   if (_posOrderTypes.length === 1) {
     const t = _posOrderTypes[0]
-    const OT_ICONS = {
-      'dine':    'dine-in',
-      'takeaway':'takeaway',
-      'delivery':'delivery',
-      'drive':   'drive-thru',
-      'online':  'online',
-    }
-    const type = OT_ICONS[t.icon] || t.name.toLowerCase().replace(/\s+/g,'-')
+    const type = otTypeFromIconKey(t)
     if (type === 'dine-in') { showTableSelectPopup(); return }
+    if (t.channel_category === 'aggregator') { showDeliveryPartnerPicker(type, t.name); return }
     showPosEntry(type); return
   }
-  showModal('modal-new-order');
+  showModal('modal-new-order')
+}
+
+// ── Delivery Partner Picker ────────────────────────────────────────
+let _dpPickerType = ''
+let _dpPickerConfirm = null
+
+function showDeliveryPartnerPicker (orderType, orderTypeName) {
+  _dpPickerType = orderType
+  const sub = document.getElementById('dp-picker-subtitle')
+  if (sub) sub.textContent = `Order via ${orderTypeName} — choose the delivery platform`
+  const grid = document.getElementById('dp-picker-grid')
+  if (!grid) return
+
+  if (!_posDeliveryPartners.length) {
+    grid.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:24px;color:var(--muted);font-size:13px">
+      No delivery partners configured.<br>Add them in Back Office → Configuration → Delivery Partners.
+    </div>`
+  } else {
+    grid.innerHTML = _posDeliveryPartners.map(p => `
+      <button class="dp-picker-btn" onclick="confirmDeliveryPartner('${p.id}','${esc(p.name)}')">
+        ${p.logo_url
+          ? `<img src="${p.logo_url}" class="dp-picker-logo" alt="${esc(p.name)}">`
+          : `<span style="font-size:32px">🚀</span>`}
+        <span class="dp-picker-name">${esc(p.name)}</span>
+      </button>`).join('')
+  }
+  _dpPickerConfirm = (partnerId) => { closeModal('modal-dp-picker'); showPosEntryWithPartner(_dpPickerType, partnerId) }
+  showModal('modal-dp-picker')
+}
+
+function confirmDeliveryPartner (partnerId, partnerName) {
+  closeModal('modal-dp-picker')
+  showPosEntryWithPartner(_dpPickerType, partnerId, partnerName)
+}
+
+function showPosEntryWithPartner (type, partnerId, partnerName) {
+  clearCart()
+  cart.mode             = 'kot'
+  cart.deliveryPartnerId = partnerId || null
+  cart.deliveryPartnerName = partnerName || null
+  setOrderTypeEntry(type)
+  document.getElementById('entry-cancel-btn').style.display = 'none'
+  document.getElementById('pos-orders-panel').style.display = 'none'
+  document.getElementById('pos-entry-panel').style.display  = 'flex'
+  updatePanelMode()
+  renderCart()
+}
+
+// ── Seat / Chair Count Picker ──────────────────────────────────────
+let _seatPickerTable = null
+let _currentSeatCount = 2
+
+function openSeatPicker (tableId, tableName) {
+  _seatPickerTable = { id: tableId, name: tableName }
+  _currentSeatCount = 2
+  const title = document.getElementById('seat-picker-title')
+  if (title) title.textContent = `Table ${tableName}`
+  document.getElementById('seat-count-display').textContent = _currentSeatCount
+  document.querySelectorAll('.seat-quick-btn').forEach(b => {
+    b.style.background = parseInt(b.dataset.n) === _currentSeatCount ? 'var(--primary)' : ''
+    b.style.color      = parseInt(b.dataset.n) === _currentSeatCount ? '#fff' : ''
+    b.style.borderColor= parseInt(b.dataset.n) === _currentSeatCount ? 'var(--primary)' : ''
+  })
+  closeModal('modal-table-select')
+  showModal('modal-seat-picker')
+}
+
+function seatAdjust (delta) {
+  _currentSeatCount = Math.max(1, Math.min(20, _currentSeatCount + delta))
+  document.getElementById('seat-count-display').textContent = _currentSeatCount
+  document.querySelectorAll('.seat-quick-btn').forEach(b => {
+    b.style.background = parseInt(b.dataset.n) === _currentSeatCount ? 'var(--primary)' : ''
+    b.style.color      = parseInt(b.dataset.n) === _currentSeatCount ? '#fff' : ''
+    b.style.borderColor= parseInt(b.dataset.n) === _currentSeatCount ? 'var(--primary)' : ''
+  })
+}
+
+function setSeatCount (n) {
+  _currentSeatCount = n
+  document.getElementById('seat-count-display').textContent = n
+  document.querySelectorAll('.seat-quick-btn').forEach(b => {
+    b.style.background = parseInt(b.dataset.n) === n ? 'var(--primary)' : ''
+    b.style.color      = parseInt(b.dataset.n) === n ? '#fff' : ''
+    b.style.borderColor= parseInt(b.dataset.n) === n ? 'var(--primary)' : ''
+  })
+}
+
+async function confirmSeatAndEnter () {
+  closeModal('modal-seat-picker')
+  if (!_seatPickerTable) return
+  cart.seatCount = _currentSeatCount
+  await selectTableAndEnter(_seatPickerTable.id, _seatPickerTable.name, 'available')
+}
+
+// ── Table long-press support ───────────────────────────────────────
+function attachTableLongPress () {
+  const grid = document.getElementById('ts-grid')
+  if (!grid) return
+  let lpTimer = null
+  let pressing = null
+
+  grid.addEventListener('pointerdown', e => {
+    const btn = e.target.closest('.ts-btn')
+    if (!btn) return
+    pressing = btn
+    btn.classList.add('pressing')
+    lpTimer = setTimeout(() => {
+      if (pressing === btn) {
+        const id   = btn.getAttribute('data-table-id')
+        const name = btn.getAttribute('data-table-name')
+        if (id && name) {
+          navigator.vibrate && navigator.vibrate(40)
+          openSeatPicker(id, name)
+        }
+      }
+    }, 600)
+  })
+
+  const cancel = () => {
+    clearTimeout(lpTimer)
+    if (pressing) pressing.classList.remove('pressing')
+    pressing = null
+  }
+  grid.addEventListener('pointerup', cancel)
+  grid.addEventListener('pointerleave', cancel)
+  grid.addEventListener('pointermove', e => {
+    if (pressing && e.movementX**2 + e.movementY**2 > 16) cancel()
+  })
+}
+
+// Manage FAB visibility
+function updateNewOrderFabVisibility () {
+  const fab = document.getElementById('new-order-fab')
+  if (!fab) return
+  const ordersVisible = document.getElementById('pos-orders-panel')?.style.display !== 'none'
+  fab.style.display = ordersVisible ? 'flex' : 'none'
 }
 
 // Push unsynced local records to central API, then pull menu + cashiers.
@@ -3591,6 +3825,7 @@ function showPosOrders() {
   cancelKotReturnTimer();
   document.getElementById('pos-orders-panel').style.display = 'flex';
   document.getElementById('pos-entry-panel').style.display  = 'none';
+  updateNewOrderFabVisibility();
 }
 
 function showPosEntry(type) {
@@ -3602,6 +3837,7 @@ function showPosEntry(type) {
   document.getElementById('pos-orders-panel').style.display = 'none';
   document.getElementById('pos-entry-panel').style.display  = 'flex';
   updatePanelMode();
+  updateNewOrderFabVisibility();
 }
 
 function switchToKotMode() {
@@ -3621,14 +3857,19 @@ async function showTableSelectPopup() {
       const cls      = occupied ? 'ts-occupied' : 'ts-available';
       const dotIc    = occupied ? ic('dotRed',20) : ic('dotGreen',20);
       const lbl      = occupied ? 'Occupied' : 'Available';
-      return `<button class="ts-btn ${cls}" onclick="selectTableAndEnter('${t.id}','${esc(t.name)}','${t.status}')">
+      const seatHint = t.seat_count ? `<span class="ts-seat-chip">${ic('chair',12)} ${t.seat_count}</span>` : ''
+      return `<button class="ts-btn ${cls}"
+        data-table-id="${t.id}" data-table-name="${esc(t.name)}"
+        onclick="selectTableAndEnter('${t.id}','${esc(t.name)}','${t.status}')">
+        <div class="ts-longpress-ring"></div>
         <span style="display:flex;align-items:center;justify-content:center">${dotIc}</span>
         <span class="ts-tname">${esc(t.name)}</span>
-        <span class="ts-status">${lbl}</span>
+        <span class="ts-status">${lbl}${seatHint}</span>
       </button>`;
     }).join('');
   }
   showModal('modal-table-select');
+  attachTableLongPress();
 }
 
 async function selectTableAndEnter(tableId, tableName, status) {
@@ -6133,5 +6374,12 @@ async function toggleFullscreen() {
   }
 })();
 </script>
+
+<!-- Floating New Order button (shows in orders panel) -->
+<button class="new-order-fab" id="new-order-fab" onclick="showNewOrderDialog()" title="New Order">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" width="22" height="22"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+  New Order
+</button>
+
 </body>
 </html>
