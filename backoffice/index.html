@@ -158,7 +158,7 @@ button,.nav-item,.filter-chip,.btn,[role="button"]{touch-action:manipulation}
 #sync-status{font-size:11px;color:#64748b;white-space:nowrap}
 
 /* ─── VIEWS ──────────────────────────────────────── */
-#view-container{flex:1;background:var(--bg)}
+#view-container{flex:1;background:var(--bg);position:relative}
 .view{display:none;padding:20px 22px;max-width:1600px;width:100%}
 .view.active{display:block}
 .page-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px}
@@ -846,7 +846,12 @@ input:checked+.toggle-slider:before{transform:translateX(17px)}
 .kds-progress{background:#e5e7eb!important}
 .kds-done-lbl{color:var(--muted)!important}.kds-empty{color:var(--muted)!important}
 /* ── OUTLET CONTEXT BAR ─────────────────────────────────────── */
-#outlet-ctx-bar{background:#fff;border-bottom:2px solid var(--primary);padding:9px 24px;display:none}
+#outlet-ctx-bar{background:#fff;border-bottom:2px solid var(--primary);padding:9px 24px}
+/* ── Outlet gate overlay (hard block) ── */
+#outlet-gate-overlay{position:absolute;inset:0;background:rgba(241,245,249,.96);display:none;align-items:center;justify-content:center;z-index:40;flex-direction:column;gap:14px;text-align:center;padding:40px 24px}
+#outlet-gate-overlay .ogate-icon{width:60px;height:60px;background:#fff7ed;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:28px;border:2px solid #fed7aa}
+#outlet-gate-overlay .ogate-title{font-size:17px;font-weight:800;color:#0f172a}
+#outlet-gate-overlay .ogate-sub{font-size:13px;color:#64748b;max-width:300px;line-height:1.6}
 /* ── Global context breadcrumb (always visible in top header) ── */
 .hdr-ctx{display:flex;align-items:center;gap:6px;padding:4px 10px;border:1.5px solid var(--border);border-radius:8px;background:#fafafa;font-size:12px;color:var(--text);cursor:pointer;transition:.12s;max-width:340px;overflow:hidden}
 .hdr-ctx:hover{border-color:var(--primary);background:#fff7ed}
@@ -865,9 +870,6 @@ input:checked+.toggle-slider:before{transform:translateX(17px)}
   #sidebar-backdrop{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:199;display:none}
   #sidebar-backdrop.open{display:block}
 }
-/* ── Force-outlet banner ── */
-.force-outlet-banner{background:#fef3c7;border:1px solid #fcd34d;color:#92400e;padding:14px 18px;border-radius:10px;font-size:13px;font-weight:600;margin:16px;display:flex;align-items:center;gap:10px}
-.force-outlet-banner button{background:var(--primary);color:#fff;border:none;padding:6px 14px;border-radius:6px;font-weight:700;cursor:pointer;font-size:12px;margin-left:auto}
 .outlet-ctx-inner{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
 .outlet-ctx-label{font-size:11px;font-weight:700;color:var(--primary);text-transform:uppercase;letter-spacing:.5px;white-space:nowrap}
 .outlet-ctx-badge{font-size:12px;font-weight:600;color:var(--primary);background:rgba(99,102,241,.08);padding:3px 10px;border-radius:20px;white-space:nowrap}
@@ -1306,15 +1308,10 @@ input:checked+.toggle-slider:before{transform:translateX(17px)}
         </button>
       </div>
     </header>
-    <!-- Force-outlet banner: shown to multi-outlet users on outlet-required views when none picked -->
-    <div id="force-outlet-banner" class="force-outlet-banner" style="display:none">
-      ⚠️  Please select an outlet to view this page. Data is scoped per outlet.
-      <button onclick="openCtxSwitcher()">Select Outlet</button>
-    </div>
-    <!-- Outlet context bar — shown for outlet-scoped sections -->
+    <!-- Outlet context bar — always visible -->
     <div id="outlet-ctx-bar">
       <div class="outlet-ctx-inner">
-        <span class="outlet-ctx-label">Managing Outlet:</span>
+        <span class="outlet-ctx-label">Outlet:</span>
         <select id="ctx-brand" onchange="ctxCascade()" style="font-size:12px;padding:5px 9px;border:1.5px solid var(--border);border-radius:6px;background:var(--card);color:var(--text)"><option value="">All Brands</option></select>
         <select id="ctx-market" onchange="ctxCascade()" style="font-size:12px;padding:5px 9px;border:1.5px solid var(--border);border-radius:6px;background:var(--card);color:var(--text)"><option value="">All Markets</option></select>
         <select id="ctx-outlet" onchange="ctxOutletChange()" style="font-size:12px;padding:5px 9px;border:1.5px solid var(--border);border-radius:6px;background:var(--card);color:var(--text);min-width:160px"><option value="">-- Select Outlet --</option></select>
@@ -1322,6 +1319,13 @@ input:checked+.toggle-slider:before{transform:translateX(17px)}
       </div>
     </div>
     <div id="view-container">
+    <!-- Hard outlet gate — blocks all outlet-required views until an outlet is chosen -->
+    <div id="outlet-gate-overlay">
+      <div class="ogate-icon">🏪</div>
+      <div class="ogate-title">Select an Outlet to Continue</div>
+      <div class="ogate-sub">All data is scoped per outlet. Choose an outlet from the bar above to view this section.</div>
+      <button class="btn btn-primary" onclick="focusCtxOutlet()">Select Outlet ↑</button>
+    </div>
 
   <!-- ── DASHBOARD ── -->
   <div class="view active" id="v-dashboard">
@@ -4418,26 +4422,29 @@ function updateCtxBreadcrumb () {
 }
 
 function openCtxSwitcher () {
-  // Bring up the existing outlet context bar (force it visible) and scroll to it.
-  const bar = document.getElementById('outlet-ctx-bar')
-  if (bar) { bar.style.display = ''; bar.scrollIntoView({ behavior:'smooth', block:'start' }) }
-  document.getElementById('ctx-brand')?.focus()
+  focusCtxOutlet()
 }
 
-// ── Force outlet selection gate (Dashboard / Reports) ────────────
-let _outletGateView = null
+// ── Outlet selection gate ─────────────────────────────────────────
 function shouldForceOutletSelection () {
-  const outlets = (_rptFilterData?.outlets || []).filter(o => !o.brand_id || !currentUser?.brand_id || o.brand_id === currentUser.brand_id)
-  if (outlets.length <= 1) return false              // single-outlet user: auto-context
   return !_ctxOutlet
 }
+function focusCtxOutlet () {
+  document.getElementById('outlet-ctx-bar')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+  document.getElementById('ctx-outlet')?.focus()
+}
 function refreshForceOutletGate () {
-  // Show inline banner on outlet-required views when no outlet picked
-  const banner = document.getElementById('force-outlet-banner')
-  if (!banner) return
+  const overlay = document.getElementById('outlet-gate-overlay')
+  if (!overlay) return
   const view = document.querySelector('.view.active')?.id?.replace('v-','') || ''
-  const needs = ['dashboard','live','kds','orders','menu','staff'].includes(view)
-  banner.style.display = (needs && shouldForceOutletSelection()) ? 'flex' : 'none'
+  let block = shouldForceOutletSelection()
+  // Config view: exempt when active sub-tab is brand/markets/outlet (hierarchy mgmt)
+  if (view === 'config') {
+    const activeSub = document.querySelector('.cfg-section.active')?.id?.replace('cfg-','') || ''
+    if (['brand','markets','outlet'].includes(activeSub)) block = false
+  }
+  overlay.style.display = block ? 'flex' : 'none'
+  if (block) window.scrollTo({ top: 0, behavior: 'smooth' })
 }
 
 // ── Sidebar toggle (mobile hamburger) ────────────────────────────
@@ -4606,7 +4613,7 @@ async function cfgSaveOrderTypeModal () {
 }
 
 // ─── NAVIGATION ──────────────────────────────────────────────────
-const OUTLET_SCOPED_VIEWS = new Set(['menu','staff','config'])
+const OUTLET_SCOPED_VIEWS = new Set(['menu','staff','config'])  // kept for legacy reference; ctx-bar is now always shown
 function mobCloseSidebar () { document.getElementById('app').classList.remove('mob-sb-open') }
 function mobToggleSidebar () { document.getElementById('app').classList.toggle('mob-sb-open') }
 function mobSetTab (id) {
@@ -4636,8 +4643,7 @@ function showView (id) {
   document.getElementById('v-' + id).classList.add('active')
   const navEl = document.getElementById('nav-' + id)
   if (navEl) navEl.classList.add('active')
-  const ctxBar = document.getElementById('outlet-ctx-bar')
-  if (ctxBar) ctxBar.style.display = OUTLET_SCOPED_VIEWS.has(id) ? '' : 'none'
+  // outlet-ctx-bar is always visible (all views are outlet-scoped)
   if (id === 'menu')      { document.getElementById('navg-menu')?.classList.add('open'); loadMenu() }
   if (id === 'item-editor')  {}
   if (id === 'orders')       { document.getElementById('navg-reports')?.classList.add('open'); setOrdersDate('today'); populateOutletSelectors(); loadOrders() }
@@ -4658,7 +4664,6 @@ function toggleNavGroup (id) {
   document.getElementById('navg-' + id).classList.toggle('open')
 }
 
-const OUTLET_SCOPED_CFG_TABS = new Set(['tables','order-types','payment','kitchens','designations','tax','modifier-groups','pos-layout'])
 function showConfigTab (tab) {
   mobCloseSidebar()
   mobSetTab('more')
@@ -4666,8 +4671,7 @@ function showConfigTab (tab) {
   document.getElementById('v-config').classList.add('active')
   document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'))
   document.getElementById('navg-config').classList.add('open')
-  const ctxBar = document.getElementById('outlet-ctx-bar')
-  if (ctxBar) ctxBar.style.display = OUTLET_SCOPED_CFG_TABS.has(tab) ? '' : 'none'
+  // outlet-ctx-bar always visible
   showCfgTab(tab)
   if (document.getElementById('v-config').getBoundingClientRect)
     window.scrollTo(0, 0)
@@ -7554,6 +7558,7 @@ function showCfgTab (tab) {
     'pos-layout': cfgLoadPosLayout, 'modifier-groups': cfgLoadModifierGroups,
     'bo-users': cfgLoadBoUsers,
   }
+  refreshForceOutletGate()
   if (loaders[tab]) loaders[tab]()
 }
 
