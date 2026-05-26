@@ -189,6 +189,126 @@ module.exports = function menuRouter (sql) {
     } catch (e) { serverError(res, e) }
   })
 
+  // ── BULK EXPORT ────────────────────────────────────────────────────────────
+
+  router.get('/export', async (req, res) => {
+    const rid = req.user?.brand_id
+    if (!rid) return res.json({ rows: [] })
+    try {
+      const rows = await sql`
+        SELECT
+          mi.item_code, mi.name, c.name AS category, mi.price,
+          mi.description, mi.active, mi.barcode, mi.item_type,
+          mi.kitchen_name, mi.tags, mi.sub_category,
+          mi.dine_in_price, mi.takeaway_price, mi.delivery_price, mi.online_price,
+          mi.dine_in_active, mi.takeaway_active, mi.delivery_active, mi.online_active
+        FROM menu_items mi
+        LEFT JOIN categories c ON c.id = mi.category_id
+        WHERE mi.brand_id = ${rid}
+        ORDER BY c.name, mi.name`
+      res.json({ rows })
+    } catch (e) { serverError(res, e) }
+  })
+
+  // ── BULK IMPORT ────────────────────────────────────────────────────────────
+
+  router.post('/import', async (req, res) => {
+    const rid = req.user?.brand_id
+    if (!rid) return res.status(403).json({ error: 'No brand context' })
+    const { rows } = req.body || {}
+    if (!Array.isArray(rows) || !rows.length) return res.status(400).json({ error: 'rows array required' })
+
+    try {
+      const cats    = await sql`SELECT id, name FROM categories WHERE brand_id = ${rid}`
+      const catMap  = new Map(cats.map(c => [c.name.toLowerCase().trim(), c.id]))
+
+      const existing  = await sql`SELECT id, item_code, name, category_id FROM menu_items WHERE brand_id = ${rid}`
+      const byCode    = new Map(existing.filter(i => i.item_code).map(i => [i.item_code.toLowerCase().trim(), i.id]))
+      const byNameCat = new Map(existing.map(i => [`${i.name.toLowerCase().trim()}|${i.category_id}`, i.id]))
+
+      let created = 0, updated = 0
+      const errors = []
+
+      for (const row of rows) {
+        const name    = row.name?.toString().trim()
+        const catName = row.category?.toString().trim()
+        const price   = parseFloat(row.price)
+
+        if (!name)        { errors.push(`Row skipped: missing name`);              continue }
+        if (!catName)     { errors.push(`"${name}" skipped: missing category`);    continue }
+        if (isNaN(price)) { errors.push(`"${name}" skipped: invalid price`);       continue }
+
+        let catId = catMap.get(catName.toLowerCase())
+        if (!catId) {
+          const [nc] = await sql`INSERT INTO categories (id, brand_id, name, sort_order) VALUES (${uid()}, ${rid}, ${catName}, 0) RETURNING id`
+          catId = nc.id
+          catMap.set(catName.toLowerCase(), catId)
+        }
+
+        const bool  = v => !/^(no|false|0)$/i.test((v ?? '').toString())
+        const numOrNull = v => (v !== undefined && v !== '' && !isNaN(parseFloat(v))) ? parseFloat(v) : null
+        const strOrNull = v => (v !== undefined && v !== '') ? v.toString().trim() : null
+
+        const p = {
+          name, category_id: catId, price,
+          description:     strOrNull(row.description) ?? '',
+          active:          /^(yes|true|1|active)$/i.test((row.active ?? 'yes').toString()) ? 1 : 0,
+          item_code:       strOrNull(row.item_code),
+          barcode:         strOrNull(row.barcode),
+          item_type:       strOrNull(row.item_type) ?? 'single',
+          kitchen_name:    strOrNull(row.kitchen_name),
+          tags:            strOrNull(row.tags),
+          sub_category:    strOrNull(row.sub_category),
+          dine_in_price:   numOrNull(row.dine_in_price),
+          takeaway_price:  numOrNull(row.takeaway_price),
+          delivery_price:  numOrNull(row.delivery_price),
+          online_price:    numOrNull(row.online_price),
+          dine_in_active:  bool(row.dine_in_active),
+          takeaway_active: bool(row.takeaway_active),
+          delivery_active: bool(row.delivery_active),
+          online_active:   bool(row.online_active),
+        }
+
+        const codeKey = p.item_code?.toLowerCase()
+        const nameKey = `${name.toLowerCase()}|${catId}`
+        const existId = (codeKey && byCode.get(codeKey)) || byNameCat.get(nameKey)
+
+        if (existId) {
+          await sql`
+            UPDATE menu_items SET
+              name=${p.name}, category_id=${p.category_id}, price=${p.price},
+              description=${p.description}, active=${p.active}, item_code=${p.item_code},
+              barcode=${p.barcode}, item_type=${p.item_type}, kitchen_name=${p.kitchen_name},
+              tags=${p.tags}, sub_category=${p.sub_category},
+              dine_in_price=${p.dine_in_price}, takeaway_price=${p.takeaway_price},
+              delivery_price=${p.delivery_price}, online_price=${p.online_price},
+              dine_in_active=${p.dine_in_active}, takeaway_active=${p.takeaway_active},
+              delivery_active=${p.delivery_active}, online_active=${p.online_active},
+              synced_at=${Date.now()}
+            WHERE id=${existId} AND brand_id=${rid}`
+          updated++
+        } else {
+          await sql`
+            INSERT INTO menu_items (
+              id, brand_id, category_id, name, price, description, active, item_code,
+              barcode, item_type, kitchen_name, tags, sub_category, synced_at,
+              dine_in_price, takeaway_price, delivery_price, online_price,
+              dine_in_active, takeaway_active, delivery_active, online_active
+            ) VALUES (
+              ${uid()}, ${rid}, ${p.category_id}, ${p.name}, ${p.price},
+              ${p.description}, ${p.active}, ${p.item_code},
+              ${p.barcode}, ${p.item_type}, ${p.kitchen_name}, ${p.tags}, ${p.sub_category}, ${Date.now()},
+              ${p.dine_in_price}, ${p.takeaway_price}, ${p.delivery_price}, ${p.online_price},
+              ${p.dine_in_active}, ${p.takeaway_active}, ${p.delivery_active}, ${p.online_active}
+            )`
+          created++
+        }
+      }
+
+      res.json({ ok: true, created, updated, errors })
+    } catch (e) { serverError(res, e) }
+  })
+
   // ── VARIANTS ───────────────────────────────────────────────────────────────
 
   router.get('/items/:id/variants', async (req, res) => {

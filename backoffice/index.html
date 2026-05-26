@@ -919,6 +919,7 @@ input:checked+.toggle-slider:before{transform:translateX(17px)}
 .input-prefix-tag{padding:9px 10px;background:#f8fafc;border-right:1px solid var(--border);font-size:13px;color:var(--muted);font-weight:600;white-space:nowrap;flex-shrink:0}
 .input-prefix input{border:none;padding:9px 11px;font-size:13px;flex:1;outline:none;background:transparent}
 </style>
+<script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
 </head>
 <body>
 
@@ -1511,8 +1512,13 @@ input:checked+.toggle-slider:before{transform:translateX(17px)}
   <div class="view" id="v-menu">
     <div class="page-header">
       <h2>Menu Management</h2>
-      <div style="display:flex;gap:10px">
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
         <button class="btn btn-outline" id="menu-btn-add-cat" onclick="showCatModal()" style="display:none"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 002-2V2"/><path d="M7 2v20"/><path d="M21 15V2a5 5 0 00-5 5v6c0 1.1.9 2 2 2h3zm0 0v7"/></svg> Add Category</button>
+        <button class="btn btn-outline" onclick="menuExport()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> Export</button>
+        <label class="btn btn-outline" style="cursor:pointer;margin:0" title="Import items from Excel or CSV">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg> Import
+          <input type="file" id="menu-import-input" accept=".xlsx,.xls,.csv" style="display:none" onchange="menuImport(this)">
+        </label>
         <button class="btn btn-primary" id="menu-btn-add-item" onclick="showItemEditor(null)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg> Add Item</button>
       </div>
     </div>
@@ -4850,6 +4856,114 @@ function showMenuTab (tab) {
   document.querySelectorAll('.nav-sub[id^="navsub-menu-"]').forEach(s => s.classList.remove('active'))
   const subEl = document.getElementById('navsub-menu-' + tab)
   if (subEl) subEl.classList.add('active')
+}
+
+// ─── MENU BULK EXPORT / IMPORT ────────────────────────────────────
+
+const MENU_EXPORT_COLS = [
+  { key: 'item_code',      header: 'item_code'      },
+  { key: 'name',           header: 'name'           },
+  { key: 'category',       header: 'category'       },
+  { key: 'price',          header: 'price'          },
+  { key: 'description',    header: 'description'    },
+  { key: 'active',         header: 'active'         },
+  { key: 'barcode',        header: 'barcode'        },
+  { key: 'item_type',      header: 'item_type'      },
+  { key: 'kitchen_name',   header: 'kitchen_name'   },
+  { key: 'tags',           header: 'tags'           },
+  { key: 'sub_category',   header: 'sub_category'   },
+  { key: 'dine_in_price',  header: 'dine_in_price'  },
+  { key: 'takeaway_price', header: 'takeaway_price' },
+  { key: 'delivery_price', header: 'delivery_price' },
+  { key: 'online_price',   header: 'online_price'   },
+  { key: 'dine_in_active',  header: 'dine_in_active'  },
+  { key: 'takeaway_active', header: 'takeaway_active' },
+  { key: 'delivery_active', header: 'delivery_active' },
+  { key: 'online_active',   header: 'online_active'   },
+]
+
+async function menuExport () {
+  try {
+    showToast('Preparing export…', 'info')
+    const { rows } = await apiFetch('GET', '/menu/export')
+
+    const sheetData = [MENU_EXPORT_COLS.map(c => c.header)]
+    for (const r of rows) {
+      sheetData.push(MENU_EXPORT_COLS.map(c => {
+        const v = r[c.key]
+        if (c.key === 'active')          return v ? 'yes' : 'no'
+        if (c.key.endsWith('_active'))   return v ? 'yes' : 'no'
+        return v ?? ''
+      }))
+    }
+
+    const wb  = XLSX.utils.book_new()
+    const ws  = XLSX.utils.aoa_to_sheet(sheetData)
+
+    // Column widths
+    ws['!cols'] = [12,28,20,10,36,8,14,10,16,18,16,12,14,14,12,14,15,15,13].map(w => ({ wch: w }))
+
+    // Instructions sheet
+    const info = [
+      ['Column', 'Required', 'Notes'],
+      ['item_code',      'No',  'Leave blank for new items. Used to match existing items for update.'],
+      ['name',           'Yes', 'Item display name'],
+      ['category',       'Yes', 'Category name — created automatically if it does not exist'],
+      ['price',          'Yes', 'Base price (number)'],
+      ['description',    'No',  'Item description'],
+      ['active',         'No',  'yes / no  (default: yes)'],
+      ['barcode',        'No',  'Barcode / PLU code'],
+      ['item_type',      'No',  'single or combo  (default: single)'],
+      ['kitchen_name',   'No',  'Override name shown on KOT'],
+      ['tags',           'No',  'Comma-separated tags'],
+      ['sub_category',   'No',  'Sub-category label'],
+      ['dine_in_price',  'No',  'Override price for dine-in (blank = use base price)'],
+      ['takeaway_price', 'No',  'Override price for takeaway'],
+      ['delivery_price', 'No',  'Override price for delivery'],
+      ['online_price',   'No',  'Override price for online'],
+      ['dine_in_active',  'No', 'yes / no  (default: yes)'],
+      ['takeaway_active', 'No', 'yes / no  (default: yes)'],
+      ['delivery_active', 'No', 'yes / no  (default: yes)'],
+      ['online_active',   'No', 'yes / no  (default: yes)'],
+    ]
+    const wsInfo = XLSX.utils.aoa_to_sheet(info)
+    wsInfo['!cols'] = [{ wch: 16 }, { wch: 10 }, { wch: 60 }]
+
+    XLSX.utils.book_append_sheet(wb, ws, 'Menu Items')
+    XLSX.utils.book_append_sheet(wb, wsInfo, 'Instructions')
+
+    const brandName = (document.getElementById('hdr-name')?.textContent || 'menu').replace(/[^a-z0-9]/gi, '_')
+    XLSX.writeFile(wb, `${brandName}_menu_export.xlsx`)
+    showToast(`Exported ${rows.length} items`, 'success')
+  } catch (e) { showToast('Export failed: ' + e.message, 'error') }
+}
+
+async function menuImport (input) {
+  const file = input.files[0]
+  input.value = ''
+  if (!file) return
+
+  try {
+    showToast('Reading file…', 'info')
+    const buf  = await file.arrayBuffer()
+    const wb   = XLSX.read(buf, { type: 'array' })
+    const ws   = wb.Sheets[wb.SheetNames[0]]
+    const rows = XLSX.utils.sheet_to_json(ws, { defval: '' })
+
+    if (!rows.length) { showToast('File is empty or unreadable', 'error'); return }
+
+    showToast(`Importing ${rows.length} rows…`, 'info')
+    const result = await apiFetch('POST', '/menu/import', { rows })
+
+    let msg = `✓ ${result.created} created, ${result.updated} updated`
+    if (result.errors?.length) msg += ` · ${result.errors.length} skipped`
+    showToast(msg, result.errors?.length ? 'warning' : 'success')
+
+    if (result.errors?.length) {
+      console.warn('Menu import skipped rows:', result.errors)
+    }
+    loadMenu()
+  } catch (e) { showToast('Import failed: ' + e.message, 'error') }
 }
 
 // ─── MENU MANAGEMENT ─────────────────────────────────────────────
