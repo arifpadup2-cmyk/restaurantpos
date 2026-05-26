@@ -694,10 +694,6 @@ textarea:focus-visible {
 .new-order-btn{align-self:center;padding:12px 28px;background:var(--primary);color:#fff;border-radius:12px;font-size:16px;font-weight:800;cursor:pointer;white-space:nowrap;border:none;flex-shrink:0;margin:4px 0;transition:.15s;box-shadow:0 4px 12px rgba(232,93,4,.35);letter-spacing:.01em;min-height:48px}
 .new-order-btn:hover{background:var(--primary-d);box-shadow:0 6px 18px rgba(232,93,4,.45);transform:translateY(-1px)}
 .new-order-btn:active{transform:translateY(0);box-shadow:0 2px 8px rgba(232,93,4,.3)}
-/* Floating New Order button (visible when in entry panel or always) */
-.new-order-fab{position:fixed;bottom:28px;right:28px;z-index:200;padding:16px 28px;background:var(--primary);color:#fff;border-radius:16px;font-size:17px;font-weight:900;cursor:pointer;border:none;box-shadow:0 6px 24px rgba(232,93,4,.5);display:flex;align-items:center;gap:10px;letter-spacing:.01em;transition:.15s}
-.new-order-fab:hover{background:var(--primary-d);box-shadow:0 8px 28px rgba(232,93,4,.55);transform:translateY(-2px)}
-.new-order-fab:active{transform:translateY(0)}
 .orders-grid-area{flex:1;overflow-y:auto;padding:14px 18px;background:var(--bg)}
 .orders-card-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(195px,1fr));gap:12px;align-content:start}
 /* Order cards */
@@ -752,11 +748,10 @@ textarea:focus-visible {
 .entry-cat-sidebar{width:110px;background:var(--secondary);display:flex;flex-direction:column;overflow-y:auto;flex-shrink:0}
 .entry-cat-sidebar::-webkit-scrollbar{width:3px}
 .entry-cat-sidebar::-webkit-scrollbar-thumb{background:rgba(255,255,255,.15);border-radius:2px}
-.ecsb-btn{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:68px;padding:12px 6px;gap:5px;cursor:pointer;border:none;background:none;color:#cbd5e1;transition:.15s;width:100%;border-left:4px solid transparent;text-align:center}
+.ecsb-btn{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:44px;padding:8px 6px;gap:0;cursor:pointer;border:none;background:none;color:#cbd5e1;transition:.15s;width:100%;border-left:4px solid transparent;text-align:center}
 .ecsb-btn:hover{background:rgba(255,255,255,.07);color:#cbd5e1}
 .ecsb-btn.active{background:rgba(249,115,22,.18);color:var(--primary);border-left-color:var(--primary)}
-.ecsb-icon{font-size:22px;line-height:1;display:block;margin-bottom:1px}
-.ecsb-label{font-size:11px;font-weight:700;line-height:1.2;word-break:break-word;max-width:96px;color:inherit}
+.ecsb-label{font-size:11px;font-weight:700;line-height:1.25;word-break:break-word;max-width:96px;color:inherit}
 /* Items area */
 .entry-items-area{flex:1;display:flex;flex-direction:column;overflow:hidden;background:var(--bg);min-width:0}
 .items-search-row{display:flex;align-items:center;gap:8px;padding:8px 10px;background:#fff;border-bottom:1px solid var(--border);flex-shrink:0}
@@ -783,19 +778,19 @@ textarea:focus-visible {
 .nitem-has-variants::after{content:'▾';position:absolute;bottom:4px;right:6px;font-size:10px;color:var(--primary);font-weight:900}
 .nitem-has-mods::before{content:'⊕';position:absolute;top:4px;right:6px;font-size:10px;color:#8b5cf6}
 /* Variant / Modifier picker modals */
-.vpick-item{display:flex;align-items:center;justify-content:space-between;padding:12px 14px;border:2px solid var(--border);border-radius:10px;cursor:pointer;transition:.15s;gap:12px}
+.vpick-item{display:flex;align-items:center;justify-content:space-between;padding:16px 14px;min-height:64px;border:2px solid var(--border);border-radius:12px;cursor:pointer;transition:.15s;gap:12px}
 .vpick-item:hover{border-color:var(--primary);background:#fff7ed}
 .vpick-item.selected{border-color:var(--primary);background:#fff7ed}
-.vpick-name{font-size:14px;font-weight:700;color:var(--text)}
-.vpick-price{font-size:14px;font-weight:800;color:var(--primary)}
+.vpick-name{font-size:16px;font-weight:700;color:var(--text)}
+.vpick-price{font-size:15px;font-weight:800;color:var(--primary)}
 .mpick-group{margin-bottom:14px}
 .mpick-group-title{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);margin-bottom:8px;display:flex;align-items:center;gap:6px}
 .mpick-required-badge{background:#fef2f2;color:#dc2626;font-size:10px;padding:2px 6px;border-radius:10px;font-weight:700}
-.mpick-opt{display:flex;align-items:center;justify-content:space-between;padding:9px 12px;border:1.5px solid var(--border);border-radius:8px;cursor:pointer;transition:.15s;margin-bottom:6px}
+.mpick-opt{display:flex;align-items:center;justify-content:space-between;padding:14px 12px;min-height:56px;border:1.5px solid var(--border);border-radius:10px;cursor:pointer;transition:.15s;margin-bottom:8px}
 .mpick-opt:hover{border-color:var(--primary)}
 .mpick-opt.selected{border-color:var(--primary);background:#fff7ed}
-.mpick-opt-name{font-size:13px;font-weight:600;color:var(--text)}
-.mpick-opt-price{font-size:13px;font-weight:700;color:var(--primary)}
+.mpick-opt-name{font-size:15px;font-weight:600;color:var(--text)}
+.mpick-opt-price{font-size:14px;font-weight:700;color:var(--primary)}
 .op-item-variant{font-size:11px;color:var(--primary);font-weight:700;margin-top:1px}
 .op-item-mods{font-size:10px;color:#8b5cf6;margin-top:1px}
 /* Order panel */
@@ -1244,22 +1239,10 @@ textarea:focus-visible {
               </div>
             </div>
           </div>
-          <!-- Filter tabs -->
-          <div class="orders-tabs-bar">
+          <!-- Filter tabs (populated by renderOrderTabs()) -->
+          <div class="orders-tabs-bar" id="orders-tabs-bar">
             <button class="otab active" onclick="filterOrderCards('all',this)" data-type="all">
               <span class="otab-dot" style="background:#6366f1"></span>All Orders<span class="otab-count" id="otc-all">0</span>
-            </button>
-            <button class="otab" onclick="filterOrderCards('dine-in',this)" data-type="dine-in">
-              <span class="otab-dot" style="background:#2563eb"></span>Dine In<span class="otab-count" id="otc-dine-in">0</span>
-            </button>
-            <button class="otab" onclick="filterOrderCards('takeaway',this)" data-type="takeaway">
-              <span class="otab-dot" style="background:#16a34a"></span>Take Away<span class="otab-count" id="otc-takeaway">0</span>
-            </button>
-            <button class="otab" onclick="filterOrderCards('delivery',this)" data-type="delivery">
-              <span class="otab-dot" style="background:#ea580c"></span>Delivery<span class="otab-count" id="otc-delivery">0</span>
-            </button>
-            <button class="otab" onclick="filterOrderCards('online',this)" data-type="online">
-              <span class="otab-dot" style="background:#9333ea"></span>Online<span class="otab-count" id="otc-online">0</span>
             </button>
             <div class="orders-tabs-spacer"></div>
             <button class="new-order-btn" onclick="showNewOrderDialog()">+ New Order</button>
@@ -1320,6 +1303,7 @@ textarea:focus-visible {
             <button class="eheader-icon-btn" onclick="printDraftBill()" title="Draft Bill">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="16" height="16"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
             </button>
+            <button onclick="showNewOrderDialog()" style="background:var(--primary);color:#fff;border:none;border-radius:10px;padding:6px 14px;font-size:13px;font-weight:800;cursor:pointer;white-space:nowrap;flex-shrink:0;min-height:34px;margin-left:4px" title="New Order">+ New Order</button>
           </div>
 
           <!-- Billing Header (existing order → payment) -->
@@ -1332,6 +1316,7 @@ textarea:focus-visible {
             <button class="eheader-icon-btn-dark" onclick="printDraftBill()" title="Print Bill">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="16" height="16"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
             </button>
+            <button onclick="showNewOrderDialog()" style="background:var(--primary);color:#fff;border:none;border-radius:10px;padding:6px 14px;font-size:13px;font-weight:800;cursor:pointer;white-space:nowrap;flex-shrink:0;min-height:34px;margin-left:8px" title="New Order">+ New Order</button>
           </div>
 
           <!-- Main content: Sidebar + Items + Order Panel -->
@@ -2397,6 +2382,43 @@ textarea:focus-visible {
   </div>
 </div>
 
+<!-- Customer Details Modal -->
+<div class="modal-overlay" id="modal-customer-details" style="display:none">
+  <div class="modal" style="max-width:420px">
+    <h3>Customer Details</h3>
+    <div style="display:flex;flex-direction:column;gap:12px;margin:8px 0 16px">
+      <div>
+        <label style="font-size:12px;font-weight:700;color:var(--muted);display:block;margin-bottom:5px;text-transform:uppercase;letter-spacing:.4px">Customer Name</label>
+        <input id="cust-modal-name" type="text" placeholder="Name (optional)" style="width:100%;padding:13px 12px;border:1.5px solid var(--border);border-radius:8px;font-size:15px;box-sizing:border-box">
+      </div>
+      <div>
+        <label style="font-size:12px;font-weight:700;color:var(--muted);display:block;margin-bottom:5px;text-transform:uppercase;letter-spacing:.4px">Phone</label>
+        <input id="cust-modal-phone" type="tel" placeholder="Phone (optional)" style="width:100%;padding:13px 12px;border:1.5px solid var(--border);border-radius:8px;font-size:15px;box-sizing:border-box">
+      </div>
+      <div id="cust-modal-addr-wrap">
+        <label style="font-size:12px;font-weight:700;color:var(--muted);display:block;margin-bottom:5px;text-transform:uppercase;letter-spacing:.4px">Delivery Address</label>
+        <input id="cust-modal-addr" type="text" placeholder="Address (optional)" style="width:100%;padding:13px 12px;border:1.5px solid var(--border);border-radius:8px;font-size:15px;box-sizing:border-box">
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('modal-customer-details')">Cancel</button>
+      <button class="btn btn-primary" onclick="saveCustomerDetails()">Save Details</button>
+    </div>
+  </div>
+</div>
+
+<!-- Change Order Type Modal -->
+<div class="modal-overlay" id="modal-change-type" style="display:none">
+  <div class="modal" style="max-width:520px">
+    <h3>Change Order Type</h3>
+    <p style="font-size:13px;color:var(--muted);margin-bottom:14px">Switch type — current items will be kept</p>
+    <div class="notp-grid" id="change-type-grid"></div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('modal-change-type')">Cancel</button>
+    </div>
+  </div>
+</div>
+
 <!-- Online Order Notification Toast -->
 <div id="online-toast">
   <h4 style="display:flex;align-items:center;gap:7px"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="16" height="16"><rect x="5" y="2" width="14" height="20" rx="2" ry="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg>New Online Order!</h4>
@@ -2736,6 +2758,7 @@ async function fetchOrderTypesFromApi() {
     if (data.order_types?.length) {
       _posOrderTypes = data.order_types
       rebuildNewOrderModal()
+      renderOrderTabs()
     }
     if (data.pos_buttons?.length) {
       _posButtonConfig = data.pos_buttons
@@ -2745,6 +2768,7 @@ async function fetchOrderTypesFromApi() {
 }
 
 const POS_BTN_META = {
+  customer: { label:'Customer',     icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" width="16" height="16"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>', action:'showCustomerDetailsModal()' },
   discount: { label:'Discount',     icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" width="16" height="16"><line x1="19" y1="5" x2="5" y2="19"/><circle cx="6.5" cy="6.5" r="2.5"/><circle cx="17.5" cy="17.5" r="2.5"/></svg>', action:'showDiscount()' },
   note:     { label:'Note',         icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" width="16" height="16"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>', action:'showOrderNoteDialog()' },
   hold:     { label:'Hold',         icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" width="16" height="16"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>', action:'holdOrder()' },
@@ -2760,9 +2784,11 @@ const POS_BTN_META = {
 function buildBottomBar() {
   const bar = document.getElementById('entry-bottom-bar')
   if (!bar) return
-  const visible = _posButtonConfig.filter(b => b.visible).sort((a,b) => a.sort_order - b.sort_order)
+  const configured = _posButtonConfig.filter(b => b.visible).sort((a,b) => a.sort_order - b.sort_order)
+  const defaults = ['customer','discount','note','hold'].map((key,i) => ({key, visible:true, sort_order:i}))
+  const btns = configured.length ? configured : defaults
   let html = ''
-  for (const b of visible) {
+  for (const b of btns) {
     const m = POS_BTN_META[b.key]
     if (!m) continue
     const cls = m.danger ? 'ebb-btn ebb-quick danger' : 'ebb-btn ebb-quick'
@@ -2773,8 +2799,7 @@ function buildBottomBar() {
   }
   html += `<button class="ebb-btn ebb-more" onclick="showMoreOptions()">
     <div class="ebb-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="18" height="18"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg></div>
-    <div class="ebb-label">More Options</div>
-    ${visible.length === 0 ? '<div class="ebb-sub">Discount, notes, split, manager actions</div>' : ''}
+    <div class="ebb-label">More</div>
   </button>`
   bar.innerHTML = html
 }
@@ -2833,6 +2858,78 @@ function rebuildNewOrderModal () {
       <span class="notp-label">${t.name}</span>
     </button>`
   }).join('')
+}
+
+function renderOrderTabs() {
+  const bar = document.getElementById('orders-tabs-bar');
+  if (!bar) return;
+  const dotColors = { 'dine-in':'#2563eb', 'takeaway':'#16a34a', 'delivery':'#ea580c', 'drive-thru':'#0891b2', 'online':'#9333ea' };
+  const typeBtns = _posOrderTypes.map(t => {
+    const type  = otTypeFromIconKey(t);
+    const color = dotColors[type] || '#64748b';
+    const id    = 'otc-' + type;
+    return `<button class="otab" onclick="filterOrderCards('${type}',this)" data-type="${type}">
+      <span class="otab-dot" style="background:${color}"></span>${esc(t.name)}<span class="otab-count" id="${id}">0</span>
+    </button>`;
+  }).join('');
+  bar.innerHTML = `<button class="otab active" onclick="filterOrderCards('all',this)" data-type="all">
+    <span class="otab-dot" style="background:#6366f1"></span>All Orders<span class="otab-count" id="otc-all">0</span>
+  </button>` + typeBtns + `<div class="orders-tabs-spacer"></div>
+  <button class="new-order-btn" onclick="showNewOrderDialog()">+ New Order</button>`;
+}
+
+function showCustomerDetailsModal() {
+  const nameEl   = document.getElementById('cust-modal-name');
+  const phoneEl  = document.getElementById('cust-modal-phone');
+  const addrEl   = document.getElementById('cust-modal-addr');
+  const addrWrap = document.getElementById('cust-modal-addr-wrap');
+  if (nameEl)   nameEl.value   = cart.customerName    || '';
+  if (phoneEl)  phoneEl.value  = cart.customerPhone   || '';
+  if (addrEl)   addrEl.value   = cart.customerAddress || '';
+  if (addrWrap) addrWrap.style.display = ['delivery','online','drive-thru'].includes(cart.type) ? 'block' : 'none';
+  showModal('modal-customer-details');
+  setTimeout(() => nameEl?.focus(), 120);
+}
+
+function saveCustomerDetails() {
+  cart.customerName    = document.getElementById('cust-modal-name')?.value.trim()  || null;
+  cart.customerPhone   = document.getElementById('cust-modal-phone')?.value.trim() || null;
+  cart.customerAddress = document.getElementById('cust-modal-addr')?.value.trim()  || null;
+  const n = document.getElementById('entry-cust-name');  if (n) n.value = cart.customerName    || '';
+  const p = document.getElementById('entry-cust-phone'); if (p) p.value = cart.customerPhone   || '';
+  const a = document.getElementById('entry-cust-addr');  if (a) a.value = cart.customerAddress || '';
+  closeModal('modal-customer-details');
+  updateEheaderCust();
+  showToast('Customer details saved', 'success');
+}
+
+function showChangeOrderTypeDialog() {
+  const grid = document.getElementById('change-type-grid');
+  if (!grid) return;
+  const catLabel = { offline:'In-store', online:'Online', aggregator:'3rd Party', other:'Other' };
+  const catCls   = { offline:'offline',  online:'online',  aggregator:'aggregator', other:'other' };
+  grid.innerHTML = _posOrderTypes.map(t => {
+    const type   = otTypeFromIconKey(t);
+    const cat    = t.channel_category || 'offline';
+    const active = cart.type === type ? 'style="border-color:var(--primary);background:#fff7ed"' : '';
+    return `<button class="notp-btn" ${active} onclick="applyOrderTypeChange('${type}','${t.name.replace(/'/g,"\\'")}')">
+      <span class="notp-cat-badge notp-cat-${catCls[cat]||'other'}">${catLabel[cat]||cat}</span>
+      <span class="notp-icon">${otIconEmoji(t)}</span>
+      <span class="notp-label">${esc(t.name)}</span>
+    </button>`;
+  }).join('');
+  showModal('modal-change-type');
+}
+
+function applyOrderTypeChange(type, typeName) {
+  cart.type = type;
+  cart.typeName = typeName;
+  if (type !== 'dine-in') { cart.tableId = null; cart.tableName = null; }
+  closeModal('modal-change-type');
+  updateOrderPanelHeader();
+  renderEntryTableChips();
+  renderCart();
+  showToast(`Order type changed to ${typeName}`, 'success');
 }
 
 function showNewOrderDialog () {
@@ -2972,14 +3069,6 @@ function attachTableLongPress () {
   grid.addEventListener('pointermove', e => {
     if (pressing && e.movementX**2 + e.movementY**2 > 16) cancel()
   })
-}
-
-// Manage FAB visibility
-function updateNewOrderFabVisibility () {
-  const fab = document.getElementById('new-order-fab')
-  if (!fab) return
-  const ordersVisible = document.getElementById('pos-orders-panel')?.style.display !== 'none'
-  fab.style.display = ordersVisible ? 'flex' : 'none'
 }
 
 // Push unsynced local records to central API, then pull menu + cashiers.
@@ -3558,6 +3647,7 @@ function enterPOS() {
   loadTables();
   loadActiveOrders();
   renderEntryTableChips();
+  buildBottomBar();
   showView('pos');
 }
 
@@ -3691,13 +3781,11 @@ function renderCategories() {
   if (!sidebar) return;
   const all = menu.selectedCat === 'all';
   sidebar.innerHTML = `<button class="ecsb-btn ${all?'active':''}" onclick="filterCategory('all')" data-id="all">
-    <span class="ecsb-icon">🏷️</span><span class="ecsb-label">All Items</span>
+    <span class="ecsb-label">All Items</span>
   </button>`;
   menu.categories.forEach(c => {
-    const emoji = catEmoji(c.name);
     sidebar.innerHTML += `<button class="ecsb-btn ${menu.selectedCat===c.id?'active':''}"
       onclick="filterCategory('${c.id}')" data-id="${c.id}">
-      <span class="ecsb-icon">${emoji}</span>
       <span class="ecsb-label">${esc(c.name)}</span>
     </button>`;
   });
@@ -3825,7 +3913,6 @@ function showPosOrders() {
   cancelKotReturnTimer();
   document.getElementById('pos-orders-panel').style.display = 'flex';
   document.getElementById('pos-entry-panel').style.display  = 'none';
-  updateNewOrderFabVisibility();
 }
 
 function showPosEntry(type) {
@@ -3837,7 +3924,6 @@ function showPosEntry(type) {
   document.getElementById('pos-orders-panel').style.display = 'none';
   document.getElementById('pos-entry-panel').style.display  = 'flex';
   updatePanelMode();
-  updateNewOrderFabVisibility();
 }
 
 function switchToKotMode() {
@@ -4070,7 +4156,11 @@ function updateEheaderCust() {
 }
 
 function editOrderContext() {
-  if (cart.type === 'dine-in') showTableSelectPopup();
+  if (cart.type === 'dine-in') {
+    showTableSelectPopup();
+  } else {
+    showCustomerDetailsModal();
+  }
 }
 
 function updatePanelMode() {
@@ -4104,12 +4194,14 @@ function renderOrderCards() {
   const cur = settings.currency;
   const search = (document.getElementById('orders-search')?.value || '').toLowerCase().trim();
 
-  // Update tab counts
+  // Update tab counts (dynamic from configured order types)
   const counts = { all: activeOrders.length };
-  ['dine-in','takeaway','delivery','online'].forEach(t =>
-    counts[t] = activeOrders.filter(o => o.order_type === t).length);
+  const tabTypes = _posOrderTypes.length
+    ? _posOrderTypes.map(t => otTypeFromIconKey(t))
+    : ['dine-in','takeaway','delivery','online'];
+  tabTypes.forEach(t => counts[t] = activeOrders.filter(o => o.order_type === t).length);
   Object.entries(counts).forEach(([type, count]) => {
-    const el = document.getElementById('otc-' + (type === 'dine-in' ? 'dine-in' : type));
+    const el = document.getElementById('otc-' + type);
     if (el) el.textContent = count;
   });
   // count badge
@@ -4274,9 +4366,10 @@ const HUB_ITEMS = {
       {n:'No Sale',             h:'Open drawer',             a:"showNoSale()",          d:1},
     ]},
     { s:'Table / System', items:[
-      {n:'Change Table/Customer',h:'Order context',          a:"editOrderContext()"},
+      {n:'Customer Details',    h:'Name, phone, address',    a:"showCustomerDetailsModal()"},
+      {n:'Change Order Type',   h:'Switch type, keep items', a:"showChangeOrderTypeDialog()"},
+      {n:'Change Table',        h:'Dine-in only',            a:"showTableSelectPopup()"},
       {n:'Transfer Table',      h:'Dine-in only',            a:"openTransferForCurrentOrder()"},
-      {n:'Printer Settings',    h:'Terminal setup',          a:"navTo('settings')"},
     ]},
   ],
   reports: [
@@ -5573,7 +5666,7 @@ async function placeOrder() {
   if (cart.type === 'dine-in' && !cart.tableId) {
     if (!confirm('No table selected. Continue without a table?')) return;
   }
-
+  try {
   const kp = await getKotPrinter();
   const kotPrinter = kp?.windows_name || (window._posConfig && window._posConfig.kotPrinter) || '';
   const now = Date.now();
@@ -5653,6 +5746,10 @@ async function placeOrder() {
   await loadTables();
   renderEntryTableChips();
   updateOrdersBadge();
+  } catch (e) {
+    console.error('placeOrder error:', e);
+    showToast('Failed to send KOT: ' + (e?.message || String(e)), 'error');
+  }
 }
 
 // ─── KOT return countdown ─────────────────────────────────────
@@ -6375,11 +6472,6 @@ async function toggleFullscreen() {
 })();
 </script>
 
-<!-- Floating New Order button (shows in orders panel) -->
-<button class="new-order-fab" id="new-order-fab" onclick="showNewOrderDialog()" title="New Order">
-  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" width="22" height="22"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-  New Order
-</button>
 
 </body>
 </html>
