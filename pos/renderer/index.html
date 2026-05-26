@@ -2956,23 +2956,23 @@ function renderOutletPicker(outlets) {
   }
   list.innerHTML = outlets.map(o => `
     <div class="outlet-pick-item" id="opick-${o.id}"
-         onclick="pickOutlet('${o.id}',${JSON.stringify(o.name)},${JSON.stringify(o.brand_name||'')},${JSON.stringify(o.market_name||'')})">
+         data-oid="${esc(o.id)}" data-name="${esc(o.name)}"
+         data-brand="${esc(o.brand_name||'')}" data-market="${esc(o.market_name||'')}"
+         onclick="pickOutletEl(this)">
       <div class="outlet-pick-icon">&#127978;</div>
       <div>
         <div class="outlet-pick-name">${esc(o.name)}</div>
         <div class="outlet-pick-sub">${esc(o.brand_name||'')}${o.market_name ? ' · ' + esc(o.market_name) : ''}</div>
       </div>
     </div>`).join('');
-  if (outlets.length === 1) {
-    pickOutlet(outlets[0].id, outlets[0].name, outlets[0].brand_name || '', outlets[0].market_name || '');
-  }
+  if (outlets.length === 1) pickOutletEl(list.querySelector('.outlet-pick-item'));
 }
 
-function pickOutlet(id, name, brand, market) {
+function pickOutletEl(el) {
+  if (!el) return;
   document.querySelectorAll('.outlet-pick-item').forEach(x => x.classList.remove('selected'));
-  const el = document.getElementById('opick-' + id);
-  if (el) el.classList.add('selected');
-  _setupSelectedOutlet = { id, name, brand, market };
+  el.classList.add('selected');
+  _setupSelectedOutlet = { id: el.dataset.oid, name: el.dataset.name, brand: el.dataset.brand, market: el.dataset.market };
   document.getElementById('btn-setup-confirm').disabled = false;
 }
 
