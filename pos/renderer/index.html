@@ -2398,6 +2398,7 @@ let settings  = {
   branch_name:'', cash_variance_alert_pct:5
 };
 let menu      = { categories:[], items:[], filteredItems:[], selectedCat:'all' };
+window.menu   = menu;
 let tables    = [];
 let cart      = {
   type:'dine-in', tableId:null, tableName:'',
@@ -2405,6 +2406,7 @@ let cart      = {
   items:[], discountType:'none', discountValue:0, notes:'',
   orderId: null, orderNumber: null
 };
+window.cart   = cart;
 let activeOrders     = [];
 let currentOrderFilter = 'all';
 let paymentOrderId   = null;

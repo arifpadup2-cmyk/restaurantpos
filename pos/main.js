@@ -117,25 +117,28 @@ async function initDB(cfg = {}) {
 async function runMigrations() {
   const migrationsDir = path.join(__dirname, 'migrations');
   const files = fs.readdirSync(migrationsDir)
-    .filter(f => f.endsWith('.sql'))
+    .filter(f => f.endsWith('.sql') && !f.endsWith('.down.sql') && !f.includes('sync_queue'))
     .sort();
 
+  // Use same schema_migrations table + version column as server
   await sql`
     CREATE TABLE IF NOT EXISTS schema_migrations (
-      filename TEXT PRIMARY KEY,
-      ran_at   BIGINT NOT NULL DEFAULT 0
+      version    TEXT        PRIMARY KEY,
+      applied_at TIMESTAMPTZ NOT NULL DEFAULT now()
     )`;
 
-  const ran = new Set((await sql`SELECT filename FROM schema_migrations`).map(r => r.filename));
+  const rows = await sql`SELECT version FROM schema_migrations`;
+  const ran  = new Set(rows.map(r => r.version));
 
   for (const file of files) {
-    if (ran.has(file)) continue;
+    const version = file.replace('.sql', '');
+    if (ran.has(version)) continue;
     const sqlText = fs.readFileSync(path.join(migrationsDir, file), 'utf8');
-    const statements = sqlText.split(';').map(s => s.trim()).filter(Boolean);
-    for (const stmt of statements) {
-      await sql.unsafe(stmt);
-    }
-    await sql`INSERT INTO schema_migrations (filename, ran_at) VALUES (${file}, ${Date.now()})`;
+    await sql.begin(async t => {
+      await t.unsafe(sqlText);
+      await t`INSERT INTO schema_migrations (version) VALUES (${version})`;
+    });
+    console.log(`  ✓ pos migration: ${file}`);
   }
 }
 
