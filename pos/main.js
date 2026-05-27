@@ -1,6 +1,6 @@
 require('dotenv').config({ path: require('path').join(__dirname, '.env') });
 
-const { app, BrowserWindow, ipcMain, shell } = require('electron');
+const { app, BrowserWindow, ipcMain, shell, dialog } = require('electron');
 const path = require('path');
 const fs   = require('fs');
 const https = require('https');
@@ -367,7 +367,24 @@ function createWindow() {
 
 // ── App lifecycle ─────────────────────────────────────────────────────────────
 
+const gotTheLock = app.requestSingleInstanceLock();
+if (!gotTheLock) {
+  dialog.showErrorBox(
+    'POS Already Running',
+    'The Restaurant POS is already open on this computer.\n\nOnly one instance can run at a time.\nClose the existing window first.'
+  );
+  app.quit();
+} else {
+  app.on('second-instance', () => {
+    if (mainWindow) {
+      if (mainWindow.isMinimized()) mainWindow.restore();
+      mainWindow.focus();
+    }
+  });
+}
+
 app.whenReady().then(async () => {
+  if (!gotTheLock) return;
   const cfg = readConfig();
   if (cfg.serverIp) {
     try { await initDB(cfg); } catch (_) { /* renderer detects failure and shows setup */ }

@@ -716,6 +716,27 @@ textarea:focus-visible {
 .ocard-footer{display:flex;align-items:center;justify-content:space-between;border-top:1px solid var(--border);padding-top:8px;margin-top:2px}
 .ocard-items-count{font-size:12px;color:var(--muted)}
 .ocard-total{font-size:15px;font-weight:800;color:#15803d}
+.ocard-cashier{font-size:11px;color:var(--muted);font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:110px}
+.ocard-cust{font-size:12px;color:var(--secondary);font-weight:600;padding:2px 0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:flex;align-items:center;gap:4px}
+.ocard-agg-id{font-size:11px;color:#0369a1;background:#eff6ff;border-radius:6px;padding:2px 7px;display:inline-block;margin:2px 0 4px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;box-sizing:border-box}
+/* Chair picker */
+.chair-table-wrap{display:flex;justify-content:center;padding:8px 0}
+.chair-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(62px,1fr));gap:8px;max-width:360px;width:100%}
+.chair-btn{display:flex;flex-direction:column;align-items:center;gap:3px;padding:9px 6px;border-radius:10px;border:2px solid var(--border);background:#fff;cursor:pointer;transition:.15s;font-size:10px;font-weight:700;color:var(--muted);line-height:1}
+.chair-btn svg{width:26px;height:26px;stroke:var(--muted);transition:.15s}
+.chair-btn.selected{background:#fff7ed;border-color:var(--primary);color:var(--primary)}
+.chair-btn.selected svg{stroke:var(--primary)}
+.chair-btn:hover:not(.selected){border-color:#cbd5e1;background:var(--bg)}
+/* Table section header in picker */
+.ts-section-header{grid-column:1/-1;background:var(--bg);border-radius:8px;padding:6px 14px;font-size:11px;font-weight:700;color:var(--muted);letter-spacing:.6px;text-transform:uppercase;border:1px solid var(--border);margin-top:6px;cursor:default}
+/* Orders section sub-filter bar */
+.orders-section-bar{display:flex;align-items:center;gap:6px;padding:7px 14px;background:#f8fafc;border-bottom:1px solid var(--border);overflow-x:auto;flex-shrink:0}
+.orders-section-bar::-webkit-scrollbar{height:0}
+.osec-tab{padding:4px 13px;border-radius:20px;font-size:12px;font-weight:600;border:1.5px solid var(--border);background:#fff;color:var(--muted);cursor:pointer;white-space:nowrap;transition:.15s}
+.osec-tab:hover{border-color:var(--primary);color:var(--primary)}
+.osec-tab.active{background:var(--primary);color:#fff;border-color:var(--primary)}
+/* Confirm modal */
+.cmodal-icon{font-size:38px;display:block;text-align:center;margin-bottom:6px}
 /* Pagination */
 .orders-pagination{display:flex;align-items:center;justify-content:space-between;padding:8px 18px;background:#fff;border-top:1px solid var(--border);flex-shrink:0;font-size:12px;color:var(--muted);flex-wrap:wrap;gap:6px;min-height:42px}
 .pag-controls{display:flex;align-items:center;gap:3px}
@@ -778,20 +799,30 @@ textarea:focus-visible {
 .nitem-price{font-size:17px;font-weight:900;color:var(--primary)}
 .nitem-has-variants::after{content:'▾';position:absolute;bottom:4px;right:6px;font-size:10px;color:var(--primary);font-weight:900}
 .nitem-has-mods::before{content:'⊕';position:absolute;top:4px;right:6px;font-size:10px;color:#8b5cf6}
-/* Variant / Modifier picker modals */
-.vpick-item{display:flex;align-items:center;justify-content:space-between;padding:16px 14px;min-height:64px;border:2px solid var(--border);border-radius:12px;cursor:pointer;transition:.15s;gap:12px}
-.vpick-item:hover{border-color:var(--primary);background:#fff7ed}
-.vpick-item.selected{border-color:var(--primary);background:#fff7ed}
-.vpick-name{font-size:16px;font-weight:700;color:var(--text)}
-.vpick-price{font-size:15px;font-weight:800;color:var(--primary)}
-.mpick-group{margin-bottom:14px}
+/* Variant picker — square touch grid */
+.vpick-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:10px;margin:8px 0 12px}
+.vpick-item{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:16px 10px;min-height:110px;border:2.5px solid var(--border);border-radius:14px;cursor:pointer;transition:.15s;gap:6px;text-align:center;background:#fff;user-select:none}
+.vpick-item:hover{border-color:var(--primary);background:#fff7ed;transform:translateY(-2px);box-shadow:0 4px 14px rgba(249,115,22,.15)}
+.vpick-item:active{transform:scale(.96)}
+.vpick-item.selected{border-color:var(--primary);background:#fff7ed;box-shadow:0 0 0 3px rgba(249,115,22,.18)}
+.vpick-name{font-size:15px;font-weight:700;color:var(--text);line-height:1.3}
+.vpick-size{font-size:12px;font-weight:500;color:var(--muted);margin-top:1px}
+.vpick-price{font-size:17px;font-weight:900;color:var(--primary);margin-top:2px}
+.vpick-check{font-size:18px;color:var(--primary);margin-bottom:2px;opacity:0;transition:.15s}
+.vpick-item.selected .vpick-check{opacity:1}
+/* Modifier picker — square touch grid */
+.mpick-group{margin-bottom:18px}
 .mpick-group-title{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);margin-bottom:8px;display:flex;align-items:center;gap:6px}
 .mpick-required-badge{background:#fef2f2;color:#dc2626;font-size:10px;padding:2px 6px;border-radius:10px;font-weight:700}
-.mpick-opt{display:flex;align-items:center;justify-content:space-between;padding:14px 12px;min-height:56px;border:1.5px solid var(--border);border-radius:10px;cursor:pointer;transition:.15s;margin-bottom:8px}
-.mpick-opt:hover{border-color:var(--primary)}
-.mpick-opt.selected{border-color:var(--primary);background:#fff7ed}
-.mpick-opt-name{font-size:15px;font-weight:600;color:var(--text)}
-.mpick-opt-price{font-size:14px;font-weight:700;color:var(--primary)}
+.mpick-opts-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:8px}
+.mpick-opt{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:12px 8px;min-height:90px;border:2px solid var(--border);border-radius:12px;cursor:pointer;transition:.15s;gap:4px;text-align:center;background:#fff;position:relative;user-select:none}
+.mpick-opt:hover{border-color:var(--primary);background:#fff7ed}
+.mpick-opt:active{transform:scale(.96)}
+.mpick-opt.selected{border-color:var(--primary);background:#fff7ed;box-shadow:0 0 0 3px rgba(249,115,22,.15)}
+.mpick-opt-check{font-size:15px;color:var(--primary);opacity:0;transition:.15s;line-height:1}
+.mpick-opt.selected .mpick-opt-check{opacity:1}
+.mpick-opt-name{font-size:13px;font-weight:700;color:var(--text);line-height:1.3;word-break:break-word}
+.mpick-opt-price{font-size:12px;font-weight:800;color:var(--primary)}
 .op-item-variant{font-size:11px;color:var(--primary);font-weight:700;margin-top:1px}
 .op-item-mods{font-size:10px;color:#8b5cf6;margin-top:1px}
 /* Order panel */
@@ -1249,6 +1280,8 @@ textarea:focus-visible {
             <div class="orders-tabs-spacer"></div>
             <button class="new-order-btn" onclick="showNewOrderDialog()">+ New Order</button>
           </div>
+          <!-- Section sub-filter (shown for dine-in when sections exist) -->
+          <div class="orders-section-bar" id="orders-section-bar" style="display:none"></div>
           <!-- Cards grid -->
           <div class="orders-grid-area">
             <div class="orders-card-grid" id="orders-sq-grid"></div>
@@ -2040,29 +2073,35 @@ textarea:focus-visible {
   </div>
 </div>
 
-<!-- Seat Count Picker Modal -->
+<!-- Seat / Chair Visual Picker Modal -->
 <div class="modal-overlay" id="modal-seat-picker">
-  <div class="modal" style="max-width:340px;text-align:center">
-    <h3 id="seat-picker-title" style="margin-bottom:4px">Table T1</h3>
-    <p style="font-size:13px;color:var(--muted);margin-bottom:20px">How many guests at this table?</p>
-    <div style="display:flex;align-items:center;justify-content:center;gap:16px;margin-bottom:20px">
-      <button onclick="seatAdjust(-1)" style="width:44px;height:44px;border-radius:50%;background:var(--bg);border:2px solid var(--border);font-size:22px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center">−</button>
-      <span id="seat-count-display" style="font-size:42px;font-weight:900;min-width:60px;color:var(--primary)">2</span>
-      <button onclick="seatAdjust(+1)" style="width:44px;height:44px;border-radius:50%;background:var(--bg);border:2px solid var(--border);font-size:22px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center">+</button>
+  <div class="modal" style="max-width:400px">
+    <h3 id="seat-picker-title" style="margin-bottom:4px;text-align:center">Table T1</h3>
+    <p style="font-size:13px;color:var(--muted);margin-bottom:14px;text-align:center">Long-press selected seats for this table</p>
+    <div class="chair-table-wrap">
+      <div class="chair-grid" id="chair-grid"></div>
     </div>
-    <div style="display:flex;gap:8px;justify-content:center;margin-bottom:16px;flex-wrap:wrap">
-      <button onclick="setSeatCount(1)" style="width:44px;height:44px;border-radius:10px;background:var(--bg);border:2px solid var(--border);font-size:15px;font-weight:700;cursor:pointer;transition:.1s" class="seat-quick-btn" data-n="1">1</button>
-      <button onclick="setSeatCount(2)" style="width:44px;height:44px;border-radius:10px;background:var(--bg);border:2px solid var(--border);font-size:15px;font-weight:700;cursor:pointer;transition:.1s" class="seat-quick-btn" data-n="2">2</button>
-      <button onclick="setSeatCount(3)" style="width:44px;height:44px;border-radius:10px;background:var(--bg);border:2px solid var(--border);font-size:15px;font-weight:700;cursor:pointer;transition:.1s" class="seat-quick-btn" data-n="3">3</button>
-      <button onclick="setSeatCount(4)" style="width:44px;height:44px;border-radius:10px;background:var(--bg);border:2px solid var(--border);font-size:15px;font-weight:700;cursor:pointer;transition:.1s" class="seat-quick-btn" data-n="4">4</button>
-      <button onclick="setSeatCount(5)" style="width:44px;height:44px;border-radius:10px;background:var(--bg);border:2px solid var(--border);font-size:15px;font-weight:700;cursor:pointer;transition:.1s" class="seat-quick-btn" data-n="5">5</button>
-      <button onclick="setSeatCount(6)" style="width:44px;height:44px;border-radius:10px;background:var(--bg);border:2px solid var(--border);font-size:15px;font-weight:700;cursor:pointer;transition:.1s" class="seat-quick-btn" data-n="6">6</button>
-      <button onclick="setSeatCount(7)" style="width:44px;height:44px;border-radius:10px;background:var(--bg);border:2px solid var(--border);font-size:15px;font-weight:700;cursor:pointer;transition:.1s" class="seat-quick-btn" data-n="7">7</button>
-      <button onclick="setSeatCount(8)" style="width:44px;height:44px;border-radius:10px;background:var(--bg);border:2px solid var(--border);font-size:15px;font-weight:700;cursor:pointer;transition:.1s" class="seat-quick-btn" data-n="8">8</button>
+    <div style="text-align:center;margin:14px 0 6px;display:flex;align-items:center;justify-content:center;gap:6px">
+      <span style="font-size:13px;color:var(--muted)">Occupied:</span>
+      <span id="seat-selected-count" style="font-size:24px;font-weight:900;color:var(--primary)">0</span>
+      <span style="font-size:13px;color:var(--muted)">/ <span id="seat-total-count">6</span> seats</span>
     </div>
     <div class="modal-footer">
       <button class="btn-outline" onclick="closeModal('modal-seat-picker');showModal('modal-table-select')">Back</button>
-      <button class="btn btn-primary" onclick="confirmSeatAndEnter()">Confirm</button>
+      <button class="btn btn-primary" onclick="confirmSeatAndEnter()">Confirm &amp; Enter</button>
+    </div>
+  </div>
+</div>
+
+<!-- Generic Confirm Modal -->
+<div class="modal-overlay" id="modal-confirm">
+  <div class="modal" style="max-width:360px;text-align:center">
+    <span class="cmodal-icon" id="cmodal-icon">⚠️</span>
+    <h3 id="cmodal-title" style="margin-bottom:8px">Confirm</h3>
+    <p id="cmodal-msg" style="font-size:14px;color:var(--muted);margin:0 0 20px;line-height:1.5;white-space:pre-wrap"></p>
+    <div class="modal-footer" style="justify-content:center;gap:10px">
+      <button class="btn-outline" id="cmodal-cancel" onclick="_confirmModalCancel()">Cancel</button>
+      <button class="btn btn-primary" id="cmodal-ok" onclick="_confirmModalOk()">Confirm</button>
     </div>
   </div>
 </div>
@@ -2362,10 +2401,11 @@ textarea:focus-visible {
 
 <!-- Variant Picker Modal -->
 <div class="modal-overlay" id="modal-variant-picker" style="display:none">
-  <div class="modal" style="max-width:420px">
+  <div class="modal" style="max-width:520px;width:94vw">
     <h3 id="vp-item-name">Choose Option</h3>
+    <p style="font-size:13px;color:var(--muted);margin:-6px 0 10px">Select a size or variant to continue</p>
     <p style="font-size:12px;color:var(--muted);margin-bottom:12px">Select a size or variant</p>
-    <div id="vp-list" style="display:flex;flex-direction:column;gap:8px;margin:4px 0 8px"></div>
+    <div id="vp-list" class="vpick-grid"></div>
     <div class="modal-footer">
       <button class="btn btn-outline" onclick="document.getElementById('modal-variant-picker').style.display='none';_pendingItem=null">Cancel</button>
     </div>
@@ -2374,7 +2414,7 @@ textarea:focus-visible {
 
 <!-- Modifier Prompt Modal -->
 <div class="modal-overlay" id="modal-modifier-prompt" style="display:none">
-  <div class="modal" style="max-width:480px;max-height:88vh;display:flex;flex-direction:column">
+  <div class="modal" style="max-width:560px;width:94vw;max-height:88vh;display:flex;flex-direction:column">
     <h3 id="mp-item-name" style="flex-shrink:0">Customize</h3>
     <div id="mp-groups" style="overflow-y:auto;flex:1;margin:8px 0;padding-right:4px"></div>
     <div class="modal-footer" style="flex-shrink:0">
@@ -2642,7 +2682,7 @@ async function saveSettings() {
   await setSetting('require_void_reason',     String(settings.require_void_reason));
   document.getElementById('hdr-rest-name').textContent  = settings.restaurant_name;
   document.getElementById('login-rest-name').textContent = settings.restaurant_name;
-  alert('Settings saved!');
+  showToast('Settings saved!', 'success');
 }
 
 async function loadConnectionSettings() {
@@ -3012,49 +3052,41 @@ function showPosEntryWithPartner (type, partnerId, partnerName) {
   renderCart()
 }
 
-// ── Seat / Chair Count Picker ──────────────────────────────────────
+// ── Visual Chair / Seat Picker ──────────────────────────────────────
 let _seatPickerTable = null
-let _currentSeatCount = 2
+let _selectedSeats = new Set()
 
 function openSeatPicker (tableId, tableName) {
-  _seatPickerTable = { id: tableId, name: tableName }
-  _currentSeatCount = 2
-  const title = document.getElementById('seat-picker-title')
-  if (title) title.textContent = `Table ${tableName}`
-  document.getElementById('seat-count-display').textContent = _currentSeatCount
-  document.querySelectorAll('.seat-quick-btn').forEach(b => {
-    b.style.background = parseInt(b.dataset.n) === _currentSeatCount ? 'var(--primary)' : ''
-    b.style.color      = parseInt(b.dataset.n) === _currentSeatCount ? '#fff' : ''
-    b.style.borderColor= parseInt(b.dataset.n) === _currentSeatCount ? 'var(--primary)' : ''
-  })
+  _seatPickerTable = tables.find(t => t.id === tableId) || { id: tableId, name: tableName, capacity: 6 }
+  _selectedSeats = new Set()
+
+  const capacity = Math.min(Math.max(_seatPickerTable.capacity || 6, 1), 24)
+  document.getElementById('seat-picker-title').textContent = `Table ${tableName}`
+  document.getElementById('seat-total-count').textContent = capacity
+  document.getElementById('seat-selected-count').textContent = '0'
+
+  const chairSVG = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="7" r="4"/><path d="M5 20v-3a7 7 0 0 1 14 0v3"/></svg>`
+  document.getElementById('chair-grid').innerHTML = Array.from({ length: capacity }, (_, i) =>
+    `<button class="chair-btn" data-seat="${i}" onclick="toggleChair(${i})">${chairSVG}<span>${i + 1}</span></button>`
+  ).join('')
+
   closeModal('modal-table-select')
   showModal('modal-seat-picker')
 }
 
-function seatAdjust (delta) {
-  _currentSeatCount = Math.max(1, Math.min(20, _currentSeatCount + delta))
-  document.getElementById('seat-count-display').textContent = _currentSeatCount
-  document.querySelectorAll('.seat-quick-btn').forEach(b => {
-    b.style.background = parseInt(b.dataset.n) === _currentSeatCount ? 'var(--primary)' : ''
-    b.style.color      = parseInt(b.dataset.n) === _currentSeatCount ? '#fff' : ''
-    b.style.borderColor= parseInt(b.dataset.n) === _currentSeatCount ? 'var(--primary)' : ''
+function toggleChair (seatIdx) {
+  if (_selectedSeats.has(seatIdx)) _selectedSeats.delete(seatIdx)
+  else _selectedSeats.add(seatIdx)
+  document.querySelectorAll('.chair-btn').forEach(btn => {
+    btn.classList.toggle('selected', _selectedSeats.has(parseInt(btn.dataset.seat)))
   })
-}
-
-function setSeatCount (n) {
-  _currentSeatCount = n
-  document.getElementById('seat-count-display').textContent = n
-  document.querySelectorAll('.seat-quick-btn').forEach(b => {
-    b.style.background = parseInt(b.dataset.n) === n ? 'var(--primary)' : ''
-    b.style.color      = parseInt(b.dataset.n) === n ? '#fff' : ''
-    b.style.borderColor= parseInt(b.dataset.n) === n ? 'var(--primary)' : ''
-  })
+  document.getElementById('seat-selected-count').textContent = _selectedSeats.size
 }
 
 async function confirmSeatAndEnter () {
   closeModal('modal-seat-picker')
   if (!_seatPickerTable) return
-  cart.seatCount = _currentSeatCount
+  cart.seatCount = _selectedSeats.size || 1
   await selectTableAndEnter(_seatPickerTable.id, _seatPickerTable.name, 'available')
 }
 
@@ -3208,7 +3240,7 @@ async function acceptOnlineOrder() {
 
   updateOrdersBadge();
   loadActiveOrders();
-  alert(`Online order #${orderNum} accepted!`);
+  showToast(`Online order #${orderNum} accepted!`, 'success');
   pendingOnlineOrder = null;
 }
 
@@ -3674,8 +3706,7 @@ function enterPOS() {
   showView('pos');
 }
 
-async function confirmLogout() {
-  if (!confirm('Are you sure you want to end this shift?')) return;
+async function _doLogout() {
   await db.run('UPDATE shifts SET status=?,closed_at=? WHERE id=?',
     ['closed', Date.now(), shift.id]);
   await syncUnsyncedData();
@@ -3692,6 +3723,11 @@ async function confirmLogout() {
   document.getElementById('pin-box').classList.add('show');
   document.getElementById('cash-box').classList.remove('show');
   showPosOrders();
+}
+
+async function confirmLogout() {
+  showConfirmModal('End this shift and log out?', _doLogout,
+    { title: 'End Shift', confirmLabel: 'Log Out', type: 'warning', icon: '🔒' });
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -3921,7 +3957,12 @@ function renderEntryTableChips() {
 
 function selectTable(id, name, status) {
   if (status === 'occupied' && cart.tableId !== id) {
-    if (!confirm(`Table ${name} is occupied. View that order or select anyway?`)) return;
+    showConfirmModal(
+      `Table ${name} is occupied. Select it anyway?`,
+      () => { cart.tableId = id; cart.tableName = name; renderEntryTableChips(); updateCartOrderInfo(); },
+      { title: 'Table Occupied', confirmLabel: 'Select Anyway', type: 'warning', icon: '⚠️' }
+    );
+    return;
   }
   cart.tableId   = id;
   cart.tableName = name;
@@ -3933,6 +3974,7 @@ function selectTable(id, name, status) {
 //  POS PANEL NAVIGATION
 // ═══════════════════════════════════════════════════════════════
 let orderCardFilter = 'all';
+let orderSectionFilter = 'all';
 let ordersCurrentPage = 1;
 
 function showPosOrders() {
@@ -3964,12 +4006,12 @@ async function showTableSelectPopup() {
   if (!tables.length) {
     grid.innerHTML = `<div class="empty-state"><span class="es-icon">${ic('chair',48)}</span><span>No tables configured.<br>Add tables in Back Office.</span></div>`;
   } else {
-    grid.innerHTML = tables.map(t => {
+    const renderTableBtn = t => {
       const occupied = t.status === 'occupied';
-      const cls      = occupied ? 'ts-occupied' : 'ts-available';
-      const dotIc    = occupied ? ic('dotRed',20) : ic('dotGreen',20);
-      const lbl      = occupied ? 'Occupied' : 'Available';
-      const seatHint = t.seat_count ? `<span class="ts-seat-chip">${ic('chair',12)} ${t.seat_count}</span>` : ''
+      const cls   = occupied ? 'ts-occupied' : 'ts-available';
+      const dotIc = occupied ? ic('dotRed',20) : ic('dotGreen',20);
+      const lbl   = occupied ? 'Occupied' : 'Available';
+      const seatHint = t.seat_count ? `<span class="ts-seat-chip">${ic('chair',12)} ${t.seat_count}</span>` : '';
       return `<button class="ts-btn ${cls}"
         data-table-id="${t.id}" data-table-name="${esc(t.name)}"
         onclick="selectTableAndEnter('${t.id}','${esc(t.name)}','${t.status}')">
@@ -3978,7 +4020,23 @@ async function showTableSelectPopup() {
         <span class="ts-tname">${esc(t.name)}</span>
         <span class="ts-status">${lbl}${seatHint}</span>
       </button>`;
-    }).join('');
+    };
+
+    const allSections = [...new Set(tables.map(t => t.section_name || '').filter(Boolean))];
+    if (allSections.length >= 2) {
+      const bySection = {};
+      tables.forEach(t => {
+        const s = t.section_name || 'General';
+        if (!bySection[s]) bySection[s] = [];
+        bySection[s].push(t);
+      });
+      const orderedSections = [...new Set(tables.map(t => t.section_name || 'General'))];
+      grid.innerHTML = orderedSections.map(s =>
+        `<div class="ts-section-header">${esc(s)}</div>${bySection[s].map(renderTableBtn).join('')}`
+      ).join('');
+    } else {
+      grid.innerHTML = tables.map(renderTableBtn).join('');
+    }
   }
   showModal('modal-table-select');
   attachTableLongPress();
@@ -4021,7 +4079,7 @@ async function selectTableAndEnter(tableId, tableName, status) {
       [MACHINE_ID, tableId, MACHINE_ID]
     );
     if (!retry.ok || retry.changes === 0) {
-      alert(`Table ${tableName} is being used by another terminal. Please wait or choose another table.`);
+      showToast(`Table ${tableName} is in use by another terminal. Please choose another table.`, 'warning');
       await loadTables();
       showTableSelectPopup();
       return;
@@ -4132,18 +4190,25 @@ async function handlePayClick(method) {
 
 async function cancelCurrentOrder() {
   if (!cart.orderId) return;
-  if (!confirm(`Cancel Order #${cart.orderNumber}? This cannot be undone.`)) return;
-  const order = activeOrders.find(o => o.id === cart.orderId);
-  await db.run(`UPDATE orders SET status='cancelled',updated_at=?,synced=0 WHERE id=?`,
-    [Date.now(), cart.orderId]);
-  if (order && order.table_id)
-    await db.run(`UPDATE tables_layout SET status='available',current_order_id=NULL WHERE id=?`, [order.table_id]);
-  clearCart();
-  showPosOrders();
-  await loadActiveOrders();
-  await loadTables();
-  renderEntryTableChips();
-  updateOrdersBadge();
+  const oid = cart.orderId;
+  const onum = cart.orderNumber;
+  showConfirmModal(
+    `Cancel Order #${onum}?\n\nThis cannot be undone.`,
+    async () => {
+      const order = activeOrders.find(o => o.id === oid);
+      await db.run(`UPDATE orders SET status='cancelled',updated_at=?,synced=0 WHERE id=?`, [Date.now(), oid]);
+      if (order && order.table_id)
+        await db.run(`UPDATE tables_layout SET status='available',current_order_id=NULL WHERE id=?`, [order.table_id]);
+      clearCart();
+      showPosOrders();
+      await loadActiveOrders();
+      await loadTables();
+      renderEntryTableChips();
+      updateOrdersBadge();
+      showToast(`Order #${onum} cancelled.`, 'info');
+    },
+    { title: 'Cancel Order', confirmLabel: 'Cancel Order', cancelLabel: 'Keep', type: 'danger', icon: '🗑️' }
+  );
 }
 
 function setOrderTypeEntry(type) {
@@ -4231,8 +4296,17 @@ function updatePanelMode() {
 
 function filterOrderCards(type, btn) {
   orderCardFilter = type;
+  orderSectionFilter = 'all';
   ordersCurrentPage = 1;
   document.querySelectorAll('.otab').forEach(b => b.classList.remove('active'));
+  if (btn) btn.classList.add('active');
+  renderOrderCards();
+}
+
+function filterOrderSection(section, btn) {
+  orderSectionFilter = section;
+  ordersCurrentPage = 1;
+  document.querySelectorAll('.osec-tab').forEach(b => b.classList.remove('active'));
   if (btn) btn.classList.add('active');
   renderOrderCards();
 }
@@ -4260,15 +4334,38 @@ function renderOrderCards() {
     badge.textContent   = `${activeOrders.length} open`;
   }
 
+  // Section sub-filter bar (shown only for dine-in when 2+ sections exist)
+  const secBar = document.getElementById('orders-section-bar');
+  const tableSections = [...new Set(tables.filter(t => t.section_name).map(t => t.section_name))];
+  if (orderCardFilter === 'dine-in' && tableSections.length >= 2) {
+    secBar.style.display = '';
+    secBar.innerHTML = [`<button class="osec-tab ${orderSectionFilter==='all'?'active':''}" onclick="filterOrderSection('all',this)">All Sections</button>`]
+      .concat(tableSections.map(s =>
+        `<button class="osec-tab ${orderSectionFilter===s?'active':''}" onclick="filterOrderSection('${esc(s)}',this)">${esc(s)}</button>`
+      )).join('');
+  } else {
+    secBar.style.display = 'none';
+    if (orderSectionFilter !== 'all') orderSectionFilter = 'all';
+  }
+
   let orders = orderCardFilter === 'all'
     ? [...activeOrders]
     : activeOrders.filter(o => o.order_type === orderCardFilter);
 
+  // Apply section sub-filter for dine-in
+  if (orderCardFilter === 'dine-in' && orderSectionFilter !== 'all') {
+    orders = orders.filter(o => {
+      const tbl = tables.find(t => t.id === o.table_id);
+      return tbl && tbl.section_name === orderSectionFilter;
+    });
+  }
+
   if (search) {
     orders = orders.filter(o =>
       String(o.order_number).toLowerCase().includes(search) ||
-      (o.table_name    || '').toLowerCase().includes(search) ||
-      (o.customer_name || '').toLowerCase().includes(search)
+      (o.table_name           || '').toLowerCase().includes(search) ||
+      (o.customer_name        || '').toLowerCase().includes(search) ||
+      (o.aggregator_order_id  || '').toLowerCase().includes(search)
     );
   }
 
@@ -4315,25 +4412,29 @@ function renderOrderCards() {
   };
 
   grid.innerHTML = pageOrders.map(o => {
-    const tc = typeConfig[o.order_type] || { bar:'#64748b', icon:'📋', iconBg:'#f1f5f9' };
-    const info = o.order_type === 'dine-in'
-      ? (o.table_name ? `TABLE ${o.table_name}` : 'No Table')
-      : (o.customer_name || '—');
+    const tc      = typeConfig[o.order_type] || { bar:'#64748b', icon:'📋', iconBg:'#f1f5f9' };
     const elapsed = timeAgo(o.created_at);
-    const statusCls = 'ocard-new'; // could vary by logic
+    const infoLine = o.order_type === 'dine-in'
+      ? (o.table_name ? `🪑 ${esc(o.table_name)}` : 'No Table')
+      : (o.customer_name ? `👤 ${esc(o.customer_name)}` : '—');
+    const showCust = o.order_type !== 'dine-in' && o.customer_name; // dine-in shows table, others show cust in info
+    const aggLine  = o.aggregator_order_id
+      ? `<div class="ocard-agg-id">🔗 ${esc(o.aggregator_order_id)}</div>` : '';
     return `<div class="ocard" onclick="openOrderInEntry('${o.id}')">
       <div class="ocard-bar" style="background:${tc.bar}"></div>
       <div class="ocard-top">
-        <span class="ocard-status ${statusCls}">● New</span>
+        <div style="display:flex;align-items:center;gap:6px;min-width:0;overflow:hidden">
+          <div class="ocard-type-icon" style="background:${tc.iconBg};flex-shrink:0">${tc.icon}</div>
+          <span class="ocard-num" style="font-size:14px;font-weight:800;color:var(--secondary);white-space:nowrap">#${o.order_number}</span>
+        </div>
         <span class="ocard-time">${elapsed}</span>
       </div>
-      <div class="ocard-num">#ORD-${o.order_number}</div>
-      <div class="ocard-info-row">
-        <div class="ocard-type-icon" style="background:${tc.iconBg}">${tc.icon}</div>
-        <div class="ocard-info-text">${esc(info)}</div>
+      <div class="ocard-info-row" style="margin-bottom:4px">
+        <div class="ocard-info-text">${infoLine}</div>
       </div>
+      ${aggLine}
       <div class="ocard-footer">
-        <span class="ocard-items-count">${o.item_count||0} items</span>
+        <span class="ocard-cashier" title="${esc(o.cashier_name||'')}">◷ ${esc(o.cashier_name||'—')}</span>
         <span class="ocard-total">${cur} ${parseFloat(o.total||0).toFixed(2)}</span>
       </div>
     </div>`;
@@ -4631,9 +4732,9 @@ function openVariantPicker(item) {
   const list = document.getElementById('vp-list');
   list.innerHTML = item.variants.map(v => `
     <div class="vpick-item" id="vpick-${v.id}" onclick="selectVariant(${JSON.stringify(v).replace(/"/g,'&quot;')})">
-      <div>
-        <div class="vpick-name">${esc(v.name)}${v.size ? ` — ${esc(v.size)}` : ''}</div>
-      </div>
+      <div class="vpick-check">✓</div>
+      <div class="vpick-name">${esc(v.name)}</div>
+      ${v.size ? `<div class="vpick-size">${esc(v.size)}</div>` : ''}
       <div class="vpick-price">${settings.currency} ${parseFloat(v.price).toFixed(2)}</div>
     </div>`).join('');
   document.getElementById('modal-variant-picker').style.display = 'flex';
@@ -4667,13 +4768,16 @@ function openModifierPrompt(item, preSelections) {
       <div class="mpick-group-title">
         ${esc(g.name)}
         ${g.required ? '<span class="mpick-required-badge">Required</span>' : '<span style="font-size:10px;color:var(--muted)">(Optional)</span>'}
-        ${!isMulti ? '<span style="font-size:10px;color:var(--muted)">Choose 1</span>' : `<span style="font-size:10px;color:var(--muted)">Choose up to ${g.max_select}</span>`}
+        ${!isMulti ? '<span style="font-size:10px;color:var(--muted)">Choose 1</span>' : `<span style="font-size:10px;color:var(--muted)">Up to ${g.max_select}</span>`}
       </div>
-      ${opts.map(o => `
-        <div class="mpick-opt" id="mopt-${g.id}-${o.id}" onclick="toggleModOption('${g.id}','${o.id}',${g.max_select},${JSON.stringify(o).replace(/"/g,'&quot;')})">
-          <span class="mpick-opt-name">${esc(o.name)}</span>
-          <span class="mpick-opt-price">${parseFloat(o.price) > 0 ? '+' + settings.currency + ' ' + parseFloat(o.price).toFixed(2) : 'Free'}</span>
-        </div>`).join('')}
+      <div class="mpick-opts-grid">
+        ${opts.map(o => `
+          <div class="mpick-opt" id="mopt-${g.id}-${o.id}" onclick="toggleModOption('${g.id}','${o.id}',${g.max_select},${JSON.stringify(o).replace(/"/g,'&quot;')})">
+            <span class="mpick-opt-check">✓</span>
+            <span class="mpick-opt-name">${esc(o.name)}</span>
+            ${parseFloat(o.price) > 0 ? `<span class="mpick-opt-price">+${settings.currency} ${parseFloat(o.price).toFixed(2)}</span>` : ''}
+          </div>`).join('')}
+      </div>
     </div>`;
   }).join('');
   document.getElementById('mp-groups').innerHTML = html || '<p style="color:var(--muted);text-align:center;font-size:13px">No modifier options available.</p>';
@@ -5067,7 +5171,7 @@ async function confirmPayment() {
     const a1 = parseFloat(document.getElementById('split-a1').value) || 0;
     const a2 = parseFloat(document.getElementById('split-a2').value) || 0;
     if (Math.abs(a1 + a2 - paymentTotal) > 0.01) {
-      alert('Split amounts must equal the total.'); return;
+      showToast('Split amounts must equal the total.', 'warning'); return;
     }
     const m1 = document.getElementById('split-m1').value;
     const m2 = document.getElementById('split-m2').value;
@@ -5082,7 +5186,7 @@ async function confirmPayment() {
       ? (parseFloat(document.getElementById('pay-received').value) || 0)
       : paymentTotal;
     if (paymentMethod === 'cash' && received < paymentTotal) {
-      alert('Cash received is less than the total!'); return;
+      showToast('Cash received is less than the total!', 'error'); return;
     }
     change = Math.max(0, received - paymentTotal);
   }
@@ -5167,7 +5271,7 @@ async function confirmPayment() {
 }
 
 async function printDraftBill() {
-  if (!cart.items.length) { alert('Cart is empty.'); return; }
+  if (!cart.items.length) { showToast('Cart is empty.', 'warning'); return; }
   const { subtotal, taxAmt, discAmt, total } = calcTotals();
   const rp = await getReceiptPrinter();
   const billPrinter = rp?.windows_name || (window._posConfig && window._posConfig.billPrinter) || '';
@@ -5561,7 +5665,7 @@ async function addExpense() {
   const category = document.getElementById('exp-category').value;
   const amount   = parseFloat(document.getElementById('exp-amount').value);
   const desc     = document.getElementById('exp-desc').value.trim();
-  if (!amount || amount <= 0) { alert('Enter a valid amount.'); return; }
+  if (!amount || amount <= 0) { showToast('Enter a valid amount.', 'warning'); return; }
 
   await db.run(`INSERT INTO expenses (id,category,description,amount,cashier_id,cashier_name,shift_id,created_at,synced)
     VALUES (?,?,?,?,?,?,?,?,?)`,
@@ -5645,21 +5749,21 @@ async function loadShiftSummary() {
 }
 
 async function closeShift() {
-  if (!shift) { alert('No active shift.'); return; }
+  if (!shift) { showToast('No active shift.', 'warning'); return; }
   const active = await db.get(`SELECT COUNT(*) as c FROM orders WHERE shift_id=? AND status='active'`, [shift.id]);
   if (active.ok && active.data.c > 0) {
-    alert(`There are ${active.data.c} active order(s). Please bill them before closing the shift.`); return;
+    showToast(`${active.data.c} active order(s) still open. Bill them before closing the shift.`, 'warning'); return;
   }
-  if (!confirm('Close this shift?')) return;
-
   const closing = parseFloat(document.getElementById('sc-cash').value) || 0;
   const notes   = document.getElementById('sc-notes').value.trim();
-  await db.run('UPDATE shifts SET status=?,closing_cash=?,notes=?,closed_at=?,synced=0 WHERE id=?',
-    ['closed', closing, notes, Date.now(), shift.id]);
-  await syncUnsyncedData();
-  alert('Shift closed successfully!');
-  shift = null;
-  await confirmLogout();
+  showConfirmModal('Close this shift?', async () => {
+    await db.run('UPDATE shifts SET status=?,closing_cash=?,notes=?,closed_at=?,synced=0 WHERE id=?',
+      ['closed', closing, notes, Date.now(), shift.id]);
+    await syncUnsyncedData();
+    showToast('Shift closed successfully.', 'success');
+    shift = null;
+    await _doLogout();
+  }, { title: 'Close Shift', confirmLabel: 'Close Shift', icon: '🔒' });
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -5705,36 +5809,56 @@ async function loadDaySummary() {
 async function closeDay() {
   const today = todayStr();
   const existing = await db.get('SELECT id FROM day_closings WHERE date=?', [today]);
-  if (existing.ok && existing.data) { alert('Day already closed for today.'); return; }
+  if (existing.ok && existing.data) { showToast('Day already closed for today.', 'warning'); return; }
 
   const openShifts = await db.get(`SELECT COUNT(*) as c FROM shifts WHERE status='open'`);
-  if (openShifts.ok && openShifts.data.c > 0)
-    if (!confirm(`There are ${openShifts.data.c} open shift(s). Close day anyway?`)) return;
+  const hasOpenShifts = openShifts.ok && openShifts.data.c > 0;
 
-  const notes = document.getElementById('dc-notes').value.trim();
-  const s = window._dayStats || {};
-  await db.run(`INSERT INTO day_closings
-    (id,date,total_orders,total_sales,cash_sales,card_sales,online_payment_sales,total_expenses,net_sales,
-     dine_in_count,takeaway_count,delivery_count,online_count,closed_by,closed_at,notes,synced)
-    VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`,
-    [uid(), today, (s.orders||[]).length, s.sales||0, s.cash||0, s.card||0, s.onlinePay||0,
-     s.expTotal||0, (s.sales||0)-(s.expTotal||0),
-     s.dineIn||0, s.takeaway||0, s.delivery||0, s.online||0,
-     cashier.name, Date.now(), notes, 0]);
+  const _doCloseDay = async () => {
+    const notes = document.getElementById('dc-notes').value.trim();
+    const s = window._dayStats || {};
+    await db.run(`INSERT INTO day_closings
+      (id,date,total_orders,total_sales,cash_sales,card_sales,online_payment_sales,total_expenses,net_sales,
+       dine_in_count,takeaway_count,delivery_count,online_count,closed_by,closed_at,notes,synced)
+      VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`,
+      [uid(), today, (s.orders||[]).length, s.sales||0, s.cash||0, s.card||0, s.onlinePay||0,
+       s.expTotal||0, (s.sales||0)-(s.expTotal||0),
+       s.dineIn||0, s.takeaway||0, s.delivery||0, s.online||0,
+       cashier.name, Date.now(), notes, 0]);
+    await syncUnsyncedData();
+    showToast(`Day ${today} closed. Z-Report saved.`, 'success');
+    if (document.getElementById('v-dashboard').classList.contains('active')) loadDashboard();
+  };
 
-  await syncUnsyncedData();
-  alert(`Day ${today} closed successfully! Z-Report saved.`);
-  if (document.getElementById('v-dashboard').classList.contains('active')) loadDashboard();
+  if (hasOpenShifts) {
+    showConfirmModal(
+      `There are ${openShifts.data.c} open shift(s). Close the day anyway?`,
+      _doCloseDay,
+      { title: 'Close Day', confirmLabel: 'Close Day', icon: '📅' }
+    );
+  } else {
+    showConfirmModal('Close the day and save Z-Report?', _doCloseDay,
+      { title: 'Close Day', confirmLabel: 'Close Day', icon: '📅' });
+  }
 }
 
 // ═══════════════════════════════════════════════════════════════
 //  PLACE ORDER (KOT)
 // ═══════════════════════════════════════════════════════════════
 async function placeOrder() {
-  if (!cart.items.length) { alert('Cart is empty.'); return; }
+  if (!cart.items.length) { showToast('Cart is empty — add items first.', 'warning'); return; }
   if (cart.type === 'dine-in' && !cart.tableId) {
-    if (!confirm('No table selected. Continue without a table?')) return;
+    showConfirmModal(
+      'No table selected for this dine-in order. Continue without a table?',
+      () => _doPlaceOrder(),
+      { title: 'No Table Selected', confirmLabel: 'Continue', icon: '🪑' }
+    );
+    return;
   }
+  await _doPlaceOrder();
+}
+
+async function _doPlaceOrder() {
   try {
   const kp = await getKotPrinter();
   const kotPrinter = kp?.windows_name || (window._posConfig && window._posConfig.kotPrinter) || '';
@@ -5758,11 +5882,15 @@ async function placeOrder() {
     activeOrderId  = uid();
     activeOrderNum = await getNextOrderNumber();
 
+    const _sectionName = cart.tableId
+      ? (tables.find(t => t.id === cart.tableId)?.section_name || null)
+      : null;
+    const _aggOrderId = cart.aggregatorOrderId || null;
     const _dbr = await db.run(`INSERT INTO orders
       (id,order_number,order_type,table_id,table_name,customer_name,customer_phone,customer_address,
        status,subtotal,tax_rate,tax_amount,discount_type,discount_value,discount_amount,total,
-       notes,cashier_id,cashier_name,shift_id,terminal_id,outlet_id,brand_id,created_at,updated_at,synced)
-      VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`,
+       notes,cashier_id,cashier_name,shift_id,terminal_id,outlet_id,brand_id,section_name,aggregator_order_id,created_at,updated_at,synced)
+      VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`,
       [activeOrderId, activeOrderNum, cart.type,
        cart.tableId||null, cart.tableName||null, cart.customerName||null,
        cart.customerPhone||null, cart.customerAddress||null,
@@ -5770,7 +5898,7 @@ async function placeOrder() {
        cart.discountType||null, cart.discountValue||0, discAmt, total,
        cart.notes||null, cashier.id||cashier.name, cashier.name, shift.id, MACHINE_ID,
        window._posConfig?.outletId||null, window._posConfig?.brandId||null,
-       now, now, 0]);
+       _sectionName, _aggOrderId, now, now, 0]);
     if (!_dbr.ok) throw new Error(_dbr.error || 'DB insert failed');
 
     for (const item of cart.items) {
@@ -6201,7 +6329,7 @@ function closePrinterModal() {
 
 async function savePrinterModal() {
   const name   = document.getElementById('pm-name').value.trim();
-  if (!name) { alert('Printer label is required.'); return; }
+  if (!name) { showToast('Printer label is required.', 'warning'); return; }
   const id     = document.getElementById('pm-id').value || (Date.now().toString(36)+Math.random().toString(36).slice(2,6));
   const role   = document.getElementById('pm-role').value;
   const width  = parseInt(document.getElementById('pm-width').value) || 80;
@@ -6231,10 +6359,11 @@ async function savePrinterModal() {
   msg.style.color = 'var(--success)';
 }
 
-async function deletePrinter(id, name) {
-  if (!confirm(`Delete printer "${name}"?`)) return;
-  await db.run(`DELETE FROM printers WHERE id=?`, [id]);
-  await loadPrinterSettings();
+function deletePrinter(id, name) {
+  showConfirmModal(`Delete printer "${name}"?`, async () => {
+    await db.run(`DELETE FROM printers WHERE id=?`, [id]);
+    await loadPrinterSettings();
+  }, { title: 'Delete Printer', confirmLabel: 'Delete', type: 'danger', icon: '🗑️' });
 }
 
 async function getReceiptPrinter() {
@@ -6265,6 +6394,31 @@ async function getNextOrderNumber() {
 function uid() {
   return Date.now().toString(36) + Math.random().toString(36).substring(2,8);
 }
+// ── Confirm Modal ─────────────────────────────────────────────────────────────
+let _confirmCallback = null;
+function showConfirmModal(msg, onConfirm, opts = {}) {
+  const { title = 'Confirm', confirmLabel = 'Confirm', cancelLabel = 'Cancel',
+          type = 'warning', icon = '⚠️' } = opts;
+  _confirmCallback = onConfirm;
+  document.getElementById('cmodal-icon').textContent = icon;
+  document.getElementById('cmodal-title').textContent = title;
+  document.getElementById('cmodal-msg').textContent = msg;
+  const okBtn = document.getElementById('cmodal-ok');
+  okBtn.textContent = confirmLabel;
+  okBtn.style.background = type === 'danger' ? '#ef4444' : '';
+  okBtn.style.borderColor = type === 'danger' ? '#ef4444' : '';
+  document.getElementById('cmodal-cancel').textContent = cancelLabel;
+  showModal('modal-confirm');
+}
+function _confirmModalOk() {
+  closeModal('modal-confirm');
+  if (_confirmCallback) { const cb = _confirmCallback; _confirmCallback = null; cb(); }
+}
+function _confirmModalCancel() {
+  closeModal('modal-confirm');
+  _confirmCallback = null;
+}
+
 function showToast(msg, type = 'info') {
   const colors = { success:'#22c55e', error:'#ef4444', info:'#475569', warning:'#f59e0b' };
   const t = document.createElement('div');
@@ -6361,7 +6515,7 @@ function showVoidReason(onConfirm, skipMgr) {
 
 function confirmVoid() {
   const sel = document.getElementById('void-reason-sel').value;
-  if (!sel) { alert('Select a reason.'); return; }
+  if (!sel) { showToast('Please select a reason.', 'warning'); return; }
   const other = document.getElementById('void-reason-other').value.trim();
   const reason = sel === 'Other' ? (other || 'Other') : sel;
   closeModal('modal-void');
@@ -6376,7 +6530,7 @@ document.getElementById('void-reason-sel').addEventListener('change', function()
 //  NO SALE
 // ═══════════════════════════════════════════════════════════════
 function showNoSale() {
-  if (!cashier) { alert('Please log in first.'); return; }
+  if (!cashier) { showToast('Please log in first.', 'warning'); return; }
   _nosaleReason = '';
   document.querySelectorAll('.nosale-reason-btn').forEach(b => b.classList.remove('selected'));
   document.getElementById('nosale-other').style.display = 'none';
@@ -6397,7 +6551,7 @@ async function confirmNoSale() {
   const reason = _nosaleReason === 'Other'
     ? (document.getElementById('nosale-other').value.trim() || 'Other')
     : _nosaleReason;
-  if (!reason) { alert('Select a reason.'); return; }
+  if (!reason) { showToast('Please select a reason.', 'warning'); return; }
   closeModal('modal-nosale');
   await db.run(`INSERT INTO no_sale_log (id,reason,cashier_id,cashier_name,terminal_id,created_at,synced)
     VALUES (?,?,?,?,?,?,0)`,
@@ -6496,7 +6650,7 @@ function clearCustomer() {
 async function addNewCustomer() {
   const name  = document.getElementById('cust-new-name').value.trim();
   const phone = document.getElementById('cust-new-phone').value.trim();
-  if (!name) { alert('Enter customer name.'); return; }
+  if (!name) { showToast('Enter a customer name.', 'warning'); return; }
   const id  = uid();
   const now = Date.now();
   await db.run(`INSERT OR IGNORE INTO customers (id,name,phone,created_at,updated_at,synced) VALUES (?,?,?,?,?,0)`,
