@@ -97,20 +97,21 @@ ok('signup no-number rejected (400)',    signupNoNum.status === 400)
 
 // ── 5. Account lockout on a throwaway user ────────────────────────────────────
 console.log('[5] Account lockout (throwaway account)...')
-// Ensure locktest user exists
-await api('POST', '/config/users', { username: 'locktest_user', password: 'LockTest1!', permissions: {}, app_access: { backoffice: true } }, ownerToken)
+// Unique username per run so each run gets a fresh per-username rate-limit bucket
+const locktestUser = 'locktest_' + Date.now()
+await api('POST', '/config/users', { username: locktestUser, password: 'LockTest1!', permissions: {}, app_access: { backoffice: true } }, ownerToken)
 // Send 5 wrong passwords
 for (let i = 0; i < 5; i++) {
-  await api('POST', '/auth/login', { username: 'locktest_user', password: 'Wrong' + i })
+  await api('POST', '/auth/login', { username: locktestUser, password: 'Wrong' + i })
 }
-const lockedR = await api('POST', '/auth/login', { username: 'locktest_user', password: 'LockTest1!' })
+const lockedR = await api('POST', '/auth/login', { username: locktestUser, password: 'LockTest1!' })
 ok('account locked after 5 failures (423)', lockedR.status === 423)
 // Owner unlocks it
-const lockedUser = (await api('GET', '/config/users', null, ownerToken)).json.rows?.find(u => u.username === 'locktest_user')
+const lockedUser = (await api('GET', '/config/users', null, ownerToken)).json.rows?.find(u => u.username === locktestUser)
 if (lockedUser) {
   const unlockR = await api('PUT', `/config/users/${lockedUser.id}`, { unlock_account: true }, ownerToken)
   ok('owner unlock returns 200', unlockR.status === 200)
-  const afterUnlock = await api('POST', '/auth/login', { username: 'locktest_user', password: 'LockTest1!' })
+  const afterUnlock = await api('POST', '/auth/login', { username: locktestUser, password: 'LockTest1!' })
   ok('login works after unlock', afterUnlock.status === 200)
 }
 

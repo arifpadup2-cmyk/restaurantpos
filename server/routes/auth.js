@@ -88,10 +88,9 @@ module.exports = function authRouter (sql) {
   // POST /auth/login
   router.post('/login', async (req, res) => {
     const ip = req.ip || 'unknown'
-    if (isRateLimited(ip, 'login', 10, 15 * 60 * 1000))
-      return res.status(429).json({ error: 'Too many login attempts. Try again in 15 minutes.' })
-
     const { username, password } = req.body || {}
+    if (isRateLimited(ip, 'login:' + (username || '').toLowerCase(), 10, 15 * 60 * 1000))
+      return res.status(429).json({ error: 'Too many login attempts. Try again in 15 minutes.' })
     if (!username || !password)
       return res.status(400).json({ error: 'username and password required' })
 
