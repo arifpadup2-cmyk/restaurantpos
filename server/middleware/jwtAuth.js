@@ -39,6 +39,11 @@ async function jwtAuth (req, res, next) {
         const rows = await _sql`SELECT id, active FROM owners WHERE id = ${payload.owner_id} LIMIT 1`
         if (!rows.length || rows[0].active === false)
           return res.status(401).json({ error: 'Session expired. Please sign in again.' })
+      } else if (payload.type === 'cashier') {
+        // Cashier/waiter token — validate against cashiers table
+        const rows = await _sql`SELECT id, active FROM cashiers WHERE id = ${payload.id} LIMIT 1`
+        if (!rows.length || !rows[0].active)
+          return res.status(401).json({ error: 'Session expired. Please sign in again.' })
       } else {
         const rows = await _sql`SELECT id, active FROM bo_users WHERE id = ${payload.id} LIMIT 1`
         if (!rows.length || rows[0].active === false)

@@ -11,6 +11,15 @@ module.exports = function waiterRouter (sql) {
 
   // ── Auth ──────────────────────────────────────────────────────────────────
 
+  // GET /waiter/cashiers — public list for login UI (no PINs returned)
+  router.get('/cashiers', async (_req, res) => {
+    try {
+      const cashiers = await sql`
+        SELECT id, name, role, 1 AS active FROM cashiers WHERE active = 1 ORDER BY name`
+      res.json({ cashiers })
+    } catch (e) { serverError(res, e) }
+  })
+
   // POST /waiter/auth — cashier PIN login for waiter app
   router.post('/auth', async (req, res) => {
     const { cashier_id, pin } = req.body || {}
@@ -56,6 +65,28 @@ module.exports = function waiterRouter (sql) {
   // POST /waiter/auth/refresh — re-issue token (called on app resume)
   router.get('/auth/me', jwtAuth, (req, res) => {
     res.json({ ok: true, cashier: req.user })
+  })
+
+  // ── Menu ─────────────────────────────────────────────────────────────────
+
+  // GET /waiter/menu — authenticated menu fetch (includes image_url)
+  router.get('/menu', jwtAuth, async (req, res) => {
+    try {
+      const [categories, items] = await Promise.all([
+        sql`SELECT id, name, sort_order, color, active FROM categories WHERE active = 1 ORDER BY sort_order, name`,
+        sql`SELECT id, category_id, name, price, description, image_url, active FROM menu_items WHERE active = 1 ORDER BY name`
+      ])
+      res.json({ categories, items })
+    } catch (e) { serverError(res, e) }
+  })
+
+  // GET /waiter/settings — currency + tax_rate for waiter app
+  router.get('/settings', jwtAuth, async (req, res) => {
+    try {
+      const rows = await sql`SELECT key, value FROM settings WHERE key IN ('currency','tax_rate','restaurant_name')`
+      const map = Object.fromEntries(rows.map(r => [r.key, r.value]))
+      res.json({ settings: rows, restaurant_name: map.restaurant_name || '' })
+    } catch (e) { serverError(res, e) }
   })
 
   // ── Orders ────────────────────────────────────────────────────────────────
