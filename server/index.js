@@ -374,6 +374,8 @@ app.post('/sync/server-push', apiKey, async (req, res) => {
       for (const o of records) {
         const items = o.items || []
         delete o.items
+        // Coerce NOT NULL columns that can arrive as null from older POS versions
+        if (!o.discount_type) o.discount_type = 'none'
         await sql.begin(async t => {
           await t`
             INSERT INTO orders ${sql(sanitizeOrder({ ...o, brand_id }))}
