@@ -3050,7 +3050,7 @@ input:checked+.toggle-slider:before{transform:translateX(17px)}
                 </div>
                 <div class="form-group">
                   <label>Short Description <span style="font-size:11px;color:var(--muted);font-weight:400">Shown on menu cards &amp; waiter app</span></label>
-                  <textarea id="ie-desc" placeholder="e.g. Juicy beef patty with fresh lettuce and tomato" rows="2" style="resize:vertical"></textarea>
+                  <textarea id="ie-desc" placeholder="e.g. Juicy beef patty with fresh lettuce and tomato" rows="2" style="resize:vertical" oninput="ieUpdateSummary()"></textarea>
                 </div>
                 <div class="form-group">
                   <label>Long Description <span style="font-size:11px;color:var(--muted);font-weight:400">Full details for digital menu / customer-facing view</span></label>
@@ -3268,6 +3268,7 @@ input:checked+.toggle-slider:before{transform:translateX(17px)}
             </div>
             <!-- Name + badges -->
             <p class="ie-sb-name" id="ies-name">—</p>
+            <p id="ies-desc" style="font-size:12px;color:var(--muted);margin:-4px 0 8px;line-height:1.4;display:none"></p>
             <div class="ie-sb-badges">
               <span class="ie-sb-badge" id="ies-type" style="background:#f1f5f9;color:#475569">Single</span>
               <span class="ie-sb-badge" id="ies-status" style="background:#dcfce7;color:#16a34a">Active</span>
@@ -3711,9 +3712,15 @@ input:checked+.toggle-slider:before{transform:translateX(17px)}
       </div>
       <div class="form-group">
         <label>4-Digit PIN *</label>
-        <input id="staff-pin" type="password" maxlength="4" placeholder="e.g. 1234"
-          pattern="[0-9]{4}" inputmode="numeric"
-          style="letter-spacing:6px;font-size:18px;font-weight:700">
+        <div style="display:flex;gap:6px;align-items:center">
+          <input id="staff-pin" type="text" maxlength="4" placeholder="e.g. 1234"
+            pattern="[0-9]{4}" inputmode="numeric"
+            style="letter-spacing:6px;font-size:18px;font-weight:700;flex:1"
+            oninput="onStaffPinInput(this)">
+          <button type="button" class="btn btn-outline" style="padding:6px 10px;font-size:11px;white-space:nowrap"
+            onclick="suggestPin()" id="btn-suggest-pin">Suggest</button>
+        </div>
+        <div id="staff-pin-status" style="font-size:11px;margin-top:4px;min-height:16px"></div>
       </div>
     </div>
     <div class="modal-footer">
@@ -5399,6 +5406,14 @@ function ieUpdateSummary () {
   const nameEl = document.getElementById('ies-name')
   if (nameEl) nameEl.textContent = name || '—'
 
+  // Short description preview
+  const descPreview = document.getElementById('ies-desc')
+  if (descPreview) {
+    const d = document.getElementById('ie-desc')?.value?.trim()
+    descPreview.textContent = d || ''
+    descPreview.style.display = d ? '' : 'none'
+  }
+
   // Type badge
   const typeEl = document.getElementById('ies-type')
   if (typeEl) {
@@ -5456,6 +5471,7 @@ function ieUpdateSummary () {
     document.getElementById('ie-price')?.value,
     document.getElementById('ie-cat')?.value,
     document.getElementById('ie-desc')?.value?.trim(),
+    document.getElementById('ie-long-desc')?.value?.trim(),
     document.getElementById('ie-image')?.value?.trim(),
     document.getElementById('ie-kds-name')?.value?.trim(),
   ]
@@ -6494,8 +6510,49 @@ function showStaffModal (staff) {
   document.getElementById('staff-id').value   = staff ? staff.id : ''
   document.getElementById('staff-name').value = staff ? staff.name : ''
   document.getElementById('staff-role').value = staff ? (staff.role || 'cashier') : 'cashier'
-  document.getElementById('staff-pin').value  = staff ? (staff.pin || '') : ''
+  document.getElementById('staff-pin').value  = ''
+  document.getElementById('staff-pin-status').textContent = ''
+  document.getElementById('staff-pin-status').style.color = ''
   showModal('modal-staff')
+  if (!staff) suggestPin()
+}
+
+let _pinCheckTimer = null
+async function onStaffPinInput (el) {
+  const pin = el.value.replace(/\D/g, '').slice(0, 4)
+  el.value = pin
+  const status = document.getElementById('staff-pin-status')
+  if (pin.length < 4) { status.textContent = ''; return }
+  status.textContent = 'Checking…'; status.style.color = 'var(--muted)'
+  clearTimeout(_pinCheckTimer)
+  const staffId = document.getElementById('staff-id').value
+  _pinCheckTimer = setTimeout(async () => {
+    try {
+      const qs = staffId ? `?pin=${pin}&exclude_id=${staffId}` : `?pin=${pin}`
+      const d = await apiFetch('GET', `/staff/check-pin${qs}`)
+      if (d.available) {
+        status.textContent = '✓ Available'; status.style.color = '#16a34a'
+      } else {
+        status.textContent = '✗ Already used in this brand'; status.style.color = 'var(--danger)'
+      }
+    } catch (_) { status.textContent = ''; }
+  }, 400)
+}
+
+async function suggestPin () {
+  const btn    = document.getElementById('btn-suggest-pin')
+  const pinEl  = document.getElementById('staff-pin')
+  const status = document.getElementById('staff-pin-status')
+  btn.disabled = true; btn.textContent = '…'
+  try {
+    const d = await apiFetch('GET', '/staff/suggest-pin')
+    pinEl.value = d.pin
+    status.textContent = '✓ Available'; status.style.color = '#16a34a'
+  } catch (_) {
+    status.textContent = 'Could not suggest a PIN'; status.style.color = 'var(--danger)'
+  } finally {
+    btn.disabled = false; btn.textContent = 'Suggest'
+  }
 }
 
 function editStaff (staff) { showStaffModal(staff) }
@@ -6513,7 +6570,16 @@ async function saveStaff () {
     closeModal('modal-staff')
     loadStaff()
     showToast('Staff saved.','success')
-  } catch (e) { showToast('Error: ' + e.message,'error') }
+  } catch (e) {
+    const msg = e.message || ''
+    if (msg.includes('PIN already used')) {
+      const status = document.getElementById('staff-pin-status')
+      status.textContent = '✗ Already used in this brand'; status.style.color = 'var(--danger)'
+      showToast('PIN already used by another staff member.', 'error')
+    } else {
+      showToast('Error: ' + msg, 'error')
+    }
+  }
 }
 
 async function toggleStaffActive (id, active) {

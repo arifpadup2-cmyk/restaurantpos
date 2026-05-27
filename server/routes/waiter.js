@@ -11,11 +11,13 @@ module.exports = function waiterRouter (sql) {
 
   // ── Auth ──────────────────────────────────────────────────────────────────
 
-  // GET /waiter/cashiers — public list for login UI (no PINs returned)
+  // GET /waiter/cashiers — public list for login UI (waiters + cashiers only, no PINs)
   router.get('/cashiers', async (_req, res) => {
     try {
       const cashiers = await sql`
-        SELECT id, name, role, 1 AS active FROM cashiers WHERE active = 1 ORDER BY name`
+        SELECT id, name, role, 1 AS active FROM cashiers
+        WHERE active = 1 AND role IN ('waiter', 'cashier')
+        ORDER BY role, name`
       res.json({ cashiers })
     } catch (e) { serverError(res, e) }
   })
@@ -33,6 +35,9 @@ module.exports = function waiterRouter (sql) {
 
       if (!cashier)
         return res.status(401).json({ error: 'Cashier not found' })
+
+      if (!['waiter', 'cashier'].includes(cashier.role))
+        return res.status(403).json({ error: 'This role cannot access the waiter app' })
 
       // Prefer bcrypt hash; fall back to plain-text and migrate lazily
       let pinOk = false

@@ -18,6 +18,54 @@ module.exports = function staffRouter (sql) {
     return safe
   }
 
+  // Helper: check PIN uniqueness within a brand (excluding a specific cashier id)
+  async function isPinTaken (rid, pin, excludeId = null) {
+    const rows = rid
+      ? excludeId
+        ? await sql`SELECT 1 FROM cashiers WHERE brand_id = ${rid} AND pin = ${pin} AND id != ${excludeId} LIMIT 1`
+        : await sql`SELECT 1 FROM cashiers WHERE brand_id = ${rid} AND pin = ${pin} LIMIT 1`
+      : excludeId
+        ? await sql`SELECT 1 FROM cashiers WHERE brand_id IS NULL AND pin = ${pin} AND id != ${excludeId} LIMIT 1`
+        : await sql`SELECT 1 FROM cashiers WHERE brand_id IS NULL AND pin = ${pin} LIMIT 1`
+    return rows.length > 0
+  }
+
+  // Helper: generate a unique 4-digit PIN for a brand
+  async function suggestPin (rid) {
+    const existing = rid
+      ? await sql`SELECT pin FROM cashiers WHERE brand_id = ${rid}`
+      : await sql`SELECT pin FROM cashiers WHERE brand_id IS NULL`
+    const used = new Set(existing.map(r => r.pin))
+    let attempts = 0
+    while (attempts < 500) {
+      const candidate = String(Math.floor(1000 + Math.random() * 9000))
+      if (!used.has(candidate)) return candidate
+      attempts++
+    }
+    return null
+  }
+
+  // GET /staff/suggest-pin — returns a unique 4-digit PIN for the brand
+  router.get('/suggest-pin', async (req, res) => {
+    const rid = req.user?.brand_id || null
+    try {
+      const pin = await suggestPin(rid)
+      if (!pin) return res.status(409).json({ error: 'No available PINs (all 9000 used)' })
+      res.json({ pin })
+    } catch (e) { serverError(res, e) }
+  })
+
+  // GET /staff/check-pin — check if a PIN is available
+  router.get('/check-pin', async (req, res) => {
+    const { pin, exclude_id } = req.query
+    if (!pin || !/^\d{4}$/.test(pin)) return res.status(400).json({ error: 'pin must be 4 digits' })
+    const rid = req.user?.brand_id || null
+    try {
+      const taken = await isPinTaken(rid, pin, exclude_id || null)
+      res.json({ available: !taken })
+    } catch (e) { serverError(res, e) }
+  })
+
   // GET /staff/cashiers
   router.get('/cashiers', async (req, res) => {
     const rid = req.user?.brand_id || null
@@ -38,8 +86,10 @@ module.exports = function staffRouter (sql) {
     if (!name || !pin) return res.status(400).json({ error: 'name and pin required' })
     if (!/^\d{4}$/.test(pin)) return res.status(400).json({ error: 'pin must be 4 digits' })
     try {
+      const rid  = req.user?.brand_id || null
+      if (await isPinTaken(rid, pin))
+        return res.status(409).json({ error: 'PIN already used by another staff member in this brand' })
       const id      = uid()
-      const rid     = req.user?.brand_id || null
       const pinHash = await bcrypt.hash(pin, 10)
       const [row]   = await sql`
         INSERT INTO cashiers (id, name, pin, pin_hash, role, active, created_at, brand_id, outlet_id)
@@ -55,6 +105,8 @@ module.exports = function staffRouter (sql) {
     if (pin && !/^\d{4}$/.test(pin)) return res.status(400).json({ error: 'pin must be 4 digits' })
     const rid = req.user?.brand_id || null
     try {
+      if (pin && await isPinTaken(rid, pin, req.params.id))
+        return res.status(409).json({ error: 'PIN already used by another staff member in this brand' })
       const pinHash = pin ? await bcrypt.hash(pin, 10) : null
       const [row]   = await sql`
         UPDATE cashiers SET

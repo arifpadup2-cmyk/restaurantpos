@@ -1,4 +1,4 @@
-const CACHE = 'waiter-v2';
+const CACHE = 'waiter-v3';
 const APP_SHELL = ['/waiter-app/', '/waiter-app/index.html'];
 
 self.addEventListener('install', e => {
