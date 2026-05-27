@@ -498,6 +498,26 @@ module.exports = function setupRouter (sql) {
         }
       }
 
+      // Seed default waiter/cashier staff (only if none exist for this brand with those roles)
+      const [{ staff_count }] = await sql`
+        SELECT COUNT(*)::int AS staff_count FROM cashiers
+        WHERE brand_id = ${bid} AND role IN ('waiter','cashier') AND active = 1`
+      if (staff_count === 0) {
+        const defaultStaff = [
+          { name: 'Cashier 1', pin: '1234', role: 'cashier' },
+          { name: 'Cashier 2', pin: '2345', role: 'cashier' },
+          { name: 'Waiter 1',  pin: '4444', role: 'waiter'  },
+          { name: 'Waiter 2',  pin: '5555', role: 'waiter'  },
+        ]
+        for (const s of defaultStaff) {
+          const sid = 'cash-' + uid()
+          await sql`
+            INSERT INTO cashiers (id, brand_id, outlet_id, name, pin, role, active, created_at)
+            VALUES (${sid}, ${bid}, ${outletId}, ${s.name}, ${s.pin}, ${s.role}, 1, ${Date.now()})
+            ON CONFLICT DO NOTHING`
+        }
+      }
+
       res.json({ ok: true, message: `Sample data seeded for outlet: ${outlet.name}` })
     } catch (e) { serverError(res, e) }
   })

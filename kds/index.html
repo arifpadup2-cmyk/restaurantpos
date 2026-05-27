@@ -140,6 +140,9 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(
         autocomplete="off" spellcheck="false">
       <p class="kds-modal-hint">Cloud URL of your POS server. Requires internet.</p>
     </div>
+    <input id="kds-brand-id" type="text" class="kds-modal-input" placeholder="Brand ID (e.g. REST-GPPE8G)"
+      autocomplete="off" spellcheck="false" style="margin-top:4px">
+    <p class="kds-modal-hint" style="margin-top:-4px;margin-bottom:12px">Your Brand ID — required for cloud; optional on local network.</p>
     <div class="kds-modal-actions">
       <button class="kds-modal-cancel" onclick="closeKdsSrvModal()">Cancel</button>
       <button class="kds-modal-save" onclick="saveKdsSrvConfig()">Save &amp; Reconnect</button>
@@ -193,10 +196,14 @@ function getKdsBase() {
 }
 let BASE = getKdsBase();
 
+function getKdsBrandId() {
+  return (localStorage.getItem('kds_brand_id') || '').trim();
+}
 function openKdsSrvModal() {
   const mode = localStorage.getItem('kds_server_mode') || 'auto';
   setKdsSrvMode(mode);
   document.getElementById('kds-cloud-url').value = localStorage.getItem('kds_cloud_url') || '';
+  document.getElementById('kds-brand-id').value  = localStorage.getItem('kds_brand_id')  || '';
   document.getElementById('kds-srv-overlay').style.display = 'flex';
 }
 function closeKdsSrvModal() {
@@ -213,9 +220,13 @@ function setKdsSrvMode(mode) {
 function saveKdsSrvConfig() {
   const mode     = document.getElementById('kds-tab-cloud').classList.contains('active') ? 'cloud' : 'auto';
   const cloudUrl = document.getElementById('kds-cloud-url').value.trim().replace(/\/+$/, '');
+  const brandId  = document.getElementById('kds-brand-id').value.trim();
   if (mode === 'cloud' && !cloudUrl) { document.getElementById('kds-cloud-url').focus(); return; }
+  if (mode === 'cloud' && !brandId)  { document.getElementById('kds-brand-id').focus();  return; }
   localStorage.setItem('kds_server_mode', mode);
   if (cloudUrl) localStorage.setItem('kds_cloud_url', cloudUrl);
+  if (brandId)  localStorage.setItem('kds_brand_id', brandId);
+  else          localStorage.removeItem('kds_brand_id');
   BASE = getKdsBase();
   updateKdsBadge();
   closeKdsSrvModal();
@@ -231,6 +242,13 @@ function updateKdsBadge() {
   badge.className   = 'kds-srv-badge ' + (mode === 'cloud' ? 'cloud' : 'local');
 }
 updateKdsBadge();
+
+// Sync brand_id from electron config on startup (electron KDS only)
+if (typeof window.electronAPI !== 'undefined') {
+  window.electronAPI.getConfig().then(cfg => {
+    if (cfg?.brandId) localStorage.setItem('kds_brand_id', cfg.brandId);
+  }).catch(() => {});
+}
 
 // ─────────────────────────────────────────────────────────────────────────────
 let orders    = [];
@@ -254,7 +272,9 @@ setInterval(updateTimers, 10000); // refresh timers every 10s
 // ── FETCH ORDERS ──────────────────────────────────────────────────────────────
 async function fetchOrders() {
   try {
-    const data = await fetch(BASE + '/kitchen/orders').then(r=>r.json());
+    const brandId = getKdsBrandId();
+    const url = BASE + '/kitchen/orders' + (brandId ? '?brand_id=' + encodeURIComponent(brandId) : '');
+    const data = await fetch(url).then(r=>r.json());
     orders = data.orders || [];
     renderOrders();
   } catch { /* will retry via socket reconnect */ }
@@ -267,7 +287,10 @@ function connect() {
     setTimeout(connect, 5000);
     return;
   }
-  socket = io(BASE, { query:{ area:'kitchen' }, transports:['websocket'] });
+  const brandId = getKdsBrandId();
+  const query = { area: 'kitchen' };
+  if (brandId) query.brand_id = brandId;
+  socket = io(BASE, { query, transports: ['polling', 'websocket'] });
 
   socket.on('connect', () => {
     setConnected(true);
@@ -455,7 +478,9 @@ async function markItemDone(orderId, itemId, done) {
   item.done = done;
   renderOrders();
   try {
-    await fetch(`${BASE}/kitchen/items/${itemId}/done`, {
+    const brandId = getKdsBrandId();
+    const qs = brandId ? '?brand_id=' + encodeURIComponent(brandId) : '';
+    await fetch(`${BASE}/kitchen/items/${itemId}/done${qs}`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ done }),
@@ -472,7 +497,9 @@ async function markOrderDone(orderId) {
   order.items.forEach(i => i.done = true);
   renderOrders();
   try {
-    await fetch(`${BASE}/kitchen/orders/${orderId}/done`, { method:'PATCH' });
+    const brandId = getKdsBrandId();
+    const qs = brandId ? '?brand_id=' + encodeURIComponent(brandId) : '';
+    await fetch(`${BASE}/kitchen/orders/${orderId}/done${qs}`, { method:'PATCH' });
   } catch {
     order.items.forEach(i => i.done = false);
     renderOrders();

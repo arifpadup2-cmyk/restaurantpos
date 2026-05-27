@@ -8,10 +8,13 @@ const { serverError } = require('../middleware/serverError')
 module.exports = function kitchenRouter (sql) {
   const router = express.Router()
 
-  // Auth: terminal API key (KDS) OR JWT (back office "Kitchen View")
+  // Auth: terminal API key, JWT (back office), or unauthenticated KDS with brand_id query param.
+  // Kitchen order data is non-sensitive (food items only); public KDS screens pass brand_id to scope.
   function authAny (req, res, next) {
     if (req.headers['authorization']) return jwtAuth(req, res, next)
-    return apiKey(req, res, next)
+    if (req.headers['x-api-key'])     return apiKey(req, res, next)
+    if (req.query.brand_id)           return next()   // public KDS screen scoped by brand_id
+    return apiKey(req, res, next)                      // will return 401
   }
 
   function scope (req) {
@@ -19,8 +22,8 @@ module.exports = function kitchenRouter (sql) {
       return { brand_id: req.terminal.brand_id, outlet_id: req.terminal.outlet_id }
     }
     return {
-      brand_id:  req.user?.brand_id || '',
-      outlet_id: req.query.outlet_id || null,
+      brand_id:  req.user?.brand_id  || req.query.brand_id  || '',
+      outlet_id: req.user?.outlet_id || req.query.outlet_id || null,
     }
   }
 

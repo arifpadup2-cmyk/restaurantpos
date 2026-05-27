@@ -232,6 +232,9 @@ input,select,textarea{font-family:inherit;outline:none;color:inherit}
         autocomplete="off" spellcheck="false">
       <p class="srv-hint">Enter your cloud server URL. Internet required.<br>Use this when outside the local network.</p>
     </div>
+    <input id="srv-brand-id" type="text" class="srv-input" placeholder="Brand ID (e.g. REST-GPPE8G)"
+      autocomplete="off" spellcheck="false" style="margin-top:4px">
+    <p class="srv-hint" style="margin-top:-4px;margin-bottom:12px">Your Brand ID — required for cloud; optional on local network.</p>
     <div class="srv-actions">
       <button class="srv-btn-cancel" onclick="closeSrvModal()">Cancel</button>
       <button class="srv-btn-save" onclick="saveSrvConfig()">Save &amp; Reconnect</button>
@@ -390,12 +393,16 @@ function getBase() {
   if (mode === 'cloud' && cloudUrl) return cloudUrl;
   return window.location.origin;
 }
+function getWaiterBrandId() {
+  return (localStorage.getItem('waiter_brand_id') || '').trim();
+}
 let BASE = getBase();
 
 function openSrvModal() {
   const mode = localStorage.getItem('waiter_server_mode') || 'auto';
   setSrvMode(mode);
   document.getElementById('srv-cloud-url').value = localStorage.getItem('waiter_cloud_url') || '';
+  document.getElementById('srv-brand-id').value  = localStorage.getItem('waiter_brand_id')  || '';
   document.getElementById('srv-modal-overlay').style.display = 'flex';
 }
 function closeSrvModal() {
@@ -412,11 +419,13 @@ function setSrvMode(mode) {
 function saveSrvConfig() {
   const mode     = document.getElementById('srv-tab-cloud').classList.contains('active') ? 'cloud' : 'auto';
   const cloudUrl = document.getElementById('srv-cloud-url').value.trim().replace(/\/+$/, '');
-  if (mode === 'cloud' && !cloudUrl) {
-    document.getElementById('srv-cloud-url').focus(); return;
-  }
+  const brandId  = document.getElementById('srv-brand-id').value.trim();
+  if (mode === 'cloud' && !cloudUrl) { document.getElementById('srv-cloud-url').focus(); return; }
+  if (mode === 'cloud' && !brandId)  { document.getElementById('srv-brand-id').focus();  return; }
   localStorage.setItem('waiter_server_mode', mode);
   if (cloudUrl) localStorage.setItem('waiter_cloud_url', cloudUrl);
+  if (brandId)  localStorage.setItem('waiter_brand_id', brandId);
+  else          localStorage.removeItem('waiter_brand_id');
   BASE = getBase();
   updateSrvBadge();
   closeSrvModal();
@@ -486,7 +495,9 @@ function connectSocket() {
 // ── LOGIN ─────────────────────────────────────────────────────────────────────
 async function loadLoginCashiers() {
   try {
-    const data = await fetch(BASE + '/waiter/cashiers').then(r => r.json());
+    const brandId = getWaiterBrandId();
+    const qs = brandId ? '?brand_id=' + encodeURIComponent(brandId) : '';
+    const data = await fetch(BASE + '/waiter/cashiers' + qs).then(r => r.json());
     loginCashiers = (data.cashiers || []).filter(c => c.active == 1);
     const list = document.getElementById('cashier-list');
     list.innerHTML = loginCashiers.map(c =>

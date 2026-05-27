@@ -61,6 +61,12 @@ body{font-family:'Segoe UI',sans-serif;background:linear-gradient(135deg,#1e293b
   </div>
 
   <div class="field">
+    <label>Brand ID</label>
+    <input id="brand-id" type="text" placeholder="REST-XXXXXX" autocomplete="off"
+      onkeydown="if(event.key==='Enter')document.getElementById('mid').focus()">
+    <span class="hint">Your Brand ID from the Back Office — required for cloud mode</span>
+  </div>
+  <div class="field">
     <label>Machine ID (Screen Name)</label>
     <input id="mid" type="text" placeholder="KDS-01" autocomplete="off"
       onkeydown="if(event.key==='Enter')connect()">
@@ -98,10 +104,12 @@ function setMode(mode) {
   }
   if (cfg && cfg.machineId) document.getElementById('mid').value = cfg.machineId;
   else document.getElementById('mid').value = 'KDS-01';
+  if (cfg && cfg.brandId) document.getElementById('brand-id').value = cfg.brandId;
 })();
 
 async function connect() {
-  const mid = document.getElementById('mid').value.trim();
+  const mid     = document.getElementById('mid').value.trim();
+  const brandId = document.getElementById('brand-id').value.trim();
   const err = document.getElementById('err');
   err.textContent = '';
   if (!mid) { err.textContent = 'Machine ID is required.'; return; }
@@ -110,12 +118,13 @@ async function connect() {
 
   if (currentMode === 'cloud') {
     const cloudUrl = document.getElementById('cloud-url').value.trim().replace(/\/+$/, '');
-    if (!cloudUrl) { err.textContent = 'Cloud Server URL is required.'; btn.disabled = false; btn.textContent = '▶ Connect (goes fullscreen)'; return; }
-    await window.electronAPI.saveAndConnect({ connectionMode: 'cloud', cloudServerUrl: cloudUrl, machineId: mid });
+    if (!cloudUrl)  { err.textContent = 'Cloud Server URL is required.'; btn.disabled = false; btn.textContent = '▶ Connect (goes fullscreen)'; return; }
+    if (!brandId)   { err.textContent = 'Brand ID is required for cloud mode.'; btn.disabled = false; btn.textContent = '▶ Connect (goes fullscreen)'; return; }
+    await window.electronAPI.saveAndConnect({ connectionMode: 'cloud', cloudServerUrl: cloudUrl, machineId: mid, brandId });
   } else {
     const ip = document.getElementById('ip').value.trim();
     if (!ip) { err.textContent = 'Server IP is required.'; btn.disabled = false; btn.textContent = '▶ Connect (goes fullscreen)'; return; }
-    await window.electronAPI.saveAndConnect({ connectionMode: 'local', serverIp: ip, machineId: mid });
+    await window.electronAPI.saveAndConnect({ connectionMode: 'local', serverIp: ip, machineId: mid, brandId: brandId || null });
   }
 }
 </script>

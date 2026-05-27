@@ -12,12 +12,19 @@ module.exports = function waiterRouter (sql) {
   // ── Auth ──────────────────────────────────────────────────────────────────
 
   // GET /waiter/cashiers — public list for login UI (waiters + cashiers only, no PINs)
-  router.get('/cashiers', async (_req, res) => {
+  // ?brand_id=X scopes to a specific brand (required for multi-tenant cloud deployments)
+  router.get('/cashiers', async (req, res) => {
     try {
-      const cashiers = await sql`
-        SELECT id, name, role, 1 AS active FROM cashiers
-        WHERE active = 1 AND role IN ('waiter', 'cashier')
-        ORDER BY role, name`
+      const brandId = req.query.brand_id || null
+      const cashiers = brandId
+        ? await sql`
+            SELECT id, name, role, 1 AS active FROM cashiers
+            WHERE active = 1 AND role IN ('waiter', 'cashier') AND brand_id = ${brandId}
+            ORDER BY role, name`
+        : await sql`
+            SELECT id, name, role, 1 AS active FROM cashiers
+            WHERE active = 1 AND role IN ('waiter', 'cashier')
+            ORDER BY role, name`
       res.json({ cashiers })
     } catch (e) { serverError(res, e) }
   })
