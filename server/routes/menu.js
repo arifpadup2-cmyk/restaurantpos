@@ -107,7 +107,7 @@ module.exports = function menuRouter (sql) {
 
   router.post('/items', async (req, res) => {
     const {
-      name, price, category_id, description, item_code, outlet_id,
+      name, price, category_id, description, short_description, long_description, item_code, outlet_id,
       sub_category, image_url, item_type, preparation_time, tax_group_id,
       barcode, kitchen_name, internal_note, printer_group, tags,
       dine_in_price, takeaway_price, delivery_price, online_price,
@@ -121,16 +121,16 @@ module.exports = function menuRouter (sql) {
       const ppJson = partner_prices && typeof partner_prices === 'object' ? JSON.stringify(partner_prices) : '{}'
       const row = await sql`
         INSERT INTO menu_items (
-          id, category_id, name, price, description, item_code, active, synced_at, brand_id, outlet_id,
+          id, category_id, name, price, description, short_description, long_description, item_code, active, synced_at, brand_id, outlet_id,
           sub_category, image_url, item_type, preparation_time, tax_group_id,
           barcode, kitchen_name, internal_note, printer_group, tags,
           dine_in_price, takeaway_price, delivery_price, online_price,
           dine_in_active, takeaway_active, delivery_active, online_active,
           partner_prices
         ) VALUES (
-          ${id}, ${category_id}, ${name}, ${price}, ${description || ''}, ${item_code || null}, 1, ${Date.now()}, ${rid}, ${outlet_id || null},
+          ${id}, ${category_id}, ${name}, ${price}, ${description || ''}, ${short_description || null}, ${long_description || null}, ${item_code || null}, 1, ${Date.now()}, ${rid}, ${outlet_id || null},
           ${sub_category || null}, ${image_url || null}, ${item_type || 'single'}, ${preparation_time || 0}, ${tax_group_id || null},
-          ${barcode || null}, ${kitchen_name || null}, ${internal_note || null}, ${printer_group || null}, ${tags || null},
+          ${barcode || null}, ${kitchen_name || name}, ${internal_note || null}, ${printer_group || null}, ${tags || null},
           ${dine_in_price ?? null}, ${takeaway_price ?? null}, ${delivery_price ?? null}, ${online_price ?? null},
           ${dine_in_active !== false}, ${takeaway_active !== false}, ${delivery_active !== false}, ${online_active !== false},
           ${ppJson}
@@ -141,7 +141,7 @@ module.exports = function menuRouter (sql) {
 
   router.put('/items/:id', async (req, res) => {
     const {
-      name, price, category_id, description, active, item_code,
+      name, price, category_id, description, short_description, long_description, active, item_code,
       sub_category, image_url, item_type, preparation_time, tax_group_id,
       barcode, kitchen_name, internal_note, printer_group, tags,
       dine_in_price, takeaway_price, delivery_price, online_price,
@@ -158,7 +158,9 @@ module.exports = function menuRouter (sql) {
           name           = COALESCE(${name ?? null}, name),
           price          = COALESCE(${price ?? null}, price),
           category_id    = COALESCE(${category_id ?? null}, category_id),
-          description    = COALESCE(${description ?? null}, description),
+          description         = COALESCE(${description ?? null}, description),
+          short_description   = CASE WHEN ${short_description !== undefined} THEN ${short_description ?? null} ELSE short_description END,
+          long_description    = CASE WHEN ${long_description !== undefined} THEN ${long_description ?? null} ELSE long_description END,
           item_code      = CASE WHEN ${item_code !== undefined} THEN ${item_code ?? null} ELSE item_code END,
           active         = COALESCE(${active ?? null}, active),
           sub_category   = CASE WHEN ${sub_category !== undefined} THEN ${sub_category ?? null} ELSE sub_category END,
@@ -167,7 +169,7 @@ module.exports = function menuRouter (sql) {
           preparation_time = CASE WHEN ${preparation_time !== undefined} THEN ${preparation_time ?? 0} ELSE preparation_time END,
           tax_group_id   = CASE WHEN ${tax_group_id !== undefined} THEN ${tax_group_id ?? null} ELSE tax_group_id END,
           barcode        = CASE WHEN ${barcode !== undefined} THEN ${barcode ?? null} ELSE barcode END,
-          kitchen_name   = CASE WHEN ${kitchen_name !== undefined} THEN ${kitchen_name ?? null} ELSE kitchen_name END,
+          kitchen_name   = CASE WHEN ${kitchen_name !== undefined} THEN COALESCE(${kitchen_name ?? null}, ${name ?? null}) ELSE kitchen_name END,
           internal_note  = CASE WHEN ${internal_note !== undefined} THEN ${internal_note ?? null} ELSE internal_note END,
           printer_group  = CASE WHEN ${printer_group !== undefined} THEN ${printer_group ?? null} ELSE printer_group END,
           tags           = CASE WHEN ${tags !== undefined} THEN ${tags ?? null} ELSE tags END,

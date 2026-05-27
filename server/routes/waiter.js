@@ -74,7 +74,7 @@ module.exports = function waiterRouter (sql) {
     try {
       const [categories, items] = await Promise.all([
         sql`SELECT id, name, sort_order, color, active FROM categories WHERE active = 1 ORDER BY sort_order, name`,
-        sql`SELECT id, category_id, name, price, description, image_url, active FROM menu_items WHERE active = 1 ORDER BY name`
+        sql`SELECT id, category_id, name, price, description, short_description, long_description, image_url, active FROM menu_items WHERE active = 1 ORDER BY name`
       ])
       res.json({ categories, items })
     } catch (e) { serverError(res, e) }

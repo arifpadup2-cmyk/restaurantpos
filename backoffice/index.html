@@ -37,18 +37,33 @@ button,.nav-item,.filter-chip,.btn,[role="button"]{touch-action:manipulation}
 .auth-brand-icon{width:42px;height:42px;background:var(--primary);border-radius:11px;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0}
 .auth-brand-name{font-size:15px;font-weight:800;color:#f1f5f9;line-height:1.2}
 .auth-brand-sub{font-size:11px;color:#64748b;font-weight:500}
-.auth-left-body{flex:1;display:flex;flex-direction:column;justify-content:center;padding:48px 0 32px}
-.auth-headline{font-size:30px;font-weight:800;color:#f1f5f9;line-height:1.25;margin-bottom:12px;letter-spacing:-.3px}
-.auth-subline{font-size:14px;color:#64748b;line-height:1.6;margin-bottom:40px;max-width:340px}
-.auth-features{display:flex;flex-direction:column;gap:16px}
-.auth-feat{display:flex;align-items:flex-start;gap:14px}
-.auth-feat-icon{width:36px;height:36px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0;margin-top:1px}
+.auth-left-body{flex:1;display:flex;flex-direction:column;justify-content:center;padding:40px 0 24px}
+.auth-headline{font-size:28px;font-weight:800;color:#f1f5f9;line-height:1.25;margin-bottom:10px;letter-spacing:-.3px}
+.auth-subline{font-size:13px;color:#64748b;line-height:1.6;margin-bottom:24px;max-width:340px}
+/* What's New section */
+.auth-whats-new{background:rgba(249,115,22,.08);border:1px solid rgba(249,115,22,.2);border-radius:12px;padding:14px 16px;margin-bottom:28px}
+.auth-wn-header{display:flex;align-items:center;gap:8px;margin-bottom:12px}
+.auth-wn-badge{font-size:10px;font-weight:800;background:var(--primary);color:#fff;padding:2px 7px;border-radius:20px;letter-spacing:.4px;text-transform:uppercase}
+.auth-wn-label{font-size:12px;font-weight:700;color:#f97316;flex:1}
+.auth-wn-ver{font-size:10px;color:#475569;font-weight:600}
+.auth-wn-list{display:flex;flex-direction:column;gap:8px}
+.auth-wn-item{display:flex;align-items:flex-start;gap:10px}
+.auth-wn-dot{width:20px;height:20px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:11px;flex-shrink:0;margin-top:1px}
+.auth-wn-dot.img{background:rgba(249,115,22,.2)}
+.auth-wn-dot.desc{background:rgba(59,130,246,.2)}
+.auth-wn-dot.waiter{background:rgba(34,197,94,.2)}
+.auth-wn-text-title{font-size:12px;font-weight:700;color:#e2e8f0;line-height:1.3}
+.auth-wn-text-sub{font-size:11px;color:#64748b;line-height:1.3;margin-top:1px}
+/* Feature list */
+.auth-features{display:flex;flex-direction:column;gap:12px}
+.auth-feat{display:flex;align-items:flex-start;gap:12px}
+.auth-feat-icon{width:32px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0;margin-top:1px}
 .auth-feat-icon.orange{background:rgba(249,115,22,.15)}
 .auth-feat-icon.blue{background:rgba(59,130,246,.15)}
 .auth-feat-icon.green{background:rgba(34,197,94,.15)}
 .auth-feat-icon.purple{background:rgba(168,85,247,.15)}
-.auth-feat-title{font-size:13px;font-weight:700;color:#e2e8f0;margin-bottom:2px}
-.auth-feat-desc{font-size:12px;color:#64748b;line-height:1.4}
+.auth-feat-title{font-size:12px;font-weight:700;color:#e2e8f0;margin-bottom:1px}
+.auth-feat-desc{font-size:11px;color:#64748b;line-height:1.4}
 .auth-left-foot{margin-top:auto;padding-top:32px;border-top:1px solid rgba(255,255,255,.06)}
 .auth-help-label{font-size:10px;font-weight:700;color:#475569;text-transform:uppercase;letter-spacing:.6px;margin-bottom:8px}
 .auth-help-contacts{display:flex;gap:16px;flex-wrap:wrap}
@@ -1030,6 +1045,39 @@ input:checked+.toggle-slider:before{transform:translateX(17px)}
     <div class="auth-left-body">
       <div class="auth-headline">Manage your brand<br>smarter, every day.</div>
       <div class="auth-subline">Monitor sales, manage orders, track inventory, and grow your business from one powerful dashboard.</div>
+
+      <!-- What's New section -->
+      <div class="auth-whats-new">
+        <div class="auth-wn-header">
+          <span class="auth-wn-badge">✦ New</span>
+          <span class="auth-wn-label">What's New in v3.5</span>
+          <span class="auth-wn-ver">May 2026</span>
+        </div>
+        <div class="auth-wn-list">
+          <div class="auth-wn-item">
+            <div class="auth-wn-dot img">📸</div>
+            <div>
+              <div class="auth-wn-text-title">Image Picker for Menu Items</div>
+              <div class="auth-wn-text-sub">Upload photos or search 600M+ free CC images — no manual URL needed.</div>
+            </div>
+          </div>
+          <div class="auth-wn-item">
+            <div class="auth-wn-dot desc">📝</div>
+            <div>
+              <div class="auth-wn-text-title">Digital Menu Descriptions</div>
+              <div class="auth-wn-text-sub">Short &amp; long descriptions on every item for online &amp; digital menus.</div>
+            </div>
+          </div>
+          <div class="auth-wn-item">
+            <div class="auth-wn-dot waiter">📱</div>
+            <div>
+              <div class="auth-wn-text-title">Waiter App — Item Photos</div>
+              <div class="auth-wn-text-sub">Menu cards on the waiter app now display item images automatically.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <div class="auth-features">
         <div class="auth-feat">
           <div class="auth-feat-icon orange">📊</div>
@@ -1041,7 +1089,7 @@ input:checked+.toggle-slider:before{transform:translateX(17px)}
         <div class="auth-feat">
           <div class="auth-feat-icon blue">🍳</div>
           <div>
-            <div class="auth-feat-title">Order & Kitchen Management</div>
+            <div class="auth-feat-title">Order &amp; Kitchen Management</div>
             <div class="auth-feat-desc">Track orders and kitchen activity in real time.</div>
           </div>
         </div>
@@ -1055,7 +1103,7 @@ input:checked+.toggle-slider:before{transform:translateX(17px)}
         <div class="auth-feat">
           <div class="auth-feat-icon purple">👨‍🍳</div>
           <div>
-            <div class="auth-feat-title">Staff & Access Management</div>
+            <div class="auth-feat-title">Staff &amp; Access Management</div>
             <div class="auth-feat-desc">Manage your team and user permissions.</div>
           </div>
         </div>
@@ -2979,7 +3027,7 @@ input:checked+.toggle-slider:before{transform:translateX(17px)}
                 <div class="form-row">
                   <div class="form-group" style="flex:2">
                     <label>Item Name *</label>
-                    <input id="ie-name" type="text" placeholder="e.g. Grilled Chicken" oninput="ieAutoCode();ieUpdateSummary()">
+                    <input id="ie-name" type="text" placeholder="e.g. Grilled Chicken" oninput="ieAutoCode();ieUpdateSummary();ieAutoKdsName()">
                   </div>
                   <div class="form-group" style="flex:1">
                     <label>Item Code</label>
@@ -3001,8 +3049,12 @@ input:checked+.toggle-slider:before{transform:translateX(17px)}
                   <input id="ie-image" type="url" placeholder="https://example.com/food.jpg" oninput="ieUpdateImgPreview()">
                 </div>
                 <div class="form-group">
-                  <label>Description</label>
-                  <textarea id="ie-desc" placeholder="Shown on the menu and waiter app…" rows="2" style="resize:vertical"></textarea>
+                  <label>Short Description <span style="font-size:11px;color:var(--muted);font-weight:400">Shown on menu cards &amp; waiter app</span></label>
+                  <textarea id="ie-desc" placeholder="e.g. Juicy beef patty with fresh lettuce and tomato" rows="2" style="resize:vertical"></textarea>
+                </div>
+                <div class="form-group">
+                  <label>Long Description <span style="font-size:11px;color:var(--muted);font-weight:400">Full details for digital menu / customer-facing view</span></label>
+                  <textarea id="ie-long-desc" placeholder="e.g. Our signature hand-pressed beef patty, served on a brioche bun with crispy lettuce, vine-ripened tomatoes, house sauce…" rows="3" style="resize:vertical"></textarea>
                 </div>
               </div>
             </div>
@@ -3166,7 +3218,7 @@ input:checked+.toggle-slider:before{transform:translateX(17px)}
             <div class="form-row">
               <div class="form-group">
                 <label>Kitchen Display Name <span style="font-size:11px;color:var(--muted);font-weight:400">Short name on KDS screen</span></label>
-                <input id="ie-kds-name" type="text" placeholder="e.g. GRLD CHKN">
+                <input id="ie-kds-name" type="text" placeholder="e.g. GRLD CHKN" oninput="this.dataset.manuallyEdited='1'">
               </div>
               <div class="form-group">
                 <label>Printer Group / Kitchen Station</label>
@@ -5050,11 +5102,13 @@ const MENU_EXPORT_COLS = [
   { key: 'name',           header: 'name'           },
   { key: 'category',       header: 'category'       },
   { key: 'price',          header: 'price'          },
-  { key: 'description',    header: 'description'    },
-  { key: 'active',         header: 'active'         },
-  { key: 'barcode',        header: 'barcode'        },
-  { key: 'item_type',      header: 'item_type'      },
-  { key: 'kitchen_name',   header: 'kitchen_name'   },
+  { key: 'description',       header: 'description'       },
+  { key: 'short_description', header: 'short_description' },
+  { key: 'long_description',  header: 'long_description'  },
+  { key: 'active',            header: 'active'            },
+  { key: 'barcode',           header: 'barcode'           },
+  { key: 'item_type',         header: 'item_type'         },
+  { key: 'kitchen_name',      header: 'kitchen_name'      },
   { key: 'tags',           header: 'tags'           },
   { key: 'sub_category',   header: 'sub_category'   },
   { key: 'dine_in_price',  header: 'dine_in_price'  },
@@ -5086,7 +5140,7 @@ async function menuExport () {
     const ws  = XLSX.utils.aoa_to_sheet(sheetData)
 
     // Column widths
-    ws['!cols'] = [12,28,20,10,36,8,14,10,16,18,16,12,14,14,12,14,15,15,13].map(w => ({ wch: w }))
+    ws['!cols'] = [12,28,20,10,36,36,48,8,14,10,16,18,16,12,14,14,12,14,15,15,13].map(w => ({ wch: w }))
 
     // Instructions sheet
     const info = [
@@ -5095,11 +5149,13 @@ async function menuExport () {
       ['name',           'Yes', 'Item display name'],
       ['category',       'Yes', 'Category name — created automatically if it does not exist'],
       ['price',          'Yes', 'Base price (number)'],
-      ['description',    'No',  'Item description'],
-      ['active',         'No',  'yes / no  (default: yes)'],
-      ['barcode',        'No',  'Barcode / PLU code'],
-      ['item_type',      'No',  'single or combo  (default: single)'],
-      ['kitchen_name',   'No',  'Override name shown on KOT'],
+      ['description',       'No',  'Item description (legacy — same as short_description)'],
+      ['short_description', 'No',  'Short description shown on menu cards and waiter app'],
+      ['long_description',  'No',  'Full description for digital menu / customer-facing view'],
+      ['active',            'No',  'yes / no  (default: yes)'],
+      ['barcode',           'No',  'Barcode / PLU code'],
+      ['item_type',         'No',  'single or combo  (default: single)'],
+      ['kitchen_name',      'No',  'Name shown on KOT/KDS (defaults to item name if blank)'],
       ['tags',           'No',  'Comma-separated tags'],
       ['sub_category',   'No',  'Sub-category label'],
       ['dine_in_price',  'No',  'Override price for dine-in (blank = use base price)'],
@@ -5284,6 +5340,13 @@ function ieAutoCode () {
   if (codeEl && !codeEl.dataset.manuallyEdited) {
     const name = document.getElementById('ie-name').value.trim()
     codeEl.value = name.split(/\s+/).map(w => w[0] || '').join('').toUpperCase()
+  }
+}
+
+function ieAutoKdsName () {
+  const kdsEl = document.getElementById('ie-kds-name')
+  if (kdsEl && !kdsEl.dataset.manuallyEdited) {
+    kdsEl.value = document.getElementById('ie-name').value.trim()
   }
 }
 
@@ -5591,13 +5654,16 @@ async function showItemEditor (item) {
   document.getElementById('ie-name').value     = s(item?.name)
   document.getElementById('ie-code').value     = s(item?.item_code)
   document.getElementById('ie-subcat').value   = s(item?.sub_category)
-  document.getElementById('ie-desc').value     = s(item?.description)
+  document.getElementById('ie-desc').value     = s(item?.description || item?.short_description)
+  document.getElementById('ie-long-desc').value = s(item?.long_description)
   document.getElementById('ie-price').value    = item?.price || ''
   document.getElementById('ie-prep').value     = item?.preparation_time || ''
   document.getElementById('ie-image').value    = s(item?.image_url)
   document.getElementById('ie-tags').value     = s(item?.tags)
   document.getElementById('ie-barcode').value  = s(item?.barcode)
-  document.getElementById('ie-kds-name').value = s(item?.kitchen_name)
+  const kdsEl = document.getElementById('ie-kds-name')
+  kdsEl.value = s(item?.kitchen_name || item?.name)
+  kdsEl.dataset.manuallyEdited = item?.kitchen_name ? '1' : ''
   document.getElementById('ie-note').value     = s(item?.internal_note)
   // Populate printer group dropdown from kitchens
   try {
@@ -5686,19 +5752,21 @@ async function saveItemEditor (addAnother) {
   const payload = {
     name,
     price,
-    category_id:      catId,
-    description:      document.getElementById('ie-desc').value.trim(),
-    item_code:        document.getElementById('ie-code').value.trim().toUpperCase() || null,
-    sub_category:     document.getElementById('ie-subcat').value.trim() || null,
-    image_url:        document.getElementById('ie-image').value.trim() || null,
-    item_type:        document.querySelector('input[name="ie-type"]:checked')?.value || 'single',
-    preparation_time: parseInt(document.getElementById('ie-prep').value) || 0,
-    tax_group_id:     document.getElementById('ie-tax').value || null,
-    barcode:          document.getElementById('ie-barcode').value.trim() || null,
-    kitchen_name:     document.getElementById('ie-kds-name').value.trim() || null,
-    internal_note:    document.getElementById('ie-note').value.trim() || null,
-    printer_group:    document.getElementById('ie-printer-grp').value.trim() || null,
-    tags:             document.getElementById('ie-tags').value.trim() || null,
+    category_id:       catId,
+    description:       document.getElementById('ie-desc').value.trim(),
+    short_description: document.getElementById('ie-desc').value.trim() || null,
+    long_description:  document.getElementById('ie-long-desc').value.trim() || null,
+    item_code:         document.getElementById('ie-code').value.trim().toUpperCase() || null,
+    sub_category:      document.getElementById('ie-subcat').value.trim() || null,
+    image_url:         document.getElementById('ie-image').value.trim() || null,
+    item_type:         document.querySelector('input[name="ie-type"]:checked')?.value || 'single',
+    preparation_time:  parseInt(document.getElementById('ie-prep').value) || 0,
+    tax_group_id:      document.getElementById('ie-tax').value || null,
+    barcode:           document.getElementById('ie-barcode').value.trim() || null,
+    kitchen_name:      document.getElementById('ie-kds-name').value.trim() || name,
+    internal_note:     document.getElementById('ie-note').value.trim() || null,
+    printer_group:     document.getElementById('ie-printer-grp').value.trim() || null,
+    tags:              document.getElementById('ie-tags').value.trim() || null,
     active:           document.getElementById('ie-active').checked ? 1 : 0,
     dine_in_price:    parseFloat(document.getElementById('ie-ch-dine_in-price').value) || null,
     takeaway_price:   parseFloat(document.getElementById('ie-ch-takeaway-price').value) || null,
