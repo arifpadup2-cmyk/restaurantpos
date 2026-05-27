@@ -33,6 +33,12 @@ const imagesRouter     = require('./routes/images')
 
 const { apiKey, initApiKey } = require('./middleware/apiKey')
 const { serverError } = require('./middleware/serverError')
+const { initCloudSync, getSyncStatus, pushToCloud, pullFromCloud } = require('./lib/cloud-sync')
+
+const IS_CLOUD_SERVER = process.env.IS_CLOUD_SERVER === 'true'
+const CLOUD_SYNC_URL  = (process.env.CLOUD_SYNC_URL  || '').replace(/\/+$/, '')
+const CLOUD_SYNC_KEY  = process.env.CLOUD_SYNC_KEY   || ''
+const CLOUD_BRAND_ID  = process.env.CLOUD_BRAND_ID   || ''
 
 const PORT     = parseInt(process.env.PORT || '3001', 10)
 const DATA_DIR = process.env.DATA_DIR || path.join(__dirname)
@@ -351,6 +357,147 @@ app.post('/sync/day_closings', apiKey, async (req, res) => {
   } catch (e) { serverError(res, e) }
 })
 
+// ── Cloud sync endpoints (used by local server daemon → cloud server) ─────────
+
+// POST /sync/server-push  — local server pushes transaction data to cloud
+app.post('/sync/server-push', apiKey, async (req, res) => {
+  const { brand_id, entity, records } = req.body || {}
+  if (!brand_id || !entity || !Array.isArray(records))
+    return res.status(400).json({ error: 'brand_id, entity and records required' })
+  if (records.length === 0) return res.json({ ok: true, upserted: 0 })
+
+  try {
+    const now = Date.now()
+    let upserted = 0
+
+    if (entity === 'orders') {
+      for (const o of records) {
+        const items = o.items || []
+        delete o.items
+        await sql.begin(async t => {
+          await t`
+            INSERT INTO orders ${sql(sanitizeOrder({ ...o, brand_id }))}
+            ON CONFLICT (id) DO UPDATE SET
+              status           = EXCLUDED.status,
+              total            = EXCLUDED.total,
+              payment_method   = EXCLUDED.payment_method,
+              payment_received = EXCLUDED.payment_received,
+              billed_at        = EXCLUDED.billed_at,
+              updated_at       = EXCLUDED.updated_at,
+              synced           = 1`
+          for (const item of items) {
+            await t`
+              INSERT INTO order_items ${sql(sanitizeOrderItem(item))}
+              ON CONFLICT (id) DO NOTHING`
+          }
+        })
+        upserted++
+      }
+    } else if (entity === 'expenses') {
+      for (const e of records) {
+        await sql`
+          INSERT INTO expenses ${sql(sanitizeExpense(e))}
+          ON CONFLICT (id) DO NOTHING`
+        upserted++
+      }
+    } else if (entity === 'shifts') {
+      for (const s of records) {
+        await sql`
+          INSERT INTO shifts ${sql(sanitizeShift(s))}
+          ON CONFLICT (id) DO UPDATE SET
+            closing_cash = EXCLUDED.closing_cash,
+            status       = EXCLUDED.status,
+            closed_at    = EXCLUDED.closed_at,
+            synced       = 1`
+        upserted++
+      }
+    }
+
+    // Track last push received per brand on cloud server
+    await sql`
+      INSERT INTO cloud_sync_state (entity, last_push_at, push_count, updated_at)
+      VALUES (${brand_id + ':' + entity}, ${now}, ${upserted}, now())
+      ON CONFLICT (entity) DO UPDATE SET
+        last_push_at = EXCLUDED.last_push_at,
+        push_count   = cloud_sync_state.push_count + ${upserted},
+        last_error   = NULL,
+        updated_at   = now()`.catch(() => {})
+
+    res.json({ ok: true, upserted })
+  } catch (e) { serverError(res, e) }
+})
+
+// GET /sync/server-pull  — local server pulls master data from cloud
+app.get('/sync/server-pull', apiKey, async (req, res) => {
+  const { brand_id, entity, after = '0' } = req.query
+  if (!brand_id || !entity)
+    return res.status(400).json({ error: 'brand_id and entity required' })
+
+  const cursor = parseInt(after, 10) || 0
+
+  try {
+    if (entity === 'menu') {
+      const [categories, items] = await Promise.all([
+        sql`SELECT id, name, sort_order, color, active, synced_at
+            FROM   categories
+            WHERE  (brand_id = ${brand_id} OR brand_id IS NULL)
+              AND  active = 1
+            ORDER  BY sort_order, name`,
+        sql`SELECT id, category_id, name, price, description, active, synced_at
+            FROM   menu_items
+            WHERE  (brand_id = ${brand_id} OR brand_id IS NULL)
+              AND  active = 1
+            ORDER  BY name`,
+      ])
+      res.json({ categories, items })
+
+    } else if (entity === 'cashiers') {
+      const cashiers = await sql`
+        SELECT id, brand_id, outlet_id, name, pin, pin_hash, role, active, created_at
+        FROM   cashiers
+        WHERE  brand_id = ${brand_id}
+          AND  active = 1
+        ORDER  BY role, name`
+      res.json({ cashiers })
+
+    } else {
+      res.status(400).json({ error: `Unknown entity: ${entity}` })
+    }
+  } catch (e) { serverError(res, e) }
+})
+
+// GET /sync/status  — reports local sync daemon state (or cloud receive state)
+app.get('/sync/status', async (_req, res) => {
+  try {
+    if (IS_CLOUD_SERVER) {
+      // On cloud: return when each brand last pushed data
+      const rows = await sql`
+        SELECT entity, last_push_at, push_count, last_error, updated_at
+        FROM   cloud_sync_state
+        WHERE  entity LIKE '%:orders'
+        ORDER  BY last_push_at DESC
+        LIMIT  20`
+      res.json({ role: 'cloud', syncs: rows })
+    } else {
+      // On local: return daemon status
+      const daemonStatus = getSyncStatus()
+      const rows = await sql`
+        SELECT entity, last_push_at, last_pull_at, push_count, last_error
+        FROM   cloud_sync_state
+        ORDER  BY entity`.catch(() => [])
+      res.json({ role: 'local', ...daemonStatus, entities: rows })
+    }
+  } catch (e) { serverError(res, e) }
+})
+
+// POST /sync/trigger-push  — manually trigger a push cycle (admin use)
+app.post('/sync/trigger-push', apiKey, async (_req, res) => {
+  try {
+    await pushToCloud()
+    res.json({ ok: true, status: getSyncStatus() })
+  } catch (e) { serverError(res, e) }
+})
+
 // ── Sanitizers ────────────────────────────────────────────────────────────────
 
 const ORDER_COLS = [
@@ -423,6 +570,14 @@ async function start () {
   sql = makeSql()
   await seedAdminUser()
   await migratePinHashes()
+
+  // Start cloud sync daemon (local server only; cloud server is a no-op)
+  await initCloudSync(sql, {
+    isCloud:  IS_CLOUD_SERVER,
+    cloudUrl: CLOUD_SYNC_URL,
+    apiKey:   CLOUD_SYNC_KEY,
+    brandId:  CLOUD_BRAND_ID,
+  }).catch(e => console.error('  ✗ Cloud sync init:', e.message))
 
   // Wire SQL into middleware
   require('./middleware/jwtAuth').initJwtAuth(sql)

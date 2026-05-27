@@ -386,17 +386,58 @@ input,select,textarea{font-family:inherit;outline:none;color:inherit}
 </div>
 
 <script>
-// ── SERVER CONFIG (local vs cloud) ───────────────────────────────────────────
-function getBase() {
-  const mode     = localStorage.getItem('waiter_server_mode') || 'auto';
-  const cloudUrl = (localStorage.getItem('waiter_cloud_url') || '').replace(/\/+$/, '');
-  if (mode === 'cloud' && cloudUrl) return cloudUrl;
-  return window.location.origin;
+// ── SERVER CONFIG + AUTO-FALLBACK ────────────────────────────────────────────
+let _waiterFallback = false;   // true when auto-switched to cloud
+let _waiterHealthFails = 0;
+const _WAITER_FAIL_THRESHOLD = 3;
+
+function _waiterCloudUrl() {
+  return (localStorage.getItem('waiter_cloud_url') || '').replace(/\/+$/, '');
 }
 function getWaiterBrandId() {
   return (localStorage.getItem('waiter_brand_id') || '').trim();
 }
+function getBase() {
+  const mode = localStorage.getItem('waiter_server_mode') || 'auto';
+  if (mode === 'cloud') return _waiterCloudUrl() || window.location.origin;
+  return _waiterFallback && _waiterCloudUrl() ? _waiterCloudUrl() : window.location.origin;
+}
 let BASE = getBase();
+
+async function _waiterHealthCheck() {
+  const mode     = localStorage.getItem('waiter_server_mode') || 'auto';
+  const cloudUrl = _waiterCloudUrl();
+  if (mode !== 'auto' || !cloudUrl) return;          // no fallback configured
+  try {
+    const r = await fetch(window.location.origin + '/health', {
+      signal: AbortSignal.timeout(5000),
+    });
+    if (r.ok) {
+      _waiterHealthFails = 0;
+      if (_waiterFallback) {
+        _waiterFallback = false;
+        BASE = window.location.origin;
+        updateSrvBadge();
+        if (socket) { socket.disconnect(); socket = null; }
+        if (token) connectSocket();
+        loadLoginCashiers();
+        showToast('Local server restored — reconnected');
+      }
+    } else throw new Error('unhealthy');
+  } catch {
+    _waiterHealthFails++;
+    if (_waiterHealthFails >= _WAITER_FAIL_THRESHOLD && !_waiterFallback) {
+      _waiterFallback = true;
+      BASE = cloudUrl;
+      updateSrvBadge();
+      if (socket) { socket.disconnect(); socket = null; }
+      if (token) connectSocket();
+      loadLoginCashiers();
+      showToast('Local server unreachable — switched to cloud');
+    }
+  }
+}
+setInterval(_waiterHealthCheck, 15_000);
 
 function openSrvModal() {
   const mode = localStorage.getItem('waiter_server_mode') || 'auto';
@@ -426,6 +467,8 @@ function saveSrvConfig() {
   if (cloudUrl) localStorage.setItem('waiter_cloud_url', cloudUrl);
   if (brandId)  localStorage.setItem('waiter_brand_id', brandId);
   else          localStorage.removeItem('waiter_brand_id');
+  _waiterFallback    = false;
+  _waiterHealthFails = 0;
   BASE = getBase();
   updateSrvBadge();
   closeSrvModal();
@@ -439,8 +482,16 @@ function updateSrvBadge() {
   const mode  = localStorage.getItem('waiter_server_mode') || 'auto';
   const badge = document.getElementById('srv-mode-badge');
   if (!badge) return;
-  badge.textContent = mode === 'cloud' ? 'Cloud' : 'Local';
-  badge.className   = 'server-cfg-badge ' + (mode === 'cloud' ? 'cloud' : 'local');
+  if (mode === 'cloud') {
+    badge.textContent = 'Cloud';
+    badge.className   = 'server-cfg-badge cloud';
+  } else if (_waiterFallback) {
+    badge.textContent = 'Cloud ⚡';
+    badge.className   = 'server-cfg-badge cloud';
+  } else {
+    badge.textContent = 'Local';
+    badge.className   = 'server-cfg-badge local';
+  }
 }
 updateSrvBadge();
 
@@ -478,7 +529,7 @@ if ('serviceWorker' in navigator) {
 // ── SOCKET.IO ─────────────────────────────────────────────────────────────────
 function connectSocket() {
   if (typeof io === 'undefined') return;
-  socket = io(BASE, { query: { area: 'waiter' }, transports: ['websocket'] });
+  socket = io(BASE, { query: { area: 'waiter' }, transports: ['polling', 'websocket'] });
   socket.on('connect', () => { document.getElementById('conn-bar').classList.remove('show'); });
   socket.on('disconnect', () => { document.getElementById('conn-bar').classList.add('show'); });
   socket.on('table:status', data => {

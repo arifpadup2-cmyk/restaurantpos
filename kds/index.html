@@ -187,14 +187,53 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(
 </div>
 
 <script>
-// ── SERVER CONFIG ─────────────────────────────────────────────────────────────
+// ── SERVER CONFIG + AUTO-FALLBACK ────────────────────────────────────────────
+let _kdsFallback = false;
+let _kdsHealthFails = 0;
+const _KDS_FAIL_THRESHOLD = 3;
+
+function _kdsCloudUrl() {
+  return (localStorage.getItem('kds_cloud_url') || '').replace(/\/+$/, '');
+}
 function getKdsBase() {
-  const mode     = localStorage.getItem('kds_server_mode') || 'auto';
-  const cloudUrl = (localStorage.getItem('kds_cloud_url') || '').replace(/\/+$/, '');
-  if (mode === 'cloud' && cloudUrl) return cloudUrl;
-  return window.location.origin;
+  const mode = localStorage.getItem('kds_server_mode') || 'auto';
+  if (mode === 'cloud') return _kdsCloudUrl() || window.location.origin;
+  return _kdsFallback && _kdsCloudUrl() ? _kdsCloudUrl() : window.location.origin;
 }
 let BASE = getKdsBase();
+
+async function _kdsHealthCheck() {
+  const mode     = localStorage.getItem('kds_server_mode') || 'auto';
+  const cloudUrl = _kdsCloudUrl();
+  if (mode !== 'auto' || !cloudUrl) return;
+  try {
+    const r = await fetch(window.location.origin + '/health', {
+      signal: AbortSignal.timeout(5000),
+    });
+    if (r.ok) {
+      _kdsHealthFails = 0;
+      if (_kdsFallback) {
+        _kdsFallback = false;
+        BASE = window.location.origin;
+        updateKdsBadge();
+        if (socket) { socket.disconnect(); socket = null; }
+        connect();
+        fetchOrders();
+      }
+    } else throw new Error('unhealthy');
+  } catch {
+    _kdsHealthFails++;
+    if (_kdsHealthFails >= _KDS_FAIL_THRESHOLD && !_kdsFallback) {
+      _kdsFallback = true;
+      BASE = cloudUrl;
+      updateKdsBadge();
+      if (socket) { socket.disconnect(); socket = null; }
+      connect();
+      fetchOrders();
+    }
+  }
+}
+setInterval(_kdsHealthCheck, 15_000);
 
 function getKdsBrandId() {
   return (localStorage.getItem('kds_brand_id') || '').trim();
@@ -227,6 +266,8 @@ function saveKdsSrvConfig() {
   if (cloudUrl) localStorage.setItem('kds_cloud_url', cloudUrl);
   if (brandId)  localStorage.setItem('kds_brand_id', brandId);
   else          localStorage.removeItem('kds_brand_id');
+  _kdsFallback    = false;
+  _kdsHealthFails = 0;
   BASE = getKdsBase();
   updateKdsBadge();
   closeKdsSrvModal();
@@ -238,8 +279,16 @@ function updateKdsBadge() {
   const mode  = localStorage.getItem('kds_server_mode') || 'auto';
   const badge = document.getElementById('kds-srv-badge');
   if (!badge) return;
-  badge.textContent = mode === 'cloud' ? 'Cloud' : 'Local';
-  badge.className   = 'kds-srv-badge ' + (mode === 'cloud' ? 'cloud' : 'local');
+  if (mode === 'cloud') {
+    badge.textContent = 'Cloud';
+    badge.className   = 'kds-srv-badge cloud';
+  } else if (_kdsFallback) {
+    badge.textContent = 'Cloud ⚡';
+    badge.className   = 'kds-srv-badge cloud';
+  } else {
+    badge.textContent = 'Local';
+    badge.className   = 'kds-srv-badge local';
+  }
 }
 updateKdsBadge();
 
