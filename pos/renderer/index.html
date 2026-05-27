@@ -2538,6 +2538,15 @@ async function init() {
   const outletNameEl = document.getElementById('login-outlet-name');
   if (outletNameEl && _cfg.outletName) outletNameEl.textContent = _cfg.outletName;
 
+  // Fetch brand_id from outlet row (required by orders table constraint)
+  if (!_cfg.brandId && _cfg.outletId) {
+    const outletRow = await db.get('SELECT brand_id FROM outlets WHERE id=?', [_cfg.outletId]);
+    if (outletRow.ok && outletRow.data?.brand_id) {
+      _cfg.brandId = outletRow.data.brand_id;
+      window._posConfig = _cfg;
+    }
+  }
+
   // Load API config from settings (fall back to config file values)
   apiUrl = (await getSetting('api_url')) || (_cfg.serverIp ? `http://${_cfg.serverIp}:3001` : '');
   apiKey = (await getSetting('api_key')) || _cfg.apiKey || '';
@@ -5074,18 +5083,18 @@ async function confirmPayment() {
        status,subtotal,tax_rate,tax_amount,discount_type,discount_value,discount_amount,
        service_charge_rate,service_charge_amount,total,
        payment_method,payment_received,change_amount,notes,cashier_id,cashier_name,shift_id,
-       customer_id,approved_by,outlet_id,created_at,updated_at,billed_at,synced)
-      VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`,
+       customer_id,approved_by,outlet_id,brand_id,created_at,updated_at,billed_at,synced)
+      VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`,
       [orderId, orderNum, cart.type,
        cart.tableId||null, cart.tableName||null, cart.customerName||null,
        cart.customerPhone||null, cart.customerAddress||null,
        'paid', subtotal, settings.tax_rate, taxAmt,
-       cart.discountType, cart.discountValue, discAmt,
+       cart.discountType||null, cart.discountValue||0, discAmt,
        settings.service_charge_rate, scAmt, total,
        effectiveMethod, received, change, cart.notes||null,
-       cashier.name, cashier.name, shift.id,
+       cashier.id||cashier.name, cashier.name, shift.id,
        _selectedCustomer?.id||null, cart._discApprovedBy||null,
-       cfg.outletId||null,
+       window._posConfig?.outletId||null, window._posConfig?.brandId||null,
        now, now, now, 0]);
 
     for (const item of cart.items) {
@@ -5689,18 +5698,20 @@ async function placeOrder() {
     activeOrderId  = uid();
     activeOrderNum = await getNextOrderNumber();
 
-    await db.run(`INSERT INTO orders
+    const _dbr = await db.run(`INSERT INTO orders
       (id,order_number,order_type,table_id,table_name,customer_name,customer_phone,customer_address,
        status,subtotal,tax_rate,tax_amount,discount_type,discount_value,discount_amount,total,
-       notes,cashier_id,cashier_name,shift_id,terminal_id,outlet_id,created_at,updated_at,synced)
-      VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`,
+       notes,cashier_id,cashier_name,shift_id,terminal_id,outlet_id,brand_id,created_at,updated_at,synced)
+      VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`,
       [activeOrderId, activeOrderNum, cart.type,
        cart.tableId||null, cart.tableName||null, cart.customerName||null,
        cart.customerPhone||null, cart.customerAddress||null,
        'active', subtotal, settings.tax_rate, taxAmt,
-       cart.discountType, cart.discountValue, discAmt, total,
-       cart.notes||null, cashier.name, cashier.name, shift.id, MACHINE_ID, cfg.outletId||null,
+       cart.discountType||null, cart.discountValue||0, discAmt, total,
+       cart.notes||null, cashier.id||cashier.name, cashier.name, shift.id, MACHINE_ID,
+       window._posConfig?.outletId||null, window._posConfig?.brandId||null,
        now, now, 0]);
+    if (!_dbr.ok) throw new Error(_dbr.error || 'DB insert failed');
 
     for (const item of cart.items) {
       const dispName = item.comp ? `[COMP] ${item.name}` : item.name;
