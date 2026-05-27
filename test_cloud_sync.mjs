@@ -33,7 +33,7 @@ async function post (path, body, key) {
 // ── Test data ─────────────────────────────────────────────────────────────────
 const TEST_ORDER = {
   id:             'test-csync-' + Date.now(),
-  order_number:   'CSYNC-001',
+  order_number:   'CSYNC-' + Date.now(),
   order_type:     'dine-in',
   status:         'completed',
   subtotal:       20.00,

@@ -376,24 +376,30 @@ app.post('/sync/server-push', apiKey, async (req, res) => {
         delete o.items
         // Coerce NOT NULL columns that can arrive as null from older POS versions
         if (!o.discount_type) o.discount_type = 'none'
-        await sql.begin(async t => {
-          await t`
-            INSERT INTO orders ${sql(sanitizeOrder({ ...o, brand_id }))}
-            ON CONFLICT (id) DO UPDATE SET
-              status           = EXCLUDED.status,
-              total            = EXCLUDED.total,
-              payment_method   = EXCLUDED.payment_method,
-              payment_received = EXCLUDED.payment_received,
-              billed_at        = EXCLUDED.billed_at,
-              updated_at       = EXCLUDED.updated_at,
-              synced           = 1`
-          for (const item of items) {
+        try {
+          await sql.begin(async t => {
             await t`
-              INSERT INTO order_items ${sql(sanitizeOrderItem(item))}
-              ON CONFLICT (id) DO NOTHING`
-          }
-        })
-        upserted++
+              INSERT INTO orders ${sql(sanitizeOrder({ ...o, brand_id }))}
+              ON CONFLICT (id) DO UPDATE SET
+                status           = EXCLUDED.status,
+                total            = EXCLUDED.total,
+                payment_method   = EXCLUDED.payment_method,
+                payment_received = EXCLUDED.payment_received,
+                billed_at        = EXCLUDED.billed_at,
+                updated_at       = EXCLUDED.updated_at,
+                synced           = 1`
+            for (const item of items) {
+              await t`
+                INSERT INTO order_items ${sql(sanitizeOrderItem(item))}
+                ON CONFLICT (id) DO NOTHING`
+            }
+          })
+          upserted++
+        } catch (orderErr) {
+          // Skip orders that violate unique constraints (e.g. duplicate order_number)
+          // rather than aborting the entire batch
+          console.error('  ⚠ server-push order skip:', o.id, orderErr.message)
+        }
       }
     } else if (entity === 'expenses') {
       for (const e of records) {
