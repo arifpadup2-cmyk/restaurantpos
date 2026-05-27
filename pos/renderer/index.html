@@ -2561,7 +2561,7 @@ async function init() {
   await loadCashiersForLogin();
   updateClock();
   setInterval(updateClock, 1000);
-  setInterval(loadActiveOrders, 15000);
+  setInterval(loadActiveOrders, 5000);
   setInterval(() => { if (document.getElementById('v-dashboard').classList.contains('active')) loadDashboard(); }, 30000);
 }
 
@@ -4810,7 +4810,7 @@ function renderCart() {
             <button class="op-qty-btn" onclick="event.stopPropagation();updateQty('${item.id}',1)">+</button>
           </div>
           <button class="op-comp-btn${item.comp ? ' active' : ''}" onclick="toggleComp('${item.id}')" title="Mark as Complimentary">★</button>
-          <div class="op-item-price">${item.comp ? '<span class="comp-badge">COMP</span>' : `${cur} ${item.total.toFixed(2)}`}</div>
+          <div class="op-item-price">${item.comp ? '<span class="comp-badge">COMP</span>' : `${cur} ${parseFloat(item.total||0).toFixed(2)}`}</div>
         </div>`
       ).join('');
     }
@@ -5401,7 +5401,7 @@ function renderOrders() {
       </div>
       <div class="order-card-meta">${info} · ${timeAgo(o.created_at)}</div>
       <div class="order-card-footer">
-        <span class="order-total">${cur} ${o.total.toFixed(2)}</span>
+        <span class="order-total">${cur} ${parseFloat(o.total||0).toFixed(2)}</span>
         <span class="order-status-badge status-active">Active</span>
       </div>
     </div>`;
@@ -5432,10 +5432,10 @@ async function openOrderDetail(orderId) {
 
   document.getElementById('od-totals').innerHTML = `
     <table style="width:100%;font-size:13px">
-      <tr><td>Subtotal</td><td align="right">${cur} ${order.subtotal.toFixed(2)}</td></tr>
-      ${order.tax_amount>0?`<tr><td>Tax (${order.tax_rate}%)</td><td align="right">${cur} ${order.tax_amount.toFixed(2)}</td></tr>`:''}
-      ${order.discount_amount>0?`<tr><td>Discount</td><td align="right" style="color:green">-${cur} ${order.discount_amount.toFixed(2)}</td></tr>`:''}
-      <tr><td><b>Total</b></td><td align="right"><b>${cur} ${order.total.toFixed(2)}</b></td></tr>
+      <tr><td>Subtotal</td><td align="right">${cur} ${parseFloat(order.subtotal||0).toFixed(2)}</td></tr>
+      ${parseFloat(order.tax_amount||0)>0?`<tr><td>Tax (${order.tax_rate}%)</td><td align="right">${cur} ${parseFloat(order.tax_amount||0).toFixed(2)}</td></tr>`:''}
+      ${parseFloat(order.discount_amount||0)>0?`<tr><td>Discount</td><td align="right" style="color:green">-${cur} ${parseFloat(order.discount_amount||0).toFixed(2)}</td></tr>`:''}
+      <tr><td><b>Total</b></td><td align="right"><b>${cur} ${parseFloat(order.total||0).toFixed(2)}</b></td></tr>
     </table>`;
 
   const orderObj = activeOrders.find(o => o.id === orderId);
