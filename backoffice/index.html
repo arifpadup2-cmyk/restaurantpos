@@ -497,7 +497,7 @@ input:checked+.toggle-slider:before{transform:translateX(17px)}
 #app.mob-sb-open #mob-sb-overlay{display:block}
 #app.mob-sb-open #sidebar{transform:translateX(0) !important}
 .toast{background:#1e293b;color:#fff;padding:11px 16px;border-radius:10px;font-size:13px;font-weight:600;box-shadow:0 4px 20px rgba(0,0,0,.25);pointer-events:auto;animation:toast-in .2s ease;max-width:300px;display:flex;align-items:center;gap:8px}
-.toast-success{border-left:4px solid #22c55e}.toast-error{border-left:4px solid var(--danger)}.toast-info{border-left:4px solid var(--info)}
+.toast-success{border-left:4px solid #22c55e}.toast-error{border-left:4px solid var(--danger)}.toast-info{border-left:4px solid var(--info)}.toast-warning{border-left:4px solid #f59e0b}
 @keyframes toast-in{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
 
 /* ─── RESPONSIVE ─────────────────────────────────── */
@@ -2428,7 +2428,8 @@ input:checked+.toggle-slider:before{transform:translateX(17px)}
       <div style="padding:16px;display:flex;flex-wrap:wrap;gap:12px" id="web-app-links">
         <a id="link-waiter" href="#" target="_blank" style="display:inline-flex;align-items:center;gap:7px;padding:10px 18px;background:#0ea5e9;color:#fff;border-radius:8px;font-weight:600;text-decoration:none;font-size:13px"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 002-2V2"/><path d="M7 2v20"/><path d="M21 15V2a5 5 0 00-5 5v6c0 1.1.9 2 2 2h3zm0 0v7"/></svg>Waiter App</a>
         <a id="link-kds"    href="#" target="_blank" style="display:inline-flex;align-items:center;gap:7px;padding:10px 18px;background:#8b5cf6;color:#fff;border-radius:8px;font-weight:600;text-decoration:none;font-size:13px"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>Kitchen Display (KDS)</a>
-        <a id="link-bo"     href="#" target="_blank" style="display:inline-flex;align-items:center;gap:7px;padding:10px 18px;background:#f97316;color:#fff;border-radius:8px;font-weight:600;text-decoration:none;font-size:13px"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="9" rx="1"/><rect x="14" y="3" width="7" height="5" rx="1"/><rect x="14" y="12" width="7" height="9" rx="1"/><rect x="3" y="16" width="7" height="5" rx="1"/></svg>Back Office</a>
+        <a id="link-bo"       href="#" target="_blank" style="display:inline-flex;align-items:center;gap:7px;padding:10px 18px;background:#f97316;color:#fff;border-radius:8px;font-weight:600;text-decoration:none;font-size:13px"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="9" rx="1"/><rect x="14" y="3" width="7" height="5" rx="1"/><rect x="14" y="12" width="7" height="9" rx="1"/><rect x="3" y="16" width="7" height="5" rx="1"/></svg>Back Office</a>
+        <a id="link-delivery" href="#" target="_blank" style="display:inline-flex;align-items:center;gap:7px;padding:10px 18px;background:#0d9488;color:#fff;border-radius:8px;font-weight:600;text-decoration:none;font-size:13px"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="3" width="15" height="13" rx="2"/><path d="M16 8h4l3 5v4h-7V8z"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>Delivery App</a>
       </div>
       <div style="padding:0 16px 16px;font-size:12px;color:#64748b">Open these links on any device on the same network. Bookmark them for quick access.</div>
     </div>
@@ -3711,9 +3712,10 @@ input:checked+.toggle-slider:before{transform:translateX(17px)}
     <div class="form-row">
       <div class="form-group">
         <label>Role</label>
-        <select id="staff-role">
+        <select id="staff-role" onchange="updateStaffOutletWarn()">
           <option value="cashier">Cashier</option>
           <option value="waiter">Waiter (no payment)</option>
+          <option value="delivery">Delivery Boy</option>
           <option value="manager">Manager</option>
           <option value="admin">Admin</option>
         </select>
@@ -3730,6 +3732,10 @@ input:checked+.toggle-slider:before{transform:translateX(17px)}
         </div>
         <div id="staff-pin-status" style="font-size:11px;margin-top:4px;min-height:16px"></div>
       </div>
+    </div>
+    <div id="staff-no-outlet-warn" style="display:none;margin-top:10px;padding:10px 12px;background:#fef3c7;border:1px solid #f59e0b;border-radius:8px;font-size:12px;color:#92400e;line-height:1.5">
+      <b>&#9888; No outlet assigned</b> — orders from this staff member won't appear on any outlet-specific KDS or waiter screen.<br>
+      <span style="color:#78350f">Select an outlet from the top filter before adding staff to assign them automatically.</span>
     </div>
     <div class="modal-footer">
       <button class="btn btn-outline" onclick="closeModal('modal-staff')">Cancel</button>
@@ -3791,7 +3797,7 @@ async function apiFetch (method, endpoint, body) {
 function showToast (msg, type = 'info', ms = 3500) {
   const region = document.getElementById('toast-region')
   const t = document.createElement('div')
-  const icons = { success: '✓', error: '✗', info: 'ℹ' }
+  const icons = { success: '✓', error: '✗', info: 'ℹ', warning: '⚠' }
   t.className = `toast toast-${type}`
   t.innerHTML = `<span style="font-size:15px">${icons[type]||'ℹ'}</span> ${msg}`
   region.appendChild(t)
@@ -6556,6 +6562,14 @@ async function loadStaff () {
   } catch (e) { console.error(e) }
 }
 
+function updateStaffOutletWarn () {
+  const role = document.getElementById('staff-role')?.value
+  const warn = document.getElementById('staff-no-outlet-warn')
+  if (!warn) return
+  const needsOutlet = role === 'cashier' || role === 'waiter' || role === 'delivery'
+  warn.style.display = (needsOutlet && !_ctxOutlet) ? 'block' : 'none'
+}
+
 function showStaffModal (staff) {
   document.getElementById('staff-modal-title').textContent = staff ? 'Edit Staff' : 'Add Staff'
   document.getElementById('staff-id').value   = staff ? staff.id : ''
@@ -6564,6 +6578,7 @@ function showStaffModal (staff) {
   document.getElementById('staff-pin').value  = ''
   document.getElementById('staff-pin-status').textContent = ''
   document.getElementById('staff-pin-status').style.color = ''
+  updateStaffOutletWarn()
   showModal('modal-staff')
   if (!staff) suggestPin()
 }
@@ -6614,7 +6629,11 @@ async function saveStaff () {
   const pin  = document.getElementById('staff-pin').value.trim()
   if (!name) { showToast('Name is required.','error'); return }
   if (!pin || !/^\d{4}$/.test(pin)) { showToast('PIN must be exactly 4 digits.','error'); return }
-  const payload = { name, pin, role: document.getElementById('staff-role').value, active: 1, outlet_id: _ctxOutlet || null }
+  const role = document.getElementById('staff-role').value
+  if (!_ctxOutlet && (role === 'cashier' || role === 'waiter' || role === 'delivery')) {
+    showToast('Saved without outlet — orders won\'t appear on outlet-specific KDS screens.', 'warning')
+  }
+  const payload = { name, pin, role, active: 1, outlet_id: _ctxOutlet || null }
   try {
     if (id) await apiFetch('PUT', `/staff/cashiers/${id}`, payload)
     else     await apiFetch('POST', '/staff/cashiers', payload)
@@ -7335,9 +7354,10 @@ async function loadDownloadsPage () {
   loadInstallerFiles()
   loadBackupOutlets()
   const base = window.location.origin
-  document.getElementById('link-waiter').href = base + '/waiter-app/'
-  document.getElementById('link-kds').href    = base + '/kds/'
-  document.getElementById('link-bo').href     = base + '/backoffice/'
+  document.getElementById('link-waiter').href   = base + '/waiter-app/'
+  document.getElementById('link-kds').href      = base + '/kds/'
+  document.getElementById('link-bo').href       = base + '/backoffice/'
+  document.getElementById('link-delivery').href = base + '/delivery-app/'
   const last = localStorage.getItem('pos_last_backup')
   if (last) document.getElementById('last-backup-info').textContent = 'Last backup: ' + new Date(last).toLocaleString()
 }

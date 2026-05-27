@@ -148,10 +148,13 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(
         <span style="font-size:12px;font-weight:700;color:var(--muted)">Outlet (optional)</span>
         <button onclick="kdsFetchOutlets()" style="font-size:11px;color:var(--primary);background:none;border:none;cursor:pointer;font-weight:700;padding:0">Fetch ↓</button>
       </div>
-      <select id="kds-outlet-id" class="kds-modal-input" style="margin-bottom:4px">
+      <select id="kds-outlet-id" class="kds-modal-input" style="margin-bottom:4px" onchange="updateKdsOutletWarn()">
         <option value="">All outlets (no filter)</option>
       </select>
       <p class="kds-modal-hint" style="margin-bottom:0" id="kds-outlet-hint">Select an outlet to show only orders for that outlet. Tap Fetch to load from server.</p>
+      <div id="kds-outlet-warn" style="display:none;margin-top:7px;padding:8px 10px;background:#fef3c7;border:1px solid #f59e0b;border-radius:7px;font-size:11px;color:#92400e;line-height:1.5">
+        &#9888; No outlet selected — this screen will show orders from all outlets.<br>Tap <b>Fetch ↓</b> then pick an outlet to restrict to this kitchen only.
+      </div>
     </div>
     <div class="kds-modal-actions">
       <button class="kds-modal-cancel" onclick="closeKdsSrvModal()">Cancel</button>
@@ -179,6 +182,10 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(
 </div>
 
 <div class="reconn-bar" id="reconn-bar">⚠ Lost connection — attempting to reconnect…</div>
+
+<div id="kds-outlet-banner" style="display:none;padding:7px 16px;background:#fef3c7;border-bottom:1px solid #f59e0b;font-size:12px;color:#92400e;text-align:center">
+  &#9888; No outlet configured — this screen shows orders from all outlets. Tap &#9881; to set outlet.
+</div>
 
 <div class="filter-bar">
   <button class="filter-tab active" onclick="setFilter('all',this)">All</button>
@@ -248,6 +255,17 @@ setInterval(_kdsHealthCheck, 15_000);
 function getKdsBrandId()  { return (localStorage.getItem('kds_brand_id')  || '').trim(); }
 function getKdsOutletId() { return (localStorage.getItem('kds_outlet_id') || '').trim(); }
 
+function updateKdsOutletWarn() {
+  const val  = document.getElementById('kds-outlet-id')?.value;
+  const warn = document.getElementById('kds-outlet-warn');
+  if (warn) warn.style.display = val ? 'none' : 'block';
+}
+
+function checkKdsOutletBanner() {
+  const banner = document.getElementById('kds-outlet-banner');
+  if (banner) banner.style.display = getKdsOutletId() ? 'none' : 'block';
+}
+
 function openKdsSrvModal() {
   const mode = localStorage.getItem('kds_server_mode') || 'auto';
   setKdsSrvMode(mode);
@@ -262,6 +280,7 @@ function openKdsSrvModal() {
     opt.value = savedOutlet; opt.textContent = savedOutletName || savedOutlet; opt.selected = true;
     sel.appendChild(opt);
   }
+  updateKdsOutletWarn();
   document.getElementById('kds-srv-overlay').style.display = 'flex';
 }
 
@@ -288,6 +307,7 @@ async function kdsFetchOutlets() {
     });
     hintEl.textContent = outlets.length ? `${outlets.length} outlet(s) loaded.` : 'No outlets found.';
     hintEl.style.color = outlets.length ? 'var(--success)' : 'var(--warning)';
+    updateKdsOutletWarn();
   } catch (e) {
     hintEl.textContent = 'Cannot reach server: ' + e.message;
     hintEl.style.color = 'var(--danger)';
@@ -626,6 +646,7 @@ function esc(s) { return String(s||'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'
 if ('serviceWorker' in navigator) {
   navigator.serviceWorker.register('/kds/sw.js').catch(()=>{});
 }
+checkKdsOutletBanner();
 connect();
 // Periodic fallback refresh in case a socket event was missed
 setInterval(fetchOrders, 30000);

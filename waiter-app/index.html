@@ -240,10 +240,13 @@ input,select,textarea{font-family:inherit;outline:none;color:inherit}
         <span style="font-size:12px;font-weight:700;color:var(--muted)">Outlet (optional)</span>
         <button onclick="waiterFetchOutlets()" style="font-size:11px;color:var(--primary);background:none;border:none;cursor:pointer;font-weight:700;padding:0">Fetch ↓</button>
       </div>
-      <select id="srv-outlet-id" class="srv-input" style="margin-bottom:4px">
+      <select id="srv-outlet-id" class="srv-input" style="margin-bottom:4px" onchange="updateWaiterOutletWarn()">
         <option value="">All outlets (no filter)</option>
       </select>
       <p class="srv-hint" style="margin-bottom:0" id="srv-outlet-hint">Select an outlet to show only that outlet's staff and tables. Tap Fetch to load from server.</p>
+      <div id="srv-outlet-warn" style="display:none;margin-top:7px;padding:8px 10px;background:#fef3c7;border:1px solid #f59e0b;border-radius:7px;font-size:11px;color:#92400e;line-height:1.5">
+        &#9888; No outlet selected — this device will show all staff and receive all orders.<br>Tap <b>Fetch ↓</b> then pick an outlet to restrict to this screen only.
+      </div>
     </div>
     <div class="srv-actions">
       <button class="srv-btn-cancel" onclick="closeSrvModal()">Cancel</button>
@@ -258,6 +261,9 @@ input,select,textarea{font-family:inherit;outline:none;color:inherit}
     <svg viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="48" height="48"><path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 002-2V2"/><path d="M7 2v20"/><path d="M21 15V2a5 5 0 00-5 5v6c0 1.1.9 2 2 2h3zm0 0v7"/></svg>
     <h1>Waiter App</h1>
     <p>Select your name to begin</p>
+  </div>
+  <div id="waiter-outlet-banner" style="display:none;margin:0 auto 14px;max-width:340px;padding:9px 13px;background:#fef3c7;border:1px solid #f59e0b;border-radius:9px;font-size:12px;color:#92400e;text-align:center;line-height:1.5">
+    &#9888; No outlet configured — tap &#9881; settings to set your outlet
   </div>
   <div class="cashier-grid" id="cashier-list"></div>
   <p class="login-cashier-name" id="login-cashier-name" style="display:none"></p>
@@ -449,6 +455,17 @@ async function _waiterHealthCheck() {
 }
 setInterval(_waiterHealthCheck, 15_000);
 
+function updateWaiterOutletWarn() {
+  const val  = document.getElementById('srv-outlet-id')?.value;
+  const warn = document.getElementById('srv-outlet-warn');
+  if (warn) warn.style.display = val ? 'none' : 'block';
+}
+
+function checkWaiterOutletBanner() {
+  const banner = document.getElementById('waiter-outlet-banner');
+  if (banner) banner.style.display = getWaiterOutletId() ? 'none' : 'block';
+}
+
 function openSrvModal() {
   const mode = localStorage.getItem('waiter_server_mode') || 'auto';
   setSrvMode(mode);
@@ -463,6 +480,7 @@ function openSrvModal() {
     opt.value = savedOutlet; opt.textContent = savedOutletName || savedOutlet; opt.selected = true;
     sel.appendChild(opt);
   }
+  updateWaiterOutletWarn();
   document.getElementById('srv-modal-overlay').style.display = 'flex';
 }
 
@@ -489,6 +507,7 @@ async function waiterFetchOutlets() {
     });
     hintEl.textContent = outlets.length ? `${outlets.length} outlet(s) loaded.` : 'No outlets found.';
     hintEl.style.color = outlets.length ? 'var(--success)' : 'var(--warning)';
+    updateWaiterOutletWarn();
   } catch (e) {
     hintEl.textContent = 'Cannot reach server: ' + e.message;
     hintEl.style.color = 'var(--danger)';
@@ -600,6 +619,7 @@ function getWaiterOutletId() {
 }
 
 async function loadLoginCashiers() {
+  checkWaiterOutletBanner();
   try {
     const brandId  = getWaiterBrandId();
     const outletId = getWaiterOutletId();

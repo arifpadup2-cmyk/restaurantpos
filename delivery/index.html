@@ -1,0 +1,722 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <title>Delivery App</title>
+  <style>
+    :root {
+      --primary:    #0d9488;
+      --primary-dk: #0f766e;
+      --primary-lt: #ccfbf1;
+      --danger:     #ef4444;
+      --warning:    #f59e0b;
+      --success:    #22c55e;
+      --muted:      #64748b;
+      --bg:         #f0fdf4;
+      --card:       #ffffff;
+      --border:     #d1fae5;
+      --text:       #0f172a;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+
+    /* ── Settings Modal ─────────────────────────────────────── */
+    .srv-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.55); z-index: 900; align-items: center; justify-content: center; padding: 16px; }
+    .srv-box { background: #fff; border-radius: 16px; padding: 24px; width: 100%; max-width: 380px; box-shadow: 0 20px 60px rgba(0,0,0,.25); }
+    .srv-title { font-size: 16px; font-weight: 800; color: var(--text); margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
+    .srv-tabs { display: flex; gap: 6px; margin-bottom: 14px; }
+    .srv-tab { flex: 1; padding: 8px; border-radius: 8px; border: 1.5px solid #e2e8f0; background: #f8fafc; font-size: 12px; font-weight: 700; cursor: pointer; color: var(--muted); }
+    .srv-tab.active { background: var(--primary); border-color: var(--primary); color: #fff; }
+    .srv-input { width: 100%; padding: 10px 12px; border: 1.5px solid #d1d5db; border-radius: 9px; font-size: 13px; color: var(--text); background: #fff; margin-bottom: 8px; outline: none; }
+    .srv-input:focus { border-color: var(--primary); }
+    .srv-hint { font-size: 11px; color: var(--muted); margin-bottom: 10px; line-height: 1.5; }
+    .srv-actions { display: flex; gap: 10px; margin-top: 16px; }
+    .srv-btn-cancel { flex: 1; padding: 10px; border-radius: 9px; border: 1.5px solid #d1d5db; background: #fff; font-size: 13px; font-weight: 700; cursor: pointer; color: var(--muted); }
+    .srv-btn-save   { flex: 2; padding: 10px; border-radius: 9px; border: none; background: var(--primary); color: #fff; font-size: 13px; font-weight: 700; cursor: pointer; }
+    .srv-btn-save:hover { background: var(--primary-dk); }
+
+    /* ── Screen management ──────────────────────────────────── */
+    .screen { display: none; min-height: 100vh; flex-direction: column; }
+    .screen.active { display: flex; }
+
+    /* ── Login Screen ───────────────────────────────────────── */
+    #s-login { background: linear-gradient(160deg, #0d9488 0%, #0f766e 100%); }
+    .login-header { display: flex; align-items: center; justify-content: space-between; padding: 16px 20px; }
+    .login-brand { display: flex; align-items: center; gap: 10px; color: #fff; }
+    .login-brand h1 { font-size: 18px; font-weight: 800; }
+    .login-brand p  { font-size: 11px; opacity: .75; }
+    .srv-gear { background: rgba(255,255,255,.15); border: none; color: #fff; width: 38px; height: 38px; border-radius: 10px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+    .srv-badge { font-size: 10px; font-weight: 700; padding: 2px 7px; border-radius: 20px; margin-left: 6px; }
+    .srv-badge.local { background: #d1fae5; color: #065f46; }
+    .srv-badge.cloud { background: #dbeafe; color: #1e40af; }
+    .srv-badge.fallback { background: #fef3c7; color: #92400e; }
+
+    #outlet-banner { display: none; margin: 0 16px 8px; padding: 9px 13px; background: rgba(254,243,199,.95); border: 1px solid var(--warning); border-radius: 10px; font-size: 12px; color: #92400e; text-align: center; line-height: 1.5; }
+
+    .login-prompt { color: rgba(255,255,255,.8); font-size: 13px; text-align: center; padding: 4px 20px 12px; }
+    .boys-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 10px; padding: 0 16px 16px; }
+    .boy-chip { background: rgba(255,255,255,.15); border: 2px solid rgba(255,255,255,.2); border-radius: 12px; padding: 14px 10px; text-align: center; cursor: pointer; color: #fff; transition: all .15s; }
+    .boy-chip:hover  { background: rgba(255,255,255,.25); border-color: rgba(255,255,255,.5); }
+    .boy-chip.selected { background: #fff; border-color: #fff; color: var(--primary); }
+    .boy-chip-name { font-size: 14px; font-weight: 700; }
+    .boy-chip-role { font-size: 10px; opacity: .7; margin-top: 3px; }
+    .boy-chip.selected .boy-chip-role { opacity: .6; }
+
+    .no-boys { text-align: center; padding: 40px 20px; color: rgba(255,255,255,.7); font-size: 14px; }
+
+    /* PIN section */
+    .pin-section { background: rgba(0,0,0,.15); border-radius: 16px 16px 0 0; padding: 20px 16px 0; margin-top: auto; }
+    .pin-selected-name { color: #fff; font-size: 15px; font-weight: 700; text-align: center; margin-bottom: 14px; }
+    .pin-dots { display: flex; justify-content: center; gap: 12px; margin-bottom: 18px; }
+    .pin-dot { width: 14px; height: 14px; border-radius: 50%; border: 2px solid rgba(255,255,255,.6); transition: all .15s; }
+    .pin-dot.filled { background: #fff; border-color: #fff; }
+    .pinpad { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; max-width: 280px; margin: 0 auto 20px; }
+    .pp-btn { background: rgba(255,255,255,.15); border: none; color: #fff; font-size: 22px; font-weight: 700; height: 60px; border-radius: 12px; cursor: pointer; transition: background .1s; }
+    .pp-btn:active { background: rgba(255,255,255,.35); }
+    .pp-btn.pp-action { font-size: 13px; font-weight: 800; }
+
+    /* ── Orders Screen ──────────────────────────────────────── */
+    #s-orders { background: var(--bg); }
+    .orders-header { background: var(--primary); padding: 14px 16px; display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+    .orders-header-left { display: flex; align-items: center; gap: 10px; color: #fff; }
+    .orders-header-left svg { opacity: .85; }
+    .orders-welcome { font-size: 15px; font-weight: 800; color: #fff; }
+    .orders-sub { font-size: 11px; color: rgba(255,255,255,.75); }
+    .orders-header-right { display: flex; align-items: center; gap: 8px; }
+    .conn-dot { width: 8px; height: 8px; border-radius: 50%; background: #94a3b8; transition: background .3s; }
+    .conn-dot.connected { background: #86efac; }
+    .conn-label { font-size: 11px; color: rgba(255,255,255,.75); }
+    .btn-logout { background: rgba(255,255,255,.15); border: none; color: #fff; padding: 7px 13px; border-radius: 8px; font-size: 12px; font-weight: 700; cursor: pointer; }
+    .btn-logout:hover { background: rgba(255,255,255,.25); }
+
+    .orders-outlet-banner { display: none; padding: 7px 16px; background: #fef3c7; border-bottom: 1px solid var(--warning); font-size: 12px; color: #92400e; text-align: center; }
+
+    .orders-toolbar { padding: 12px 16px 4px; display: flex; align-items: center; justify-content: space-between; }
+    .orders-count { font-size: 13px; font-weight: 700; color: var(--muted); }
+    .btn-refresh { background: none; border: 1.5px solid var(--border); border-radius: 8px; padding: 6px 12px; font-size: 12px; font-weight: 700; color: var(--primary); cursor: pointer; display: flex; align-items: center; gap: 5px; }
+
+    .orders-list { padding: 8px 16px 80px; display: flex; flex-direction: column; gap: 12px; }
+
+    .order-card { background: var(--card); border-radius: 14px; border: 1.5px solid var(--border); box-shadow: 0 2px 8px rgba(13,148,136,.07); overflow: hidden; }
+    .order-card-head { padding: 12px 14px 10px; border-bottom: 1px solid #f0fdf4; display: flex; align-items: center; justify-content: space-between; }
+    .order-num { font-size: 14px; font-weight: 800; color: var(--text); }
+    .order-time { font-size: 11px; color: var(--muted); }
+    .status-badge { font-size: 10px; font-weight: 800; padding: 3px 9px; border-radius: 20px; }
+    .status-pending  { background: #fef3c7; color: #92400e; }
+    .status-assigned { background: #dbeafe; color: #1e40af; }
+    .status-picked_up { background: #fce7f3; color: #9d174d; }
+    .status-delivered { background: #dcfce7; color: #14532d; }
+
+    .order-card-body { padding: 12px 14px; }
+    .order-customer { font-size: 15px; font-weight: 700; color: var(--text); margin-bottom: 6px; }
+    .order-detail { display: flex; align-items: flex-start; gap: 7px; font-size: 12px; color: var(--muted); margin-bottom: 5px; line-height: 1.4; }
+    .order-detail svg { flex-shrink: 0; margin-top: 1px; }
+    .order-detail a { color: var(--primary); text-decoration: none; font-weight: 700; }
+
+    .order-items { background: #f0fdf4; border-radius: 9px; padding: 9px 11px; margin: 10px 0; font-size: 12px; color: #374151; }
+    .order-item-row { display: flex; justify-content: space-between; padding: 2px 0; }
+    .order-item-name { font-weight: 600; }
+    .order-item-qty  { color: var(--muted); }
+
+    .order-total { font-size: 14px; font-weight: 800; color: var(--primary); text-align: right; margin-bottom: 12px; }
+    .order-assigned-to { font-size: 11px; color: var(--muted); text-align: center; padding: 6px 0; font-style: italic; }
+
+    .btn-claim    { width: 100%; padding: 12px; border-radius: 10px; border: none; background: var(--primary); color: #fff; font-size: 14px; font-weight: 800; cursor: pointer; }
+    .btn-pickup   { width: 100%; padding: 12px; border-radius: 10px; border: none; background: #7c3aed; color: #fff; font-size: 14px; font-weight: 800; cursor: pointer; }
+    .btn-delivered{ width: 100%; padding: 12px; border-radius: 10px; border: none; background: var(--success); color: #fff; font-size: 14px; font-weight: 800; cursor: pointer; }
+    .btn-claim:hover     { background: var(--primary-dk); }
+    .btn-pickup:hover    { background: #6d28d9; }
+    .btn-delivered:hover { background: #16a34a; }
+    .btn-busy { background: #e2e8f0 !important; color: #94a3b8 !important; cursor: not-allowed !important; }
+
+    .empty-state { text-align: center; padding: 60px 20px; }
+    .empty-icon { font-size: 48px; margin-bottom: 12px; }
+    .empty-msg  { font-size: 15px; font-weight: 700; color: var(--muted); }
+    .empty-sub  { font-size: 13px; color: #94a3b8; margin-top: 6px; }
+
+    /* ── Toasts ─────────────────────────────────────────────── */
+    #toast-region { position: fixed; bottom: 22px; right: 16px; left: 16px; z-index: 999; display: flex; flex-direction: column; align-items: center; gap: 7px; pointer-events: none; }
+    .toast { background: #1e293b; color: #fff; padding: 10px 16px; border-radius: 10px; font-size: 13px; font-weight: 600; box-shadow: 0 4px 20px rgba(0,0,0,.25); pointer-events: auto; animation: toast-in .2s ease; display: flex; align-items: center; gap: 8px; max-width: 340px; }
+    .toast-success { border-left: 4px solid var(--success); }
+    .toast-error   { border-left: 4px solid var(--danger); }
+    .toast-info    { border-left: 4px solid #38bdf8; }
+    .toast-warning { border-left: 4px solid var(--warning); }
+    @keyframes toast-in { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+
+    @media (max-width: 360px) {
+      .boys-grid { grid-template-columns: repeat(2, 1fr); }
+      .pinpad { max-width: 240px; }
+      .pp-btn { height: 52px; font-size: 20px; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ── Settings Modal ──────────────────────────────────────────────────────── -->
+<div class="srv-overlay" id="srv-overlay">
+  <div class="srv-box">
+    <div class="srv-title">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+      Server Settings
+    </div>
+    <div class="srv-tabs">
+      <button class="srv-tab active" id="srv-tab-auto"  onclick="setSrvMode('auto')">&#127968; Local Server</button>
+      <button class="srv-tab"        id="srv-tab-cloud" onclick="setSrvMode('cloud')">&#9729; Cloud Server</button>
+    </div>
+    <div id="srv-auto-sect">
+      <p class="srv-hint">Uses the server this app is hosted on. Works on local network without internet.</p>
+    </div>
+    <div id="srv-cloud-sect" style="display:none">
+      <input id="srv-cloud-url" type="url" class="srv-input" placeholder="https://mypos.railway.app" autocomplete="off">
+      <p class="srv-hint">Cloud URL of your POS server. Requires internet.</p>
+    </div>
+    <input id="srv-brand-id" type="text" class="srv-input" placeholder="Brand ID (e.g. REST-GPPE8G)" autocomplete="off">
+    <p class="srv-hint" style="margin-top:-4px;margin-bottom:12px">Your Brand ID — required for cloud; optional on local.</p>
+    <div style="margin-bottom:14px">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:5px">
+        <span style="font-size:12px;font-weight:700;color:var(--muted)">Outlet (optional)</span>
+        <button onclick="fetchOutlets()" style="font-size:11px;color:var(--primary);background:none;border:none;cursor:pointer;font-weight:700;padding:0">Fetch &#8595;</button>
+      </div>
+      <select id="srv-outlet-id" class="srv-input" style="margin-bottom:4px" onchange="updateOutletWarn()">
+        <option value="">All outlets (no filter)</option>
+      </select>
+      <p class="srv-hint" style="margin-bottom:0" id="srv-outlet-hint">Select an outlet to show only that outlet's delivery orders.</p>
+      <div id="srv-outlet-warn" style="display:none;margin-top:7px;padding:8px 10px;background:#fef3c7;border:1px solid var(--warning);border-radius:7px;font-size:11px;color:#92400e;line-height:1.5">
+        &#9888; No outlet selected — this device will show delivery orders from all outlets.<br>Tap <b>Fetch &#8595;</b> then pick an outlet.
+      </div>
+    </div>
+    <div class="srv-actions">
+      <button class="srv-btn-cancel" onclick="closeSrvModal()">Cancel</button>
+      <button class="srv-btn-save"   onclick="saveSrvConfig()">Save &amp; Reconnect</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── Login Screen ────────────────────────────────────────────────────────── -->
+<div class="screen active" id="s-login">
+  <div class="login-header">
+    <div class="login-brand">
+      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="3" width="15" height="13" rx="2"/><path d="M16 8h4l3 5v4h-7V8z"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>
+      <div>
+        <h1>Delivery App</h1>
+        <p id="login-outlet-name">Select your name</p>
+      </div>
+    </div>
+    <button class="srv-gear" onclick="openSrvModal()" title="Server Settings">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+      <span class="srv-badge local" id="srv-badge">Local</span>
+    </button>
+  </div>
+
+  <div id="outlet-banner">&#9888; No outlet configured — tap &#9881; to set your outlet</div>
+
+  <p class="login-prompt">Select your name to begin</p>
+  <div class="boys-grid" id="boys-grid"></div>
+
+  <div id="pin-section" style="display:none">
+    <div class="pin-section">
+      <div class="pin-selected-name" id="pin-selected-name"></div>
+      <div class="pin-dots" id="pin-dots">
+        <div class="pin-dot" id="pd0"></div>
+        <div class="pin-dot" id="pd1"></div>
+        <div class="pin-dot" id="pd2"></div>
+        <div class="pin-dot" id="pd3"></div>
+      </div>
+      <div class="pinpad">
+        <button class="pp-btn" onclick="pinTap('1')">1</button>
+        <button class="pp-btn" onclick="pinTap('2')">2</button>
+        <button class="pp-btn" onclick="pinTap('3')">3</button>
+        <button class="pp-btn" onclick="pinTap('4')">4</button>
+        <button class="pp-btn" onclick="pinTap('5')">5</button>
+        <button class="pp-btn" onclick="pinTap('6')">6</button>
+        <button class="pp-btn" onclick="pinTap('7')">7</button>
+        <button class="pp-btn" onclick="pinTap('8')">8</button>
+        <button class="pp-btn" onclick="pinTap('9')">9</button>
+        <button class="pp-btn pp-action" onclick="pinClear()">CLR</button>
+        <button class="pp-btn" onclick="pinTap('0')">0</button>
+        <button class="pp-btn pp-action" onclick="pinBack()">&#9003;</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ── Orders Screen ───────────────────────────────────────────────────────── -->
+<div class="screen" id="s-orders">
+  <div class="orders-header">
+    <div class="orders-header-left">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="3" width="15" height="13" rx="2"/><path d="M16 8h4l3 5v4h-7V8z"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>
+      <div>
+        <div class="orders-welcome" id="orders-welcome">Deliveries</div>
+        <div class="orders-sub" id="orders-sub"></div>
+      </div>
+    </div>
+    <div class="orders-header-right">
+      <div class="conn-dot" id="conn-dot"></div>
+      <span class="conn-label" id="conn-label">Connecting…</span>
+      <button class="btn-logout" onclick="logout()">Logout</button>
+    </div>
+  </div>
+
+  <div class="orders-outlet-banner" id="orders-outlet-banner">
+    &#9888; No outlet configured — showing orders from all outlets. Tap logout then &#9881; to set outlet.
+  </div>
+
+  <div class="orders-toolbar">
+    <span class="orders-count" id="orders-count">Loading…</span>
+    <button class="btn-refresh" onclick="loadOrders()">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 11-2.12-9.36L23 10"/></svg>
+      Refresh
+    </button>
+  </div>
+
+  <div id="orders-list" class="orders-list"></div>
+</div>
+
+<div id="toast-region"></div>
+
+<script>
+// ── State ─────────────────────────────────────────────────────────────────────
+let BASE          = getBase()
+let token         = localStorage.getItem('delivery_token') || ''
+let currentBoy    = null
+let allBoys       = []
+let selectedBoy   = null
+let pinBuffer     = ''
+let socket        = null
+let reconnTimer   = null
+let _fallback     = false
+let _healthFails  = 0
+const _FAIL_THRESHOLD = 3
+
+// ── Config ────────────────────────────────────────────────────────────────────
+function getMode()      { return localStorage.getItem('delivery_server_mode') || 'auto' }
+function getCloudUrl()  { return (localStorage.getItem('delivery_cloud_url') || '').replace(/\/+$/, '') }
+function getBrandId()   { return (localStorage.getItem('delivery_brand_id')  || '').trim() }
+function getOutletId()  { return (localStorage.getItem('delivery_outlet_id') || '').trim() }
+function getOutletName(){ return localStorage.getItem('delivery_outlet_name') || '' }
+
+function getBase() {
+  const mode     = localStorage.getItem('delivery_server_mode') || 'auto'
+  const cloudUrl = (localStorage.getItem('delivery_cloud_url')  || '').replace(/\/+$/, '')
+  return mode === 'cloud' && cloudUrl ? cloudUrl : window.location.origin
+}
+
+function updateBadge() {
+  const badge = document.getElementById('srv-badge')
+  if (!badge) return
+  badge.className = 'srv-badge ' + (_fallback ? 'fallback' : getMode() === 'cloud' ? 'cloud' : 'local')
+  badge.textContent = _fallback ? 'Cloud (fallback)' : getMode() === 'cloud' ? 'Cloud' : 'Local'
+}
+
+// ── Settings Modal ────────────────────────────────────────────────────────────
+function openSrvModal() {
+  const mode = getMode()
+  setSrvMode(mode)
+  document.getElementById('srv-cloud-url').value = getCloudUrl()
+  document.getElementById('srv-brand-id').value  = getBrandId()
+  const sel = document.getElementById('srv-outlet-id')
+  const savedId = getOutletId(), savedName = getOutletName()
+  sel.innerHTML = '<option value="">All outlets (no filter)</option>'
+  if (savedId) {
+    const opt = document.createElement('option')
+    opt.value = savedId; opt.textContent = savedName || savedId; opt.selected = true
+    sel.appendChild(opt)
+  }
+  updateOutletWarn()
+  document.getElementById('srv-overlay').style.display = 'flex'
+}
+
+function closeSrvModal() {
+  document.getElementById('srv-overlay').style.display = 'none'
+}
+
+function setSrvMode(mode) {
+  const isCloud = mode === 'cloud'
+  document.getElementById('srv-tab-auto').classList.toggle('active', !isCloud)
+  document.getElementById('srv-tab-cloud').classList.toggle('active', isCloud)
+  document.getElementById('srv-auto-sect').style.display  = isCloud ? 'none' : ''
+  document.getElementById('srv-cloud-sect').style.display = isCloud ? '' : 'none'
+}
+
+function updateOutletWarn() {
+  const val  = document.getElementById('srv-outlet-id')?.value
+  const warn = document.getElementById('srv-outlet-warn')
+  if (warn) warn.style.display = val ? 'none' : 'block'
+}
+
+async function fetchOutlets() {
+  const hint    = document.getElementById('srv-outlet-hint')
+  const mode    = document.getElementById('srv-tab-cloud').classList.contains('active') ? 'cloud' : 'auto'
+  const cloudUrl = document.getElementById('srv-cloud-url').value.trim().replace(/\/+$/, '')
+  const brandId  = document.getElementById('srv-brand-id').value.trim()
+  const base     = mode === 'cloud' ? cloudUrl : window.location.origin
+  if (!base) { hint.textContent = 'Enter a cloud URL first.'; hint.style.color = 'var(--danger)'; return }
+  hint.textContent = 'Fetching outlets…'; hint.style.color = 'var(--muted)'
+  try {
+    const url  = base + '/delivery/outlets' + (brandId ? '?brand_id=' + encodeURIComponent(brandId) : '')
+    const data = await fetch(url, { signal: AbortSignal.timeout(5000) }).then(r => r.json())
+    const outlets = data.outlets || []
+    const sel = document.getElementById('srv-outlet-id')
+    const current = sel.value
+    sel.innerHTML = '<option value="">All outlets (no filter)</option>'
+    outlets.forEach(o => {
+      const opt = document.createElement('option')
+      opt.value = o.id; opt.textContent = o.name
+      if (o.id === current) opt.selected = true
+      sel.appendChild(opt)
+    })
+    hint.textContent = outlets.length ? `${outlets.length} outlet(s) loaded.` : 'No outlets found.'
+    hint.style.color = outlets.length ? 'var(--success)' : 'var(--warning)'
+    updateOutletWarn()
+  } catch (e) {
+    hint.textContent = 'Cannot reach server: ' + e.message
+    hint.style.color = 'var(--danger)'
+  }
+}
+
+function saveSrvConfig() {
+  const mode     = document.getElementById('srv-tab-cloud').classList.contains('active') ? 'cloud' : 'auto'
+  const cloudUrl = document.getElementById('srv-cloud-url').value.trim().replace(/\/+$/, '')
+  const brandId  = document.getElementById('srv-brand-id').value.trim()
+  if (mode === 'cloud' && !cloudUrl) { document.getElementById('srv-cloud-url').focus(); return }
+  if (mode === 'cloud' && !brandId)  { document.getElementById('srv-brand-id').focus();  return }
+  const sel        = document.getElementById('srv-outlet-id')
+  const outletId   = sel.value
+  const outletName = sel.options[sel.selectedIndex]?.text || ''
+  localStorage.setItem('delivery_server_mode', mode)
+  if (cloudUrl) localStorage.setItem('delivery_cloud_url', cloudUrl)
+  if (brandId)  localStorage.setItem('delivery_brand_id',  brandId)
+  else          localStorage.removeItem('delivery_brand_id')
+  if (outletId) { localStorage.setItem('delivery_outlet_id', outletId); localStorage.setItem('delivery_outlet_name', outletName) }
+  else          { localStorage.removeItem('delivery_outlet_id'); localStorage.removeItem('delivery_outlet_name') }
+  _fallback = false; _healthFails = 0
+  BASE = getBase()
+  updateBadge()
+  closeSrvModal()
+  loadBoys()
+  if (socket) { socket.disconnect(); socket = null }
+  if (token) connectSocket()
+}
+
+// ── Health check + auto-fallback ──────────────────────────────────────────────
+async function healthCheck() {
+  const localUrl = getMode() !== 'cloud' ? window.location.origin : ''
+  const cloudUrl = getCloudUrl()
+  try {
+    await fetch(BASE + '/health', { signal: AbortSignal.timeout(4000) })
+    if (_fallback) {
+      _fallback = false; _healthFails = 0
+      if (localUrl && getMode() !== 'cloud') {
+        BASE = localUrl; updateBadge()
+        showToast('Local server restored', 'success')
+      }
+    } else { _healthFails = 0 }
+  } catch {
+    _healthFails++
+    if (!_fallback && getMode() !== 'cloud' && cloudUrl && _healthFails >= _FAIL_THRESHOLD) {
+      _fallback = true; BASE = cloudUrl; updateBadge()
+      showToast('Local server unreachable — switched to cloud', 'warning')
+    }
+  }
+}
+setInterval(healthCheck, 15000)
+
+// ── Login ─────────────────────────────────────────────────────────────────────
+async function loadBoys() {
+  checkOutletBanner()
+  const brandId  = getBrandId()
+  const outletId = getOutletId()
+  let qs = brandId ? '?brand_id=' + encodeURIComponent(brandId) : ''
+  if (outletId) qs += (qs ? '&' : '?') + 'outlet_id=' + encodeURIComponent(outletId)
+  try {
+    const data = await fetch(BASE + '/delivery/boys' + qs).then(r => r.json())
+    allBoys = data.boys || []
+    const grid = document.getElementById('boys-grid')
+    if (!allBoys.length) {
+      grid.innerHTML = '<div class="no-boys">No delivery staff found.<br>Add staff with role <b>Delivery Boy</b> in Back Office.</div>'
+      return
+    }
+    grid.innerHTML = allBoys.map(b =>
+      `<div class="boy-chip" id="chip-${b.id}" onclick="selectBoy('${b.id}')">
+        <div class="boy-chip-name">${esc(b.name)}</div>
+        <div class="boy-chip-role">Delivery</div>
+      </div>`
+    ).join('')
+  } catch { showToast('Cannot reach server — check settings', 'error') }
+}
+
+function checkOutletBanner() {
+  const banner = document.getElementById('outlet-banner')
+  if (banner) banner.style.display = getOutletId() ? 'none' : 'block'
+  const outletName = getOutletName()
+  const el = document.getElementById('login-outlet-name')
+  if (el) el.textContent = outletName ? outletName : 'Select your name'
+}
+
+function selectBoy(id) {
+  selectedBoy = allBoys.find(b => b.id === id)
+  if (!selectedBoy) return
+  document.querySelectorAll('.boy-chip').forEach(el => el.classList.remove('selected'))
+  document.getElementById('chip-' + id)?.classList.add('selected')
+  pinBuffer = ''
+  updatePinDots()
+  document.getElementById('pin-selected-name').textContent = selectedBoy.name
+  document.getElementById('pin-section').style.display = 'block'
+}
+
+function pinTap(d) {
+  if (pinBuffer.length >= 4) return
+  pinBuffer += d
+  updatePinDots()
+  if (pinBuffer.length === 4) setTimeout(doLogin, 150)
+}
+function pinClear()  { pinBuffer = ''; updatePinDots() }
+function pinBack()   { pinBuffer = pinBuffer.slice(0, -1); updatePinDots() }
+function updatePinDots() {
+  for (let i = 0; i < 4; i++) {
+    document.getElementById('pd' + i)?.classList.toggle('filled', i < pinBuffer.length)
+  }
+}
+
+async function doLogin() {
+  if (!selectedBoy || pinBuffer.length < 4) return
+  try {
+    const r = await fetch(BASE + '/delivery/auth', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ boy_id: selectedBoy.id, pin: pinBuffer })
+    })
+    const data = await r.json()
+    if (!r.ok) {
+      showToast(data.error || 'Wrong PIN', 'error')
+      pinBuffer = ''; updatePinDots()
+      return
+    }
+    token = data.token
+    localStorage.setItem('delivery_token', token)
+    currentBoy = data.boy
+    enterOrdersScreen()
+  } catch (e) {
+    showToast('Cannot reach server', 'error')
+    pinBuffer = ''; updatePinDots()
+  }
+}
+
+function enterOrdersScreen() {
+  document.getElementById('s-login').classList.remove('active')
+  document.getElementById('s-orders').classList.add('active')
+  document.getElementById('orders-welcome').textContent = currentBoy?.name || 'Deliveries'
+  const outletName = getOutletName()
+  document.getElementById('orders-sub').textContent = outletName ? outletName : 'All outlets'
+  const ob = document.getElementById('orders-outlet-banner')
+  if (ob) ob.style.display = getOutletId() ? 'none' : 'block'
+  loadOrders()
+  connectSocket()
+}
+
+function logout() {
+  token = ''; currentBoy = null; selectedBoy = null; pinBuffer = ''
+  localStorage.removeItem('delivery_token')
+  if (socket) { socket.disconnect(); socket = null }
+  document.getElementById('s-orders').classList.remove('active')
+  document.getElementById('s-login').classList.add('active')
+  document.getElementById('pin-section').style.display = 'none'
+  document.querySelectorAll('.boy-chip').forEach(el => el.classList.remove('selected'))
+  loadBoys()
+}
+
+// ── Orders ────────────────────────────────────────────────────────────────────
+async function loadOrders() {
+  document.getElementById('orders-count').textContent = 'Loading…'
+  try {
+    const r = await fetch(BASE + '/delivery/orders', {
+      headers: { 'Authorization': 'Bearer ' + token }
+    })
+    if (r.status === 401) { logout(); return }
+    const data = await r.json()
+    renderOrders(data.orders || [])
+  } catch { showToast('Failed to load orders', 'error') }
+}
+
+function renderOrders(orders) {
+  const list = document.getElementById('orders-list')
+  document.getElementById('orders-count').textContent =
+    orders.length ? `${orders.length} active order${orders.length > 1 ? 's' : ''}` : 'No active deliveries'
+  if (!orders.length) {
+    list.innerHTML = `<div class="empty-state">
+      <div class="empty-icon">🏍️</div>
+      <div class="empty-msg">No active deliveries</div>
+      <div class="empty-sub">New delivery orders will appear here</div>
+    </div>`
+    return
+  }
+  list.innerHTML = orders.map(o => orderCard(o)).join('')
+}
+
+function orderCard(o) {
+  const st   = o.delivery_status || 'pending'
+  const mine = o.delivery_boy_id === currentBoy?.id
+  const taken = o.delivery_boy_id && !mine
+
+  const items = (o.items || []).map(i =>
+    `<div class="order-item-row">
+      <span class="order-item-name">${esc(i.item_name)}</span>
+      <span class="order-item-qty">×${i.quantity}</span>
+    </div>`
+  ).join('')
+
+  const phone = o.customer_phone
+    ? `<div class="order-detail">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.07 10.8 19.79 19.79 0 01.06 2.18 2 2 0 012 0h3a2 2 0 012 1.72 12.84 12.84 0 00.7 2.81 2 2 0 01-.45 2.11L6.09 7.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45 12.84 12.84 0 002.81.7A2 2 0 0122 14z"/></svg>
+        <a href="tel:${esc(o.customer_phone)}">${esc(o.customer_phone)}</a>
+      </div>` : ''
+
+  const address = o.customer_address
+    ? `<div class="order-detail">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
+        ${esc(o.customer_address)}
+      </div>` : ''
+
+  const notes = o.notes
+    ? `<div class="order-detail"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>${esc(o.notes)}</div>`
+    : ''
+
+  let actionBtn = ''
+  if (!o.delivery_boy_id) {
+    actionBtn = `<button class="btn-claim" onclick="claimOrder('${o.id}',this)">&#128666; Claim Order</button>`
+  } else if (mine) {
+    if (st === 'assigned' || st === 'pending') {
+      actionBtn = `<button class="btn-pickup" onclick="updateStatus('${o.id}','picked_up',this)">&#9989; Mark as Picked Up</button>`
+    } else if (st === 'picked_up') {
+      actionBtn = `<button class="btn-delivered" onclick="updateStatus('${o.id}','delivered',this)">&#127881; Mark as Delivered</button>`
+    }
+  } else {
+    actionBtn = `<div class="order-assigned-to">Assigned to ${esc(o.delivery_boy_name || 'another driver')}</div>`
+  }
+
+  const statusBadge = {
+    pending:   '<span class="status-badge status-pending">Pending</span>',
+    assigned:  '<span class="status-badge status-assigned">Assigned</span>',
+    picked_up: '<span class="status-badge status-picked_up">Picked Up</span>',
+    delivered: '<span class="status-badge status-delivered">Delivered</span>',
+  }[st] || `<span class="status-badge status-pending">${esc(st)}</span>`
+
+  const timeStr = o.created_at ? new Date(parseInt(o.created_at)).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'}) : ''
+
+  return `<div class="order-card" id="card-${o.id}">
+    <div class="order-card-head">
+      <div>
+        <div class="order-num">${esc(o.order_number)}</div>
+        <div class="order-time">${timeStr}${o.order_type ? ' · ' + esc(o.order_type) : ''}</div>
+      </div>
+      ${statusBadge}
+    </div>
+    <div class="order-card-body">
+      <div class="order-customer">${esc(o.customer_name || 'No name')}</div>
+      ${phone}
+      ${address}
+      ${notes}
+      <div class="order-items">${items || '<div style="color:var(--muted)">No items</div>'}</div>
+      <div class="order-total">${o.payment_method ? esc(o.payment_method.toUpperCase()) + ' · ' : ''}Total: ${formatCurrency(o.total)}</div>
+      ${actionBtn}
+    </div>
+  </div>`
+}
+
+async function claimOrder(orderId, btn) {
+  btn.disabled = true; btn.classList.add('btn-busy'); btn.textContent = 'Claiming…'
+  try {
+    const r = await fetch(BASE + '/delivery/orders/' + orderId + '/claim', {
+      method: 'POST', headers: { 'Authorization': 'Bearer ' + token }
+    })
+    const data = await r.json()
+    if (!r.ok) { showToast(data.error || 'Could not claim order', 'error'); btn.disabled = false; btn.classList.remove('btn-busy'); btn.textContent = '🚗 Claim Order'; return }
+    showToast('Order claimed!', 'success')
+    loadOrders()
+  } catch { showToast('Network error', 'error'); btn.disabled = false; btn.classList.remove('btn-busy'); btn.textContent = '🚗 Claim Order' }
+}
+
+async function updateStatus(orderId, status, btn) {
+  const labels = { picked_up: '✅ Mark as Picked Up', delivered: '🎉 Mark as Delivered' }
+  btn.disabled = true; btn.classList.add('btn-busy'); btn.textContent = 'Updating…'
+  try {
+    const r = await fetch(BASE + '/delivery/orders/' + orderId + '/status', {
+      method: 'PATCH',
+      headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ status })
+    })
+    const data = await r.json()
+    if (!r.ok) { showToast(data.error || 'Update failed', 'error'); btn.disabled = false; btn.classList.remove('btn-busy'); btn.textContent = labels[status] || status; return }
+    showToast(status === 'delivered' ? 'Delivered! Great work!' : 'Status updated', 'success')
+    loadOrders()
+  } catch { showToast('Network error', 'error'); btn.disabled = false; btn.classList.remove('btn-busy'); btn.textContent = labels[status] || status }
+}
+
+// ── Socket.io ─────────────────────────────────────────────────────────────────
+function connectSocket() {
+  if (socket) return
+  const brandId  = getBrandId()
+  const outletId = getOutletId()
+  const io = window.io
+  if (!io) { startPollFallback(); return }
+  try {
+    socket = io(BASE, {
+      query: { area: 'delivery', brand_id: brandId, outlet_id: outletId },
+      transports: ['websocket', 'polling'],
+      reconnectionDelay: 2000,
+    })
+    socket.on('connect', () => {
+      document.getElementById('conn-dot').classList.add('connected')
+      document.getElementById('conn-label').textContent = 'Connected'
+    })
+    socket.on('disconnect', () => {
+      document.getElementById('conn-dot').classList.remove('connected')
+      document.getElementById('conn-label').textContent = 'Reconnecting…'
+    })
+    socket.on('order:created', (d) => {
+      if (d.orderType === 'delivery' || d.orderType === 'online') loadOrders()
+    })
+    socket.on('delivery:claimed', () => loadOrders())
+    socket.on('delivery:status',  () => loadOrders())
+  } catch { startPollFallback() }
+}
+
+function startPollFallback() {
+  document.getElementById('conn-label').textContent = 'Polling'
+  setInterval(() => { if (currentBoy) loadOrders() }, 20000)
+}
+
+// ── Helpers ───────────────────────────────────────────────────────────────────
+function esc(s) {
+  return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')
+}
+function formatCurrency(v) {
+  return parseFloat(v || 0).toFixed(2)
+}
+function showToast(msg, type = 'info', ms = 3500) {
+  const icons = { success: '✓', error: '✗', info: 'ℹ', warning: '⚠' }
+  const t = document.createElement('div')
+  t.className = `toast toast-${type}`
+  t.innerHTML = `<span>${icons[type] || 'ℹ'}</span> ${msg}`
+  document.getElementById('toast-region').appendChild(t)
+  setTimeout(() => { t.style.opacity = '0'; t.style.transform = 'translateY(8px)'; t.style.transition = '.2s'; setTimeout(() => t.remove(), 220) }, ms)
+}
+
+// ── Boot ──────────────────────────────────────────────────────────────────────
+updateBadge()
+if (token) {
+  fetch(BASE + '/delivery/auth/me', { headers: { 'Authorization': 'Bearer ' + token } })
+    .then(r => r.ok ? r.json() : null)
+    .then(data => {
+      if (data?.boy) { currentBoy = data.boy; enterOrdersScreen() }
+      else { token = ''; localStorage.removeItem('delivery_token'); loadBoys() }
+    })
+    .catch(() => loadBoys())
+} else {
+  loadBoys()
+}
+</script>
+<script src="/socket.io/socket.io.js" onerror="console.warn('Socket.io not available')"></script>
+</body>
+</html>
