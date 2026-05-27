@@ -143,6 +143,16 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(
     <input id="kds-brand-id" type="text" class="kds-modal-input" placeholder="Brand ID (e.g. REST-GPPE8G)"
       autocomplete="off" spellcheck="false" style="margin-top:4px">
     <p class="kds-modal-hint" style="margin-top:-4px;margin-bottom:12px">Your Brand ID — required for cloud; optional on local network.</p>
+    <div style="margin-bottom:14px">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:5px">
+        <span style="font-size:12px;font-weight:700;color:var(--muted)">Outlet (optional)</span>
+        <button onclick="kdsFetchOutlets()" style="font-size:11px;color:var(--primary);background:none;border:none;cursor:pointer;font-weight:700;padding:0">Fetch ↓</button>
+      </div>
+      <select id="kds-outlet-id" class="kds-modal-input" style="margin-bottom:4px">
+        <option value="">All outlets (no filter)</option>
+      </select>
+      <p class="kds-modal-hint" style="margin-bottom:0" id="kds-outlet-hint">Select an outlet to show only orders for that outlet. Tap Fetch to load from server.</p>
+    </div>
     <div class="kds-modal-actions">
       <button class="kds-modal-cancel" onclick="closeKdsSrvModal()">Cancel</button>
       <button class="kds-modal-save" onclick="saveKdsSrvConfig()">Save &amp; Reconnect</button>
@@ -235,15 +245,53 @@ async function _kdsHealthCheck() {
 }
 setInterval(_kdsHealthCheck, 15_000);
 
-function getKdsBrandId() {
-  return (localStorage.getItem('kds_brand_id') || '').trim();
-}
+function getKdsBrandId()  { return (localStorage.getItem('kds_brand_id')  || '').trim(); }
+function getKdsOutletId() { return (localStorage.getItem('kds_outlet_id') || '').trim(); }
+
 function openKdsSrvModal() {
   const mode = localStorage.getItem('kds_server_mode') || 'auto';
   setKdsSrvMode(mode);
   document.getElementById('kds-cloud-url').value = localStorage.getItem('kds_cloud_url') || '';
   document.getElementById('kds-brand-id').value  = localStorage.getItem('kds_brand_id')  || '';
+  const savedOutlet = localStorage.getItem('kds_outlet_id') || '';
+  const savedOutletName = localStorage.getItem('kds_outlet_name') || '';
+  const sel = document.getElementById('kds-outlet-id');
+  sel.innerHTML = '<option value="">All outlets (no filter)</option>';
+  if (savedOutlet) {
+    const opt = document.createElement('option');
+    opt.value = savedOutlet; opt.textContent = savedOutletName || savedOutlet; opt.selected = true;
+    sel.appendChild(opt);
+  }
   document.getElementById('kds-srv-overlay').style.display = 'flex';
+}
+
+async function kdsFetchOutlets() {
+  const hintEl = document.getElementById('kds-outlet-hint');
+  const mode     = document.getElementById('kds-tab-cloud').classList.contains('active') ? 'cloud' : 'auto';
+  const cloudUrl = document.getElementById('kds-cloud-url').value.trim().replace(/\/+$/, '');
+  const brandId  = document.getElementById('kds-brand-id').value.trim();
+  const serverBase = mode === 'cloud' ? cloudUrl : window.location.origin;
+  if (!serverBase) { hintEl.textContent = 'Enter a cloud URL first.'; hintEl.style.color = 'var(--danger)'; return; }
+  hintEl.textContent = 'Fetching outlets…'; hintEl.style.color = 'var(--muted)';
+  try {
+    const url = serverBase + '/waiter/outlets' + (brandId ? '?brand_id=' + encodeURIComponent(brandId) : '');
+    const data = await fetch(url, { signal: AbortSignal.timeout(5000) }).then(r => r.json());
+    const outlets = data.outlets || [];
+    const sel = document.getElementById('kds-outlet-id');
+    const current = sel.value;
+    sel.innerHTML = '<option value="">All outlets (no filter)</option>';
+    outlets.forEach(o => {
+      const opt = document.createElement('option');
+      opt.value = o.id; opt.textContent = o.name;
+      if (o.id === current) opt.selected = true;
+      sel.appendChild(opt);
+    });
+    hintEl.textContent = outlets.length ? `${outlets.length} outlet(s) loaded.` : 'No outlets found.';
+    hintEl.style.color = outlets.length ? 'var(--success)' : 'var(--warning)';
+  } catch (e) {
+    hintEl.textContent = 'Cannot reach server: ' + e.message;
+    hintEl.style.color = 'var(--danger)';
+  }
 }
 function closeKdsSrvModal() {
   document.getElementById('kds-srv-overlay').style.display = 'none';
@@ -262,10 +310,15 @@ function saveKdsSrvConfig() {
   const brandId  = document.getElementById('kds-brand-id').value.trim();
   if (mode === 'cloud' && !cloudUrl) { document.getElementById('kds-cloud-url').focus(); return; }
   if (mode === 'cloud' && !brandId)  { document.getElementById('kds-brand-id').focus();  return; }
+  const outletSel  = document.getElementById('kds-outlet-id');
+  const outletId   = outletSel.value;
+  const outletName = outletSel.options[outletSel.selectedIndex]?.text || '';
   localStorage.setItem('kds_server_mode', mode);
   if (cloudUrl) localStorage.setItem('kds_cloud_url', cloudUrl);
   if (brandId)  localStorage.setItem('kds_brand_id', brandId);
   else          localStorage.removeItem('kds_brand_id');
+  if (outletId) { localStorage.setItem('kds_outlet_id', outletId); localStorage.setItem('kds_outlet_name', outletName); }
+  else          { localStorage.removeItem('kds_outlet_id'); localStorage.removeItem('kds_outlet_name'); }
   _kdsFallback    = false;
   _kdsHealthFails = 0;
   BASE = getKdsBase();
@@ -321,9 +374,11 @@ setInterval(updateTimers, 10000); // refresh timers every 10s
 // ── FETCH ORDERS ──────────────────────────────────────────────────────────────
 async function fetchOrders() {
   try {
-    const brandId = getKdsBrandId();
-    const url = BASE + '/kitchen/orders' + (brandId ? '?brand_id=' + encodeURIComponent(brandId) : '');
-    const data = await fetch(url).then(r=>r.json());
+    const brandId  = getKdsBrandId();
+    const outletId = getKdsOutletId();
+    let qs = brandId  ? '?brand_id='  + encodeURIComponent(brandId)  : '';
+    if (outletId) qs += (qs ? '&' : '?') + 'outlet_id=' + encodeURIComponent(outletId);
+    const data = await fetch(BASE + '/kitchen/orders' + qs).then(r=>r.json());
     orders = data.orders || [];
     renderOrders();
   } catch { /* will retry via socket reconnect */ }
@@ -336,9 +391,11 @@ function connect() {
     setTimeout(connect, 5000);
     return;
   }
-  const brandId = getKdsBrandId();
+  const brandId  = getKdsBrandId();
+  const outletId = getKdsOutletId();
   const query = { area: 'kitchen' };
-  if (brandId) query.brand_id = brandId;
+  if (brandId)  query.brand_id  = brandId;
+  if (outletId) query.outlet_id = outletId;
   socket = io(BASE, { query, transports: ['polling', 'websocket'] });
 
   socket.on('connect', () => {

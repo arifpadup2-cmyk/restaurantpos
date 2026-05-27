@@ -84,6 +84,41 @@ textarea:focus-visible {
 .setup-version{font-size:11px;color:#94a3b8;text-align:center;margin-top:8px}
 .btn-reconfigure{background:none;border:none;color:#475569;font-size:11px;cursor:pointer;text-decoration:underline;margin-top:10px}
 .btn-reconfigure:hover{color:#fff}
+/* ── POS QUICK SETTINGS ── */
+.pos-qs-btn{position:absolute;bottom:16px;right:16px;background:rgba(255,255,255,.08);
+  border:1px solid rgba(255,255,255,.14);border-radius:8px;padding:6px 12px;font-size:11px;
+  font-weight:600;color:#94a3b8;cursor:pointer;display:flex;align-items:center;gap:5px;z-index:10}
+.pos-qs-btn:hover{background:rgba(255,255,255,.14);color:#fff}
+.pos-qs-badge{font-size:9px;padding:1px 5px;border-radius:4px;font-weight:800;letter-spacing:.5px}
+.pos-qs-badge.local{background:rgba(34,197,94,.15);color:#4ade80}
+.pos-qs-badge.cloud{background:rgba(59,130,246,.25);color:#60a5fa}
+.pos-qs-overlay{position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:2000;
+  display:flex;align-items:center;justify-content:center}
+.pos-qs-box{background:#fff;border-radius:16px;padding:28px;width:380px;
+  max-width:calc(100vw - 32px);max-height:90vh;overflow-y:auto;
+  box-shadow:0 24px 60px rgba(0,0,0,.5)}
+.pos-qs-box h3{font-size:16px;font-weight:800;margin-bottom:16px;color:var(--text)}
+.pos-qs-tabs{display:flex;gap:3px;background:#f1f5f9;border-radius:10px;padding:3px;margin-bottom:18px}
+.pos-qs-tab{flex:1;padding:9px 4px;border-radius:8px;border:none;font-size:12px;font-weight:700;
+  cursor:pointer;color:#64748b;transition:.15s;font-family:inherit;background:none}
+.pos-qs-tab.active{background:#fff;color:var(--primary);box-shadow:0 1px 4px rgba(0,0,0,.12)}
+.pos-qs-label{display:block;font-size:11px;font-weight:700;color:var(--muted);margin-bottom:5px;
+  text-transform:uppercase;letter-spacing:.5px}
+.pos-qs-input{width:100%;padding:10px 13px;border:1.5px solid var(--border);border-radius:8px;
+  font-size:14px;color:var(--text);background:#fff;font-family:inherit;margin-bottom:12px}
+.pos-qs-input:focus{border-color:var(--primary);outline:none}
+.pos-qs-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:5px}
+.pos-qs-fetch{font-size:11px;color:var(--primary);background:none;border:none;cursor:pointer;font-weight:700;padding:0}
+.pos-qs-hint{font-size:11px;color:var(--muted);margin-bottom:12px;line-height:1.4}
+.pos-qs-actions{display:flex;gap:8px;margin-top:4px}
+.pos-qs-save{flex:1;padding:11px;background:var(--primary);color:#fff;border:none;
+  border-radius:8px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit}
+.pos-qs-save:disabled{background:#94a3b8;cursor:not-allowed}
+.pos-qs-cancel{padding:11px 14px;background:#f1f5f9;color:var(--muted);border:1px solid var(--border);
+  border-radius:8px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit}
+.pos-qs-link{width:100%;padding:9px;background:none;border:1.5px solid var(--border);color:var(--muted);
+  border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;margin-top:8px}
+.pos-qs-link:hover{border-color:var(--primary);color:var(--primary)}
 /* auto-detect step */
 .detect-spinner{width:44px;height:44px;border:4px solid rgba(249,115,22,.2);border-top-color:var(--primary);border-radius:50%;animation:spin .8s linear infinite;margin:0 auto 16px}
 @keyframes spin{to{transform:rotate(360deg)}}
@@ -1148,14 +1183,61 @@ textarea:focus-visible {
   </div>
 </div>
 
+<!-- ═══════ QUICK SETTINGS MODAL ═══════ -->
+<div id="pos-qs-overlay" class="pos-qs-overlay" style="display:none" onclick="if(event.target===this)closePosQS()">
+  <div class="pos-qs-box">
+    <h3>⚙ Terminal Settings</h3>
+    <div class="pos-qs-tabs">
+      <button class="pos-qs-tab active" id="qs-tab-local" onclick="setPosQsMode('local')">🌐 Local Server</button>
+      <button class="pos-qs-tab" id="qs-tab-cloud" onclick="setPosQsMode('cloud')">☁️ Cloud Direct</button>
+    </div>
+
+    <div id="qs-local-sect">
+      <label class="pos-qs-label">Server IP Address</label>
+      <input id="qs-server-ip" type="text" class="pos-qs-input" placeholder="192.168.1.100" autocomplete="off">
+      <label class="pos-qs-label">Cloud URL (fallback when local is down)</label>
+      <input id="qs-cloud-fallback" type="url" class="pos-qs-input" placeholder="https://mypos.onrender.com" autocomplete="off">
+      <p class="pos-qs-hint">When the local server is unreachable, the POS will automatically switch to the cloud URL.</p>
+    </div>
+
+    <div id="qs-cloud-sect" style="display:none">
+      <label class="pos-qs-label">Cloud Server URL</label>
+      <input id="qs-cloud-url" type="url" class="pos-qs-input" placeholder="https://mypos.onrender.com" autocomplete="off">
+    </div>
+
+    <label class="pos-qs-label">Machine / Terminal ID</label>
+    <input id="qs-machine-id" type="text" class="pos-qs-input" placeholder="POS-01" autocomplete="off">
+
+    <div class="pos-qs-row">
+      <label class="pos-qs-label" style="margin-bottom:0">Outlet</label>
+      <button class="pos-qs-fetch" onclick="qsFetchOutlets()">Fetch outlets ↓</button>
+    </div>
+    <select id="qs-outlet-sel" class="pos-qs-input">
+      <option value="">Select outlet…</option>
+    </select>
+    <p class="pos-qs-hint" id="qs-outlet-hint" style="margin-top:-8px">Tap "Fetch outlets" to load the list from your server.</p>
+
+    <div class="pos-qs-actions">
+      <button class="pos-qs-cancel" onclick="closePosQS()">Cancel</button>
+      <button class="pos-qs-save" id="qs-save-btn" onclick="savePosQS()">Save &amp; Apply</button>
+    </div>
+    <button class="pos-qs-link" onclick="closePosQS();showSetupScreen()">Full terminal reconfigure (first-run wizard)</button>
+  </div>
+</div>
+
 <!-- ═══════ LOGIN SCREEN ═══════ -->
-<div id="screen-login">
+<div id="screen-login" style="position:relative">
   <div class="login-header">
     <div style="width:60px;height:60px;color:var(--primary)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="60" height="60"><path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 002-2V2"/><path d="M7 2v20"/><path d="M21 15V2a5 5 0 00-5 5v6c0 1.1.9 2 2 2h3zm0 0v7"/></svg></div>
     <h1 id="login-rest-name">Restaurant POS</h1>
     <p id="login-outlet-name" style="color:#f97316;font-weight:600;font-size:13px;margin-top:2px"></p>
-    <button class="btn-reconfigure" onclick="showSetupScreen()" title="Reconfigure terminal">⚙ Reconfigure terminal</button>
   </div>
+  <!-- Settings gear button -->
+  <button class="pos-qs-btn" onclick="openPosQS()">
+    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+    Settings
+    <span class="pos-qs-badge local" id="pos-qs-badge">Local</span>
+  </button>
 
   <!-- PIN pad (direct — no cashier selection step) -->
   <div class="pin-box show" id="pin-box">
@@ -2837,6 +2919,10 @@ async function testApiConnection() {
 // ═══════════════════════════════════════════════════════════════
 let apiUrl = '';
 let apiKey = '';
+// Auto-fallback state
+let _posHealthFails   = 0;
+let _posFallbackActive = false;
+const _POS_FAIL_THRESHOLD = 3;
 
 function setSyncStatus(online) {
   const dot   = document.getElementById('sync-dot');
@@ -2855,15 +2941,165 @@ async function apiFetch(method, endpoint, body) {
 }
 
 async function checkApiConnectivity() {
+  const cfg = window._posConfig || {};
+  const localUrl = cfg.connectionMode !== 'cloud' && cfg.serverIp
+    ? `http://${cfg.serverIp}:3001` : '';
+  const cloudUrl = cfg.cloudApiUrl || '';
   try {
     await apiFetch('GET', '/health');
     setSyncStatus(true);
+    if (_posFallbackActive) {
+      // Recovered — switch back to local server
+      _posFallbackActive = false;
+      _posHealthFails    = 0;
+      if (localUrl && cfg.connectionMode !== 'cloud') {
+        apiUrl = localUrl;
+        updatePosQsBadge();
+        showToast('Local server restored — reconnected', 'success');
+      }
+    } else {
+      _posHealthFails = 0;
+    }
     fetchMenuFromApi().catch(() => {});
     fetchCashiersFromApi().catch(() => {});
     fetchOrderTypesFromApi().catch(() => {});
   } catch {
+    _posHealthFails++;
     setSyncStatus(false);
+    if (!_posFallbackActive && cfg.connectionMode !== 'cloud'
+        && cloudUrl && _posHealthFails >= _POS_FAIL_THRESHOLD) {
+      _posFallbackActive = true;
+      apiUrl = cloudUrl;
+      updatePosQsBadge();
+      showToast('Local server unreachable — switched to cloud', 'warning');
+    }
   }
+}
+
+function updatePosQsBadge() {
+  const badge = document.getElementById('pos-qs-badge');
+  if (!badge) return;
+  const cfg = window._posConfig || {};
+  if (cfg.connectionMode === 'cloud' || _posFallbackActive) {
+    badge.textContent = _posFallbackActive ? 'Cloud ⚡' : 'Cloud';
+    badge.className   = 'pos-qs-badge cloud';
+  } else {
+    badge.textContent = 'Local';
+    badge.className   = 'pos-qs-badge local';
+  }
+}
+
+// ── POS QUICK SETTINGS ────────────────────────────────────────────────────────
+let _qsMode = 'local';
+
+function openPosQS() {
+  const cfg = window._posConfig || {};
+  _qsMode = cfg.connectionMode || 'local';
+  setPosQsMode(_qsMode);
+  document.getElementById('qs-server-ip').value      = cfg.serverIp    || '';
+  document.getElementById('qs-cloud-fallback').value = cfg.cloudApiUrl || '';
+  document.getElementById('qs-cloud-url').value      = cfg.cloudApiUrl || '';
+  document.getElementById('qs-machine-id').value     = cfg.machineId   || '';
+  const sel = document.getElementById('qs-outlet-sel');
+  sel.innerHTML = '<option value="">Select outlet…</option>';
+  if (cfg.outletId) {
+    const opt = document.createElement('option');
+    opt.value = cfg.outletId; opt.textContent = cfg.outletName || cfg.outletId; opt.selected = true;
+    sel.appendChild(opt);
+  }
+  document.getElementById('qs-outlet-hint').textContent = 'Tap "Fetch outlets" to load the list from your server.';
+  document.getElementById('pos-qs-overlay').style.display = 'flex';
+}
+
+function closePosQS() {
+  document.getElementById('pos-qs-overlay').style.display = 'none';
+}
+
+function setPosQsMode(mode) {
+  _qsMode = mode;
+  const isCloud = mode === 'cloud';
+  document.getElementById('qs-tab-local').classList.toggle('active', !isCloud);
+  document.getElementById('qs-tab-cloud').classList.toggle('active',  isCloud);
+  document.getElementById('qs-local-sect').style.display = isCloud ? 'none' : '';
+  document.getElementById('qs-cloud-sect').style.display = isCloud ? ''     : 'none';
+}
+
+async function qsFetchOutlets() {
+  const hintEl = document.getElementById('qs-outlet-hint');
+  const isCloud = _qsMode === 'cloud';
+  const ip       = document.getElementById('qs-server-ip').value.trim();
+  const cloudUrl = isCloud
+    ? document.getElementById('qs-cloud-url').value.trim().replace(/\/+$/, '')
+    : document.getElementById('qs-cloud-fallback').value.trim().replace(/\/+$/, '');
+  const serverBase = isCloud ? cloudUrl : (ip ? `http://${ip}:3001` : 'http://localhost:3001');
+  const cfg = window._posConfig || {};
+  const brandId = cfg.brandId || '';
+  hintEl.textContent = 'Fetching outlets…';
+  try {
+    const url = serverBase + '/waiter/outlets' + (brandId ? '?brand_id=' + encodeURIComponent(brandId) : '');
+    const ctrl = new AbortController();
+    setTimeout(() => ctrl.abort(), 5000);
+    const data = await fetch(url, { signal: ctrl.signal }).then(r => r.json());
+    const outlets = data.outlets || [];
+    const sel = document.getElementById('qs-outlet-sel');
+    const current = sel.value;
+    sel.innerHTML = '<option value="">Select outlet…</option>';
+    outlets.forEach(o => {
+      const opt = document.createElement('option');
+      opt.value = o.id; opt.textContent = o.name;
+      if (o.id === current || o.id === cfg.outletId) opt.selected = true;
+      sel.appendChild(opt);
+    });
+    hintEl.textContent = outlets.length ? `${outlets.length} outlet(s) loaded` : 'No outlets found';
+  } catch (e) {
+    hintEl.textContent = 'Cannot reach server: ' + e.message;
+  }
+}
+
+async function savePosQS() {
+  const isCloud  = _qsMode === 'cloud';
+  const serverIp = document.getElementById('qs-server-ip').value.trim();
+  const cloudUrl = isCloud
+    ? document.getElementById('qs-cloud-url').value.trim().replace(/\/+$/, '')
+    : document.getElementById('qs-cloud-fallback').value.trim().replace(/\/+$/, '');
+  const machineId  = document.getElementById('qs-machine-id').value.trim() || 'POS-01';
+  const outletSel  = document.getElementById('qs-outlet-sel');
+  const outletId   = outletSel.value;
+  const outletName = outletSel.options[outletSel.selectedIndex]?.text || '';
+
+  if (isCloud && !cloudUrl) { document.getElementById('qs-cloud-url').focus(); return; }
+  if (!isCloud && !serverIp) { document.getElementById('qs-server-ip').focus(); return; }
+  if (!outletId) { showToast('Please select an outlet first', 'warning'); return; }
+
+  const btn = document.getElementById('qs-save-btn');
+  btn.disabled = true; btn.textContent = 'Saving…';
+
+  const cfg = {
+    ...(window._posConfig || {}),
+    connectionMode: _qsMode,
+    serverIp:       isCloud ? '' : serverIp,
+    cloudApiUrl:    cloudUrl,
+    machineId,
+    outletId,
+    outletName,
+  };
+
+  const res = await window.posAPI.saveConfig(cfg);
+  btn.disabled = false; btn.textContent = 'Save & Apply';
+  if (!res.ok) { showToast('Save failed: ' + res.error, 'error'); return; }
+
+  window._posConfig = cfg;
+  apiUrl = isCloud ? cloudUrl : (serverIp ? `http://${serverIp}:3001` : '');
+  _posFallbackActive = false;
+  _posHealthFails    = 0;
+  updatePosQsBadge();
+
+  const outletEl = document.getElementById('login-outlet-name');
+  if (outletEl) outletEl.textContent = outletName;
+
+  closePosQS();
+  showToast('Settings saved — reconnecting…', 'success');
+  checkApiConnectivity();
 }
 
 let _posOrderTypes = []
@@ -6816,6 +7052,7 @@ async function toggleFullscreen() {
 (async () => {
   const cfg = await posAPI.getConfig();
   window._posConfig = cfg || {};
+  updatePosQsBadge();
   if (!cfg || !cfg.outletId) {
     showSetupScreen('First-time setup — takes less than a minute');
   } else {

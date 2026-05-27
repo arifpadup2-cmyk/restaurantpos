@@ -235,6 +235,16 @@ input,select,textarea{font-family:inherit;outline:none;color:inherit}
     <input id="srv-brand-id" type="text" class="srv-input" placeholder="Brand ID (e.g. REST-GPPE8G)"
       autocomplete="off" spellcheck="false" style="margin-top:4px">
     <p class="srv-hint" style="margin-top:-4px;margin-bottom:12px">Your Brand ID — required for cloud; optional on local network.</p>
+    <div style="margin-bottom:14px">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:5px">
+        <span style="font-size:12px;font-weight:700;color:var(--muted)">Outlet (optional)</span>
+        <button onclick="waiterFetchOutlets()" style="font-size:11px;color:var(--primary);background:none;border:none;cursor:pointer;font-weight:700;padding:0">Fetch ↓</button>
+      </div>
+      <select id="srv-outlet-id" class="srv-input" style="margin-bottom:4px">
+        <option value="">All outlets (no filter)</option>
+      </select>
+      <p class="srv-hint" style="margin-bottom:0" id="srv-outlet-hint">Select an outlet to show only that outlet's staff and tables. Tap Fetch to load from server.</p>
+    </div>
     <div class="srv-actions">
       <button class="srv-btn-cancel" onclick="closeSrvModal()">Cancel</button>
       <button class="srv-btn-save" onclick="saveSrvConfig()">Save &amp; Reconnect</button>
@@ -444,7 +454,45 @@ function openSrvModal() {
   setSrvMode(mode);
   document.getElementById('srv-cloud-url').value = localStorage.getItem('waiter_cloud_url') || '';
   document.getElementById('srv-brand-id').value  = localStorage.getItem('waiter_brand_id')  || '';
+  const savedOutlet = localStorage.getItem('waiter_outlet_id') || '';
+  const savedOutletName = localStorage.getItem('waiter_outlet_name') || '';
+  const sel = document.getElementById('srv-outlet-id');
+  sel.innerHTML = '<option value="">All outlets (no filter)</option>';
+  if (savedOutlet) {
+    const opt = document.createElement('option');
+    opt.value = savedOutlet; opt.textContent = savedOutletName || savedOutlet; opt.selected = true;
+    sel.appendChild(opt);
+  }
   document.getElementById('srv-modal-overlay').style.display = 'flex';
+}
+
+async function waiterFetchOutlets() {
+  const hintEl = document.getElementById('srv-outlet-hint');
+  const mode     = document.getElementById('srv-tab-cloud').classList.contains('active') ? 'cloud' : 'auto';
+  const cloudUrl = document.getElementById('srv-cloud-url').value.trim().replace(/\/+$/, '');
+  const brandId  = document.getElementById('srv-brand-id').value.trim();
+  const serverBase = mode === 'cloud' ? cloudUrl : window.location.origin;
+  if (!serverBase) { hintEl.textContent = 'Enter a cloud URL first.'; hintEl.style.color = 'var(--danger)'; return; }
+  hintEl.textContent = 'Fetching outlets…'; hintEl.style.color = 'var(--muted)';
+  try {
+    const url = serverBase + '/waiter/outlets' + (brandId ? '?brand_id=' + encodeURIComponent(brandId) : '');
+    const data = await fetch(url, { signal: AbortSignal.timeout(5000) }).then(r => r.json());
+    const outlets = data.outlets || [];
+    const sel = document.getElementById('srv-outlet-id');
+    const current = sel.value;
+    sel.innerHTML = '<option value="">All outlets (no filter)</option>';
+    outlets.forEach(o => {
+      const opt = document.createElement('option');
+      opt.value = o.id; opt.textContent = o.name;
+      if (o.id === current) opt.selected = true;
+      sel.appendChild(opt);
+    });
+    hintEl.textContent = outlets.length ? `${outlets.length} outlet(s) loaded.` : 'No outlets found.';
+    hintEl.style.color = outlets.length ? 'var(--success)' : 'var(--warning)';
+  } catch (e) {
+    hintEl.textContent = 'Cannot reach server: ' + e.message;
+    hintEl.style.color = 'var(--danger)';
+  }
 }
 function closeSrvModal() {
   document.getElementById('srv-modal-overlay').style.display = 'none';
@@ -463,19 +511,22 @@ function saveSrvConfig() {
   const brandId  = document.getElementById('srv-brand-id').value.trim();
   if (mode === 'cloud' && !cloudUrl) { document.getElementById('srv-cloud-url').focus(); return; }
   if (mode === 'cloud' && !brandId)  { document.getElementById('srv-brand-id').focus();  return; }
+  const outletSel  = document.getElementById('srv-outlet-id');
+  const outletId   = outletSel.value;
+  const outletName = outletSel.options[outletSel.selectedIndex]?.text || '';
   localStorage.setItem('waiter_server_mode', mode);
   if (cloudUrl) localStorage.setItem('waiter_cloud_url', cloudUrl);
   if (brandId)  localStorage.setItem('waiter_brand_id', brandId);
   else          localStorage.removeItem('waiter_brand_id');
+  if (outletId) { localStorage.setItem('waiter_outlet_id', outletId); localStorage.setItem('waiter_outlet_name', outletName); }
+  else          { localStorage.removeItem('waiter_outlet_id'); localStorage.removeItem('waiter_outlet_name'); }
   _waiterFallback    = false;
   _waiterHealthFails = 0;
   BASE = getBase();
   updateSrvBadge();
   closeSrvModal();
-  // Reload login cashiers from new server
   loadLoginCashiers();
   if (socket) { socket.disconnect(); socket = null; }
-  // Re-connect socket to new server if already logged in
   if (token) connectSocket();
 }
 function updateSrvBadge() {
@@ -544,10 +595,16 @@ function connectSocket() {
 }
 
 // ── LOGIN ─────────────────────────────────────────────────────────────────────
+function getWaiterOutletId() {
+  return (localStorage.getItem('waiter_outlet_id') || '').trim();
+}
+
 async function loadLoginCashiers() {
   try {
-    const brandId = getWaiterBrandId();
-    const qs = brandId ? '?brand_id=' + encodeURIComponent(brandId) : '';
+    const brandId  = getWaiterBrandId();
+    const outletId = getWaiterOutletId();
+    let qs = brandId  ? '?brand_id='  + encodeURIComponent(brandId)  : '';
+    if (outletId) qs += (qs ? '&' : '?') + 'outlet_id=' + encodeURIComponent(outletId);
     const data = await fetch(BASE + '/waiter/cashiers' + qs).then(r => r.json());
     loginCashiers = (data.cashiers || []).filter(c => c.active == 1);
     const list = document.getElementById('cashier-list');

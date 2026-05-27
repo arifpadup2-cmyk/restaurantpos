@@ -12,11 +12,20 @@ module.exports = function waiterRouter (sql) {
   // ── Auth ──────────────────────────────────────────────────────────────────
 
   // GET /waiter/cashiers — public list for login UI (waiters + cashiers only, no PINs)
-  // ?brand_id=X scopes to a specific brand (required for multi-tenant cloud deployments)
+  // ?brand_id=X  scopes to a brand (required on cloud)
+  // ?outlet_id=Y  filters to cashiers assigned to that outlet (or with no outlet assignment)
   router.get('/cashiers', async (req, res) => {
     try {
-      const brandId = req.query.brand_id || null
-      const cashiers = brandId
+      const brandId  = req.query.brand_id  || null
+      const outletId = req.query.outlet_id || null
+      const cashiers = brandId && outletId
+        ? await sql`
+            SELECT id, name, role, 1 AS active FROM cashiers
+            WHERE active = 1 AND role IN ('waiter', 'cashier')
+              AND brand_id = ${brandId}
+              AND (outlet_id = ${outletId} OR outlet_id IS NULL)
+            ORDER BY role, name`
+        : brandId
         ? await sql`
             SELECT id, name, role, 1 AS active FROM cashiers
             WHERE active = 1 AND role IN ('waiter', 'cashier') AND brand_id = ${brandId}
@@ -26,6 +35,17 @@ module.exports = function waiterRouter (sql) {
             WHERE active = 1 AND role IN ('waiter', 'cashier')
             ORDER BY role, name`
       res.json({ cashiers })
+    } catch (e) { serverError(res, e) }
+  })
+
+  // GET /waiter/outlets — public list of outlets for a brand (used by settings modal to pick outlet)
+  router.get('/outlets', async (req, res) => {
+    try {
+      const brandId = req.query.brand_id || null
+      const outlets = brandId
+        ? await sql`SELECT id, name FROM outlets WHERE brand_id = ${brandId} ORDER BY name`
+        : await sql`SELECT id, name FROM outlets ORDER BY name`
+      res.json({ outlets })
     } catch (e) { serverError(res, e) }
   })
 
