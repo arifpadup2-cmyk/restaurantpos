@@ -398,7 +398,6 @@ function selectLoginCashier(id) {
   document.querySelector(`.cashier-chip[onclick*="${id}"]`).classList.add('selected');
   document.getElementById('login-cashier-name').textContent = selectedLoginCashier.name;
   document.getElementById('login-cashier-name').style.display = 'block';
-  if (!selectedLoginCashier.pin) { doLogin(''); return; }
   pinBuffer = '';
   updatePinDots();
   document.getElementById('pin-error').textContent = '';
