@@ -127,8 +127,8 @@ async function pushToCloud () {
     if (rows.length > 0) {
       await cloudPost('/sync/server-push', { brand_id: bid, entity: 'orders', records: rows })
       await markPush('orders', rows.length)
-      _status.push.orders = { at: now, count: rows.length }
     }
+    _status.push.orders = { at: now, count: rows.length }
   } catch (e) {
     await markError('orders', e.message)
     _status.lastError = `orders push: ${e.message}`
@@ -145,8 +145,8 @@ async function pushToCloud () {
     if (rows.length > 0) {
       await cloudPost('/sync/server-push', { brand_id: bid, entity: 'expenses', records: rows })
       await markPush('expenses', rows.length)
-      _status.push.expenses = { at: now, count: rows.length }
     }
+    _status.push.expenses = { at: now, count: rows.length }
   } catch (e) {
     await markError('expenses', e.message)
   }
@@ -163,8 +163,8 @@ async function pushToCloud () {
     if (rows.length > 0) {
       await cloudPost('/sync/server-push', { brand_id: bid, entity: 'shifts', records: rows })
       await markPush('shifts', rows.length)
-      _status.push.shifts = { at: now, count: rows.length }
     }
+    _status.push.shifts = { at: now, count: rows.length }
   } catch (e) {
     await markError('shifts', e.message)
   }
@@ -189,10 +189,10 @@ async function pullFromCloud () {
       await _sql.begin(async t => {
         for (const c of cats) {
           await t`
-            INSERT INTO categories (id, name, sort_order, color, active, synced_at)
-            VALUES (${c.id}, ${c.name}, ${c.sort_order ?? 0}, ${c.color ?? null}, ${c.active ?? 1}, ${now})
+            INSERT INTO categories (id, brand_id, outlet_id, name, sort_order, color, active, synced_at)
+            VALUES (${c.id}, ${bid}, NULL, ${c.name}, ${c.sort_order ?? 0}, ${c.color ?? '#6b7280'}, ${c.active ?? 1}, ${now})
             ON CONFLICT (id) DO UPDATE SET
-              name = EXCLUDED.name, sort_order = EXCLUDED.sort_order,
+              brand_id = EXCLUDED.brand_id, name = EXCLUDED.name, sort_order = EXCLUDED.sort_order,
               color = EXCLUDED.color, active = EXCLUDED.active, synced_at = EXCLUDED.synced_at`
         }
         for (const it of items) {
@@ -206,8 +206,8 @@ async function pullFromCloud () {
         }
       })
       await markPull('menu')
-      _status.pull.menu = { at: now, count: cats.length + items.length }
     }
+    _status.pull.menu = { at: now, count: cats.length + items.length }
   } catch (e) {
     await markError('menu_pull', e.message)
     _status.lastError = `menu pull: ${e.message}`
@@ -222,16 +222,16 @@ async function pullFromCloud () {
     if (staff.length > 0) {
       for (const c of staff) {
         await _sql`
-          INSERT INTO cashiers (id, brand_id, outlet_id, name, pin, pin_hash, role, active, created_at)
-          VALUES (${c.id}, ${c.brand_id ?? bid}, ${c.outlet_id ?? null}, ${c.name}, ${c.pin ?? null},
-                  ${c.pin_hash ?? null}, ${c.role ?? 'cashier'}, ${c.active ?? 1}, ${c.created_at ?? now})
+          INSERT INTO cashiers (id, brand_id, outlet_id, name, pin, pin_hash, role, active, synced, created_at)
+          VALUES (${c.id}, ${c.brand_id ?? bid}, NULL, ${c.name}, ${c.pin ?? null},
+                  ${c.pin_hash ?? null}, ${c.role ?? 'cashier'}, ${c.active ?? 1}, 1, ${c.created_at ?? now})
           ON CONFLICT (id) DO UPDATE SET
-            name = EXCLUDED.name, pin = EXCLUDED.pin, pin_hash = EXCLUDED.pin_hash,
-            role = EXCLUDED.role, active = EXCLUDED.active`
+            brand_id = EXCLUDED.brand_id, name = EXCLUDED.name, pin = EXCLUDED.pin,
+            pin_hash = EXCLUDED.pin_hash, role = EXCLUDED.role, active = EXCLUDED.active`
       }
       await markPull('cashiers')
-      _status.pull.cashiers = { at: now, count: staff.length }
     }
+    _status.pull.cashiers = { at: now, count: staff.length }
   } catch (e) {
     await markError('cashiers_pull', e.message)
   }
