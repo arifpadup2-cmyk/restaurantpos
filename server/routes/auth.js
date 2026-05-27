@@ -269,14 +269,14 @@ module.exports = function authRouter (sql) {
   // POST /auth/signup — self-service 7-day trial signup (email + password)
   router.post('/signup', async (req, res) => {
     const ip = req.ip || 'unknown'
-    if (isRateLimited(ip, 'signup', 5, 60 * 60 * 1000))
-      return res.status(429).json({ error: 'Too many signup attempts. Try again in 1 hour.' })
-
     const { email, password } = req.body || {}
+    // Validate inputs before rate-limiting — invalid passwords must not consume rate-limit slots
     if (!email || !/^[^@]+@[^@]+\.[^@]+$/.test(email))
       return res.status(400).json({ error: 'Valid email required' })
     const pwdErr2 = validatePassword(password)
     if (pwdErr2) return res.status(400).json({ error: pwdErr2 })
+    if (isRateLimited(ip, 'signup', 5, 60 * 60 * 1000))
+      return res.status(429).json({ error: 'Too many signup attempts. Try again in 1 hour.' })
 
     try {
       const existing = await sql`SELECT id FROM bo_users WHERE LOWER(email) = ${email.toLowerCase()} LIMIT 1`
