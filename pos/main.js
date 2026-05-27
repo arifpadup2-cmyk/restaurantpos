@@ -28,7 +28,9 @@ function writeConfig(obj) {
 
 function notifyServer (event, payload) {
   const cfg    = readConfig();
-  const API_URL = cfg.serverIp ? `http://${cfg.serverIp}:3001` : (process.env.API_URL || '');
+  const API_URL = (cfg.connectionMode === 'cloud' && cfg.cloudApiUrl)
+    ? cfg.cloudApiUrl
+    : (cfg.serverIp ? `http://${cfg.serverIp}:3001` : (process.env.API_URL || ''));
   if (!API_URL) return;
   try {
     const body    = JSON.stringify({ event, payload });

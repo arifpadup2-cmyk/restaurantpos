@@ -48,6 +48,33 @@ input,select,textarea{font-family:inherit;outline:none;color:inherit}
   font-weight:700;transition:.1s;border:1px solid var(--border)}
 .pp-btn:active{background:var(--primary);color:#fff}
 .pin-error{color:var(--danger);font-size:12px;text-align:center;margin-top:8px;min-height:16px}
+/* server config */
+.server-cfg-btn{position:absolute;bottom:16px;right:16px;background:rgba(255,255,255,.07);
+  border:1px solid rgba(255,255,255,.12);border-radius:8px;padding:6px 12px;font-size:11px;
+  font-weight:600;color:var(--muted);cursor:pointer;display:flex;align-items:center;gap:5px}
+.server-cfg-btn:hover{background:rgba(255,255,255,.12);color:var(--text)}
+.server-cfg-badge{font-size:9px;padding:1px 5px;border-radius:4px;font-weight:800;letter-spacing:.5px}
+.server-cfg-badge.cloud{background:rgba(59,130,246,.25);color:#60a5fa}
+.server-cfg-badge.local{background:rgba(34,197,94,.15);color:#4ade80}
+/* server modal */
+.srv-modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:9999;
+  display:flex;align-items:flex-end;justify-content:center}
+.srv-modal{background:var(--card);border-radius:20px 20px 0 0;padding:24px;width:100%;max-width:440px;
+  border-top:2px solid var(--border)}
+.srv-modal h3{font-size:16px;font-weight:800;margin-bottom:16px;color:var(--text)}
+.srv-tabs{display:flex;gap:3px;background:rgba(255,255,255,.06);border-radius:9px;padding:3px;margin-bottom:16px}
+.srv-tab{flex:1;padding:8px 4px;border-radius:7px;border:none;font-size:12px;font-weight:700;
+  cursor:pointer;color:var(--muted);background:none;font-family:inherit;transition:.15s}
+.srv-tab.active{background:var(--card2);color:var(--primary)}
+.srv-input{width:100%;padding:11px 14px;border:1.5px solid var(--border);border-radius:10px;
+  font-size:14px;background:var(--card2);color:var(--text);font-family:inherit;margin-bottom:8px}
+.srv-input:focus{border-color:var(--primary);outline:none}
+.srv-hint{font-size:11px;color:var(--muted);margin-bottom:14px;line-height:1.5}
+.srv-actions{display:flex;gap:8px}
+.srv-btn-save{flex:1;padding:12px;background:var(--primary);color:#fff;border:none;
+  border-radius:10px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit}
+.srv-btn-cancel{padding:12px 16px;background:var(--card2);color:var(--muted);border:1px solid var(--border);
+  border-radius:10px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit}
 .login-cashier-name{font-size:13px;color:var(--muted);text-align:center;font-weight:600}
 
 /* ── TOP BAR ── */
@@ -189,8 +216,31 @@ input,select,textarea{font-family:inherit;outline:none;color:inherit}
 </head>
 <body>
 
+<!-- SERVER CONFIG MODAL -->
+<div id="srv-modal-overlay" class="srv-modal-overlay" style="display:none" onclick="if(event.target===this)closeSrvModal()">
+  <div class="srv-modal">
+    <h3>⚙️ Server Connection</h3>
+    <div class="srv-tabs">
+      <button class="srv-tab active" id="srv-tab-auto" onclick="setSrvMode('auto')">🌐 Auto (Local)</button>
+      <button class="srv-tab" id="srv-tab-cloud" onclick="setSrvMode('cloud')">☁️ Cloud Server</button>
+    </div>
+    <div id="srv-auto-section">
+      <p class="srv-hint">Uses the server this app is hosted on.<br>Works on local network without internet.</p>
+    </div>
+    <div id="srv-cloud-section" style="display:none">
+      <input id="srv-cloud-url" type="url" class="srv-input" placeholder="https://mypos.railway.app"
+        autocomplete="off" spellcheck="false">
+      <p class="srv-hint">Enter your cloud server URL. Internet required.<br>Use this when outside the local network.</p>
+    </div>
+    <div class="srv-actions">
+      <button class="srv-btn-cancel" onclick="closeSrvModal()">Cancel</button>
+      <button class="srv-btn-save" onclick="saveSrvConfig()">Save &amp; Reconnect</button>
+    </div>
+  </div>
+</div>
+
 <!-- LOGIN SCREEN -->
-<div class="screen active" id="s-login">
+<div class="screen active" id="s-login" style="position:relative">
   <div class="login-logo">
     <svg viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="48" height="48"><path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 002-2V2"/><path d="M7 2v20"/><path d="M21 15V2a5 5 0 00-5 5v6c0 1.1.9 2 2 2h3zm0 0v7"/></svg>
     <h1>Waiter App</h1>
@@ -221,6 +271,12 @@ input,select,textarea{font-family:inherit;outline:none;color:inherit}
     </div>
     <div class="pin-error" id="pin-error"></div>
   </div>
+  <!-- Server config button -->
+  <button class="server-cfg-btn" id="srv-cfg-btn" onclick="openSrvModal()">
+    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+    Server
+    <span class="server-cfg-badge local" id="srv-mode-badge">Local</span>
+  </button>
 </div>
 
 <!-- MAIN SCREEN -->
@@ -327,8 +383,59 @@ input,select,textarea{font-family:inherit;outline:none;color:inherit}
 </div>
 
 <script>
-// ── CONFIG ───────────────────────────────────────────────────────────────────
-const BASE = window.location.origin;
+// ── SERVER CONFIG (local vs cloud) ───────────────────────────────────────────
+function getBase() {
+  const mode     = localStorage.getItem('waiter_server_mode') || 'auto';
+  const cloudUrl = (localStorage.getItem('waiter_cloud_url') || '').replace(/\/+$/, '');
+  if (mode === 'cloud' && cloudUrl) return cloudUrl;
+  return window.location.origin;
+}
+let BASE = getBase();
+
+function openSrvModal() {
+  const mode = localStorage.getItem('waiter_server_mode') || 'auto';
+  setSrvMode(mode);
+  document.getElementById('srv-cloud-url').value = localStorage.getItem('waiter_cloud_url') || '';
+  document.getElementById('srv-modal-overlay').style.display = 'flex';
+}
+function closeSrvModal() {
+  document.getElementById('srv-modal-overlay').style.display = 'none';
+}
+function setSrvMode(mode) {
+  const isCloud = mode === 'cloud';
+  document.getElementById('srv-tab-auto').classList.toggle('active', !isCloud);
+  document.getElementById('srv-tab-cloud').classList.toggle('active', isCloud);
+  document.getElementById('srv-auto-section').style.display  = isCloud ? 'none' : '';
+  document.getElementById('srv-cloud-section').style.display = isCloud ? '' : 'none';
+  if (isCloud) setTimeout(() => document.getElementById('srv-cloud-url')?.focus(), 50);
+}
+function saveSrvConfig() {
+  const mode     = document.getElementById('srv-tab-cloud').classList.contains('active') ? 'cloud' : 'auto';
+  const cloudUrl = document.getElementById('srv-cloud-url').value.trim().replace(/\/+$/, '');
+  if (mode === 'cloud' && !cloudUrl) {
+    document.getElementById('srv-cloud-url').focus(); return;
+  }
+  localStorage.setItem('waiter_server_mode', mode);
+  if (cloudUrl) localStorage.setItem('waiter_cloud_url', cloudUrl);
+  BASE = getBase();
+  updateSrvBadge();
+  closeSrvModal();
+  // Reload login cashiers from new server
+  loadLoginCashiers();
+  if (socket) { socket.disconnect(); socket = null; }
+  // Re-connect socket to new server if already logged in
+  if (token) connectSocket();
+}
+function updateSrvBadge() {
+  const mode  = localStorage.getItem('waiter_server_mode') || 'auto';
+  const badge = document.getElementById('srv-mode-badge');
+  if (!badge) return;
+  badge.textContent = mode === 'cloud' ? 'Cloud' : 'Local';
+  badge.className   = 'server-cfg-badge ' + (mode === 'cloud' ? 'cloud' : 'local');
+}
+updateSrvBadge();
+
+// ── CONFIG ────────────────────────────────────────────────────────────────────
 let token     = localStorage.getItem('waiter_token') || '';
 let cashier   = JSON.parse(localStorage.getItem('waiter_cashier') || 'null');
 let currency  = 'RM';

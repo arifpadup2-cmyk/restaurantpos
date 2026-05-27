@@ -30,7 +30,7 @@ module.exports = function waiterRouter (sql) {
 
     try {
       const [cashier] = await sql`
-        SELECT id, name, pin, role, active FROM cashiers
+        SELECT id, name, pin, pin_hash, role, active, brand_id, outlet_id FROM cashiers
         WHERE id = ${cashier_id} AND active = 1`
 
       if (!cashier)
@@ -54,10 +54,12 @@ module.exports = function waiterRouter (sql) {
         return res.status(401).json({ error: 'Wrong PIN' })
 
       const token = sign({
-        id:   cashier.id,
-        name: cashier.name,
-        role: cashier.role,
-        type: 'cashier',
+        id:        cashier.id,
+        name:      cashier.name,
+        role:      cashier.role,
+        type:      'cashier',
+        brand_id:  cashier.brand_id  || null,
+        outlet_id: cashier.outlet_id || null,
       })
       res.json({
         ok: true,
@@ -163,6 +165,7 @@ module.exports = function waiterRouter (sql) {
             discount_type, discount_value, discount_amount,
             payment_received, change_amount,
             notes, cashier_id, cashier_name, shift_id, terminal_id,
+            brand_id, outlet_id,
             created_at, updated_at, synced
           ) VALUES (
             ${orderId}, ${orderNumber}, ${order_type}, ${table_id || null}, ${table_name || null},
@@ -170,6 +173,7 @@ module.exports = function waiterRouter (sql) {
             'active', ${subtotal}, ${taxRate}, ${taxAmount}, ${total},
             'none', 0, 0, 0, 0,
             ${notes || null}, ${cashier.id}, ${cashier.name}, ${shift_id || null}, ${terminal_id || null},
+            ${cashier.brand_id || null}, ${cashier.outlet_id || null},
             ${now}, ${now}, 0
           )`
 

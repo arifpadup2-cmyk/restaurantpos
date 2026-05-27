@@ -15,6 +15,14 @@ function writeConfig(obj) {
   fs.writeFileSync(getConfigPath(), JSON.stringify(obj, null, 2));
 }
 
+function buildServerUrl(cfg) {
+  if (cfg.connectionMode === 'cloud' && cfg.cloudServerUrl) {
+    return cfg.cloudServerUrl.replace(/\/+$/, '');
+  }
+  if (cfg.serverIp) return `http://${cfg.serverIp}:3001`;
+  return null;
+}
+
 function loadSetup(errorMsg) {
   let url = 'file://' + path.join(__dirname, 'setup.html');
   if (errorMsg) url += '?error=' + encodeURIComponent(errorMsg);
@@ -35,8 +43,9 @@ function createWindow() {
   });
 
   const cfg = readConfig();
-  if (cfg.serverIp) {
-    mainWindow.loadURL(`http://${cfg.serverIp}:3001/kds/`);
+  const url = buildServerUrl(cfg);
+  if (url) {
+    mainWindow.loadURL(url + '/kds/');
     mainWindow.setFullScreen(true);
   } else {
     loadSetup();
@@ -51,7 +60,9 @@ ipcMain.handle('get-config', () => readConfig());
 
 ipcMain.handle('save-and-connect', (_e, cfg) => {
   writeConfig(cfg);
-  mainWindow.loadURL(`http://${cfg.serverIp}:3001/kds/`);
+  const url = buildServerUrl(cfg);
+  if (!url) return { ok: false, error: 'No server configured' };
+  mainWindow.loadURL(url + '/kds/');
   mainWindow.setFullScreen(true);
   return { ok: true };
 });

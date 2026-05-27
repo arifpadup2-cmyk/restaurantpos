@@ -89,6 +89,10 @@ textarea:focus-visible {
 @keyframes spin{to{transform:rotate(360deg)}}
 .detect-status{font-size:15px;font-weight:600;color:#374151;text-align:center;margin-bottom:6px}
 .detect-sub{font-size:12px;color:#6b7280;text-align:center;margin-bottom:20px}
+/* server connection mode tabs */
+.conn-mode-tabs{display:flex;gap:3px;background:#f1f5f9;border-radius:10px;padding:3px;margin-bottom:18px}
+.conn-mode-tab{flex:1;padding:9px 4px;border-radius:8px;border:none;font-size:12px;font-weight:700;cursor:pointer;color:#64748b;transition:.15s;font-family:inherit;background:none}
+.conn-mode-tab.active{background:#fff;color:var(--primary);box-shadow:0 1px 4px rgba(0,0,0,.12)}
 .outlet-pick-item{display:flex;align-items:center;gap:12px;padding:12px 14px;border:2px solid var(--border);border-radius:10px;cursor:pointer;margin-bottom:8px;transition:.15s;background:#fff}
 .outlet-pick-item:hover{border-color:var(--primary);background:#fff7ed}
 .outlet-pick-item.selected{border-color:var(--primary);background:#fff7ed}
@@ -1052,46 +1056,69 @@ textarea:focus-visible {
 
   <div class="setup-box">
 
-    <!-- Step 1: Auto-detect connecting -->
+    <!-- Step 1: Auto-detect / cloud connecting -->
     <div class="setup-step active" id="setup-step-detect">
-      <div class="detect-spinner" id="detect-spinner"></div>
-      <div class="detect-status" id="detect-status-text">Connecting to local server…</div>
-      <div class="detect-sub" id="detect-sub-text">Looking for server at localhost</div>
-      <!-- Manual fallback (shown if auto-detect fails) -->
-      <div id="detect-manual" style="display:none">
-        <div style="border-top:1px solid #e5e7eb;margin:16px 0;padding-top:16px"></div>
-        <div class="setup-field">
-          <label>Server IP Address</label>
-          <input id="setup-ip" type="text" placeholder="192.168.1.100" autocomplete="off"
-            style="font-size:16px;letter-spacing:.5px"
-            onkeydown="if(event.key==='Enter')setupManualConnect()">
-          <span class="setup-hint">IP address of the server PC on your network</span>
-        </div>
-        <!-- Advanced DB options (for remote/cloud setups) -->
-        <details class="setup-advanced" id="setup-adv">
-          <summary>▸ Advanced (cloud / remote DB)</summary>
-          <div class="setup-field" style="margin-top:10px">
-            <label>Restaurant ID</label>
-            <input id="setup-rid" type="text" placeholder="REST-AB3X9K" autocomplete="off"
-              oninput="this.value=this.value.toUpperCase()" style="font-family:monospace;letter-spacing:1px">
-          </div>
-          <div class="setup-field">
-            <label>License Key</label>
-            <input id="setup-lkey" type="text" placeholder="ABCDE-12345-FGHIJ-67890" autocomplete="off"
-              oninput="this.value=this.value.toUpperCase()" style="font-family:monospace;letter-spacing:1px">
-          </div>
-          <div class="setup-field">
-            <label>DB Host</label>
-            <input id="setup-dbhost" type="text" placeholder="e.g. ep-xxx.us-east-2.aws.neon.tech">
-          </div>
-          <div class="setup-field"><label>DB Port</label><input id="setup-port" type="number" placeholder="5432"></div>
-          <div class="setup-field"><label>DB Name</label><input id="setup-dbname" type="text" placeholder="restaurant_pos_central"></div>
-          <div class="setup-field"><label>DB User</label><input id="setup-dbuser" type="text" placeholder="pos_central_user"></div>
-          <div class="setup-field"><label>DB Password</label><input id="setup-dbpass" type="password"></div>
-        </details>
-        <div class="setup-error" id="setup-error"></div>
-        <button class="btn-login" onclick="setupManualConnect()">🔌 Connect</button>
+
+      <!-- Connection mode selector -->
+      <div class="conn-mode-tabs">
+        <button class="conn-mode-tab active" id="setup-cmode-local" onclick="setSetupConnMode('local')">🌐 Local Network</button>
+        <button class="conn-mode-tab" id="setup-cmode-cloud" onclick="setSetupConnMode('cloud')">☁️ Cloud Server</button>
       </div>
+
+      <!-- LOCAL section -->
+      <div id="detect-local-section">
+        <div class="detect-spinner" id="detect-spinner"></div>
+        <div class="detect-status" id="detect-status-text">Connecting to local server…</div>
+        <div class="detect-sub" id="detect-sub-text">Looking for server at localhost</div>
+        <!-- Manual fallback (shown if auto-detect fails) -->
+        <div id="detect-manual" style="display:none">
+          <div style="border-top:1px solid #e5e7eb;margin:16px 0;padding-top:16px"></div>
+          <div class="setup-field">
+            <label>Server IP Address</label>
+            <input id="setup-ip" type="text" placeholder="192.168.1.100" autocomplete="off"
+              style="font-size:16px;letter-spacing:.5px"
+              onkeydown="if(event.key==='Enter')setupManualConnect()">
+            <span class="setup-hint">IP address of the server PC on your local network</span>
+          </div>
+          <!-- Advanced DB options -->
+          <details class="setup-advanced" id="setup-adv">
+            <summary>▸ Advanced (DB credentials)</summary>
+            <div class="setup-field" style="margin-top:10px">
+              <label>Restaurant ID</label>
+              <input id="setup-rid" type="text" placeholder="REST-AB3X9K" autocomplete="off"
+                oninput="this.value=this.value.toUpperCase()" style="font-family:monospace;letter-spacing:1px">
+            </div>
+            <div class="setup-field">
+              <label>License Key</label>
+              <input id="setup-lkey" type="text" placeholder="ABCDE-12345-FGHIJ-67890" autocomplete="off"
+                oninput="this.value=this.value.toUpperCase()" style="font-family:monospace;letter-spacing:1px">
+            </div>
+            <div class="setup-field">
+              <label>DB Host</label>
+              <input id="setup-dbhost" type="text" placeholder="e.g. ep-xxx.us-east-2.aws.neon.tech">
+            </div>
+            <div class="setup-field"><label>DB Port</label><input id="setup-port" type="number" placeholder="5432"></div>
+            <div class="setup-field"><label>DB Name</label><input id="setup-dbname" type="text" placeholder="restaurant_pos_central"></div>
+            <div class="setup-field"><label>DB User</label><input id="setup-dbuser" type="text" placeholder="pos_central_user"></div>
+            <div class="setup-field"><label>DB Password</label><input id="setup-dbpass" type="password"></div>
+          </details>
+          <div class="setup-error" id="setup-error"></div>
+          <button class="btn-login" onclick="setupManualConnect()">🔌 Connect</button>
+        </div>
+      </div>
+
+      <!-- CLOUD section -->
+      <div id="detect-cloud-section" style="display:none">
+        <div class="setup-field">
+          <label>Cloud Server URL</label>
+          <input id="setup-cloud-url" type="url" placeholder="https://mypos.railway.app" autocomplete="off"
+            style="font-size:15px" onkeydown="if(event.key==='Enter')setupCloudConnect()">
+          <span class="setup-hint">Full URL of your cloud-hosted POS server (requires internet)</span>
+        </div>
+        <div class="setup-error" id="setup-cloud-error"></div>
+        <button class="btn-login" onclick="setupCloudConnect()">☁️ Connect to Cloud</button>
+      </div>
+
     </div>
 
     <!-- Step 2: Outlet selection -->
@@ -1967,7 +1994,12 @@ textarea:focus-visible {
             <div id="conn-current-info" style="background:#f8fafc;border:1.5px solid var(--border);border-radius:8px;padding:12px 14px;margin-bottom:14px;font-size:13px;color:#475569">
               Loading…
             </div>
-            <div class="form-row">
+            <!-- Connection mode -->
+            <div class="conn-mode-tabs" style="margin-bottom:14px">
+              <button class="conn-mode-tab active" id="conn-mode-local" onclick="setConnSettingsMode('local')">🌐 Local Network</button>
+              <button class="conn-mode-tab" id="conn-mode-cloud" onclick="setConnSettingsMode('cloud')">☁️ Cloud Server</button>
+            </div>
+            <div class="form-row" id="conn-local-row">
               <div class="form-group">
                 <label>Server IP Address</label>
                 <input type="text" id="conn-ip" placeholder="192.168.1.100" style="width:100%">
@@ -1976,6 +2008,19 @@ textarea:focus-visible {
                 <label>Machine ID (this terminal)</label>
                 <input type="text" id="conn-mid" placeholder="POS-01" style="max-width:130px">
               </div>
+            </div>
+            <div id="conn-cloud-row" style="display:none">
+              <div class="form-row">
+                <div class="form-group" style="flex:1">
+                  <label>Cloud Server URL</label>
+                  <input type="url" id="conn-cloud-url" placeholder="https://mypos.railway.app" style="width:100%">
+                </div>
+                <div class="form-group">
+                  <label>Machine ID (this terminal)</label>
+                  <input type="text" id="conn-mid-cloud" placeholder="POS-01" style="max-width:130px">
+                </div>
+              </div>
+              <p style="font-size:12px;color:var(--muted);margin:-6px 0 10px">Internet required. DB credentials still needed below for direct DB access.</p>
             </div>
             <details style="margin-bottom:14px">
               <summary style="font-size:12px;color:var(--muted);cursor:pointer;padding:4px 0;user-select:none">▶ Advanced (DB credentials)</summary>
@@ -2595,7 +2640,10 @@ async function init() {
   }
 
   // Load API config from settings (fall back to config file values)
-  apiUrl = (await getSetting('api_url')) || (_cfg.serverIp ? `http://${_cfg.serverIp}:3001` : '');
+  apiUrl = (await getSetting('api_url')) ||
+    (_cfg.connectionMode === 'cloud' && _cfg.cloudApiUrl
+      ? _cfg.cloudApiUrl
+      : (_cfg.serverIp ? `http://${_cfg.serverIp}:3001` : ''));
   apiKey = (await getSetting('api_key')) || _cfg.apiKey || '';
   if (document.getElementById('set-api-url')) document.getElementById('set-api-url').value = apiUrl;
   if (document.getElementById('set-api-key')) document.getElementById('set-api-key').value = apiKey;
@@ -2686,18 +2734,24 @@ async function saveSettings() {
 }
 
 async function loadConnectionSettings() {
-  const cfg = (await window.posAPI.getConfig()) || {};
-  document.getElementById('conn-ip').value     = cfg.serverIp  || '';
-  document.getElementById('conn-mid').value    = cfg.machineId || '';
-  document.getElementById('conn-port').value   = cfg.dbPort    || '5432';
-  document.getElementById('conn-dbname').value = cfg.dbName    || 'restaurant_pos_central';
-  document.getElementById('conn-dbuser').value = cfg.dbUser    || 'pos_central_user';
-  document.getElementById('conn-dbpass').value = cfg.dbPass    || '';
+  const cfg  = (await window.posAPI.getConfig()) || {};
+  const mode = cfg.connectionMode || 'local';
+  setConnSettingsMode(mode);
+  document.getElementById('conn-ip').value         = cfg.serverIp    || '';
+  document.getElementById('conn-mid').value        = cfg.machineId   || '';
+  document.getElementById('conn-cloud-url').value  = cfg.cloudApiUrl || '';
+  document.getElementById('conn-mid-cloud').value  = cfg.machineId   || '';
+  document.getElementById('conn-port').value        = cfg.dbPort      || '5432';
+  document.getElementById('conn-dbname').value      = cfg.dbName      || 'restaurant_pos_central';
+  document.getElementById('conn-dbuser').value      = cfg.dbUser      || 'pos_central_user';
+  document.getElementById('conn-dbpass').value      = cfg.dbPass      || '';
   const info = document.getElementById('conn-current-info');
-  if (cfg.serverIp) {
-    info.innerHTML = `<b>Current:</b> ${cfg.serverIp}:${cfg.dbPort||5432} &nbsp;·&nbsp; DB: ${cfg.dbName||'restaurant_pos_central'} &nbsp;·&nbsp; Terminal: <b>${cfg.machineId||'?'}</b>`
+  if (mode === 'cloud' && cfg.cloudApiUrl) {
+    info.innerHTML = `<b>☁️ Cloud:</b> ${cfg.cloudApiUrl} &nbsp;·&nbsp; Terminal: <b>${cfg.machineId||'?'}</b>`;
+  } else if (cfg.serverIp) {
+    info.innerHTML = `<b>🌐 Local:</b> ${cfg.serverIp}:${cfg.dbPort||5432} &nbsp;·&nbsp; DB: ${cfg.dbName||'restaurant_pos_central'} &nbsp;·&nbsp; Terminal: <b>${cfg.machineId||'?'}</b>`;
   } else {
-    info.textContent = 'Not configured — using environment defaults.'
+    info.textContent = 'Not configured — using environment defaults.';
   }
 }
 
@@ -2705,7 +2759,9 @@ async function testServerConnection() {
   const msg = document.getElementById('conn-status-msg');
   msg.textContent = '⏳ Testing…'; msg.style.color = 'var(--muted)';
   const cfg = buildConnCfg();
-  if (!cfg.serverIp) { msg.textContent = '❌ Enter server IP first.'; msg.style.color = 'red'; return; }
+  const isCloud = cfg.connectionMode === 'cloud';
+  if (isCloud && !cfg.cloudApiUrl) { msg.textContent = '❌ Enter cloud server URL first.'; msg.style.color = 'red'; return; }
+  if (!isCloud && !cfg.serverIp)   { msg.textContent = '❌ Enter server IP first.'; msg.style.color = 'red'; return; }
   const r = await window.posAPI.testConnection(cfg);
   if (r.ok) {
     msg.textContent = `✅ Connected — ${r.cashiers} staff found`;
@@ -2720,8 +2776,9 @@ async function saveServerConnection() {
   const msg = document.getElementById('conn-status-msg');
   msg.textContent = '⏳ Connecting…'; msg.style.color = 'var(--muted)';
   const cfg = buildConnCfg();
-  if (!cfg.serverIp) { msg.textContent = '❌ Enter server IP first.'; msg.style.color = 'red'; return; }
-  // Preserve existing printer + api config
+  const isCloud = cfg.connectionMode === 'cloud';
+  if (isCloud && !cfg.cloudApiUrl) { msg.textContent = '❌ Enter cloud server URL first.'; msg.style.color = 'red'; return; }
+  if (!isCloud && !cfg.serverIp)   { msg.textContent = '❌ Enter server IP first.'; msg.style.color = 'red'; return; }
   const existing = (await window.posAPI.getConfig()) || {};
   const merged = { ...existing, ...cfg };
   const r = await window.posAPI.saveConfig(merged);
@@ -2736,13 +2793,18 @@ async function saveServerConnection() {
 }
 
 function buildConnCfg() {
+  const mode    = document.getElementById('conn-mode-cloud').classList.contains('active') ? 'cloud' : 'local';
+  const isCloud = mode === 'cloud';
   return {
-    serverIp:  document.getElementById('conn-ip').value.trim(),
-    machineId: document.getElementById('conn-mid').value.trim(),
-    dbPort:    document.getElementById('conn-port').value || '5432',
-    dbName:    document.getElementById('conn-dbname').value || 'restaurant_pos_central',
-    dbUser:    document.getElementById('conn-dbuser').value || 'pos_central_user',
-    dbPass:    document.getElementById('conn-dbpass').value || '',
+    connectionMode: mode,
+    serverIp:       isCloud ? '' : document.getElementById('conn-ip').value.trim(),
+    cloudApiUrl:    isCloud ? document.getElementById('conn-cloud-url').value.trim().replace(/\/+$/, '') : '',
+    machineId:      isCloud ? document.getElementById('conn-mid-cloud').value.trim()
+                            : document.getElementById('conn-mid').value.trim(),
+    dbPort:         document.getElementById('conn-port').value || '5432',
+    dbName:         document.getElementById('conn-dbname').value || 'restaurant_pos_central',
+    dbUser:         document.getElementById('conn-dbuser').value || 'pos_central_user',
+    dbPass:         document.getElementById('conn-dbpass').value || '',
   };
 }
 
@@ -3267,6 +3329,57 @@ function renderCashierGrid() {
 // ── Setup screen ──────────────────────────────────────────────────────────────
 
 let _setupMode = 'new';
+let _setupConnMode = 'local'; // 'local' | 'cloud'
+
+function setSetupConnMode(mode) {
+  _setupConnMode = mode;
+  const isCloud = mode === 'cloud';
+  document.getElementById('setup-cmode-local').classList.toggle('active', !isCloud);
+  document.getElementById('setup-cmode-cloud').classList.toggle('active', isCloud);
+  document.getElementById('detect-local-section').style.display = isCloud ? 'none' : '';
+  document.getElementById('detect-cloud-section').style.display = isCloud ? '' : 'none';
+  if (!isCloud) {
+    setupAutoDetect();
+  } else {
+    // Stop spinner, focus cloud URL
+    document.getElementById('detect-spinner').style.display = 'none';
+    setTimeout(() => document.getElementById('setup-cloud-url')?.focus(), 100);
+  }
+}
+
+async function setupCloudConnect() {
+  const rawUrl = document.getElementById('setup-cloud-url').value.trim();
+  const errEl  = document.getElementById('setup-cloud-error');
+  errEl.textContent = '';
+  if (!rawUrl) { errEl.textContent = '❌ Enter cloud server URL'; return; }
+  const url = rawUrl.replace(/\/+$/, '');
+  errEl.textContent = '⏳ Connecting…';
+  try {
+    const resp = await fetch(url + '/setup/auto-detect', {
+      signal: AbortSignal.timeout(10000),
+    });
+    if (!resp.ok) throw new Error(`Server responded ${resp.status}`);
+    const data = await resp.json();
+    if (!data.ok) throw new Error(data.error || 'Server rejected request');
+    _setupAutoData = { ...data, _ip: url, _cloudUrl: url };
+    errEl.textContent = '';
+    renderOutletPicker(data.outlets || []);
+    document.getElementById('setup-step-detect').classList.remove('active');
+    document.getElementById('setup-step-outlet').classList.add('active');
+    const mid = document.getElementById('setup-mid');
+    if (!mid.value) mid.value = (await posAPI.getMachineId()) || 'POS-01';
+  } catch (e) {
+    errEl.textContent = '❌ ' + e.message;
+  }
+}
+
+function setConnSettingsMode(mode) {
+  const isCloud = mode === 'cloud';
+  document.getElementById('conn-mode-local').classList.toggle('active', !isCloud);
+  document.getElementById('conn-mode-cloud').classList.toggle('active', isCloud);
+  document.getElementById('conn-local-row').style.display  = isCloud ? 'none' : '';
+  document.getElementById('conn-cloud-row').style.display  = isCloud ? '' : 'none';
+}
 
 function setSetupMode(mode) {
   _setupMode = mode;
@@ -3408,21 +3521,24 @@ async function setupFinalize() {
   btn.disabled = true;
   errEl.textContent = '';
   const dbInfo = data.db || {};
+  const isCloud = _setupConnMode === 'cloud';
   const cfg = {
-    serverIp:       ip,
-    machineId:      mid,
-    outletId:       _setupSelectedOutlet.id,
-    outletName:     _setupSelectedOutlet.name,
-    apiKey:         data.api_key || '',
-    dbHost:         dbInfo.host || '127.0.0.1',
-    dbPort:         String(dbInfo.port || '5432'),
-    dbName:         dbInfo.database || 'restaurant_pos_central',
-    dbUser:         dbInfo.user || 'pos_central_user',
-    dbPass:         dbInfo.password || '',
-    dbSsl:          String(dbInfo.ssl || 'false'),
-    restaurantName: _setupSelectedOutlet.brand || '',
-    restaurantId:   '',
-    licenseKey:     '',
+    serverIp:        isCloud ? '' : ip,
+    cloudApiUrl:     isCloud ? (data._cloudUrl || '') : '',
+    connectionMode:  _setupConnMode,
+    machineId:       mid,
+    outletId:        _setupSelectedOutlet.id,
+    outletName:      _setupSelectedOutlet.name,
+    apiKey:          data.api_key || '',
+    dbHost:          dbInfo.host || (isCloud ? '' : '127.0.0.1'),
+    dbPort:          String(dbInfo.port || '5432'),
+    dbName:          dbInfo.database || 'restaurant_pos_central',
+    dbUser:          dbInfo.user || 'pos_central_user',
+    dbPass:          dbInfo.password || '',
+    dbSsl:           String(dbInfo.ssl || 'false'),
+    restaurantName:  _setupSelectedOutlet.brand || '',
+    restaurantId:    '',
+    licenseKey:      '',
   };
   const res = await posAPI.saveConfig(cfg);
   if (!res.ok) {
@@ -5099,9 +5215,14 @@ function openPayment(orderId, defaultMethod) {
     paymentOrderId = orderId;
     const order = activeOrders.find(o => o.id === orderId);
     if (!order) return;
-    paymentTotal = order.total;
+    paymentTotal = parseFloat(order.total) || 0;
     document.getElementById('pay-order-num').textContent = `#${order.order_number}`;
-    buildPaymentSummary(order.subtotal, order.tax_amount, order.discount_amount, order.total);
+    buildPaymentSummary(
+      parseFloat(order.subtotal        || 0),
+      parseFloat(order.tax_amount      || 0),
+      parseFloat(order.discount_amount || 0),
+      parseFloat(order.total           || 0)
+    );
   } else {
     // Paying from cart
     paymentOrderId = null;
