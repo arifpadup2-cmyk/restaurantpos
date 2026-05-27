@@ -670,14 +670,15 @@ textarea:focus-visible {
 .rc-pay-other{background:var(--bg);color:var(--muted);border:1px solid var(--border)}
 
 /* ══ ORDER LIST PANEL REDESIGN ══════════════════════════════ */
-.orders-header{display:flex;align-items:center;justify-content:space-between;padding:12px 18px;background:#fff;border-bottom:1px solid var(--border);flex-shrink:0;gap:10px;flex-wrap:wrap}
-.orders-header-left{display:flex;align-items:center;gap:10px}
+.orders-header{display:flex;align-items:center;padding:12px 18px;background:#fff;border-bottom:1px solid var(--border);flex-shrink:0;gap:10px}
+.orders-header-left{display:flex;align-items:center;gap:10px;flex:1}
 .orders-header-left h2{font-size:18px;font-weight:800;color:var(--secondary);white-space:nowrap}
+.orders-header-center{flex:2;display:flex;justify-content:center;align-items:center}
 .orders-refresh-btn{width:32px;height:32px;border-radius:8px;background:var(--bg);border:1.5px solid var(--border);color:var(--muted);font-size:16px;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;transition:.15s}
 .orders-refresh-btn:hover{border-color:var(--primary);color:var(--primary)}
 .orders-count-badge{background:#eff6ff;color:#1d4ed8;font-size:12px;font-weight:700;padding:3px 10px;border-radius:20px;white-space:nowrap}
 .orders-header-right{display:flex;align-items:center;gap:8px;flex:1;justify-content:flex-end;min-width:0}
-.orders-search-wrap{display:flex;align-items:center;gap:8px;background:var(--bg);border:1.5px solid var(--border);border-radius:8px;padding:7px 12px;flex:1;max-width:400px}
+.orders-search-wrap{display:flex;align-items:center;gap:8px;background:var(--bg);border:1.5px solid var(--border);border-radius:8px;padding:7px 12px;width:100%;max-width:420px}
 .orders-search-wrap svg{flex-shrink:0;color:var(--muted)}
 .orders-search-wrap input{flex:1;border:none;background:none;font-size:13px;color:var(--text);outline:none;min-width:0}
 .orders-search-wrap input::placeholder{color:var(--muted)}
@@ -1232,12 +1233,13 @@ textarea:focus-visible {
               </button>
               <span id="orders-count-badge" class="orders-count-badge" style="display:none"></span>
             </div>
-            <div class="orders-header-right">
+            <div class="orders-header-center">
               <div class="orders-search-wrap">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="15" height="15"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
                 <input type="text" id="orders-search" placeholder="Search by Order ID, Table or Customer..." oninput="renderOrderCards()">
               </div>
             </div>
+            <div class="orders-header-right"></div>
           </div>
           <!-- Filter tabs (populated by renderOrderTabs()) -->
           <div class="orders-tabs-bar" id="orders-tabs-bar">
@@ -2873,7 +2875,14 @@ function renderOrderTabs() {
   const bar = document.getElementById('orders-tabs-bar');
   if (!bar) return;
   const dotColors = { 'dine-in':'#2563eb', 'takeaway':'#16a34a', 'delivery':'#ea580c', 'drive-thru':'#0891b2', 'online':'#9333ea' };
-  const typeBtns = _posOrderTypes.map(t => {
+  const FALLBACK = [
+    { name:'Dine-in',  icon:'dine'     },
+    { name:'Takeaway', icon:'takeaway' },
+    { name:'Delivery', icon:'delivery' },
+    { name:'Online',   icon:'online'   },
+  ];
+  const types = _posOrderTypes.length ? _posOrderTypes : FALLBACK;
+  const typeBtns = types.map(t => {
     const type  = otTypeFromIconKey(t);
     const color = dotColors[type] || '#64748b';
     const id    = 'otc-' + type;
@@ -5196,6 +5205,7 @@ async function loadActiveOrders() {
     WHERE o.status='active' ORDER BY o.created_at ASC`);
   activeOrders = r.ok ? r.data : [];
   updateOrdersBadge();
+  renderOrderTabs();
   renderOrders();
   renderOrderCards();
 }
