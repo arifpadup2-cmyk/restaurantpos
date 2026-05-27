@@ -663,12 +663,21 @@ input:checked+.toggle-slider:before{transform:translateX(17px)}
 .imgpicker-tabs{display:flex;border-bottom:1.5px solid var(--border);margin-bottom:14px}
 .imgpicker-tab{background:none;border:none;border-bottom:2.5px solid transparent;padding:8px 16px;font-size:13px;font-weight:600;color:var(--muted);cursor:pointer;margin-bottom:-1.5px;transition:.12s}
 .imgpicker-tab.active{color:var(--primary);border-bottom-color:var(--primary)}
-.imgpick-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;max-height:320px;overflow-y:auto;padding:2px}
+/* Upload tab */
+.imgpick-dropzone{border:2.5px dashed var(--border);border-radius:12px;padding:36px 20px;text-align:center;cursor:pointer;transition:.15s;background:var(--bg)}
+.imgpick-dropzone:hover,.imgpick-dropzone.drag-over{border-color:var(--primary);background:#fff7ed}
+.imgpick-dropzone-icon{font-size:40px;display:block;margin-bottom:8px}
+.imgpick-dropzone-label{font-size:14px;font-weight:600;color:var(--text);margin-bottom:4px}
+.imgpick-dropzone-sub{font-size:12px;color:var(--muted)}
+.imgpick-preview-wrap{margin-top:14px;border-radius:10px;overflow:hidden;max-height:220px;display:none;position:relative}
+.imgpick-preview-wrap img{width:100%;object-fit:contain;max-height:220px;background:#000}
+.imgpick-preview-clear{position:absolute;top:6px;right:6px;background:rgba(0,0,0,.55);color:#fff;border:none;border-radius:50%;width:26px;height:26px;font-size:15px;cursor:pointer;line-height:1}
+/* Search tab */
+.imgpick-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;max-height:300px;overflow-y:auto;padding:2px;margin-top:10px}
 .imgpick-thumb{border-radius:8px;overflow:hidden;cursor:pointer;border:2px solid transparent;transition:.12s;position:relative}
 .imgpick-thumb:hover{border-color:var(--primary);transform:scale(1.03)}
 .imgpick-thumb img{width:100%;aspect-ratio:1;object-fit:cover;display:block}
-.imgpick-credit{position:absolute;bottom:0;left:0;right:0;background:rgba(0,0,0,.55);color:#fff;font-size:9px;padding:3px 5px;text-overflow:ellipsis;white-space:nowrap;overflow:hidden}
-.imgpick-google-hint{margin-top:10px;padding:10px 14px;background:#f8fafc;border:1px solid var(--border);border-radius:8px;font-size:12px;color:#475569;line-height:1.7}
+.imgpick-thumb-title{position:absolute;bottom:0;left:0;right:0;background:rgba(0,0,0,.55);color:#fff;font-size:9px;padding:3px 5px;text-overflow:ellipsis;white-space:nowrap;overflow:hidden}
 .imgpick-url-preview{margin-top:8px;border-radius:8px;overflow:hidden;max-height:180px;display:none}
 .imgpick-url-preview img{width:100%;object-fit:cover;max-height:180px}
 /* Image pick button next to inputs */
@@ -3237,52 +3246,57 @@ input:checked+.toggle-slider:before{transform:translateX(17px)}
 <!-- Image Picker Modal -->
 <div class="modal-overlay" id="modal-img-picker">
   <div class="modal" style="max-width:680px;width:95vw">
-    <h3>Pick an Image</h3>
+    <h3>Add Item Image</h3>
     <div class="imgpicker-tabs">
-      <button class="imgpicker-tab active" id="imgtab-search" onclick="imgPickerTab('search')"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="vertical-align:-2px;margin-right:4px"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>Search</button>
-      <button class="imgpicker-tab" id="imgtab-url" onclick="imgPickerTab('url')"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="vertical-align:-2px;margin-right:4px"><path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71"/></svg>Enter URL</button>
+      <button class="imgpicker-tab active" id="imgtab-upload" onclick="imgPickerTab('upload')">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="vertical-align:-2px;margin-right:4px"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>Upload from Computer
+      </button>
+      <button class="imgpicker-tab" id="imgtab-search" onclick="imgPickerTab('search')">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="vertical-align:-2px;margin-right:4px"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>Search Images
+      </button>
+    </div>
+
+    <!-- Upload pane -->
+    <div id="imgpicker-upload-pane">
+      <input type="file" id="imgpicker-file-input" accept="image/*" style="display:none" onchange="imgPickerFileSelected(this)">
+      <div class="imgpick-dropzone" id="imgpick-dropzone"
+           onclick="document.getElementById('imgpicker-file-input').click()"
+           ondragover="event.preventDefault();this.classList.add('drag-over')"
+           ondragleave="this.classList.remove('drag-over')"
+           ondrop="event.preventDefault();this.classList.remove('drag-over');imgPickerDropFile(event)">
+        <span class="imgpick-dropzone-icon">🖼️</span>
+        <div class="imgpick-dropzone-label">Click to browse or drag &amp; drop</div>
+        <div class="imgpick-dropzone-sub">JPG, PNG, WEBP — max 8 MB</div>
+      </div>
+      <div class="imgpick-preview-wrap" id="imgpick-preview-wrap">
+        <img id="imgpick-preview-img" src="" alt="preview">
+        <button class="imgpick-preview-clear" onclick="imgPickerClearFile()" title="Remove">✕</button>
+      </div>
+      <div style="margin-top:14px;display:flex;justify-content:flex-end;gap:8px">
+        <button class="btn btn-outline" onclick="closeModal('modal-img-picker')">Cancel</button>
+        <button class="btn btn-primary" id="imgpick-upload-btn" onclick="imgPickerUpload()" disabled>
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="vertical-align:-2px;margin-right:4px"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>Upload &amp; Use
+        </button>
+      </div>
     </div>
 
     <!-- Search pane -->
-    <div id="imgpicker-search-pane">
-      <div style="display:flex;gap:8px;margin-bottom:10px">
-        <input id="imgpicker-query" type="text" placeholder="Search: grilled chicken, burger, pasta…" style="flex:1" onkeydown="if(event.key==='Enter'){imgPickerSearchUnsplash();event.preventDefault()}">
-        <button class="btn btn-outline btn-sm" onclick="imgPickerOpenGoogle()" title="Open Google Images in a new tab">
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg> Google Images
-        </button>
-        <button class="btn btn-primary btn-sm" onclick="imgPickerSearchUnsplash()" id="btn-unsplash-srch">
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="vertical-align:-2px;margin-right:3px"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>Unsplash
+    <div id="imgpicker-search-pane" style="display:none">
+      <div style="display:flex;gap:8px">
+        <input id="imgpicker-query" type="text" placeholder="Search: grilled chicken, burger, pasta…" style="flex:1"
+               onkeydown="if(event.key==='Enter'){imgPickerSearch();event.preventDefault()}">
+        <button class="btn btn-primary btn-sm" id="btn-img-search" onclick="imgPickerSearch()">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="vertical-align:-2px;margin-right:3px"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>Search
         </button>
       </div>
       <div class="imgpick-grid" id="imgpicker-grid">
-        <div style="grid-column:1/-1;text-align:center;padding:24px;color:var(--muted);font-size:12px">
-          Type a search term and press Enter or click a button above.
+        <div style="grid-column:1/-1;text-align:center;padding:30px;color:var(--muted);font-size:13px">
+          Type a search term and press Enter
         </div>
       </div>
-      <div class="imgpick-google-hint">
-        <strong>Using Google Images:</strong> Click "Google Images" → find image → right-click → "Copy image address" → paste below:<br>
-        <div style="display:flex;gap:8px;margin-top:8px">
-          <input id="imgpicker-paste-field" type="url" placeholder="Paste copied image URL here…" style="flex:1;padding:6px 10px;border:1.5px solid var(--border);border-radius:7px;font-size:12px">
-          <button class="btn btn-outline btn-sm" onclick="imgPickerPasteClipboard()"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="vertical-align:-2px;margin-right:3px"><path d="M16 4h2a2 2 0 012 2v14a2 2 0 01-2 2H6a2 2 0 01-2-2V6a2 2 0 012-2h2"/><rect x="8" y="2" width="8" height="4" rx="1"/></svg>Auto-paste</button>
-          <button class="btn btn-primary btn-sm" onclick="imgPickerUsePasted()">Use URL</button>
-        </div>
+      <div style="margin-top:10px;display:flex;justify-content:flex-end">
+        <button class="btn btn-outline" onclick="closeModal('modal-img-picker')">Cancel</button>
       </div>
-    </div>
-
-    <!-- URL pane -->
-    <div id="imgpicker-url-pane" style="display:none">
-      <div class="form-group">
-        <label>Direct Image URL</label>
-        <input id="imgpicker-url-input" type="url" placeholder="https://example.com/food.jpg" oninput="imgPickerPreviewUrl()">
-      </div>
-      <div class="imgpick-url-preview" id="imgpicker-url-preview-box">
-        <img id="imgpicker-url-preview-img" src="" alt="preview">
-      </div>
-      <button class="btn btn-primary" onclick="imgPickerConfirmUrl()" style="margin-top:12px">Use This Image</button>
-    </div>
-
-    <div class="modal-footer">
-      <button class="btn btn-outline" onclick="closeModal('modal-img-picker')">Cancel</button>
     </div>
   </div>
 </div>
@@ -5872,26 +5886,33 @@ async function cfgDeleteModifierGroup (id) {
 }
 
 // ─── IMAGE PICKER ─────────────────────────────────────────────────
-let _imgPickerCallback = null
+let _imgPickerCallback  = null
+let _imgPickerFile      = null
 
 function openImagePicker (callback, queryHint) {
   _imgPickerCallback = callback
+  _imgPickerFile = null
+  // Reset upload tab
+  const fi = document.getElementById('imgpicker-file-input')
+  if (fi) fi.value = ''
+  const pw = document.getElementById('imgpick-preview-wrap')
+  if (pw) pw.style.display = 'none'
+  const ub = document.getElementById('imgpick-upload-btn')
+  if (ub) ub.disabled = true
+  // Reset search tab
   const qEl = document.getElementById('imgpicker-query')
   if (qEl) qEl.value = queryHint || ''
   const grid = document.getElementById('imgpicker-grid')
-  if (grid) grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:24px;color:var(--muted);font-size:12px">Type a search term and press Enter, or click a button above.</div>'
-  const pf = document.getElementById('imgpicker-paste-field'); if (pf) pf.value = ''
-  const ui = document.getElementById('imgpicker-url-input'); if (ui) ui.value = ''
-  const up = document.getElementById('imgpicker-url-preview-box'); if (up) up.style.display = 'none'
-  imgPickerTab('search')
+  if (grid) grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:30px;color:var(--muted);font-size:13px">Type a search term and press Enter</div>'
+  imgPickerTab('upload')
   showModal('modal-img-picker')
 }
 
 function imgPickerTab (tab) {
-  document.getElementById('imgpicker-search-pane').style.display = tab === 'search' ? '' : 'none'
-  document.getElementById('imgpicker-url-pane').style.display    = tab === 'url'    ? '' : 'none'
+  document.getElementById('imgpicker-upload-pane').style.display  = tab === 'upload' ? '' : 'none'
+  document.getElementById('imgpicker-search-pane').style.display  = tab === 'search' ? '' : 'none'
+  document.getElementById('imgtab-upload').classList.toggle('active', tab === 'upload')
   document.getElementById('imgtab-search').classList.toggle('active', tab === 'search')
-  document.getElementById('imgtab-url').classList.toggle('active',    tab === 'url')
 }
 
 function imgPickerSelect (url) {
@@ -5899,63 +5920,95 @@ function imgPickerSelect (url) {
   if (_imgPickerCallback && url) _imgPickerCallback(url)
 }
 
-function imgPickerOpenGoogle () {
-  const q = (document.getElementById('imgpicker-query').value || 'food').trim()
-  window.open('https://www.google.com/search?tbm=isch&q=' + encodeURIComponent(q), '_blank')
+function imgPickerFileSelected (input) {
+  const file = input.files[0]
+  if (!file) return
+  _imgPickerFile = file
+  const reader = new FileReader()
+  reader.onload = e => {
+    document.getElementById('imgpick-preview-img').src = e.target.result
+    document.getElementById('imgpick-preview-wrap').style.display = ''
+    document.getElementById('imgpick-dropzone').style.display = 'none'
+    document.getElementById('imgpick-upload-btn').disabled = false
+  }
+  reader.readAsDataURL(file)
 }
 
-async function imgPickerPasteClipboard () {
+function imgPickerDropFile (event) {
+  const file = event.dataTransfer.files[0]
+  if (!file || !file.type.startsWith('image/')) return showToast('Please drop an image file.', 'error')
+  const dt = new DataTransfer()
+  dt.items.add(file)
+  const fi = document.getElementById('imgpicker-file-input')
+  fi.files = dt.files
+  imgPickerFileSelected(fi)
+}
+
+function imgPickerClearFile () {
+  _imgPickerFile = null
+  const fi = document.getElementById('imgpicker-file-input')
+  if (fi) fi.value = ''
+  document.getElementById('imgpick-preview-wrap').style.display = 'none'
+  document.getElementById('imgpick-dropzone').style.display = ''
+  document.getElementById('imgpick-upload-btn').disabled = true
+}
+
+async function imgPickerUpload () {
+  if (!_imgPickerFile) return showToast('Select an image first.', 'error')
+  const btn = document.getElementById('imgpick-upload-btn')
+  btn.disabled = true
+  btn.textContent = 'Uploading…'
   try {
-    const text = await navigator.clipboard.readText()
-    const pf = document.getElementById('imgpicker-paste-field')
-    if (pf) pf.value = text
+    const form = new FormData()
+    form.append('image', _imgPickerFile)
+    const res = await fetch(API_BASE + '/images/upload', {
+      method: 'POST',
+      headers: { Authorization: 'Bearer ' + token },
+      body: form
+    })
+    const data = await res.json()
+    if (!data.ok || !data.url) throw new Error(data.error || 'Upload failed')
+    imgPickerSelect(data.url)
   } catch (e) {
-    showToast('Clipboard access denied. Paste manually.', 'error')
+    showToast('Upload failed: ' + e.message, 'error')
+    btn.disabled = false
+    btn.innerHTML = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="vertical-align:-2px;margin-right:4px"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>Upload &amp; Use'
   }
 }
 
-function imgPickerUsePasted () {
-  const url = (document.getElementById('imgpicker-paste-field').value || '').trim()
-  if (!url) return showToast('Paste a URL first.', 'error')
-  imgPickerSelect(url)
-}
-
-async function imgPickerSearchUnsplash () {
-  const q   = (document.getElementById('imgpicker-query').value || '').trim()
-  const key = localStorage.getItem('unsplash_key') || ''
+async function imgPickerSearch () {
+  const q = (document.getElementById('imgpicker-query').value || '').trim()
   if (!q) return showToast('Enter a search term.', 'error')
-  if (!key) {
-    showToast('No Unsplash key. Go to Settings → Image Search to add one.', 'error')
-    return
-  }
   const grid = document.getElementById('imgpicker-grid')
-  grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:24px;color:var(--muted);font-size:12px">Searching…</div>'
+  const btn  = document.getElementById('btn-img-search')
+  grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:30px;color:var(--muted);font-size:13px">Searching…</div>'
+  if (btn) { btn.disabled = true; btn.textContent = 'Searching…' }
   try {
-    const r = await fetch(`https://api.unsplash.com/search/photos?query=${encodeURIComponent(q)}&per_page=12&client_id=${key}`)
-    if (!r.ok) { const e = await r.json(); throw new Error(e.errors?.[0] || r.statusText) }
-    const data = await r.json()
-    if (!data.results?.length) { grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:24px;color:var(--muted);font-size:12px">No results. Try different keywords.</div>'; return }
-    grid.innerHTML = data.results.map(p => `
-      <div class="imgpick-thumb" onclick="imgPickerSelect('${p.urls.regular}')" title="${p.alt_description || ''}">
-        <img src="${p.urls.small}" alt="${p.alt_description || ''}">
-        <div class="imgpick-credit">${p.user.name}</div>
-      </div>`).join('')
+    const res = await fetch(API_BASE + '/images/search?q=' + encodeURIComponent(q), {
+      headers: { Authorization: 'Bearer ' + token }
+    })
+    const data = await res.json()
+    if (!res.ok || !data.results) throw new Error(data.error || 'Search failed')
+    if (!data.results.length) {
+      grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:30px;color:var(--muted);font-size:13px">No images found. Try different keywords.</div>'
+      return
+    }
+    grid.innerHTML = data.results.map(r => {
+      const safe = (r.title || '').replace(/"/g, '&quot;')
+      const thumb = r.thumb || r.url
+      return `<div class="imgpick-thumb" onclick="imgPickerSelect('${r.url.replace(/'/g,"&#39;")}')" title="${safe}">
+        <img src="${thumb}" alt="${safe}" loading="lazy" onerror="this.closest('.imgpick-thumb').style.display='none'">
+        ${safe ? `<div class="imgpick-thumb-title">${safe}</div>` : ''}
+      </div>`
+    }).join('')
   } catch (e) {
-    grid.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:24px;color:var(--danger);font-size:12px">Error: ${e.message}</div>`
+    grid.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:30px;color:var(--danger);font-size:13px">Search failed: ${e.message}</div>`
+  } finally {
+    if (btn) {
+      btn.disabled = false
+      btn.innerHTML = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="vertical-align:-2px;margin-right:3px"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>Search'
+    }
   }
-}
-
-function imgPickerPreviewUrl () {
-  const url = (document.getElementById('imgpicker-url-input').value || '').trim()
-  const box = document.getElementById('imgpicker-url-preview-box')
-  const img = document.getElementById('imgpicker-url-preview-img')
-  if (url) { img.src = url; box.style.display = ''; } else { box.style.display = 'none' }
-}
-
-function imgPickerConfirmUrl () {
-  const url = (document.getElementById('imgpicker-url-input').value || '').trim()
-  if (!url) return showToast('Enter a URL first.', 'error')
-  imgPickerSelect(url)
 }
 
 function saveUnsplashKey () {
