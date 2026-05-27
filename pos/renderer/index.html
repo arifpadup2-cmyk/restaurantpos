@@ -2549,6 +2549,11 @@ async function init() {
     }
   }
 
+  // Backfill outlet_id on tables that were seeded before this column existed
+  if (_cfg.outletId) {
+    await db.run(`UPDATE tables_layout SET outlet_id=? WHERE outlet_id IS NULL`, [_cfg.outletId]);
+  }
+
   // Load API config from settings (fall back to config file values)
   apiUrl = (await getSetting('api_url')) || (_cfg.serverIp ? `http://${_cfg.serverIp}:3001` : '');
   apiKey = (await getSetting('api_key')) || _cfg.apiKey || '';
@@ -3897,7 +3902,10 @@ function catBg(item) {
 //  TABLES
 // ═══════════════════════════════════════════════════════════════
 async function loadTables() {
-  const r = await db.all('SELECT * FROM tables_layout ORDER BY name');
+  const outletId = window._posConfig?.outletId;
+  const r = outletId
+    ? await db.all('SELECT * FROM tables_layout WHERE outlet_id=? OR outlet_id IS NULL ORDER BY name', [outletId])
+    : await db.all('SELECT * FROM tables_layout ORDER BY name');
   tables = r.ok ? r.data : [];
 }
 
@@ -5214,18 +5222,30 @@ async function printReceipt(order) {
 //  ACTIVE ORDERS
 // ═══════════════════════════════════════════════════════════════
 async function loadActiveOrders() {
-  // Reset stale occupied tables and stale locks that have no matching active order
-  await db.run(`
-    UPDATE tables_layout SET status='available', current_order_id=NULL, locked_by=NULL
-    WHERE (status='occupied' OR locked_by IS NOT NULL)
-    AND (current_order_id IS NULL
-      OR current_order_id NOT IN (SELECT id FROM orders WHERE status='active'))`);
+  const outletId = window._posConfig?.outletId;
 
-  const r = await db.all(`
-    SELECT o.*, COALESCE(ic.cnt,0) AS item_count
-    FROM orders o
-    LEFT JOIN (SELECT order_id, SUM(quantity) AS cnt FROM order_items GROUP BY order_id) ic ON ic.order_id = o.id
-    WHERE o.status='active' ORDER BY o.created_at ASC`);
+  // Reset stale occupied/locked tables that have no matching active order for this outlet
+  const activeSubq = outletId
+    ? `SELECT id FROM orders WHERE status='active' AND outlet_id=?`
+    : `SELECT id FROM orders WHERE status='active'`;
+  await db.run(
+    `UPDATE tables_layout SET status='available', current_order_id=NULL, locked_by=NULL
+     WHERE (status='occupied' OR locked_by IS NOT NULL)
+     AND (current_order_id IS NULL OR current_order_id NOT IN (${activeSubq}))`,
+    outletId ? [outletId] : []
+  );
+
+  const r = outletId
+    ? await db.all(`
+        SELECT o.*, COALESCE(ic.cnt,0) AS item_count
+        FROM orders o
+        LEFT JOIN (SELECT order_id, SUM(quantity) AS cnt FROM order_items GROUP BY order_id) ic ON ic.order_id = o.id
+        WHERE o.status='active' AND o.outlet_id=? ORDER BY o.created_at ASC`, [outletId])
+    : await db.all(`
+        SELECT o.*, COALESCE(ic.cnt,0) AS item_count
+        FROM orders o
+        LEFT JOIN (SELECT order_id, SUM(quantity) AS cnt FROM order_items GROUP BY order_id) ic ON ic.order_id = o.id
+        WHERE o.status='active' ORDER BY o.created_at ASC`);
   activeOrders = r.ok ? r.data : [];
   updateOrdersBadge();
   renderOrderTabs();
