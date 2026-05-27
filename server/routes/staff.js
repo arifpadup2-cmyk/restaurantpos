@@ -8,6 +8,11 @@ const { serverError } = require('../middleware/serverError')
 module.exports = function staffRouter (sql) {
   const router = express.Router()
   router.use(jwtAuth)
+  router.use((req, res, next) => {
+    if (req.user?.type === 'cashier')
+      return res.status(403).json({ error: 'Access denied' })
+    next()
+  })
 
   const { randomUUID } = require('crypto')
   function uid () { return randomUUID().replace(/-/g, '').slice(0, 20) }
