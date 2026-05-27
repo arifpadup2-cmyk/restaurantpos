@@ -6192,13 +6192,14 @@ async function getKotPrinter() {
 // ═══════════════════════════════════════════════════════════════
 async function getNextOrderNumber() {
   const today = todayStr();
-  const last  = await getSetting('last_counter_date');
-  let   cnt   = parseInt(await getSetting('day_order_counter') || '0');
-  if (last !== today) cnt = 0;
-  cnt++;
-  await setSetting('day_order_counter', String(cnt));
-  await setSetting('last_counter_date', today);
-  return `${today.replace(/-/g,'')}-${String(cnt).padStart(3,'0')}`;
+  const prefix = today.replace(/-/g,'');
+  // Count today's orders directly from DB — robust across multiple terminals
+  const r = await db.get(
+    "SELECT COUNT(*) AS cnt FROM orders WHERE order_number LIKE ?",
+    [prefix + '-%']
+  );
+  const cnt = (r.ok && r.data ? parseInt(r.data.cnt) : 0) + 1;
+  return `${prefix}-${String(cnt).padStart(3,'0')}`;
 }
 
 function uid() {
