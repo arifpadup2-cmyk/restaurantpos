@@ -3984,6 +3984,11 @@ async function selectTableAndEnter(tableId, tableName, status) {
       openOrderInEntry(existingOrder.id);
       return;
     }
+    // Table shows occupied but no active order — stale state, clear it
+    await db.run(
+      `UPDATE tables_layout SET status='available', current_order_id=NULL, locked_by=NULL WHERE id=?`,
+      [tableId]
+    );
   }
 
   const lockRes = await db.run(
@@ -3991,10 +3996,28 @@ async function selectTableAndEnter(tableId, tableName, status) {
     [MACHINE_ID, tableId, MACHINE_ID]
   );
   if (lockRes.ok && lockRes.changes === 0) {
-    alert(`Table ${tableName} is being used by another terminal. Please wait or choose another table.`);
-    await loadTables();
-    showTableSelectPopup();
-    return;
+    // Another terminal holds the lock — check if it has an active order
+    await loadActiveOrders();
+    const realOrder = activeOrders.find(o => o.table_id === tableId && o.status === 'active');
+    if (realOrder) {
+      openOrderInEntry(realOrder.id);
+      return;
+    }
+    // No real order — force-clear the stale lock and proceed
+    await db.run(
+      `UPDATE tables_layout SET locked_by=NULL WHERE id=? AND current_order_id NOT IN (SELECT id FROM orders WHERE status='active')`,
+      [tableId]
+    );
+    const retry = await db.run(
+      `UPDATE tables_layout SET locked_by=? WHERE id=? AND (locked_by IS NULL OR locked_by=?)`,
+      [MACHINE_ID, tableId, MACHINE_ID]
+    );
+    if (!retry.ok || retry.changes === 0) {
+      alert(`Table ${tableName} is being used by another terminal. Please wait or choose another table.`);
+      await loadTables();
+      showTableSelectPopup();
+      return;
+    }
   }
 
   clearCart();
@@ -5191,10 +5214,10 @@ async function printReceipt(order) {
 //  ACTIVE ORDERS
 // ═══════════════════════════════════════════════════════════════
 async function loadActiveOrders() {
-  // Reset stale occupied tables that have no matching active order
+  // Reset stale occupied tables and stale locks that have no matching active order
   await db.run(`
     UPDATE tables_layout SET status='available', current_order_id=NULL, locked_by=NULL
-    WHERE status='occupied'
+    WHERE (status='occupied' OR locked_by IS NOT NULL)
     AND (current_order_id IS NULL
       OR current_order_id NOT IN (SELECT id FROM orders WHERE status='active'))`);
 
