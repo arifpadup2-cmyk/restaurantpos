@@ -5182,6 +5182,13 @@ async function printReceipt(order) {
 //  ACTIVE ORDERS
 // ═══════════════════════════════════════════════════════════════
 async function loadActiveOrders() {
+  // Reset stale occupied tables that have no matching active order
+  await db.run(`
+    UPDATE tables_layout SET status='available', current_order_id=NULL, locked_by=NULL
+    WHERE status='occupied'
+    AND (current_order_id IS NULL
+      OR current_order_id NOT IN (SELECT id FROM orders WHERE status='active'))`);
+
   const r = await db.all(`
     SELECT o.*, COALESCE(ic.cnt,0) AS item_count
     FROM orders o
