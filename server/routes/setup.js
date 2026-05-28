@@ -683,6 +683,70 @@ module.exports = function setupRouter (sql) {
     } catch (e) { serverError(res, e) }
   })
 
+  // ── Public: look up outlet by brand_id + 6-char code (used by KDS / waiter / delivery) ──
+  router.post('/by-code', async (req, res) => {
+    const raw     = (req.body?.code     || '').replace(/\s/g, '')
+    const brandId = (req.body?.brand_id || '').trim()
+    if (!brandId)      return res.status(400).json({ error: 'Brand ID is required', code: 'MISSING_BRAND' })
+    if (raw.length !== 6) return res.status(400).json({ error: 'Outlet code must be exactly 6 characters', code: 'INVALID_CODE' })
+    try {
+      const [outlet] = await sql`
+        SELECT o.id, o.name, o.outlet_code, o.brand_id, b.name AS brand_name
+        FROM outlets o
+        JOIN brands b ON b.id = o.brand_id
+        WHERE o.outlet_code = ${raw} AND o.brand_id = ${brandId}`
+      if (!outlet) return res.status(404).json({ error: 'Brand ID or outlet code not found. Check both and try again.', code: 'NOT_FOUND' })
+      res.json({ outlet_id: outlet.id, outlet_name: outlet.name, outlet_code: outlet.outlet_code, brand_id: outlet.brand_id, brand_name: outlet.brand_name })
+    } catch (e) { serverError(res, e) }
+  })
+
+  // ── Public: POS terminal registers using brand_id + outlet code (replaces /connect for new installs) ──
+  router.post('/connect-code', async (req, res) => {
+    const raw     = (req.body?.outlet_code || '').replace(/\s/g, '')
+    const brandId = (req.body?.brand_id    || '').trim()
+    const { machine_id } = req.body || {}
+    if (!brandId)         return res.status(400).json({ error: 'Brand ID is required', code: 'MISSING_BRAND' })
+    if (raw.length !== 6) return res.status(400).json({ error: 'Outlet code must be exactly 6 characters', code: 'INVALID_CODE' })
+    try {
+      const [outlet] = await sql`
+        SELECT o.*, b.name AS brand_name, b.active AS brand_active, b.expires_at, b.max_terminals
+        FROM outlets o JOIN brands b ON b.id = o.brand_id
+        WHERE o.outlet_code = ${raw} AND o.brand_id = ${brandId}`
+      if (!outlet) return res.status(404).json({ error: 'Brand ID or outlet code not found.', code: 'NOT_FOUND' })
+      if (!outlet.brand_active) return res.status(403).json({ error: 'Brand license is deactivated.', code: 'DEACTIVATED' })
+      if (isExpired(outlet.expires_at)) return res.status(403).json({ error: 'License has expired. Contact your provider.', code: 'EXPIRED' })
+
+      const brand_id = outlet.brand_id
+      const mid = (machine_id || '').trim() || generateMachineId()
+      const [existingTerm] = await sql`SELECT id FROM terminal_registrations WHERE brand_id = ${brand_id} AND machine_id = ${mid}`
+
+      const { randomBytes } = require('crypto')
+      const tkPrefix = randomBytes(6).toString('hex')
+      const tkSecret = randomBytes(24).toString('base64url')
+      const tkRaw    = `${tkPrefix}.${tkSecret}`
+      const tkHash   = await bcrypt.hash(tkSecret, 10)
+
+      let terminalId
+      if (existingTerm) {
+        terminalId = existingTerm.id
+        await sql`UPDATE terminal_registrations SET last_seen=now(), active=true, outlet_id=${outlet.id}, api_key_prefix=${tkPrefix}, api_key_hash=${tkHash}, revoked_at=NULL WHERE id=${existingTerm.id}`
+      } else {
+        const [{ cnt }] = await sql`SELECT COUNT(*)::int AS cnt FROM terminal_registrations WHERE brand_id=${brand_id} AND active=true`
+        if (cnt >= (outlet.max_terminals || 99))
+          return res.status(403).json({ error: `Terminal limit reached (${outlet.max_terminals}).`, code: 'TERMINAL_LIMIT' })
+        terminalId = `${brand_id}-${mid}-${Date.now().toString(36)}`
+        await sql`INSERT INTO terminal_registrations (id, brand_id, machine_id, outlet_id, last_seen, active, api_key_prefix, api_key_hash) VALUES (${terminalId}, ${brand_id}, ${mid}, ${outlet.id}, now(), true, ${tkPrefix}, ${tkHash})`
+      }
+
+      res.json({
+        ok: true, terminal_id: terminalId, api_key: tkRaw,
+        brand_id, brand_name: outlet.brand_name,
+        outlet_id: outlet.id, outlet_name: outlet.name, outlet_code: outlet.outlet_code,
+        restaurant: { id: brand_id, name: outlet.brand_name },
+      })
+    } catch (e) { serverError(res, e) }
+  })
+
   // ── Public: POS terminal connects ────────────────────────────────────────
   // Accepts brand_id (new) or restaurant_id (legacy alias)
   router.post('/connect', async (req, res) => {
@@ -822,7 +886,7 @@ module.exports = function setupRouter (sql) {
     if (!isLocal) return res.status(403).json({ error: 'Auto-detect only available from localhost' })
     try {
       const outlets = await sql`
-        SELECT o.id, o.name, o.brand_id,
+        SELECT o.id, o.name, o.brand_id, o.outlet_code,
                b.name AS brand_name,
                m.name AS market_name
         FROM outlets o

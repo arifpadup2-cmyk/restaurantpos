@@ -8,6 +8,17 @@ const { randomUUID } = require('crypto')
 function newId () { return randomUUID().replace(/-/g, '').slice(0, 20) }
 function outletId () { return randomUUID().replace(/-/g, '').slice(0, 10).toUpperCase() }
 
+const OUTLET_CODE_CHARS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%&*'
+async function generateOutletCode (sql) {
+  for (let i = 0; i < 50; i++) {
+    let code = ''
+    for (let j = 0; j < 6; j++) code += OUTLET_CODE_CHARS[Math.floor(Math.random() * OUTLET_CODE_CHARS.length)]
+    const [exists] = await sql`SELECT 1 FROM outlets WHERE outlet_code = ${code}`
+    if (!exists) return code
+  }
+  throw new Error('Could not generate a unique outlet code')
+}
+
 const DEFAULT_PAYMENT_METHODS = [
   { name: 'Cash',                type: 'cash',    sort_order: 0 },
   { name: 'Credit / Debit Card', type: 'card',    sort_order: 1 },
@@ -275,12 +286,13 @@ module.exports = function configRouter (sql) {
     if (!market_id) return res.status(400).json({ error: 'Market is required for every outlet.' })
     try {
       const mkt = market_id ? (await sql`SELECT * FROM markets WHERE id = ${market_id} AND brand_id = ${rid}`)[0] : null
+      const outletCode = await generateOutletCode(sql)
       const [row] = await sql`
-        INSERT INTO outlets (id, brand_id, market_id, name, phone, email, address, opening_time, closing_time, currency, country, currency_code, currency_symbol, created_at)
+        INSERT INTO outlets (id, brand_id, market_id, name, phone, email, address, opening_time, closing_time, currency, country, currency_code, currency_symbol, outlet_code, created_at)
         VALUES (${outletId()}, ${rid}, ${market_id},
                 ${name.trim()}, ${phone||null}, ${email||null}, ${address||null},
                 ${opening_time||'09:00'}, ${closing_time||'22:00'}, ${mkt?.currency_code||currency||'USD'},
-                ${mkt?.country||country||null}, ${mkt?.currency_code||currency_code||'USD'}, ${mkt?.currency_symbol||currency_symbol||'$'}, ${Date.now()})
+                ${mkt?.country||country||null}, ${mkt?.currency_code||currency_code||'USD'}, ${mkt?.currency_symbol||currency_symbol||'$'}, ${outletCode}, ${Date.now()})
         RETURNING *`
       res.json(row)
     } catch (e) { serverError(res, e) }

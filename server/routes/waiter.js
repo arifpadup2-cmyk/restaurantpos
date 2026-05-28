@@ -38,13 +38,12 @@ module.exports = function waiterRouter (sql) {
     } catch (e) { serverError(res, e) }
   })
 
-  // GET /waiter/outlets — public list of outlets for a brand (used by settings modal to pick outlet)
+  // GET /waiter/outlets — public list of outlets for a brand (brand_id required for isolation)
   router.get('/outlets', async (req, res) => {
     try {
       const brandId = req.query.brand_id || null
-      const outlets = brandId
-        ? await sql`SELECT id, name FROM outlets WHERE brand_id = ${brandId} ORDER BY name`
-        : await sql`SELECT id, name FROM outlets ORDER BY name`
+      if (!brandId) return res.json({ outlets: [] })
+      const outlets = await sql`SELECT id, name FROM outlets WHERE brand_id = ${brandId} ORDER BY name`
       res.json({ outlets })
     } catch (e) { serverError(res, e) }
   })

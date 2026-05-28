@@ -8185,8 +8185,11 @@ async function cfgLoadBrands () {
               <div style="font-weight:600;font-size:13px">${esc(o.name)}</div>
               <div style="font-size:11px;color:var(--muted)">${[o.phone, o.currency_code ? (o.currency_symbol||'') + ' ' + o.currency_code : '', o.address?.split('\n')[0]].filter(Boolean).join(' · ') || 'No details'}</div>
             </div>
-            <button class="btn btn-sm" style="font-size:11px;padding:3px 8px" onclick="navigator.clipboard.writeText('${o.id}').then(()=>showToast('Outlet ID copied','success'))">Copy ID</button>
-            <button class="btn btn-sm" style="margin-left:3px" onclick="cfgOpenOutletModal(${JSON.stringify(o).replace(/"/g,'&quot;')})">Edit</button>
+            <div style="display:flex;align-items:center;gap:5px;flex-shrink:0">
+              <span style="font-family:monospace;font-size:13px;font-weight:800;letter-spacing:2px;color:var(--primary);background:#eff6ff;padding:3px 8px;border-radius:5px;border:1px solid #bfdbfe" title="Share this code with the outlet manager">${o.outlet_code||'------'}</span>
+              <button class="btn btn-sm" style="font-size:11px;padding:3px 8px" onclick="copyOutletCode('${o.outlet_code}','${esc(o.name)}')">Copy Code</button>
+              <button class="btn btn-sm" style="margin-left:2px" onclick="cfgOpenOutletModal(${JSON.stringify(o).replace(/"/g,'&quot;')})">Edit</button>
+            </div>
           </div>`).join('')
         const mData = JSON.stringify(m).replace(/"/g,'&quot;')
         return `
@@ -8214,8 +8217,11 @@ async function cfgLoadBrands () {
             <div style="font-weight:600;font-size:13px">${esc(o.name)}</div>
             <div style="font-size:11px;color:var(--muted)">No market assigned · ${[o.phone, o.currency_code ? (o.currency_symbol||'') + ' ' + o.currency_code : ''].filter(Boolean).join(' · ')}</div>
           </div>
-          <button class="btn btn-sm" style="font-size:11px;padding:3px 8px" onclick="navigator.clipboard.writeText('${o.id}').then(()=>showToast('Outlet ID copied','success'))">Copy ID</button>
-          <button class="btn btn-sm" style="margin-left:3px" onclick="cfgOpenOutletModal(${JSON.stringify(o).replace(/"/g,'&quot;')})">Edit</button>
+          <div style="display:flex;align-items:center;gap:5px;flex-shrink:0">
+            <span style="font-family:monospace;font-size:13px;font-weight:800;letter-spacing:2px;color:var(--primary);background:#eff6ff;padding:3px 8px;border-radius:5px;border:1px solid #bfdbfe" title="Share this code with the outlet manager">${o.outlet_code||'------'}</span>
+            <button class="btn btn-sm" style="font-size:11px;padding:3px 8px" onclick="copyOutletCode('${o.outlet_code}','${esc(o.name)}')">Copy Code</button>
+            <button class="btn btn-sm" style="margin-left:2px" onclick="cfgOpenOutletModal(${JSON.stringify(o).replace(/"/g,'&quot;')})">Edit</button>
+          </div>
         </div>`).join('')
 
       const bData = JSON.stringify(b).replace(/"/g,'&quot;')
@@ -8230,7 +8236,12 @@ async function cfgLoadBrands () {
               <div style="font-size:12px;color:var(--muted)">${[b.business_type, b.country, b.owner_name].filter(Boolean).join(' · ')}</div>
               <div style="font-size:11px;color:var(--muted);margin-top:2px">${bMarkets.length} market${bMarkets.length!==1?'s':''} · ${outlets.filter(o=>o.brand_id===b.id).length} outlet${outlets.filter(o=>o.brand_id===b.id).length!==1?'s':''}</div>
             </div>
-            <div style="display:flex;gap:5px;flex-shrink:0">
+            <div style="display:flex;flex-direction:column;align-items:flex-end;gap:5px;flex-shrink:0">
+              <div style="display:flex;align-items:center;gap:5px">
+                <span style="font-size:10px;color:var(--muted);font-weight:600">Brand ID:</span>
+                <span style="font-family:monospace;font-size:11px;font-weight:700;color:#64748b;background:#f1f5f9;padding:2px 7px;border-radius:4px;border:1px solid var(--border)">${esc(b.id)}</span>
+                <button class="btn btn-sm" style="font-size:10px;padding:2px 7px" onclick="navigator.clipboard.writeText('${esc(b.id)}').then(()=>showToast('Brand ID copied','success'))">Copy</button>
+              </div>
               <button class="btn btn-sm" onclick="cfgOpenBrandModal(${bData})">Edit Brand</button>
             </div>
           </div>
@@ -8310,6 +8321,11 @@ async function cfgDeleteBrand (id, name) {
 function cfgAddMarketForBrand (brandId) {
   cfgOpenMarketModal(null)
   setTimeout(() => { const s = document.getElementById('mkt-brand'); if (s) s.value = brandId }, 150)
+}
+
+function copyOutletCode (code, name) {
+  if (!code) return
+  navigator.clipboard.writeText(code).then(() => showToast(`Code "${code}" copied — share with the ${name} manager`, 'success'))
 }
 
 async function cfgAddOutletInMarket (marketId, brandId) {

@@ -140,22 +140,21 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(
         autocomplete="off" spellcheck="false">
       <p class="kds-modal-hint">Cloud URL of your POS server. Requires internet.</p>
     </div>
-    <input id="kds-brand-id" type="text" class="kds-modal-input" placeholder="Brand ID (e.g. REST-GPPE8G)"
-      autocomplete="off" spellcheck="false" style="margin-top:4px">
-    <p class="kds-modal-hint" style="margin-top:-4px;margin-bottom:12px">Your Brand ID — required for cloud; optional on local network.</p>
-    <div style="margin-bottom:14px">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:5px">
-        <span style="font-size:12px;font-weight:700;color:var(--muted)">Outlet (optional)</span>
-        <button onclick="kdsFetchOutlets()" style="font-size:11px;color:var(--primary);background:none;border:none;cursor:pointer;font-weight:700;padding:0">Fetch ↓</button>
-      </div>
-      <select id="kds-outlet-id" class="kds-modal-input" style="margin-bottom:4px" onchange="updateKdsOutletWarn()">
-        <option value="">All outlets (no filter)</option>
-      </select>
-      <p class="kds-modal-hint" style="margin-bottom:0" id="kds-outlet-hint">Select an outlet to show only orders for that outlet. Tap Fetch to load from server.</p>
-      <div id="kds-outlet-warn" style="display:none;margin-top:7px;padding:8px 10px;background:#fef3c7;border:1px solid #f59e0b;border-radius:7px;font-size:11px;color:#92400e;line-height:1.5">
-        &#9888; No outlet selected — this screen will show orders from all outlets.<br>Tap <b>Fetch ↓</b> then pick an outlet to restrict to this kitchen only.
-      </div>
+    <p class="kds-modal-hint" style="margin-bottom:8px">Enter your Brand ID and outlet code — both provided by your IT team.</p>
+    <input id="kds-brand-id-input" type="text" class="kds-modal-input" placeholder="Brand ID (e.g. REST-AB3X9K)" autocomplete="off" autocapitalize="none" autocorrect="off" spellcheck="false"
+      oninput="kdsCodeChanged()" style="font-family:monospace;letter-spacing:1px;margin-bottom:6px">
+    <input id="kds-outlet-code" type="text" class="kds-modal-input" maxlength="6" placeholder="e.g. aB3!xK" autocomplete="off" autocapitalize="none" autocorrect="off" spellcheck="false"
+      oninput="kdsCodeChanged()"
+      onkeydown="if(event.key==='Enter')kdsVerifyCode()"
+      style="font-family:monospace;font-size:22px;letter-spacing:5px;text-align:center;padding:10px;margin-bottom:4px">
+    <p class="kds-modal-hint" style="margin-bottom:6px;color:#f59e0b">&#9888; Case sensitive — type exactly as given (a ≠ A)</p>
+    <button onclick="kdsVerifyCode()" style="width:100%;padding:8px;background:var(--primary);color:#fff;border:none;border-radius:7px;font-size:13px;font-weight:700;cursor:pointer;margin-bottom:6px">🔍 Verify Code</button>
+    <div id="kds-code-confirm" style="display:none;padding:8px 10px;background:#f0fdf4;border:1px solid #86efac;border-radius:7px;font-size:12px;color:#166534;font-weight:600;margin-bottom:6px">
+      ✓ <span id="kds-code-outlet-name"></span>
     </div>
+    <p id="kds-code-error" style="color:#dc2626;font-size:11px;margin-bottom:8px;display:none"></p>
+    <input type="hidden" id="kds-outlet-id">
+    <input type="hidden" id="kds-brand-id">
     <div class="kds-modal-actions">
       <button class="kds-modal-cancel" onclick="closeKdsSrvModal()">Cancel</button>
       <button class="kds-modal-save" onclick="saveKdsSrvConfig()">Save &amp; Reconnect</button>
@@ -255,64 +254,71 @@ setInterval(_kdsHealthCheck, 15_000);
 function getKdsBrandId()  { return (localStorage.getItem('kds_brand_id')  || '').trim(); }
 function getKdsOutletId() { return (localStorage.getItem('kds_outlet_id') || '').trim(); }
 
-function updateKdsOutletWarn() {
-  const val  = document.getElementById('kds-outlet-id')?.value;
-  const warn = document.getElementById('kds-outlet-warn');
-  if (warn) warn.style.display = val ? 'none' : 'block';
-}
-
 function checkKdsOutletBanner() {
   const banner = document.getElementById('kds-outlet-banner');
   if (banner) banner.style.display = getKdsOutletId() ? 'none' : 'block';
 }
 
+function kdsCodeChanged() {
+  document.getElementById('kds-code-confirm').style.display = 'none';
+  document.getElementById('kds-code-error').style.display   = 'none';
+  document.getElementById('kds-outlet-id').value  = '';
+  document.getElementById('kds-brand-id').value   = '';
+}
+
+async function kdsVerifyCode() {
+  const code    = (document.getElementById('kds-outlet-code')?.value || '').replace(/\s/g, '');
+  const brandId = (document.getElementById('kds-brand-id-input')?.value || '').trim();
+  const errEl   = document.getElementById('kds-code-error');
+  const confEl  = document.getElementById('kds-code-confirm');
+  errEl.style.display = 'none';
+  confEl.style.display = 'none';
+  document.getElementById('kds-outlet-id').value = '';
+  document.getElementById('kds-brand-id').value  = '';
+  if (!brandId) { errEl.textContent = 'Enter your Brand ID.'; errEl.style.display = ''; return; }
+  if (code.length !== 6) { errEl.textContent = 'Enter the full 6-character outlet code.'; errEl.style.display = ''; return; }
+  const mode     = document.getElementById('kds-tab-cloud').classList.contains('active') ? 'cloud' : 'auto';
+  const cloudUrl = document.getElementById('kds-cloud-url').value.trim().replace(/\/+$/, '');
+  const base     = mode === 'cloud' ? cloudUrl : window.location.origin;
+  if (!base) { errEl.textContent = 'Enter cloud URL first.'; errEl.style.display = ''; return; }
+  try {
+    const resp = await fetch(base + '/setup/by-code', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ code, brand_id: brandId }), signal: AbortSignal.timeout(6000),
+    });
+    const d = await resp.json();
+    if (!resp.ok) { errEl.textContent = d.error || 'Not found.'; errEl.style.display = ''; return; }
+    document.getElementById('kds-code-outlet-name').textContent = d.outlet_name;
+    document.getElementById('kds-outlet-id').value = d.outlet_id;
+    document.getElementById('kds-brand-id').value  = d.brand_id;
+    confEl.style.display = '';
+  } catch (e) {
+    errEl.textContent = 'Cannot reach server: ' + e.message; errEl.style.display = '';
+  }
+}
+
 function openKdsSrvModal() {
   const mode = localStorage.getItem('kds_server_mode') || 'auto';
   setKdsSrvMode(mode);
-  document.getElementById('kds-cloud-url').value = localStorage.getItem('kds_cloud_url') || '';
-  document.getElementById('kds-brand-id').value  = localStorage.getItem('kds_brand_id')  || '';
-  const savedOutlet = localStorage.getItem('kds_outlet_id') || '';
+  document.getElementById('kds-cloud-url').value     = localStorage.getItem('kds_cloud_url')   || '';
+  document.getElementById('kds-outlet-code').value   = localStorage.getItem('kds_outlet_code') || '';
+  document.getElementById('kds-brand-id-input').value = localStorage.getItem('kds_brand_id')   || '';
+  const savedOutletId   = localStorage.getItem('kds_outlet_id')   || '';
+  const savedBrandId    = localStorage.getItem('kds_brand_id')    || '';
   const savedOutletName = localStorage.getItem('kds_outlet_name') || '';
-  const sel = document.getElementById('kds-outlet-id');
-  sel.innerHTML = '<option value="">All outlets (no filter)</option>';
-  if (savedOutlet) {
-    const opt = document.createElement('option');
-    opt.value = savedOutlet; opt.textContent = savedOutletName || savedOutlet; opt.selected = true;
-    sel.appendChild(opt);
+  document.getElementById('kds-outlet-id').value = savedOutletId;
+  document.getElementById('kds-brand-id').value  = savedBrandId;
+  const confEl = document.getElementById('kds-code-confirm');
+  if (savedOutletId && savedOutletName) {
+    document.getElementById('kds-code-outlet-name').textContent = savedOutletName;
+    confEl.style.display = '';
+  } else {
+    confEl.style.display = 'none';
   }
-  updateKdsOutletWarn();
+  document.getElementById('kds-code-error').style.display = 'none';
   document.getElementById('kds-srv-overlay').style.display = 'flex';
 }
 
-async function kdsFetchOutlets() {
-  const hintEl = document.getElementById('kds-outlet-hint');
-  const mode     = document.getElementById('kds-tab-cloud').classList.contains('active') ? 'cloud' : 'auto';
-  const cloudUrl = document.getElementById('kds-cloud-url').value.trim().replace(/\/+$/, '');
-  const brandId  = document.getElementById('kds-brand-id').value.trim();
-  const serverBase = mode === 'cloud' ? cloudUrl : window.location.origin;
-  if (!serverBase) { hintEl.textContent = 'Enter a cloud URL first.'; hintEl.style.color = 'var(--danger)'; return; }
-  hintEl.textContent = 'Fetching outlets…'; hintEl.style.color = 'var(--muted)';
-  try {
-    const url = serverBase + '/waiter/outlets' + (brandId ? '?brand_id=' + encodeURIComponent(brandId) : '');
-    const data = await fetch(url, { signal: AbortSignal.timeout(5000) }).then(r => r.json());
-    const outlets = data.outlets || [];
-    const sel = document.getElementById('kds-outlet-id');
-    const current = sel.value;
-    sel.innerHTML = '<option value="">All outlets (no filter)</option>';
-    outlets.forEach(o => {
-      const opt = document.createElement('option');
-      opt.value = o.id; opt.textContent = o.name;
-      if (o.id === current) opt.selected = true;
-      sel.appendChild(opt);
-    });
-    hintEl.textContent = outlets.length ? `${outlets.length} outlet(s) loaded.` : 'No outlets found.';
-    hintEl.style.color = outlets.length ? 'var(--success)' : 'var(--warning)';
-    updateKdsOutletWarn();
-  } catch (e) {
-    hintEl.textContent = 'Cannot reach server: ' + e.message;
-    hintEl.style.color = 'var(--danger)';
-  }
-}
 function closeKdsSrvModal() {
   document.getElementById('kds-srv-overlay').style.display = 'none';
 }
@@ -327,22 +333,29 @@ function setKdsSrvMode(mode) {
 function saveKdsSrvConfig() {
   const mode     = document.getElementById('kds-tab-cloud').classList.contains('active') ? 'cloud' : 'auto';
   const cloudUrl = document.getElementById('kds-cloud-url').value.trim().replace(/\/+$/, '');
-  const brandId  = document.getElementById('kds-brand-id').value.trim();
+  const outletId = document.getElementById('kds-outlet-id').value;
+  const brandId  = document.getElementById('kds-brand-id').value;
+  const outletCode  = (document.getElementById('kds-outlet-code')?.value || '').replace(/\s/g, '');
+  const outletName  = document.getElementById('kds-code-outlet-name')?.textContent || '';
+  const brandIdInput = (document.getElementById('kds-brand-id-input')?.value || '').trim();
   if (mode === 'cloud' && !cloudUrl) { document.getElementById('kds-cloud-url').focus(); return; }
-  if (mode === 'cloud' && !brandId)  { document.getElementById('kds-brand-id').focus();  return; }
-  const outletSel  = document.getElementById('kds-outlet-id');
-  const outletId   = outletSel.value;
-  const outletName = outletSel.options[outletSel.selectedIndex]?.text || '';
+  if (!outletId) {
+    const errEl = document.getElementById('kds-code-error');
+    errEl.textContent = 'Verify the outlet code first — tap "Verify Code".';
+    errEl.style.display = '';
+    return;
+  }
   localStorage.setItem('kds_server_mode', mode);
   if (cloudUrl) localStorage.setItem('kds_cloud_url', cloudUrl);
-  if (brandId)  localStorage.setItem('kds_brand_id', brandId);
-  else          localStorage.removeItem('kds_brand_id');
-  if (outletId) { localStorage.setItem('kds_outlet_id', outletId); localStorage.setItem('kds_outlet_name', outletName); }
-  else          { localStorage.removeItem('kds_outlet_id'); localStorage.removeItem('kds_outlet_name'); }
+  localStorage.setItem('kds_outlet_code', outletCode);
+  localStorage.setItem('kds_outlet_id',   outletId);
+  localStorage.setItem('kds_outlet_name', outletName);
+  localStorage.setItem('kds_brand_id',    brandId || brandIdInput);
   _kdsFallback    = false;
   _kdsHealthFails = 0;
   BASE = getKdsBase();
   updateKdsBadge();
+  checkKdsOutletBanner();
   closeKdsSrvModal();
   if (socket) { socket.disconnect(); socket = null; }
   connect();
@@ -365,12 +378,6 @@ function updateKdsBadge() {
 }
 updateKdsBadge();
 
-// Sync brand_id from electron config on startup (electron KDS only)
-if (typeof window.electronAPI !== 'undefined') {
-  window.electronAPI.getConfig().then(cfg => {
-    if (cfg?.brandId) localStorage.setItem('kds_brand_id', cfg.brandId);
-  }).catch(() => {});
-}
 
 // ─────────────────────────────────────────────────────────────────────────────
 let orders    = [];

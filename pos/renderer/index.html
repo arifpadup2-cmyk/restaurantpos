@@ -1156,12 +1156,31 @@ textarea:focus-visible {
 
     </div>
 
-    <!-- Step 2: Outlet selection -->
+    <!-- Step 2: Outlet code -->
     <div class="setup-step" id="setup-step-outlet">
       <div style="font-size:13px;font-weight:700;color:#111827;margin-bottom:4px">✅ Server connected!</div>
-      <div style="font-size:12px;color:#6b7280;margin-bottom:18px">Select the outlet this terminal belongs to:</div>
-      <div id="outlet-pick-list" style="max-height:260px;overflow-y:auto"></div>
-      <div class="setup-field" style="margin-top:14px">
+      <div style="font-size:12px;color:#6b7280;margin-bottom:18px">Enter your Brand ID and outlet code — both provided by your IT team:</div>
+      <div class="setup-field">
+        <label>Brand ID</label>
+        <input id="setup-brand-id" type="text" placeholder="REST-AB3X9K" autocomplete="off" autocapitalize="none" autocorrect="off"
+          oninput="setupCodeChanged()"
+          style="font-family:monospace;letter-spacing:1px">
+        <span class="setup-hint">Your restaurant's Brand ID — same for all devices in this chain</span>
+      </div>
+      <div class="setup-field">
+        <label>Outlet Code</label>
+        <input id="setup-outlet-code" type="text" maxlength="6" placeholder="aB3!xK" autocomplete="off" autocapitalize="none" autocorrect="off"
+          oninput="setupCodeChanged()"
+          onkeydown="if(event.key==='Enter')setupVerifyCode()"
+          style="font-family:monospace;font-size:26px;letter-spacing:6px;text-align:center;padding:10px">
+        <span class="setup-hint" style="color:#f59e0b">&#9888; Case sensitive — type exactly as given</span>
+      </div>
+      <button class="btn-login" onclick="setupVerifyCode()" style="margin-bottom:12px">🔍 Verify Code</button>
+      <div id="setup-code-confirm" style="display:none;padding:10px 14px;background:#f0fdf4;border:1px solid #86efac;border-radius:8px;margin-bottom:14px">
+        <div style="font-size:13px;font-weight:700;color:#166534" id="setup-code-outlet-name"></div>
+        <div style="font-size:11px;color:#166534;margin-top:2px" id="setup-code-brand-name"></div>
+      </div>
+      <div class="setup-field">
         <label>Terminal Name</label>
         <input id="setup-mid" type="text" placeholder="POS-01" autocomplete="off">
         <span class="setup-hint">E.g. POS-01, CASHIER-2 — identifies this device</span>
@@ -1169,6 +1188,7 @@ textarea:focus-visible {
       <div class="setup-error" id="setup-outlet-error"></div>
       <button class="btn-login" id="btn-setup-confirm" onclick="setupFinalize()" disabled>✔ Confirm &amp; Start</button>
     </div>
+    <input type="hidden" id="setup-outlet-code-verified">
 
     <!-- Hidden fields kept for legacy setupSave() compatibility -->
     <input type="hidden" id="setup-outlet">
@@ -1208,14 +1228,17 @@ textarea:focus-visible {
     <label class="pos-qs-label">Machine / Terminal ID</label>
     <input id="qs-machine-id" type="text" class="pos-qs-input" placeholder="POS-01" autocomplete="off">
 
-    <div class="pos-qs-row">
-      <label class="pos-qs-label" style="margin-bottom:0">Outlet</label>
-      <button class="pos-qs-fetch" onclick="qsFetchOutlets()">Fetch outlets ↓</button>
+    <label class="pos-qs-label">Brand ID</label>
+    <input id="qs-brand-id" type="text" class="pos-qs-input" placeholder="REST-AB3X9K" autocomplete="off"
+      oninput="qsOutletCodeChanged()" style="font-family:monospace;letter-spacing:1px">
+    <label class="pos-qs-label">Outlet Code</label>
+    <input id="qs-outlet-code" type="text" class="pos-qs-input" maxlength="6" placeholder="XK9T2P" autocomplete="off"
+      oninput="this.value=this.value.toUpperCase().replace(/[^A-Z0-9]/g,'');qsOutletCodeChanged()"
+      style="font-family:monospace;font-size:20px;letter-spacing:5px;text-align:center;padding:10px">
+    <div id="qs-outlet-confirm" style="display:none;margin-top:-4px;margin-bottom:8px;padding:8px 10px;background:#f0fdf4;border:1px solid #86efac;border-radius:7px;font-size:12px;color:#166534;font-weight:600">
+      ✓ <span id="qs-outlet-name-confirmed"></span>
     </div>
-    <select id="qs-outlet-sel" class="pos-qs-input">
-      <option value="">Select outlet…</option>
-    </select>
-    <p class="pos-qs-hint" id="qs-outlet-hint" style="margin-top:-8px">Tap "Fetch outlets" to load the list from your server.</p>
+    <p class="pos-qs-hint" style="margin-top:-6px">6-character code from your IT team. Enter code then save — no lookup needed.</p>
 
     <div class="pos-qs-actions">
       <button class="pos-qs-cancel" onclick="closePosQS()">Cancel</button>
@@ -2650,7 +2673,7 @@ let loginCashiers  = [];
 let selectedCashier = null;
 let pinBuffer  = '';
 let _setupAutoData     = null; // data returned by /setup/auto-detect
-let _setupSelectedOutlet = null; // outlet chosen in step 2 of setup
+let _setupSelectedOutlet = null;
 let settings  = {
   restaurant_name:'Restaurant POS', tax_rate:10, currency:'RM',
   receipt_footer:'Thank you!', kot_stay_seconds:10,
@@ -3000,15 +3023,21 @@ function openPosQS() {
   document.getElementById('qs-cloud-fallback').value = cfg.cloudApiUrl || '';
   document.getElementById('qs-cloud-url').value      = cfg.cloudApiUrl || '';
   document.getElementById('qs-machine-id').value     = cfg.machineId   || '';
-  const sel = document.getElementById('qs-outlet-sel');
-  sel.innerHTML = '<option value="">Select outlet…</option>';
-  if (cfg.outletId) {
-    const opt = document.createElement('option');
-    opt.value = cfg.outletId; opt.textContent = cfg.outletName || cfg.outletId; opt.selected = true;
-    sel.appendChild(opt);
+  document.getElementById('qs-brand-id').value       = cfg.brandId     || '';
+  document.getElementById('qs-outlet-code').value    = cfg.outletCode  || '';
+  const confirmEl = document.getElementById('qs-outlet-confirm');
+  const nameEl    = document.getElementById('qs-outlet-name-confirmed');
+  if (cfg.outletName && cfg.outletCode) {
+    nameEl.textContent    = cfg.outletName;
+    confirmEl.style.display = '';
+  } else {
+    confirmEl.style.display = 'none';
   }
-  document.getElementById('qs-outlet-hint').textContent = 'Tap "Fetch outlets" to load the list from your server.';
   document.getElementById('pos-qs-overlay').style.display = 'flex';
+}
+
+function qsOutletCodeChanged() {
+  document.getElementById('qs-outlet-confirm').style.display = 'none';
 }
 
 function closePosQS() {
@@ -3024,64 +3053,56 @@ function setPosQsMode(mode) {
   document.getElementById('qs-cloud-sect').style.display = isCloud ? ''     : 'none';
 }
 
-async function qsFetchOutlets() {
-  const hintEl = document.getElementById('qs-outlet-hint');
-  const isCloud = _qsMode === 'cloud';
-  const ip       = document.getElementById('qs-server-ip').value.trim();
-  const cloudUrl = isCloud
-    ? document.getElementById('qs-cloud-url').value.trim().replace(/\/+$/, '')
-    : document.getElementById('qs-cloud-fallback').value.trim().replace(/\/+$/, '');
-  const serverBase = isCloud ? cloudUrl : (ip ? `http://${ip}:3001` : 'http://localhost:3001');
-  const cfg = window._posConfig || {};
-  const brandId = cfg.brandId || '';
-  hintEl.textContent = 'Fetching outlets…';
-  try {
-    const url = serverBase + '/waiter/outlets' + (brandId ? '?brand_id=' + encodeURIComponent(brandId) : '');
-    const ctrl = new AbortController();
-    setTimeout(() => ctrl.abort(), 5000);
-    const data = await fetch(url, { signal: ctrl.signal }).then(r => r.json());
-    const outlets = data.outlets || [];
-    const sel = document.getElementById('qs-outlet-sel');
-    const current = sel.value;
-    sel.innerHTML = '<option value="">Select outlet…</option>';
-    outlets.forEach(o => {
-      const opt = document.createElement('option');
-      opt.value = o.id; opt.textContent = o.name;
-      if (o.id === current || o.id === cfg.outletId) opt.selected = true;
-      sel.appendChild(opt);
-    });
-    hintEl.textContent = outlets.length ? `${outlets.length} outlet(s) loaded` : 'No outlets found';
-  } catch (e) {
-    hintEl.textContent = 'Cannot reach server: ' + e.message;
-  }
-}
-
 async function savePosQS() {
   const isCloud  = _qsMode === 'cloud';
   const serverIp = document.getElementById('qs-server-ip').value.trim();
   const cloudUrl = isCloud
     ? document.getElementById('qs-cloud-url').value.trim().replace(/\/+$/, '')
     : document.getElementById('qs-cloud-fallback').value.trim().replace(/\/+$/, '');
-  const machineId  = document.getElementById('qs-machine-id').value.trim() || 'POS-01';
-  const outletSel  = document.getElementById('qs-outlet-sel');
-  const outletId   = outletSel.value;
-  const outletName = outletSel.options[outletSel.selectedIndex]?.text || '';
+  const machineId   = document.getElementById('qs-machine-id').value.trim() || 'POS-01';
+  const brandIdVal  = document.getElementById('qs-brand-id').value.trim();
+  const outletCode  = document.getElementById('qs-outlet-code').value.trim().toUpperCase();
 
   if (isCloud && !cloudUrl) { document.getElementById('qs-cloud-url').focus(); return; }
   if (!isCloud && !serverIp) { document.getElementById('qs-server-ip').focus(); return; }
-  if (!outletId) { showToast('Please select an outlet first', 'warning'); return; }
+  if (!brandIdVal) { showToast('Enter your Brand ID', 'warning'); return; }
+  if (outletCode.length !== 6) { showToast('Enter a valid 6-character outlet code', 'warning'); return; }
 
   const btn = document.getElementById('qs-save-btn');
-  btn.disabled = true; btn.textContent = 'Saving…';
+  btn.disabled = true; btn.textContent = 'Verifying…';
 
+  const serverBase = isCloud ? cloudUrl : (serverIp ? `http://${serverIp}:3001` : 'http://localhost:3001');
+  let outletId = '', outletName = '', brandId = '';
+  try {
+    const resp = await fetch(serverBase + '/setup/by-code', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ code: outletCode, brand_id: brandIdVal }),
+      signal: AbortSignal.timeout(6000),
+    });
+    const data = await resp.json();
+    if (!resp.ok) { showToast(data.error || 'Outlet code not found', 'error'); btn.disabled = false; btn.textContent = 'Save & Apply'; return; }
+    outletId   = data.outlet_id;
+    outletName = data.outlet_name;
+    brandId    = data.brand_id;
+    document.getElementById('qs-outlet-name-confirmed').textContent = outletName;
+    document.getElementById('qs-outlet-confirm').style.display = '';
+  } catch (e) {
+    showToast('Cannot reach server to verify code', 'error');
+    btn.disabled = false; btn.textContent = 'Save & Apply';
+    return;
+  }
+
+  btn.textContent = 'Saving…';
   const cfg = {
     ...(window._posConfig || {}),
     connectionMode: _qsMode,
     serverIp:       isCloud ? '' : serverIp,
     cloudApiUrl:    cloudUrl,
     machineId,
+    outletCode,
     outletId,
     outletName,
+    brandId,
   };
 
   const res = await window.posAPI.saveConfig(cfg);
@@ -3599,11 +3620,12 @@ async function setupCloudConnect() {
     if (!data.ok) throw new Error(data.error || 'Server rejected request');
     _setupAutoData = { ...data, _ip: url, _cloudUrl: url };
     errEl.textContent = '';
-    renderOutletPicker(data.outlets || []);
     document.getElementById('setup-step-detect').classList.remove('active');
     document.getElementById('setup-step-outlet').classList.add('active');
+    setupCodeChanged();
     const mid = document.getElementById('setup-mid');
     if (!mid.value) mid.value = (await posAPI.getMachineId()) || 'POS-01';
+    setTimeout(() => document.getElementById('setup-outlet-code')?.focus(), 100);
   } catch (e) {
     errEl.textContent = '❌ ' + e.message;
   }
@@ -3632,6 +3654,7 @@ function showSetupScreen(subtitle) {
   if (subtitle) document.getElementById('setup-subtitle').textContent = subtitle;
   const cfg = window._posConfig || {};
   if (cfg.machineId) document.getElementById('setup-mid').value = cfg.machineId;
+  if (cfg.brandId)   { const el = document.getElementById('setup-brand-id'); if (el) el.value = cfg.brandId; }
   document.getElementById('screen-setup').style.display = 'flex';
   document.getElementById('screen-login').style.display  = 'none';
   setupAutoDetect();
@@ -3660,14 +3683,15 @@ async function setupAutoDetect() {
     const resp = await fetch('http://localhost:3001/setup/auto-detect', { signal: ctrl.signal });
     clearTimeout(tid);
     const data = await resp.json();
-    if (data.ok && data.outlets) {
+    if (data.ok) {
       _setupAutoData = data;
-      renderOutletPicker(data.outlets);
       spinner.style.display = 'none';
       document.getElementById('setup-step-detect').classList.remove('active');
       document.getElementById('setup-step-outlet').classList.add('active');
+      setupCodeChanged();
       const mid = document.getElementById('setup-mid');
       if (!mid.value) mid.value = (await posAPI.getMachineId()) || 'POS-01';
+      setTimeout(() => document.getElementById('setup-outlet-code')?.focus(), 100);
       return;
     }
     throw new Error(data.error || 'Auto-detect failed');
@@ -3700,14 +3724,15 @@ async function setupManualConnect() {
       return;
     }
     const data = await resp.json();
-    if (data.ok && data.outlets) {
+    if (data.ok) {
       _setupAutoData = { ...data, _ip: ip };
-      renderOutletPicker(data.outlets);
       spinner.style.display = 'none';
       document.getElementById('setup-step-detect').classList.remove('active');
       document.getElementById('setup-step-outlet').classList.add('active');
+      setupCodeChanged();
       const mid = document.getElementById('setup-mid');
       if (!mid.value) mid.value = (await posAPI.getMachineId()) || 'POS-01';
+      setTimeout(() => document.getElementById('setup-outlet-code')?.focus(), 100);
       return;
     }
     errEl.textContent = '❌ ' + (data.error || 'Server error');
@@ -3717,64 +3742,82 @@ async function setupManualConnect() {
   spinner.style.display = 'none';
 }
 
-function renderOutletPicker(outlets) {
-  _setupSelectedOutlet = null;
+function setupCodeChanged() {
+  document.getElementById('setup-code-confirm').style.display = 'none';
+  document.getElementById('setup-outlet-code-verified').value = '';
   document.getElementById('btn-setup-confirm').disabled = true;
-  const list = document.getElementById('outlet-pick-list');
-  if (!outlets || !outlets.length) {
-    list.innerHTML = '<div style="text-align:center;color:#64748b;padding:20px 0">No outlets found. Create one in Back Office first.</div>';
-    return;
-  }
-  list.innerHTML = outlets.map(o => `
-    <div class="outlet-pick-item" id="opick-${o.id}"
-         data-oid="${esc(o.id)}" data-name="${esc(o.name)}"
-         data-brand="${esc(o.brand_name||'')}" data-market="${esc(o.market_name||'')}"
-         onclick="pickOutletEl(this)">
-      <div class="outlet-pick-icon">&#127978;</div>
-      <div>
-        <div class="outlet-pick-name">${esc(o.name)}</div>
-        <div class="outlet-pick-sub">${esc(o.brand_name||'')}${o.market_name ? ' · ' + esc(o.market_name) : ''}</div>
-      </div>
-    </div>`).join('');
-  if (outlets.length === 1) pickOutletEl(list.querySelector('.outlet-pick-item'));
 }
 
-function pickOutletEl(el) {
-  if (!el) return;
-  document.querySelectorAll('.outlet-pick-item').forEach(x => x.classList.remove('selected'));
-  el.classList.add('selected');
-  _setupSelectedOutlet = { id: el.dataset.oid, name: el.dataset.name, brand: el.dataset.brand, market: el.dataset.market };
-  document.getElementById('btn-setup-confirm').disabled = false;
+async function setupVerifyCode() {
+  const codeEl    = document.getElementById('setup-outlet-code');
+  const brandIdEl = document.getElementById('setup-brand-id');
+  const errEl     = document.getElementById('setup-outlet-error');
+  const confirmDiv = document.getElementById('setup-code-confirm');
+  const code    = codeEl.value.trim().toUpperCase();
+  const brandId = (brandIdEl?.value || '').trim();
+  errEl.textContent = '';
+  confirmDiv.style.display = 'none';
+  document.getElementById('btn-setup-confirm').disabled = true;
+  if (!brandId) { errEl.textContent = '❌ Enter your Brand ID.'; return; }
+  if (code.length !== 6) { errEl.textContent = '❌ Enter the full 6-character outlet code.'; return; }
+
+  const data = _setupAutoData || {};
+  const ip   = data._ip || 'localhost';
+  const isCloud = _setupConnMode === 'cloud';
+  const serverBase = isCloud ? (data._cloudUrl || '') : (ip.startsWith('http') ? ip : `http://${ip}:3001`);
+
+  errEl.textContent = '⏳ Verifying…';
+  try {
+    const resp = await fetch(serverBase + '/setup/by-code', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ code, brand_id: brandId }),
+      signal: AbortSignal.timeout(6000),
+    });
+    const d = await resp.json();
+    if (!resp.ok) { errEl.textContent = '❌ ' + (d.error || 'Code not found'); return; }
+    errEl.textContent = '';
+    document.getElementById('setup-code-outlet-name').textContent = '🏪 ' + d.outlet_name;
+    document.getElementById('setup-code-brand-name').textContent  = d.brand_name;
+    confirmDiv.style.display = '';
+    document.getElementById('setup-outlet-code-verified').value = JSON.stringify(d);
+    document.getElementById('btn-setup-confirm').disabled = false;
+  } catch (e) {
+    errEl.textContent = '❌ Cannot reach server: ' + e.message;
+  }
 }
 
 async function setupFinalize() {
-  const errEl = document.getElementById('setup-outlet-error');
-  if (!_setupSelectedOutlet) { errEl.textContent = '❌ Please select an outlet.'; return; }
+  const errEl  = document.getElementById('setup-outlet-error');
+  const verRaw = document.getElementById('setup-outlet-code-verified').value;
+  if (!verRaw) { errEl.textContent = '❌ Verify the outlet code first.'; return; }
+  const verified = JSON.parse(verRaw);
   const mid  = document.getElementById('setup-mid').value.trim() || 'POS-01';
   const data = _setupAutoData || {};
   const ip   = data._ip || 'localhost';
   const btn  = document.getElementById('btn-setup-confirm');
   btn.disabled = true;
   errEl.textContent = '';
-  const dbInfo = data.db || {};
+  const dbInfo  = data.db || {};
   const isCloud = _setupConnMode === 'cloud';
   const cfg = {
-    serverIp:        isCloud ? '' : ip,
-    cloudApiUrl:     isCloud ? (data._cloudUrl || '') : '',
-    connectionMode:  _setupConnMode,
-    machineId:       mid,
-    outletId:        _setupSelectedOutlet.id,
-    outletName:      _setupSelectedOutlet.name,
-    apiKey:          data.api_key || '',
-    dbHost:          dbInfo.host || (isCloud ? '' : '127.0.0.1'),
-    dbPort:          String(dbInfo.port || '5432'),
-    dbName:          dbInfo.database || 'restaurant_pos_central',
-    dbUser:          dbInfo.user || 'pos_central_user',
-    dbPass:          dbInfo.password || '',
-    dbSsl:           String(dbInfo.ssl || 'false'),
-    restaurantName:  _setupSelectedOutlet.brand || '',
-    restaurantId:    '',
-    licenseKey:      '',
+    serverIp:       isCloud ? '' : ip,
+    cloudApiUrl:    isCloud ? (data._cloudUrl || '') : '',
+    connectionMode: _setupConnMode,
+    machineId:      mid,
+    outletCode:     verified.outlet_code || '',
+    outletId:       verified.outlet_id,
+    outletName:     verified.outlet_name,
+    brandId:        verified.brand_id,
+    restaurantName: verified.brand_name || '',
+    apiKey:         data.api_key || '',
+    dbHost:         dbInfo.host || (isCloud ? '' : '127.0.0.1'),
+    dbPort:         String(dbInfo.port || '5432'),
+    dbName:         dbInfo.database || 'restaurant_pos_central',
+    dbUser:         dbInfo.user || 'pos_central_user',
+    dbPass:         dbInfo.password || '',
+    dbSsl:          String(dbInfo.ssl || 'false'),
+    restaurantId:   '',
+    licenseKey:     '',
   };
   const res = await posAPI.saveConfig(cfg);
   if (!res.ok) {

@@ -35,13 +35,12 @@ module.exports = function deliveryRouter (sql) {
     } catch (e) { serverError(res, e) }
   })
 
-  // GET /delivery/outlets — public outlet list
+  // GET /delivery/outlets — public outlet list (brand_id required for isolation)
   router.get('/outlets', async (req, res) => {
     try {
       const brandId = req.query.brand_id || null
-      const outlets = brandId
-        ? await sql`SELECT id, name FROM outlets WHERE brand_id = ${brandId} ORDER BY name`
-        : await sql`SELECT id, name FROM outlets ORDER BY name`
+      if (!brandId) return res.json({ outlets: [] })
+      const outlets = await sql`SELECT id, name FROM outlets WHERE brand_id = ${brandId} ORDER BY name`
       res.json({ outlets })
     } catch (e) { serverError(res, e) }
   })
