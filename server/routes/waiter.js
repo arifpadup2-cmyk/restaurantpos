@@ -18,6 +18,7 @@ module.exports = function waiterRouter (sql) {
     try {
       const brandId  = req.query.brand_id  || null
       const outletId = req.query.outlet_id || null
+      if (!brandId) return res.json({ cashiers: [] })
       // Validate outlet belongs to brand before returning cashiers
       if (brandId && outletId) {
         const [owned] = await sql`SELECT id FROM outlets WHERE id = ${outletId} AND brand_id = ${brandId}`

@@ -15,6 +15,7 @@ module.exports = function deliveryRouter (sql) {
     try {
       const brandId  = req.query.brand_id  || null
       const outletId = req.query.outlet_id || null
+      if (!brandId) return res.json({ boys: [] })
       // Validate outlet belongs to brand before returning staff list
       if (brandId && outletId) {
         const [owned] = await sql`SELECT id FROM outlets WHERE id = ${outletId} AND brand_id = ${brandId}`
