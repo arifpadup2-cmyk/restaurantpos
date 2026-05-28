@@ -183,8 +183,7 @@ module.exports = function menuRouter (sql) {
           online_active   = CASE WHEN ${online_active !== undefined} THEN ${online_active} ELSE online_active END,
           partner_prices  = CASE WHEN ${ppJson !== undefined} THEN ${ppJson ?? '{}'}::jsonb ELSE partner_prices END,
           synced_at      = ${Date.now()}
-        WHERE id = ${req.params.id}
-          AND (brand_id = ${rid} OR (${rid} IS NULL AND brand_id IS NULL))
+        WHERE id = ${req.params.id} AND brand_id = ${rid}
         RETURNING *`
       if (!row.length) return res.status(404).json({ error: 'not found' })
       res.json({ ok: true, item: row[0] })
@@ -194,8 +193,8 @@ module.exports = function menuRouter (sql) {
   router.delete('/items/:id', async (req, res) => {
     const rid = req.user?.brand_id
     try {
-      await sql`DELETE FROM menu_items WHERE id = ${req.params.id}
-        AND (brand_id = ${rid} OR (${rid} IS NULL AND brand_id IS NULL))`
+      const [deleted] = await sql`DELETE FROM menu_items WHERE id = ${req.params.id} AND brand_id = ${rid} RETURNING id`
+      if (!deleted) return res.status(404).json({ error: 'not found' })
       res.json({ ok: true })
     } catch (e) { serverError(res, e) }
   })

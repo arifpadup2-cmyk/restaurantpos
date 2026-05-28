@@ -326,7 +326,8 @@ module.exports = function configRouter (sql) {
   router.delete('/outlets/:id', async (req, res) => {
     const rid = req.user.brand_id
     try {
-      await sql`DELETE FROM outlets WHERE id = ${req.params.id} AND brand_id = ${rid}`
+      const [deleted] = await sql`DELETE FROM outlets WHERE id = ${req.params.id} AND brand_id = ${rid} RETURNING id`
+      if (!deleted) return res.status(404).json({ error: 'Outlet not found' })
       res.json({ ok: true })
     } catch (e) { serverError(res, e) }
   })
