@@ -177,10 +177,10 @@ module.exports = function menuRouter (sql) {
           takeaway_price = CASE WHEN ${takeaway_price !== undefined} THEN ${takeaway_price ?? null} ELSE takeaway_price END,
           delivery_price = CASE WHEN ${delivery_price !== undefined} THEN ${delivery_price ?? null} ELSE delivery_price END,
           online_price   = CASE WHEN ${online_price !== undefined} THEN ${online_price ?? null} ELSE online_price END,
-          dine_in_active  = CASE WHEN ${dine_in_active !== undefined} THEN ${dine_in_active} ELSE dine_in_active END,
-          takeaway_active = CASE WHEN ${takeaway_active !== undefined} THEN ${takeaway_active} ELSE takeaway_active END,
-          delivery_active = CASE WHEN ${delivery_active !== undefined} THEN ${delivery_active} ELSE delivery_active END,
-          online_active   = CASE WHEN ${online_active !== undefined} THEN ${online_active} ELSE online_active END,
+          dine_in_active  = CASE WHEN ${dine_in_active !== undefined} THEN ${dine_in_active ?? null} ELSE dine_in_active END,
+          takeaway_active = CASE WHEN ${takeaway_active !== undefined} THEN ${takeaway_active ?? null} ELSE takeaway_active END,
+          delivery_active = CASE WHEN ${delivery_active !== undefined} THEN ${delivery_active ?? null} ELSE delivery_active END,
+          online_active   = CASE WHEN ${online_active !== undefined} THEN ${online_active ?? null} ELSE online_active END,
           partner_prices  = CASE WHEN ${ppJson !== undefined} THEN ${ppJson ?? '{}'}::jsonb ELSE partner_prices END,
           synced_at      = ${Date.now()}
         WHERE id = ${req.params.id} AND brand_id = ${rid}
