@@ -120,8 +120,7 @@ module.exports = function staffRouter (sql) {
           pin_hash = COALESCE(${pinHash}, pin_hash),
           role     = COALESCE(${role ?? null}, role),
           active   = COALESCE(${active ?? null}, active)
-        WHERE id = ${req.params.id}
-          AND (brand_id = ${rid} OR (${rid} IS NULL AND brand_id IS NULL))
+        WHERE id = ${req.params.id} AND brand_id = ${rid}
         RETURNING *`
       if (!row) return res.status(404).json({ error: 'not found' })
       res.json({ ok: true, cashier: safeCashier(row) })
