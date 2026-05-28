@@ -5096,7 +5096,7 @@ async function loadDashboard () {
 
     // Top Items widget — aggregate from order items
     const itemMap = {}
-    orders.forEach(o => { (Array.isArray(o.items)?o.items:[]).filter(Boolean).forEach(it => { if(!itemMap[it]) itemMap[it]={name:it,count:0}; itemMap[it].count++ }) })
+    orders.forEach(o => { (Array.isArray(o.items)?o.items:[]).filter(Boolean).forEach(it => { const n=it.item_name||it.name||String(it); if(!itemMap[n]) itemMap[n]={name:n,count:0}; itemMap[n].count+=(parseInt(it.quantity)||1) }) })
     const topItems = Object.values(itemMap).sort((a,b)=>b.count-a.count).slice(0,5)
     const topEl = document.getElementById('top-items-widget')
     if (topEl) {
