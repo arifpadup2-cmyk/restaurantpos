@@ -44,11 +44,11 @@ textarea:focus-visible {
 .ads-dot.active{width:24px;border-radius:4px;background:#fff}
 .login-header{text-align:center;color:#fff}
 .login-header h1{font-size:28px;font-weight:700;margin-top:10px}
-.login-header p{color:#94a3b8;font-size:14px;margin-top:4px}
+.login-header p{color:#64748b;font-size:14px;margin-top:4px}
 /* cashier selection */
 .cashier-grid{display:flex;gap:12px;flex-wrap:wrap;justify-content:center;max-width:600px;padding:0 16px}
 .cashier-chip{background:rgba(255,255,255,.1);border:2px solid rgba(255,255,255,.15);
-  color:#fff;border-radius:12px;padding:14px 22px;font-size:14px;font-weight:700;
+  color:#cbd5e1;border-radius:12px;padding:14px 22px;font-size:14px;font-weight:700;
   cursor:pointer;transition:.15s;text-align:center;min-width:100px}
 .cashier-chip:hover{background:rgba(249,115,22,.3);border-color:var(--primary)}
 .cashier-chip.selected{background:var(--primary);border-color:var(--primary)}
@@ -63,13 +63,15 @@ textarea:focus-visible {
 .pin-dot.filled{background:var(--secondary);border-color:var(--secondary);box-shadow:0 0 8px rgba(249,115,22,.3)}
 .pin-dot.error{background:var(--danger);border-color:var(--danger);animation:pin-shake 300ms}
 @keyframes pin-shake{0%,100%{transform:translateX(0);box-shadow:0 0 0 rgba(220,38,38,.5)}25%{transform:translateX(-3px);box-shadow:0 0 8px rgba(220,38,38,.6)}75%{transform:translateX(3px);box-shadow:0 0 8px rgba(220,38,38,.6)}}
+@media (prefers-reduced-motion:reduce){.pin-dot.error{animation:none}}
 .pinpad{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
 .pp-btn{padding:16px;border-radius:10px;border:1.5px solid var(--border);background:var(--bg);
-  font-size:20px;font-weight:700;transition:.1s;color:var(--text);cursor:pointer;touch-action:manipulation}
+  font-size:20px;font-weight:700;transition:transform 0.08s cubic-bezier(0.4,0,0.2,1),background 0.15s;color:var(--text);cursor:pointer;touch-action:manipulation}
 .pp-btn:hover{background:var(--primary);color:#fff;border-color:var(--primary)}
 .pp-btn:active{transform:scale(.95)}
 .pp-btn:focus-visible{outline:3px solid var(--primary);outline-offset:2px}
 .pp-btn:focus:not(:focus-visible){outline:none}
+.pp-btn:disabled{cursor:not-allowed}
 .pin-error{color:var(--danger);font-size:12px;text-align:center;margin-top:8px;height:16px}
 /* opening cash step */
 .cash-box{background:#fff;border-radius:16px;padding:28px;width:300px;box-shadow:0 20px 60px rgba(0,0,0,.5);display:none}
@@ -1299,7 +1301,7 @@ textarea:focus-visible {
     <!-- PIN pad (direct — no cashier selection step) -->
     <div class="pin-box show" id="pin-box" aria-label="PIN entry form">
       <div class="pin-cashier">Enter your PIN</div>
-      <div class="pin-dots" id="pin-dots" aria-label="PIN entry indicator" role="status">
+      <div class="pin-dots" id="pin-dots" aria-label="PIN entry (4 digits, shown as dots for security)" role="status">
         <div class="pin-dot" id="pd0" aria-label="PIN digit 1 placeholder"></div>
         <div class="pin-dot" id="pd1" aria-label="PIN digit 2 placeholder"></div>
         <div class="pin-dot" id="pd2" aria-label="PIN digit 3 placeholder"></div>
@@ -4226,30 +4228,39 @@ async function checkTodayShift(cashierId) {
 }
 
 async function verifyPin() {
-  // Look up cashier by PIN in local DB
-  const r = await db.all('SELECT * FROM cashiers WHERE pin=? AND active=1 LIMIT 1', [pinBuffer]);
-  if (!r.ok || !r.data.length) {
-    pinError('Invalid PIN. Try again.');
-    return;
-  }
-  selectedCashier = r.data[0];
+  // Disable buttons during verification
+  const buttons = document.querySelectorAll('.pp-btn');
+  buttons.forEach(b => { b.disabled = true; b.style.opacity = '0.5'; });
 
-  // Check if cashier already has an open shift today
-  const existingShift = await checkTodayShift(selectedCashier.id || selectedCashier.name);
-  if (existingShift) {
-    // Shift already open — go straight to POS
-    cashier = selectedCashier;
-    shift   = existingShift;
-    enterPOS();
-  } else {
-    // New shift — ask opening cash
-    const cur = settings.currency || 'RM';
-    document.getElementById('cash-cashier-name').textContent = `Welcome, ${selectedCashier.name}! 👋`;
-    document.getElementById('cash-currency-label').textContent = `Opening Cash (${cur})`;
-    document.getElementById('login-cash').value = '';
-    document.getElementById('pin-box').classList.remove('show');
-    document.getElementById('cash-box').classList.add('show');
-    setTimeout(() => document.getElementById('login-cash').focus(), 100);
+  try {
+    // Look up cashier by PIN in local DB
+    const r = await db.all('SELECT * FROM cashiers WHERE pin=? AND active=1 LIMIT 1', [pinBuffer]);
+    if (!r.ok || !r.data.length) {
+      pinError('Invalid PIN. Try again.');
+      return;
+    }
+    selectedCashier = r.data[0];
+
+    // Check if cashier already has an open shift today
+    const existingShift = await checkTodayShift(selectedCashier.id || selectedCashier.name);
+    if (existingShift) {
+      // Shift already open — go straight to POS
+      cashier = selectedCashier;
+      shift   = existingShift;
+      enterPOS();
+    } else {
+      // New shift — ask opening cash
+      const cur = settings.currency || 'RM';
+      document.getElementById('cash-cashier-name').textContent = `Welcome, ${selectedCashier.name}! 👋`;
+      document.getElementById('cash-currency-label').textContent = `Opening Cash (${cur})`;
+      document.getElementById('login-cash').value = '';
+      document.getElementById('pin-box').classList.remove('show');
+      document.getElementById('cash-box').classList.add('show');
+      setTimeout(() => document.getElementById('login-cash').focus(), 100);
+    }
+  } finally {
+    // Re-enable buttons
+    buttons.forEach(b => { b.disabled = false; b.style.opacity = '1'; });
   }
 }
 
