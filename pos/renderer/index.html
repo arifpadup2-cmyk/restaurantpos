@@ -54,18 +54,22 @@ textarea:focus-visible {
 .cashier-chip.selected{background:var(--primary);border-color:var(--primary)}
 .cashier-none{color:#64748b;font-size:13px;text-align:center;padding:12px}
 /* PIN pad */
-.pin-box{background:#fff;border-radius:16px;padding:28px;width:300px;box-shadow:0 20px 60px rgba(0,0,0,.5);display:none}
+.pin-box{background:#fff;border-radius:16px;padding:28px;width:90vw;max-width:300px;box-shadow:0 20px 60px rgba(0,0,0,.5);display:none}
 .pin-box.show{display:block}
+@media (max-width:375px){.pin-box{padding:24px;width:95vw}.pp-btn{padding:14px;font-size:18px}}
 .pin-cashier{font-size:15px;font-weight:700;text-align:center;margin-bottom:14px;color:var(--secondary)}
 .pin-dots{display:flex;justify-content:center;gap:12px;margin-bottom:20px}
 .pin-dot{width:18px;height:18px;border-radius:50%;border:2.5px solid var(--border);transition:.15s}
-.pin-dot.filled{background:var(--secondary);border-color:var(--secondary)}
-.pin-dot.error{background:var(--danger);border-color:var(--danger)}
+.pin-dot.filled{background:var(--secondary);border-color:var(--secondary);box-shadow:0 0 8px rgba(249,115,22,.3)}
+.pin-dot.error{background:var(--danger);border-color:var(--danger);animation:pin-shake 300ms}
+@keyframes pin-shake{0%,100%{transform:translateX(0);box-shadow:0 0 0 rgba(220,38,38,.5)}25%{transform:translateX(-3px);box-shadow:0 0 8px rgba(220,38,38,.6)}75%{transform:translateX(3px);box-shadow:0 0 8px rgba(220,38,38,.6)}}
 .pinpad{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
 .pp-btn{padding:16px;border-radius:10px;border:1.5px solid var(--border);background:var(--bg);
-  font-size:20px;font-weight:700;transition:.1s;color:var(--text)}
+  font-size:20px;font-weight:700;transition:.1s;color:var(--text);cursor:pointer;touch-action:manipulation}
 .pp-btn:hover{background:var(--primary);color:#fff;border-color:var(--primary)}
 .pp-btn:active{transform:scale(.95)}
+.pp-btn:focus-visible{outline:3px solid var(--primary);outline-offset:2px}
+.pp-btn:focus:not(:focus-visible){outline:none}
 .pin-error{color:var(--danger);font-size:12px;text-align:center;margin-top:8px;height:16px}
 /* opening cash step */
 .cash-box{background:#fff;border-radius:16px;padding:28px;width:300px;box-shadow:0 20px 60px rgba(0,0,0,.5);display:none}
@@ -1293,29 +1297,29 @@ textarea:focus-visible {
     </div>
 
     <!-- PIN pad (direct — no cashier selection step) -->
-    <div class="pin-box show" id="pin-box">
+    <div class="pin-box show" id="pin-box" aria-label="PIN entry form">
       <div class="pin-cashier">Enter your PIN</div>
-      <div class="pin-dots" id="pin-dots">
-        <div class="pin-dot" id="pd0"></div>
-        <div class="pin-dot" id="pd1"></div>
-        <div class="pin-dot" id="pd2"></div>
-        <div class="pin-dot" id="pd3"></div>
+      <div class="pin-dots" id="pin-dots" aria-label="PIN entry indicator" role="status">
+        <div class="pin-dot" id="pd0" aria-label="PIN digit 1 placeholder"></div>
+        <div class="pin-dot" id="pd1" aria-label="PIN digit 2 placeholder"></div>
+        <div class="pin-dot" id="pd2" aria-label="PIN digit 3 placeholder"></div>
+        <div class="pin-dot" id="pd3" aria-label="PIN digit 4 placeholder"></div>
       </div>
-      <div class="pinpad">
-        <button class="pp-btn" onclick="pinKey('1')">1</button>
-        <button class="pp-btn" onclick="pinKey('2')">2</button>
-        <button class="pp-btn" onclick="pinKey('3')">3</button>
-        <button class="pp-btn" onclick="pinKey('4')">4</button>
-        <button class="pp-btn" onclick="pinKey('5')">5</button>
-        <button class="pp-btn" onclick="pinKey('6')">6</button>
-        <button class="pp-btn" onclick="pinKey('7')">7</button>
-        <button class="pp-btn" onclick="pinKey('8')">8</button>
-        <button class="pp-btn" onclick="pinKey('9')">9</button>
-        <button class="pp-btn" onclick="pinBack()" style="color:var(--danger)">⌫</button>
-        <button class="pp-btn" onclick="pinKey('0')">0</button>
-        <button class="pp-btn" onclick="pinBuffer='';updatePinDots();" style="font-size:13px;color:var(--muted)">✕</button>
+      <div class="pinpad" role="group" aria-label="PIN number pad buttons">
+        <button class="pp-btn" onclick="pinKey('1')" aria-label="PIN digit 1">1</button>
+        <button class="pp-btn" onclick="pinKey('2')" aria-label="PIN digit 2">2</button>
+        <button class="pp-btn" onclick="pinKey('3')" aria-label="PIN digit 3">3</button>
+        <button class="pp-btn" onclick="pinKey('4')" aria-label="PIN digit 4">4</button>
+        <button class="pp-btn" onclick="pinKey('5')" aria-label="PIN digit 5">5</button>
+        <button class="pp-btn" onclick="pinKey('6')" aria-label="PIN digit 6">6</button>
+        <button class="pp-btn" onclick="pinKey('7')" aria-label="PIN digit 7">7</button>
+        <button class="pp-btn" onclick="pinKey('8')" aria-label="PIN digit 8">8</button>
+        <button class="pp-btn" onclick="pinKey('9')" aria-label="PIN digit 9">9</button>
+        <button class="pp-btn" onclick="pinBack()" aria-label="Delete last digit" style="color:var(--danger)">⌫</button>
+        <button class="pp-btn" onclick="pinKey('0')" aria-label="PIN digit 0">0</button>
+        <button class="pp-btn" onclick="pinBuffer='';updatePinDots();" aria-label="Clear all digits" style="font-size:13px;color:var(--muted)">✕</button>
       </div>
-      <div class="pin-error" id="pin-error"></div>
+      <div class="pin-error" id="pin-error" role="status" aria-live="polite" aria-atomic="true"></div>
     </div>
 
     <!-- Opening cash (only shown for new shift) -->
@@ -2583,18 +2587,18 @@ textarea:focus-visible {
       <div class="mgr-pin-dot" id="mpd3"></div>
     </div>
     <div class="pinpad">
-      <button class="pp-btn" onclick="mgrPinKey('1')">1</button>
-      <button class="pp-btn" onclick="mgrPinKey('2')">2</button>
-      <button class="pp-btn" onclick="mgrPinKey('3')">3</button>
-      <button class="pp-btn" onclick="mgrPinKey('4')">4</button>
-      <button class="pp-btn" onclick="mgrPinKey('5')">5</button>
-      <button class="pp-btn" onclick="mgrPinKey('6')">6</button>
-      <button class="pp-btn" onclick="mgrPinKey('7')">7</button>
-      <button class="pp-btn" onclick="mgrPinKey('8')">8</button>
-      <button class="pp-btn" onclick="mgrPinKey('9')">9</button>
-      <button class="pp-btn" onclick="mgrPinKey('back')" style="color:var(--danger)">⌫</button>
-      <button class="pp-btn" onclick="mgrPinKey('0')">0</button>
-      <button class="pp-btn" onclick="closeModal('modal-manager')" style="color:var(--muted)">✕</button>
+      <button class="pp-btn" onclick="mgrPinKey('1')" aria-label="PIN digit 1">1</button>
+      <button class="pp-btn" onclick="mgrPinKey('2')" aria-label="PIN digit 2">2</button>
+      <button class="pp-btn" onclick="mgrPinKey('3')" aria-label="PIN digit 3">3</button>
+      <button class="pp-btn" onclick="mgrPinKey('4')" aria-label="PIN digit 4">4</button>
+      <button class="pp-btn" onclick="mgrPinKey('5')" aria-label="PIN digit 5">5</button>
+      <button class="pp-btn" onclick="mgrPinKey('6')" aria-label="PIN digit 6">6</button>
+      <button class="pp-btn" onclick="mgrPinKey('7')" aria-label="PIN digit 7">7</button>
+      <button class="pp-btn" onclick="mgrPinKey('8')" aria-label="PIN digit 8">8</button>
+      <button class="pp-btn" onclick="mgrPinKey('9')" aria-label="PIN digit 9">9</button>
+      <button class="pp-btn" onclick="mgrPinKey('back')" aria-label="Delete last digit" style="color:var(--danger)">⌫</button>
+      <button class="pp-btn" onclick="mgrPinKey('0')" aria-label="PIN digit 0">0</button>
+      <button class="pp-btn" onclick="closeModal('modal-manager')" aria-label="Close manager PIN" style="color:var(--muted)">✕</button>
     </div>
     <div class="mgr-pin-error" id="mgr-pin-error"></div>
   </div>
@@ -4175,6 +4179,42 @@ function pinError(msg) {
   }
   setTimeout(() => { pinBuffer = ''; updatePinDots(); document.getElementById('pin-error').textContent = ''; }, 900);
 }
+
+// Keyboard support for PIN entry (accessibility)
+document.addEventListener('keydown', (e) => {
+  const pinBox = document.getElementById('pin-box');
+  const mgrModal = document.getElementById('modal-manager');
+
+  // Only handle keyboard input when PIN pad is visible
+  if (!pinBox?.classList.contains('show') && !mgrModal?.classList.contains('show')) return;
+
+  // Digit keys 0-9
+  if (e.key >= '0' && e.key <= '9') {
+    e.preventDefault();
+    if (pinBox?.classList.contains('show')) pinKey(e.key);
+    else if (mgrModal?.classList.contains('show')) mgrPinKey(e.key);
+  }
+
+  // Backspace to delete last digit
+  if (e.key === 'Backspace') {
+    e.preventDefault();
+    if (pinBox?.classList.contains('show')) pinBack();
+    else if (mgrModal?.classList.contains('show')) mgrPinKey('back');
+  }
+
+  // Enter to submit PIN
+  if (e.key === 'Enter') {
+    e.preventDefault();
+    if (pinBox?.classList.contains('show') && pinBuffer.length === 4) verifyPin();
+  }
+
+  // Escape to cancel
+  if (e.key === 'Escape') {
+    e.preventDefault();
+    if (pinBox?.classList.contains('show')) cancelPin();
+    else if (mgrModal?.classList.contains('show')) closeModal('modal-manager');
+  }
+});
 
 async function checkTodayShift(cashierId) {
   const midnight = new Date(); midnight.setHours(0, 0, 0, 0);
