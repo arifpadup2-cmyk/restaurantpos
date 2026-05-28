@@ -6327,7 +6327,7 @@ function cascadeRptFilters () {
   }
   const osel = document.getElementById('rpt-outlet')
   if (!osel) return
-  const prevOut = osel.value
+  const prevOut = osel.value || _ctxOutlet  // fall back to global ctx outlet when no selection yet
   let outlets = _rptFilterData.outlets || []
   if (brand)  outlets = outlets.filter(o => o.brand_id  === brand)
   if (market) outlets = outlets.filter(o => o.market_id === market)
@@ -6430,7 +6430,7 @@ async function loadReport () {
 
   const brand_id   = document.getElementById('rpt-brand')?.value   || ''
   const market_id  = document.getElementById('rpt-market')?.value  || ''
-  const outlet_id  = document.getElementById('rpt-outlet')?.value  || ''
+  const outlet_id  = document.getElementById('rpt-outlet')?.value  || _ctxOutlet || ''
 
   const params = new URLSearchParams({ from, to })
   if (brand_id)  params.set('brand_id',  brand_id)
@@ -9401,7 +9401,7 @@ function setQFPeriod(barId, fromId, toId, loadFn, period) {
   } else if (period === 'month') {
     from.setDate(1);
   }
-  const fmt = d => d.toISOString().slice(0,10);
+  const fmt = d => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
   if (fromId) { const el=document.getElementById(fromId); if(el) el.value=fmt(from); }
   if (toId)   { const el=document.getElementById(toId);   if(el) el.value=fmt(to);   }
   if (loadFn) loadFn();
