@@ -2034,12 +2034,6 @@ textarea:focus-visible {
             <p style="font-size:13px;color:var(--muted);margin-bottom:14px">
               Printers are stored in the local database. Add a Windows OS printer or a network thermal printer.
             </p>
-            <!-- Printer Type Tabs -->
-            <div style="display:flex;gap:8px;margin-bottom:14px;border-bottom:1.5px solid var(--border);padding-bottom:0">
-              <button class="printer-type-tab active" onclick="filterPrintersByType('all')" style="padding:10px 16px;border:none;background:none;cursor:pointer;font-size:13px;font-weight:600;color:var(--text);border-bottom:3px solid transparent;transition:all .2s;position:relative;bottom:-1.5px">📋 All</button>
-              <button class="printer-type-tab" onclick="filterPrintersByType('windows')" style="padding:10px 16px;border:none;background:none;cursor:pointer;font-size:13px;font-weight:600;color:var(--text);border-bottom:3px solid transparent;transition:all .2s;position:relative;bottom:-1.5px">🪟 Windows Printers</button>
-              <button class="printer-type-tab" onclick="filterPrintersByType('network')" style="padding:10px 16px;border:none;background:none;cursor:pointer;font-size:13px;font-weight:600;color:var(--text);border-bottom:3px solid transparent;transition:all .2s;position:relative;bottom:-1.5px">🌐 Network Printers</button>
-            </div>
             <div id="printer-list-wrap" style="margin-bottom:14px">
               <table style="width:100%;border-collapse:collapse;font-size:13px">
                 <thead>
@@ -6885,48 +6879,7 @@ function showSettingsMenu(menuId) {
 // ═══════════════════════════════════════════════════════════════
 //  PRINTER SETTINGS  (stored in local DB)
 // ═══════════════════════════════════════════════════════════════
-let _currentPrinterType = 'all';
-
-function filterPrintersByType(type) {
-  _currentPrinterType = type;
-
-  // Update tab styling
-  const tabs = document.querySelectorAll('.printer-type-tab');
-  tabs.forEach(tab => {
-    tab.style.borderBottomColor = 'transparent';
-    tab.style.color = 'var(--text)';
-  });
-  const activeTab = Array.from(tabs).find(t => t.textContent.includes(type === 'all' ? 'All' : type === 'windows' ? 'Windows' : 'Network'));
-  if (activeTab) {
-    activeTab.style.borderBottomColor = 'var(--primary)';
-    activeTab.style.color = 'var(--primary)';
-  }
-
-  // Filter and re-render rows
-  const tbody = document.getElementById('printer-list-body');
-  if (!tbody) return;
-
-  const rows = tbody.querySelectorAll('tr');
-  rows.forEach(row => {
-    if (type === 'all') {
-      row.style.display = '';
-    } else {
-      const connCell = row.cells[2]?.textContent.trim();
-      const matches = (type === 'windows' && connCell === 'Windows') || (type === 'network' && connCell === 'Network');
-      row.style.display = matches ? '' : 'none';
-    }
-  });
-
-  // Show message if no matches
-  const visibleRows = Array.from(rows).filter(r => r.style.display !== 'none');
-  if (visibleRows.length === 0 && rows.length > 0) {
-    tbody.innerHTML += `<tr><td colspan="7" style="padding:16px;text-align:center;color:var(--muted)">No ${type} printers found.</td></tr>`;
-  }
-}
-
 async function loadPrinterSettings() {
-  _currentPrinterType = 'all';
-
   const r = await db.all(`SELECT * FROM printers ORDER BY name`);
   const rows = r.ok ? r.data : [];
   const roleLabel = { receipt: 'Receipt', kot: 'KOT', both: 'Receipt+KOT' };
@@ -6952,13 +6905,6 @@ async function loadPrinterSettings() {
   const msg = document.getElementById('printer-status-msg');
   msg.textContent = rows.length ? `${rows.length} printer(s) in local database.` : '';
   msg.style.color = 'var(--muted)';
-
-  // Reset tab styling to "All" tab
-  const tabs = document.querySelectorAll('.printer-type-tab');
-  tabs.forEach((tab, idx) => {
-    tab.style.borderBottomColor = idx === 0 ? 'var(--primary)' : 'transparent';
-    tab.style.color = idx === 0 ? 'var(--primary)' : 'var(--text)';
-  });
 }
 
 let _pmOsPrinters = [];
