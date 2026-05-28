@@ -291,14 +291,16 @@ textarea:focus-visible {
 .entry-cust-inputs input{padding:7px 10px;border:1.5px solid var(--border);border-radius:6px;font-size:13px;background:var(--bg);color:var(--text);flex:1;min-width:80px}
 .entry-cust-inputs input:focus{border-color:var(--primary);outline:none}
 /* Table Select Popup */
-.ts-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:12px;margin-bottom:20px;max-height:60vh;overflow-y:auto}
+.ts-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin-bottom:20px;max-height:60vh;overflow-y:auto}
 .ts-btn{padding:18px 8px;border-radius:12px;border:2px solid;font-size:14px;font-weight:700;
-  cursor:pointer;text-align:center;transition:.15s;display:flex;flex-direction:column;
-  align-items:center;justify-content:center;gap:5px;min-height:90px}
+  cursor:pointer;text-align:center;transition:all 200ms ease-out;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;gap:5px;min-height:90px;touch-action:manipulation;animation:stagger-in 400ms ease-out backwards}
 .ts-available{background:var(--success-bg);border-color:var(--success);color:var(--success)}
-.ts-available:hover,.ts-available:active{background:var(--success);color:#fff}
+.ts-available:hover{background:var(--success);color:#fff}
+.ts-available:active{transform:scale(.95);background:var(--success);color:#fff}
 .ts-occupied{background:var(--danger-bg);border-color:var(--danger);color:var(--danger);opacity:.9}
-.ts-occupied:hover,.ts-occupied:active{background:#fee2e2}
+.ts-occupied:hover{background:#fee2e2}
+.ts-occupied:active{transform:scale(.95);background:#fee2e2}
 .ts-tname{font-size:18px;font-weight:800}
 .ts-status{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.5px}
 
@@ -451,10 +453,13 @@ textarea:focus-visible {
 
 /* ── MODALS ──────────────────────────────────── */
 .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:500;
-  display:none;align-items:center;justify-content:center}
+  display:none;align-items:center;justify-content:center;opacity:0;animation:fade-in-overlay .25s ease-out forwards}
 .modal-overlay.show{display:flex}
 .modal{background:var(--card);border-radius:14px;padding:28px;min-width:440px;max-width:92vw;
-  max-height:90vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.3)}
+  max-height:90vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.3);opacity:0;transform:scale(.95);animation:modal-enter .3s cubic-bezier(.34,.1,.64,1) forwards}
+@keyframes fade-in-overlay{from{opacity:0}to{opacity:1}}
+@keyframes modal-enter{from{opacity:0;transform:scale(.95)}to{opacity:1;transform:scale(1)}}
+@keyframes stagger-in{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
 .modal-sm{min-width:360px}
 .modal h3{font-size:17px;font-weight:700;margin-bottom:20px}
 .modal-footer{display:flex;gap:10px;justify-content:flex-end;margin-top:20px}
@@ -877,6 +882,8 @@ textarea:focus-visible {
 /* Order panel */
 .order-panel{width:320px;background:#fff;border-left:2px solid var(--border);display:flex;flex-direction:column;flex-shrink:0;min-width:300px}
 @media(min-width:1400px){.order-panel{width:340px}}
+@media(max-width:768px){.ts-grid{grid-template-columns:repeat(3,1fr)}}
+@media(max-width:500px){.ts-grid{grid-template-columns:repeat(2,1fr)}}
 .op-header{display:flex;align-items:center;padding:10px 12px;border-bottom:1px solid var(--border);gap:6px;flex-shrink:0;background:#f8fafc}
 .op-table-name{font-size:14px;font-weight:800;color:var(--secondary);flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .op-edit-btn{width:44px;height:44px;border-radius:8px;border:2px solid var(--border);background:#fff;color:var(--muted);font-size:12px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:.15s}
@@ -941,9 +948,9 @@ textarea:focus-visible {
 .ebb-sub{font-size:11px;color:var(--muted);text-align:center;line-height:1.1}
 /* New order type popup */
 .notp-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:4px}
-.notp-btn{padding:22px 14px;border-radius:14px;border:2px solid var(--border);cursor:pointer;text-align:center;transition:.15s;background:var(--bg);display:flex;flex-direction:column;align-items:center;gap:8px;min-height:110px;position:relative}
+.notp-btn{padding:22px 14px;border-radius:14px;border:2px solid var(--border);cursor:pointer;text-align:center;transition:all 200ms ease-out;background:var(--bg);display:flex;flex-direction:column;align-items:center;gap:8px;min-height:110px;position:relative;touch-action:manipulation}
 .notp-btn:hover{border-color:var(--primary);background:#fff7ed}
-.notp-btn:active{transform:scale(.97)}
+.notp-btn:active{transform:scale(.95);opacity:.8}
 .notp-icon{font-size:32px;line-height:1}
 .notp-label{font-size:14px;font-weight:800;color:var(--text)}
 .notp-cat-badge{position:absolute;top:6px;right:8px;font-size:9px;font-weight:700;padding:2px 6px;border-radius:4px;text-transform:uppercase;letter-spacing:.04em}
@@ -2332,16 +2339,16 @@ textarea:focus-visible {
   <div class="modal modal-sm">
     <h3 style="display:flex;align-items:center;gap:8px"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="20" height="20"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>New Order</h3>
     <div class="notp-grid">
-      <button class="notp-btn" onclick="closeModal('modal-new-order');showTableSelectPopup()">
+      <button class="notp-btn" onclick="closeModal('modal-new-order');showTableSelectPopup()" aria-label="Create Dine In order">
         <span class="notp-icon">🍽️</span><span class="notp-label">Dine In</span>
       </button>
-      <button class="notp-btn" onclick="closeModal('modal-new-order');showPosEntry('takeaway')">
+      <button class="notp-btn" onclick="closeModal('modal-new-order');showPosEntry('takeaway')" aria-label="Create Take Away order">
         <span class="notp-icon">🛍️</span><span class="notp-label">Take Away</span>
       </button>
-      <button class="notp-btn" onclick="closeModal('modal-new-order');showPosEntry('delivery')">
+      <button class="notp-btn" onclick="closeModal('modal-new-order');showPosEntry('delivery')" aria-label="Create Delivery order">
         <span class="notp-icon">🚗</span><span class="notp-label">Delivery</span>
       </button>
-      <button class="notp-btn" onclick="closeModal('modal-new-order');showPosEntry('online')">
+      <button class="notp-btn" onclick="closeModal('modal-new-order');showPosEntry('online')" aria-label="Create Online order">
         <span class="notp-icon">📱</span><span class="notp-label">Online</span>
       </button>
     </div>
@@ -4554,15 +4561,19 @@ async function showTableSelectPopup() {
   if (!tables.length) {
     grid.innerHTML = `<div class="empty-state"><span class="es-icon">${ic('chair',48)}</span><span>No tables configured.<br>Add tables in Back Office.</span></div>`;
   } else {
+    let tableIndex = 0;
     const renderTableBtn = t => {
       const occupied = t.status === 'occupied';
       const cls   = occupied ? 'ts-occupied' : 'ts-available';
       const dotIc = occupied ? ic('dotRed',20) : ic('dotGreen',20);
       const lbl   = occupied ? 'Occupied' : 'Available';
       const seatHint = t.seat_count ? `<span class="ts-seat-chip">${ic('chair',12)} ${t.seat_count}</span>` : '';
+      const staggerDelay = (tableIndex++) * 30;
       return `<button class="ts-btn ${cls}"
         data-table-id="${t.id}" data-table-name="${esc(t.name)}"
-        onclick="selectTableAndEnter('${t.id}','${esc(t.name)}','${t.status}')">
+        style="animation-delay:${staggerDelay}ms"
+        onclick="selectTableAndEnter('${t.id}','${esc(t.name)}','${t.status}')"
+        aria-label="${esc(t.name)} - ${lbl}">
         <div class="ts-longpress-ring"></div>
         <span style="display:flex;align-items:center;justify-content:center">${dotIc}</span>
         <span class="ts-tname">${esc(t.name)}</span>
