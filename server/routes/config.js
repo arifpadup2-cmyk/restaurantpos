@@ -242,8 +242,10 @@ module.exports = function configRouter (sql) {
   router.delete('/markets/:id', async (req, res) => {
     const rid = req.user.brand_id
     try {
+      const [market] = await sql`SELECT id FROM markets WHERE id = ${req.params.id} AND brand_id = ${rid}`
+      if (!market) return res.status(404).json({ error: 'Market not found' })
       let linked = 0
-      try { const [c] = await sql`SELECT COUNT(*)::int AS n FROM outlets WHERE market_id = ${req.params.id}`; linked = c?.n || 0 } catch (_) {}
+      try { const [c] = await sql`SELECT COUNT(*)::int AS n FROM outlets WHERE market_id = ${req.params.id} AND brand_id = ${rid}`; linked = c?.n || 0 } catch (_) {}
       if (linked > 0) return res.status(409).json({ error: 'This market has outlets linked. Remove the outlets first.' })
       await sql`DELETE FROM markets WHERE id = ${req.params.id} AND brand_id = ${rid}`
       res.json({ ok: true })
