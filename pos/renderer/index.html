@@ -2109,6 +2109,57 @@ textarea:focus-visible {
             </div>
           </div>
 
+          <!-- ── PRINTER PROMPT MODAL (no printer configured) ── -->
+          <div id="printer-prompt-modal" onclick="if(event.target===this)printerPromptResolve(null)" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:9500;align-items:center;justify-content:center">
+            <div style="background:#fff;border-radius:12px;padding:28px;max-width:420px;width:90%;box-shadow:0 20px 25px -5px rgba(0,0,0,.1)">
+              <h3 style="margin:0 0 8px;font-size:17px;font-weight:700">🖨 Select Printer</h3>
+              <p id="printer-prompt-msg" style="font-size:13px;color:#64748b;margin:0 0 16px">No printer configured. Select one to continue:</p>
+              <div id="printer-prompt-list" style="display:flex;flex-direction:column;gap:8px;margin-bottom:20px;max-height:300px;overflow-y:auto">Loading printers…</div>
+              <div style="display:flex;gap:10px;justify-content:flex-end">
+                <button class="btn-outline" onclick="printerPromptResolve(null)">Skip Printing</button>
+                <button id="printer-prompt-ok" class="btn-primary" onclick="printerPromptConfirm()" style="white-space:nowrap">Use Selected</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- ── BILL PRINTER CONFIGURATION ── -->
+          <div class="settings-section" id="bill-printer-section">
+            <h3 style="display:flex;align-items:center;gap:8px"><span style="font-size:18px">🧾</span>Bill Printer Configuration</h3>
+            <p style="font-size:13px;color:var(--muted);margin-bottom:14px">Printer for customer receipts and bills.</p>
+            <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-bottom:14px">
+              <select id="bill-printer-sel" style="flex:1;min-width:200px;padding:8px 10px;border:1.5px solid var(--border);border-radius:7px;background:var(--card);color:var(--text);font-size:13px">
+                <option value="">— Not configured (will ask when printing) —</option>
+              </select>
+              <button class="btn-primary" onclick="savePrinterAssignments()" style="white-space:nowrap">Save</button>
+            </div>
+            <p id="bill-printer-status" style="font-size:12px;color:var(--muted);margin:0"></p>
+          </div>
+
+          <!-- ── MASTER KOT PRINTER CONFIGURATION ── -->
+          <div class="settings-section" id="master-kot-section">
+            <h3 style="display:flex;align-items:center;gap:8px"><span style="font-size:18px">🖨</span>Master KOT Printer Configuration</h3>
+            <p style="font-size:13px;color:var(--muted);margin-bottom:14px">Single printer receives one KOT with all items. Takes priority over kitchen-wise routing.</p>
+            <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-bottom:14px">
+              <select id="master-kot-sel" style="flex:1;min-width:200px;padding:8px 10px;border:1.5px solid var(--border);border-radius:7px;background:var(--card);color:var(--text);font-size:13px">
+                <option value="">— Not configured —</option>
+              </select>
+              <button class="btn-primary" onclick="savePrinterAssignments()" style="white-space:nowrap">Save</button>
+            </div>
+            <p id="master-kot-status" style="font-size:12px;color:var(--muted);margin:0"></p>
+          </div>
+
+          <!-- ── KITCHEN DEPARTMENT-WISE KOT CONFIGURATION ── -->
+          <div class="settings-section" id="kitchen-kot-section">
+            <h3 style="display:flex;align-items:center;gap:8px"><span style="font-size:18px">🍳</span>Kitchen Department-wise KOT Configuration</h3>
+            <p style="font-size:13px;color:var(--muted);margin-bottom:14px">Assign printer per kitchen. Items routed by category → kitchen. Local only, no server sync. Used when Master KOT not set.</p>
+            <div id="kitchen-printer-rows" style="margin-bottom:14px;border:1px solid var(--border);border-radius:8px;overflow:hidden">Loading kitchens…</div>
+            <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px">
+              <button class="btn-primary" onclick="saveKitchenPrinterConfig()">Save Kitchen Config</button>
+              <button class="btn-outline" onclick="loadPrinterAssignments()">↻ Refresh</button>
+            </div>
+            <p id="kitchen-printer-status" style="font-size:12px;color:var(--muted);margin:0"></p>
+          </div>
+
           <div class="settings-group-label">⚙️ System / Technical — change only when reconfiguring this terminal</div>
           <div class="settings-system-group">
           <div class="settings-section">
@@ -4188,7 +4239,7 @@ function showView(id) {
   if (id === 'day-close')   loadDaySummary();
   if (id === 'orders')      loadActiveOrders();
   if (id === 'receipts')    loadReceipts();
-  if (id === 'settings')    { loadPrinterSettings(); loadConnectionSettings(); renderThemeSwatches(); }
+  if (id === 'settings')    { loadPrinterSettings(); loadPrinterAssignments(); loadConnectionSettings(); renderThemeSwatches(); }
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -5307,6 +5358,7 @@ function pushToCart(item, variantId, variantName, variantPrice, modifiers) {
       originalPrice: unitPrice,
       total: unitPrice, notes: '',
       comp: false,
+      categoryId:   item.category_id || null,
       categoryName: (menu.categories.find(c => c.id === item.category_id) || {}).name || '',
       variantId:   variantId   || null,
       variantName: variantName || null,
@@ -5730,8 +5782,12 @@ async function confirmPayment() {
 async function printDraftBill() {
   if (!cart.items.length) { showToast('Cart is empty.', 'warning'); return; }
   const { subtotal, taxAmt, discAmt, total } = calcTotals();
-  const rp = await getReceiptPrinter();
-  const billPrinter = rp?.windows_name || (window._posConfig && window._posConfig.billPrinter) || '';
+  const rp = await resolveBillPrinter();
+  let billPrinter = rp?.windows_name || (window._posConfig && window._posConfig.billPrinter) || '';
+  if (!billPrinter) {
+    billPrinter = await showPrinterPrompt('No bill printer configured. Select printer:');
+    if (!billPrinter) return;
+  }
   await print.receipt({
     restaurantName:  settings.restaurant_name,
     orderNumber:     cart.orderNumber || '---',
@@ -5754,8 +5810,12 @@ async function printDraftBill() {
 }
 
 async function printReceipt(order) {
-  const rp = await getReceiptPrinter();
-  const billPrinter = rp?.windows_name || (window._posConfig && window._posConfig.billPrinter) || '';
+  const rp = await resolveBillPrinter();
+  let billPrinter = rp?.windows_name || (window._posConfig && window._posConfig.billPrinter) || '';
+  if (!billPrinter) {
+    billPrinter = await showPrinterPrompt('No bill printer configured. Select printer:');
+    if (!billPrinter) return;
+  }
   await print.receipt({
     restaurantName: settings.restaurant_name,
     orderNumber:    order.order_number,
@@ -5960,6 +6020,12 @@ async function reprintReceipt(orderId) {
   }
   if (!order) return;
   const items = (await db.all('SELECT * FROM order_items WHERE order_id=?', [orderId])).data || [];
+  const rp = await resolveBillPrinter();
+  let billPrinter = rp?.windows_name || (window._posConfig && window._posConfig.billPrinter) || '';
+  if (!billPrinter) {
+    billPrinter = await showPrinterPrompt('No bill printer configured. Select printer:');
+    if (!billPrinter) return;
+  }
   await posAPI.print.receipt({
     restaurantName:  settings.restaurant_name,
     orderNumber:     order.order_number,
@@ -5979,7 +6045,7 @@ async function reprintReceipt(orderId) {
     billedAt:        order.billed_at || order.created_at,
     currency:        settings.currency,
     receiptFooter:   settings.receipt_footer,
-    printerName:     settings.printer_name,
+    printerName:     billPrinter,
   });
 }
 
@@ -6327,13 +6393,23 @@ async function _doPlaceOrder() {
   if (cart.orderId) {
     // Update existing order — save new items then print KOT
     await saveCartToOrder();
-    await print.kot({
-      orderNumber: cart.orderNumber, kotNumber: getNextKotNumber(),
-      orderType: cart.type,
-      tableName: cart.tableName, customerName: cart.customerName,
-      cashierName: cashier.name, createdAt: now,
-      items: cart.items, printerName: kotPrinter
-    });
+
+    let kotGroups = await resolveKotPrinters(cart.items);
+    if (!kotGroups) {
+      const sel = await showPrinterPrompt('No KOT printer configured. Select printer:');
+      if (sel) kotGroups = [{ printer: { windows_name: sel }, items: cart.items }];
+    }
+    if (kotGroups) {
+      for (const { printer, items } of kotGroups) {
+        await print.kot({
+          orderNumber: cart.orderNumber, kotNumber: getNextKotNumber(),
+          orderType: cart.type, tableName: cart.tableName,
+          customerName: cart.customerName, cashierName: cashier.name,
+          createdAt: now, items,
+          printerName: printer.windows_name || ''
+        });
+      }
+    }
   } else {
     // Create new active order
     const { subtotal, taxAmt, discAmt, total } = calcTotals();
@@ -6370,13 +6446,22 @@ async function _doPlaceOrder() {
     if (cart.tableId)
       await db.run(`UPDATE tables_layout SET status='occupied',current_order_id=?,locked_by=NULL WHERE id=?`, [activeOrderId, cart.tableId]);
 
-    await print.kot({
-      orderNumber: activeOrderNum, kotNumber: getNextKotNumber(),
-      orderType: cart.type,
-      tableName: cart.tableName, customerName: cart.customerName,
-      cashierName: cashier.name, createdAt: now,
-      items: cart.items, printerName: kotPrinter
-    });
+    let kotGroups = await resolveKotPrinters(cart.items);
+    if (!kotGroups) {
+      const sel = await showPrinterPrompt('No KOT printer configured. Select printer:');
+      if (sel) kotGroups = [{ printer: { windows_name: sel }, items: cart.items }];
+    }
+    if (kotGroups) {
+      for (const { printer, items } of kotGroups) {
+        await print.kot({
+          orderNumber: activeOrderNum, kotNumber: getNextKotNumber(),
+          orderType: cart.type, tableName: cart.tableName,
+          customerName: cart.customerName, cashierName: cashier.name,
+          createdAt: now, items,
+          printerName: printer.windows_name || ''
+        });
+      }
+    }
 
     posAPI.notifyServer('order:created', {
       orderId: activeOrderId, orderNumber: activeOrderNum,
@@ -6833,6 +6918,194 @@ async function getReceiptPrinter() {
 async function getKotPrinter() {
   const r = await db.get(`SELECT * FROM printers WHERE role IN ('kot','both') AND active=1 ORDER BY name LIMIT 1`);
   return (r.ok && r.data) ? r.data : null;
+}
+
+// ── New: 3-section printer config (Bill, Master KOT, Kitchen-wise) ──
+
+async function loadPrinterAssignments() {
+  const cfg = window._posConfig || {};
+  const printers = (await db.all('SELECT id,name FROM printers ORDER BY name')).data || [];
+
+  // Populate bill + master KOT selects
+  ['bill-printer-sel','master-kot-sel'].forEach(id => {
+    const sel = document.getElementById(id);
+    const current = id === 'bill-printer-sel' ? cfg.billPrinterId : cfg.masterKotPrinterId;
+    sel.innerHTML = '<option value="">— Not configured —</option>' +
+      printers.map(p => `<option value="${p.id}" ${p.id===current?'selected':''}>${esc(p.name)}</option>`).join('');
+  });
+
+  // Load kitchens + categories for kitchen-wise section
+  try {
+    const outletId = window._posConfig?.outletId;
+    const kitchens = outletId
+      ? (await apiFetch('GET', `/config/kitchens?outlet_id=${outletId}`)).rows || []
+      : [];
+    const cats = (await db.all('SELECT id,name,kitchen_id FROM categories WHERE active=1 ORDER BY name')).data || [];
+    const kitchenPrinters = cfg.kitchenPrinters || {};
+
+    if (kitchens.length === 0) {
+      document.getElementById('kitchen-printer-rows').innerHTML = '<div style="padding:16px;text-align:center;color:var(--muted);font-size:13px">No kitchens found for this outlet.</div>';
+      return;
+    }
+
+    let html = '<table style="width:100%;border-collapse:collapse"><tbody>';
+    for (const k of kitchens) {
+      const kPrinter = kitchenPrinters[k.id] || '';
+      const kCats = cats.filter(c => c.kitchen_id === k.id);
+      html += `<tr style="border-bottom:1px solid var(--border)">
+        <td style="padding:12px;font-weight:600;width:140px"><span style="display:inline-block;width:12px;height:12px;background:${k.color};border-radius:3px;margin-right:6px"></span>${esc(k.name)}</td>
+        <td style="padding:12px;width:160px">
+          <select class="kitchen-printer-sel" data-kitchen-id="${k.id}" style="width:100%;padding:6px 8px;border:1px solid var(--border);border-radius:5px;font-size:12px;background:var(--card)">
+            <option value="">—</option>
+            ${printers.map(p => `<option value="${p.id}" ${p.id===kPrinter?'selected':''}>${esc(p.name)}</option>`).join('')}
+          </select>
+        </td>
+        <td style="padding:12px">
+          <div style="display:flex;flex-wrap:wrap;gap:6px">
+            ${cats.map(c => `<label style="display:inline-flex;align-items:center;gap:4px;font-size:12px;cursor:pointer">
+              <input type="checkbox" class="kitchen-cat-checkbox" data-kitchen-id="${k.id}" data-cat-id="${c.id}" ${c.kitchen_id===k.id?'checked':''} style="cursor:pointer">
+              ${esc(c.name)}
+            </label>`).join('')}
+          </div>
+        </td>
+      </tr>`;
+    }
+    html += '</tbody></table>';
+    document.getElementById('kitchen-printer-rows').innerHTML = html;
+  } catch (e) {
+    console.error('Load kitchen config:', e);
+    document.getElementById('kitchen-printer-rows').innerHTML = '<div style="padding:16px;color:var(--muted);font-size:13px">Error loading kitchens. Check outlet.</div>';
+  }
+}
+
+async function savePrinterAssignments() {
+  const existing = (await window.posAPI.getConfig()) || {};
+  const merged = {
+    ...existing,
+    billPrinterId: document.getElementById('bill-printer-sel').value || null,
+    masterKotPrinterId: document.getElementById('master-kot-sel').value || null,
+  };
+  const r = await window.posAPI.saveConfig(merged);
+  if (r.ok) { window._posConfig = merged; showToast('Printer assignments saved', 'success'); }
+  else showToast('Save failed: ' + r.error, 'error');
+}
+
+async function saveKitchenPrinterConfig() {
+  const existing = (await window.posAPI.getConfig()) || {};
+  const kitchenPrinters = {};
+
+  // Read kitchen → printer mapping
+  document.querySelectorAll('.kitchen-printer-sel').forEach(sel => {
+    const kid = sel.dataset.kitchenId;
+    const pid = sel.value;
+    if (pid) kitchenPrinters[kid] = pid;
+  });
+
+  // Update categories: category → kitchen assignment
+  const updates = [];
+  document.querySelectorAll('.kitchen-cat-checkbox').forEach(cb => {
+    const kid = cb.dataset.kitchenId;
+    const cid = cb.dataset.catId;
+    if (cb.checked) {
+      updates.push(db.run('UPDATE categories SET kitchen_id=? WHERE id=?', [kid, cid]));
+    } else if (cb.dataset.wasChecked) {
+      updates.push(db.run('UPDATE categories SET kitchen_id=NULL WHERE id=?', [cid]));
+    }
+  });
+  await Promise.all(updates);
+
+  // Save kitchen printer mapping to config
+  const merged = { ...existing, kitchenPrinters };
+  const r = await window.posAPI.saveConfig(merged);
+  if (r.ok) { window._posConfig = merged; showToast('Kitchen config saved', 'success'); }
+  else showToast('Save failed: ' + r.error, 'error');
+}
+
+async function resolveKotPrinters(cartItems) {
+  const cfg = window._posConfig || {};
+
+  // 1. Master KOT printer
+  if (cfg.masterKotPrinterId) {
+    const r = await db.get('SELECT * FROM printers WHERE id=?', [cfg.masterKotPrinterId]);
+    if (r.ok && r.data) return [{ printer: r.data, items: cartItems }];
+  }
+
+  // 2. Kitchen-wise routing
+  const kitchenPrinters = cfg.kitchenPrinters || {};
+  if (Object.keys(kitchenPrinters).length > 0) {
+    const groups = {};
+    const unrouted = [];
+    for (const item of cartItems) {
+      const catRow = await db.get('SELECT kitchen_id FROM categories WHERE id=?', [item.categoryId]);
+      const kid = catRow.data?.kitchen_id;
+      if (kid && kitchenPrinters[kid]) {
+        if (!groups[kid]) groups[kid] = [];
+        groups[kid].push(item);
+      } else {
+        unrouted.push(item);
+      }
+    }
+    const result = [];
+    for (const [kid, items] of Object.entries(groups)) {
+      const prow = await db.get('SELECT * FROM printers WHERE id=?', [kitchenPrinters[kid]]);
+      if (prow.ok && prow.data) result.push({ printer: prow.data, items });
+    }
+    if (unrouted.length > 0 && result.length > 0) {
+      result[0].items = [...result[0].items, ...unrouted];
+    } else if (unrouted.length > 0 && result.length === 0) {
+      return null;
+    }
+    if (result.length > 0) return result;
+  }
+
+  return null;
+}
+
+async function resolveBillPrinter() {
+  const cfg = window._posConfig || {};
+  if (cfg.billPrinterId) {
+    const r = await db.get('SELECT * FROM printers WHERE id=?', [cfg.billPrinterId]);
+    if (r.ok && r.data) return r.data;
+  }
+  return await getReceiptPrinter();
+}
+
+let _printerPromptResolve = null;
+
+async function showPrinterPrompt(message) {
+  return new Promise(async (resolve) => {
+    _printerPromptResolve = resolve;
+    document.getElementById('printer-prompt-msg').textContent = message;
+
+    const dbPrinters = (await db.all('SELECT id,name,windows_name FROM printers WHERE active=1')).data || [];
+    const osPrinters = await window.posAPI.getPrinters();
+    const list = document.getElementById('printer-prompt-list');
+
+    const options = [
+      ...dbPrinters.map(p => ({ name: esc(p.name), value: p.windows_name || '' })),
+      ...osPrinters.filter(o => !dbPrinters.some(d => d.windows_name === o.name))
+                   .map(o => ({ name: esc(o.name), value: o.name }))
+    ];
+
+    list.innerHTML = options.map((opt, idx) => `
+      <label style="display:flex;align-items:center;gap:8px;padding:8px;cursor:pointer;border-radius:5px;transition:background .2s;border:1px solid transparent">
+        <input type="radio" name="psel" value="${opt.value}" style="cursor:pointer;width:16px;height:16px">
+        <span style="flex:1;font-size:13px">${opt.name}</span>
+      </label>
+    `).join('');
+
+    document.getElementById('printer-prompt-modal').style.display = 'flex';
+  });
+}
+
+function printerPromptConfirm() {
+  const sel = document.querySelector('input[name="psel"]:checked');
+  printerPromptResolve(sel ? sel.value : null);
+}
+
+function printerPromptResolve(val) {
+  document.getElementById('printer-prompt-modal').style.display = 'none';
+  if (_printerPromptResolve) { _printerPromptResolve(val); _printerPromptResolve = null; }
 }
 
 // ═══════════════════════════════════════════════════════════════
