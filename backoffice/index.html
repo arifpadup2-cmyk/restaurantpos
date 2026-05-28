@@ -3226,9 +3226,17 @@ input:checked+.toggle-slider:before{transform:translateX(17px)}
           <div class="ie-card-body">
             <div class="form-row">
               <div class="form-group">
+                <label>Kitchen Assignment</label>
+                <select id="ie-kitchen-id">
+                  <option value="">— Not assigned (uses category default) —</option>
+                </select>
+              </div>
+              <div class="form-group">
                 <label>Kitchen Display Name <span style="font-size:11px;color:var(--muted);font-weight:400">Short name on KDS screen</span></label>
                 <input id="ie-kds-name" type="text" placeholder="e.g. GRLD CHKN" oninput="this.dataset.manuallyEdited='1'">
               </div>
+            </div>
+            <div class="form-row">
               <div class="form-group">
                 <label>Printer Group / Kitchen Station</label>
                 <select id="ie-printer-grp">
@@ -5746,8 +5754,13 @@ async function showItemEditor (item) {
     pgSel.innerHTML = '<option value="">— Default (all KOT printers) —</option>' +
       (kitchens || []).map(k => `<option value="${esc(k.name)}">${esc(k.name)}</option>`).join('')
     pgSel.value = s(item?.printer_group)
+    const kIdSel = document.getElementById('ie-kitchen-id')
+    kIdSel.innerHTML = '<option value="">— Not assigned (uses category default) —</option>' +
+      (kitchens || []).map(k => `<option value="${esc(k.id)}">${esc(k.name)}</option>`).join('')
+    kIdSel.value = s(item?.kitchen_id)
   } catch (_) {
     document.getElementById('ie-printer-grp').value = s(item?.printer_group)
+    document.getElementById('ie-kitchen-id').value = s(item?.kitchen_id)
   }
   if (catSel) catSel.value = s(item?.category_id)
   if (taxSel) taxSel.value = s(item?.tax_group_id)
@@ -5839,6 +5852,7 @@ async function saveItemEditor (addAnother) {
     kitchen_name:      document.getElementById('ie-kds-name').value.trim() || name,
     internal_note:     document.getElementById('ie-note').value.trim() || null,
     printer_group:     document.getElementById('ie-printer-grp').value.trim() || null,
+    kitchen_id:        document.getElementById('ie-kitchen-id').value || null,
     tags:              document.getElementById('ie-tags').value.trim() || null,
     active:           document.getElementById('ie-active').checked ? 1 : 0,
     dine_in_price:    parseFloat(document.getElementById('ie-ch-dine_in-price').value) || null,

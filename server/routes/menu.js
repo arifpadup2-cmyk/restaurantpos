@@ -109,7 +109,7 @@ module.exports = function menuRouter (sql) {
     const {
       name, price, category_id, description, short_description, long_description, item_code, outlet_id,
       sub_category, image_url, item_type, preparation_time, tax_group_id,
-      barcode, kitchen_name, internal_note, printer_group, tags,
+      barcode, kitchen_name, internal_note, printer_group, tags, kitchen_id,
       dine_in_price, takeaway_price, delivery_price, online_price,
       dine_in_active, takeaway_active, delivery_active, online_active,
       partner_prices,
@@ -123,14 +123,14 @@ module.exports = function menuRouter (sql) {
         INSERT INTO menu_items (
           id, category_id, name, price, description, short_description, long_description, item_code, active, synced_at, brand_id, outlet_id,
           sub_category, image_url, item_type, preparation_time, tax_group_id,
-          barcode, kitchen_name, internal_note, printer_group, tags,
+          barcode, kitchen_name, internal_note, printer_group, tags, kitchen_id,
           dine_in_price, takeaway_price, delivery_price, online_price,
           dine_in_active, takeaway_active, delivery_active, online_active,
           partner_prices
         ) VALUES (
           ${id}, ${category_id}, ${name}, ${price}, ${description || ''}, ${short_description || null}, ${long_description || null}, ${item_code || null}, 1, ${Date.now()}, ${rid}, ${outlet_id || null},
           ${sub_category || null}, ${image_url || null}, ${item_type || 'single'}, ${preparation_time || 0}, ${tax_group_id || null},
-          ${barcode || null}, ${kitchen_name || name}, ${internal_note || null}, ${printer_group || null}, ${tags || null},
+          ${barcode || null}, ${kitchen_name || name}, ${internal_note || null}, ${printer_group || null}, ${tags || null}, ${kitchen_id || null},
           ${dine_in_price ?? null}, ${takeaway_price ?? null}, ${delivery_price ?? null}, ${online_price ?? null},
           ${dine_in_active !== false}, ${takeaway_active !== false}, ${delivery_active !== false}, ${online_active !== false},
           ${ppJson}
@@ -143,7 +143,7 @@ module.exports = function menuRouter (sql) {
     const {
       name, price, category_id, description, short_description, long_description, active, item_code,
       sub_category, image_url, item_type, preparation_time, tax_group_id,
-      barcode, kitchen_name, internal_note, printer_group, tags,
+      barcode, kitchen_name, internal_note, printer_group, tags, kitchen_id,
       dine_in_price, takeaway_price, delivery_price, online_price,
       dine_in_active, takeaway_active, delivery_active, online_active,
       partner_prices,
@@ -174,6 +174,7 @@ module.exports = function menuRouter (sql) {
           internal_note  = CASE WHEN ${internal_note !== undefined} THEN ${internal_note ?? null} ELSE internal_note END,
           printer_group  = CASE WHEN ${printer_group !== undefined} THEN ${printer_group ?? null} ELSE printer_group END,
           tags           = CASE WHEN ${tags !== undefined} THEN ${tags ?? null} ELSE tags END,
+          kitchen_id     = CASE WHEN ${kitchen_id !== undefined} THEN ${kitchen_id ?? null} ELSE kitchen_id END,
           dine_in_price  = CASE WHEN ${dine_in_price !== undefined} THEN ${dine_in_price ?? null} ELSE dine_in_price END,
           takeaway_price = CASE WHEN ${takeaway_price !== undefined} THEN ${takeaway_price ?? null} ELSE takeaway_price END,
           delivery_price = CASE WHEN ${delivery_price !== undefined} THEN ${delivery_price ?? null} ELSE delivery_price END,

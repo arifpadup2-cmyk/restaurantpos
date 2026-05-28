@@ -5428,6 +5428,7 @@ function pushToCart(item, variantId, variantName, variantPrice, modifiers) {
       comp: false,
       categoryId:   item.category_id || null,
       categoryName: (menu.categories.find(c => c.id === item.category_id) || {}).name || '',
+      kitchenId:   item.kitchen_id || null,
       variantId:   variantId   || null,
       variantName: variantName || null,
       modifiers:   modifiers   || [],
@@ -7194,7 +7195,7 @@ async function resolveKotPrinters(cartItems) {
     const unrouted = [];
     for (const item of cartItems) {
       const catRow = await db.get('SELECT kitchen_id FROM categories WHERE id=?', [item.categoryId]);
-      const kid = catRow.data?.kitchen_id;
+      const kid = item.kitchenId || catRow.data?.kitchen_id;
       if (kid && kitchenPrinters[kid]) {
         if (!groups[kid]) groups[kid] = [];
         groups[kid].push(item);
