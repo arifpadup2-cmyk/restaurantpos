@@ -4691,13 +4691,13 @@ function ctxOutletChange () {
       badge.style.display = 'none'
     }
   }
-  // Sync outlet to all hidden outlet inputs in views
-  const outletHiddenIds = ['dash-outlet','orders-outlet','rpt-outlet','exp-outlet',
+  // Sync outlet to all outlet inputs/selects in views (hidden inputs + visible selects)
+  const outletSyncIds = ['dash-outlet','orders-outlet','rpt-outlet','exp-outlet',
     'perf-outlet','ic-outlet','wast-outlet','isr-outlet','ci-outlet','cb-outlet',
     'cob-outlet','coi-outlet'];
-  outletHiddenIds.forEach(id => {
+  outletSyncIds.forEach(id => {
     const el = document.getElementById(id);
-    if (el && el.type === 'hidden') el.value = _ctxOutlet || '';
+    if (el) el.value = _ctxOutlet || '';
   });
   updateCtxBreadcrumb()
   refreshForceOutletGate()
