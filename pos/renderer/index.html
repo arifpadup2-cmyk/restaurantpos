@@ -1966,13 +1966,32 @@ textarea:focus-visible {
 
       <!-- ── SETTINGS VIEW ── -->
       <div class="view" id="v-settings">
-        <div class="settings-card">
-          <div class="settings-section">
-            <h3 style="display:flex;align-items:center;gap:8px"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="17" height="17"><circle cx="13.5" cy="6.5" r=".5" fill="currentColor"/><circle cx="17.5" cy="10.5" r=".5" fill="currentColor"/><circle cx="8.5" cy="7.5" r=".5" fill="currentColor"/><circle cx="6.5" cy="12.5" r=".5" fill="currentColor"/><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.926 0 1.648-.746 1.648-1.688 0-.437-.18-.835-.437-1.125-.29-.289-.438-.652-.438-1.125a1.64 1.64 0 011.668-1.668h1.996c3.051 0 5.555-2.503 5.555-5.554C21.965 6.012 17.461 2 12 2z"/></svg>Display Mode</h3>
-            <p style="font-size:13px;color:var(--muted);margin-bottom:4px">Choose a readable mode for low quality, bright, or dark restaurant displays.</p>
-            <div class="theme-swatches" id="theme-swatches"></div>
+        <div style="display:flex;height:100%;background:var(--bg)">
+          <!-- SIDEBAR MENU -->
+          <div style="width:180px;border-right:1.5px solid var(--border);overflow-y:auto;background:var(--card)">
+            <div style="padding:14px 0">
+              <button class="settings-menu-item active" onclick="showSettingsMenu('theme')" style="width:100%;text-align:left;padding:12px 16px;border:none;background:none;cursor:pointer;font-size:14px;color:var(--text);border-left:3px solid transparent;transition:all .2s">🎨 Theme</button>
+              <button class="settings-menu-item" onclick="showSettingsMenu('restaurant')" style="width:100%;text-align:left;padding:12px 16px;border:none;background:none;cursor:pointer;font-size:14px;color:var(--text);border-left:3px solid transparent;transition:all .2s">🏪 Restaurant</button>
+              <button class="settings-menu-item" onclick="showSettingsMenu('printers')" style="width:100%;text-align:left;padding:12px 16px;border:none;background:none;cursor:pointer;font-size:14px;color:var(--text);border-left:3px solid transparent;transition:all .2s">🖨️ Printers</button>
+              <button class="settings-menu-item" onclick="showSettingsMenu('connection')" style="width:100%;text-align:left;padding:12px 16px;border:none;background:none;cursor:pointer;font-size:14px;color:var(--text);border-left:3px solid transparent;transition:all .2s">🌐 Connection</button>
+              <button class="settings-menu-item" onclick="showSettingsMenu('system')" style="width:100%;text-align:left;padding:12px 16px;border:none;background:none;cursor:pointer;font-size:14px;color:var(--text);border-left:3px solid transparent;transition:all .2s">⚙️ System</button>
+            </div>
           </div>
-          <div class="settings-section">
+
+          <!-- CONTENT PANEL -->
+          <div style="flex:1;overflow-y:auto;padding:20px">
+            <!-- THEME MENU -->
+            <div id="settings-menu-theme" class="settings-menu-content" style="display:block">
+              <div class="settings-section">
+                <h3 style="display:flex;align-items:center;gap:8px"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="17" height="17"><circle cx="13.5" cy="6.5" r=".5" fill="currentColor"/><circle cx="17.5" cy="10.5" r=".5" fill="currentColor"/><circle cx="8.5" cy="7.5" r=".5" fill="currentColor"/><circle cx="6.5" cy="12.5" r=".5" fill="currentColor"/><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.926 0 1.648-.746 1.648-1.688 0-.437-.18-.835-.437-1.125-.29-.289-.438-.652-.438-1.125a1.64 1.64 0 011.668-1.668h1.996c3.051 0 5.555-2.503 5.555-5.554C21.965 6.012 17.461 2 12 2z"/></svg>Display Mode</h3>
+                <p style="font-size:13px;color:var(--muted);margin-bottom:4px">Choose a readable mode for low quality, bright, or dark restaurant displays.</p>
+                <div class="theme-swatches" id="theme-swatches"></div>
+              </div>
+            </div>
+
+            <!-- RESTAURANT MENU -->
+            <div id="settings-menu-restaurant" class="settings-menu-content" style="display:none">
+              <div class="settings-section">
             <h3>Restaurant Info</h3>
             <div class="form-row">
               <div class="form-group"><label>Restaurant Name</label>
@@ -2004,9 +2023,13 @@ textarea:focus-visible {
                 </select>
               </div>
             </div>
-            <button class="btn-primary" onclick="saveSettings()" style="display:inline-flex;align-items:center;gap:6px"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="15" height="15"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>Save Settings</button>
-          </div>
-          <div class="settings-section">
+                <button class="btn-primary" onclick="saveSettings()" style="display:inline-flex;align-items:center;gap:6px"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="15" height="15"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>Save Settings</button>
+              </div>
+            </div>
+
+            <!-- PRINTERS MENU -->
+            <div id="settings-menu-printers" class="settings-menu-content" style="display:none">
+              <div class="settings-section">
             <h3 style="display:flex;align-items:center;gap:8px"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="17" height="17"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>Printer Configuration</h3>
             <p style="font-size:13px;color:var(--muted);margin-bottom:14px">
               Printers are stored in the local database. Add a Windows OS printer or a network thermal printer.
@@ -2035,10 +2058,12 @@ textarea:focus-visible {
               </button>
               <button class="btn-outline" onclick="loadPrinterSettings()">↻ Refresh</button>
             </div>
-            <p id="printer-status-msg" style="font-size:13px;margin-top:8px"></p>
-          </div>
+                <p id="printer-status-msg" style="font-size:13px;margin-top:8px"></p>
+              </div>
 
-          <!-- Printer Add/Edit Modal -->
+              <!-- PRINTER ASSIGNMENTS SUBSECTION -->
+              <div style="margin-top:28px;padding-top:28px;border-top:1.5px solid var(--border)">
+                <h2 style="font-size:15px;font-weight:700;margin-bottom:20px">Printer Assignments</h2>
           <div id="printer-modal-overlay" onclick="if(event.target===this)closePrinterModal()" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:9000;align-items:center;justify-content:center">
             <div style="background:var(--bg);border-radius:14px;padding:28px 32px;min-width:420px;max-width:520px;width:100%;box-shadow:0 20px 60px rgba(0,0,0,.25);position:relative">
               <h3 id="pm-title" style="margin:0 0 20px;font-size:17px;font-weight:700">Add Printer</h3>
@@ -2157,12 +2182,14 @@ textarea:focus-visible {
               <button class="btn-primary" onclick="saveKitchenPrinterConfig()">Save Kitchen Config</button>
               <button class="btn-outline" onclick="loadPrinterAssignments()">↻ Refresh</button>
             </div>
-            <p id="kitchen-printer-status" style="font-size:12px;color:var(--muted);margin:0"></p>
-          </div>
+                <p id="kitchen-printer-status" style="font-size:12px;color:var(--muted);margin:0"></p>
+              </div>
+              </div>
+            </div>
 
-          <div class="settings-group-label">⚙️ System / Technical — change only when reconfiguring this terminal</div>
-          <div class="settings-system-group">
-          <div class="settings-section">
+            <!-- CONNECTION MENU -->
+            <div id="settings-menu-connection" class="settings-menu-content" style="display:none">
+              <div class="settings-section">
             <h3>🖥️ Server Connection</h3>
             <p style="font-size:13px;color:var(--muted);margin-bottom:14px">
               Database server this terminal connects to. Change anytime — app will reconnect immediately.
@@ -2225,10 +2252,10 @@ textarea:focus-visible {
               <button class="btn-outline" onclick="testServerConnection()">🔌 Test Connection</button>
               <button class="btn-primary" onclick="saveServerConnection()">💾 Save &amp; Reconnect</button>
             </div>
-            <p id="conn-status-msg" style="font-size:13px;margin-top:8px"></p>
-          </div>
+                <p id="conn-status-msg" style="font-size:13px;margin-top:8px"></p>
+              </div>
 
-          <div class="settings-section">
+              <div class="settings-section">
             <h3>Cloud Sync / API</h3>
             <p style="font-size:13px;color:var(--muted);margin-bottom:12px">
               API key for syncing with the central server. Usually same as DB server.
@@ -2247,11 +2274,21 @@ textarea:focus-visible {
               <button class="btn-primary" onclick="saveApiConfig()">Save & Connect</button>
               <button class="btn-outline" onclick="testApiConnection()">Test Connection</button>
             </div>
-            <p id="fb-status-msg" style="font-size:13px;margin-top:8px"></p>
+                <p id="fb-status-msg" style="font-size:13px;margin-top:8px"></p>
+              </div>
+            </div>
+
+            <!-- SYSTEM MENU -->
+            <div id="settings-menu-system" class="settings-menu-content" style="display:none">
+              <div class="settings-section" style="background:#f8fafc;border-radius:8px;padding:16px 20px;border:1.5px solid var(--border);margin-bottom:16px">
+                <h3 style="margin-top:0">⚙️ System & Technical</h3>
+                <p style="font-size:13px;color:var(--muted)">Advanced settings. Change only when reconfiguring terminal.</p>
+              </div>
+            </div>
           </div>
-          </div><!-- end settings-system-group -->
         </div>
-      </div>
+
+        <!-- Printer Add/Edit Modal -->
 
     </div><!-- end main-content -->
   </div><!-- end app-body -->
@@ -4239,7 +4276,7 @@ function showView(id) {
   if (id === 'day-close')   loadDaySummary();
   if (id === 'orders')      loadActiveOrders();
   if (id === 'receipts')    loadReceipts();
-  if (id === 'settings')    { loadPrinterSettings(); loadPrinterAssignments(); loadConnectionSettings(); renderThemeSwatches(); }
+  if (id === 'settings')    { showSettingsMenu('theme'); }
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -6800,6 +6837,43 @@ function renderThemeSwatches() {
       <span style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:var(--muted)">🌙 Dark</span>
       <div style="display:flex;flex-wrap:wrap;gap:14px;margin-top:10px">${renderGroup(darkThemes)}</div>
     </div>`;
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  SETTINGS MENU
+// ═══════════════════════════════════════════════════════════════
+function showSettingsMenu(menuId) {
+  // Hide all menu content divs
+  const menus = document.querySelectorAll('.settings-menu-content');
+  menus.forEach(m => m.style.display = 'none');
+
+  // Show selected menu
+  const selected = document.getElementById(`settings-menu-${menuId}`);
+  if (selected) selected.style.display = 'block';
+
+  // Update active menu button
+  const buttons = document.querySelectorAll('.settings-menu-item');
+  buttons.forEach(b => {
+    b.style.borderLeftColor = 'transparent';
+    b.style.color = 'var(--text)';
+  });
+
+  const activeBtn = Array.from(buttons).find(b => b.textContent.toLowerCase().includes(menuId.replace('_', ' ').split(' ')[0]));
+  if (activeBtn) {
+    activeBtn.style.borderLeftColor = 'var(--primary)';
+    activeBtn.style.color = 'var(--primary)';
+    activeBtn.style.fontWeight = '600';
+  }
+
+  // Auto-load content for some menus
+  if (menuId === 'printers') {
+    loadPrinterSettings();
+    loadPrinterAssignments();
+  } else if (menuId === 'connection') {
+    loadConnectionSettings();
+  } else if (menuId === 'theme') {
+    renderThemeSwatches();
+  }
 }
 
 // ═══════════════════════════════════════════════════════════════
