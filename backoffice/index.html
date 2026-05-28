@@ -5748,7 +5748,9 @@ async function showItemEditor (item) {
   document.getElementById('ie-note').value     = s(item?.internal_note)
   // Populate printer group dropdown from kitchens
   try {
-    const qs = _ctxOutlet ? `?outlet_id=${_ctxOutlet}` : ''
+    // Get current outlet context - ensure it's set
+    const outletId = document.getElementById('ctx-outlet')?.value || _ctxOutlet || ''
+    const qs = outletId ? `?outlet_id=${outletId}` : ''
     const { rows: kitchens } = await apiFetch('GET', `/config/kitchens${qs}`)
     const pgSel = document.getElementById('ie-printer-grp')
     pgSel.innerHTML = '<option value="">— Default (all KOT printers) —</option>' +
