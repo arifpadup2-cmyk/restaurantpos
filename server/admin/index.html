@@ -323,6 +323,7 @@ body{font-family:'Inter',-apple-system,'Segoe UI',sans-serif;background:var(--bg
       <div class="sec">Global Config</div>
       <div class="ni" onclick="nav('gpm')" id="nav-gpm"><span class="ic"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="14" x="2" y="5" rx="2"/><line x1="2" x2="22" y1="10" y2="10"/></svg></span>Payment Methods</div>
       <div class="ni" onclick="nav('gdp')" id="nav-gdp"><span class="ic"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 17H3a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11a2 2 0 0 1 2 2v3"/><polyline points="9 17 20 17 23 11 16 11 16 17 9 17"/><circle cx="7.5" cy="17.5" r="2.5"/><circle cx="17.5" cy="17.5" r="2.5"/></svg></span>Delivery Partners</div>
+      <div class="ni" onclick="nav('announcements')" id="nav-announcements"><span class="ic"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg></span>Announcements</div>
       <div class="sec">Tools</div>
       <div class="ni" onclick="nav('performance')" id="nav-performance"><span class="ic"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg></span>Performance</div>
       <div class="ni" onclick="nav('install')" id="nav-install"><span class="ic"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg></span>Install Guide</div>
@@ -446,6 +447,22 @@ body{font-family:'Inter',-apple-system,'Segoe UI',sans-serif;background:var(--bg
             <table class="dt">
               <thead><tr><th>Name</th><th>Commission</th><th>Status</th><th>Actions</th></tr></thead>
               <tbody id="gdp-tbody"><tr><td colspan="4" style="text-align:center;padding:20px;color:#475569">Loading…</td></tr></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- ANNOUNCEMENTS -->
+      <div class="view" id="v-announcements">
+        <div class="ph">
+          <div><h2>Announcements</h2><p>Shown on the POS login screen to market new modules to all outlets</p></div>
+          <button class="btn btn-p" onclick="showAnnouncementModal(null)">+ New Announcement</button>
+        </div>
+        <div class="card" style="overflow:hidden">
+          <div style="overflow-x:auto">
+            <table class="dt">
+              <thead><tr><th>Title</th><th>Badge</th><th>Accent</th><th>Order</th><th>Status</th><th>Actions</th></tr></thead>
+              <tbody id="ann-tbody"><tr><td colspan="6" style="text-align:center;padding:20px;color:#475569">Loading…</td></tr></tbody>
             </table>
           </div>
         </div>
@@ -1148,6 +1165,7 @@ function nav (id) {
   if (id==='structure')   loadStructure()
   if (id==='gpm')         loadGpm()
   if (id==='gdp')         loadGdp()
+  if (id==='announcements') loadAnnouncements()
   if (id==='performance') loadPerformance()
   if (id==='install')     { loadInstallFiles(); populateCredSelect() }
   if (id==='system')      loadHealth()
@@ -1537,6 +1555,97 @@ async function toggleGdp (id, active) {
 async function deleteGdp (id, name) {
   if (!confirm(`Delete "${name}"? This removes it from all outlets.`)) return
   try { await api('DELETE', `/setup/global-delivery-partners/${id}`); loadGdp() }
+  catch(e) { alert('Error: '+e.message) }
+}
+
+// ── Announcements ──────────────────────────────────────────────────────────
+let _ann = []
+async function loadAnnouncements () {
+  document.getElementById('ann-tbody').innerHTML = `<tr><td colspan="6" style="text-align:center;padding:20px;color:#475569">Loading…</td></tr>`
+  try {
+    const { announcements } = await api('GET', '/announcements/admin')
+    _ann = announcements
+    renderAnnouncements()
+  } catch(e) {
+    document.getElementById('ann-tbody').innerHTML = `<tr><td colspan="6" style="text-align:center;padding:20px;color:#f87171">${e.message}</td></tr>`
+  }
+}
+
+function renderAnnouncements () {
+  document.getElementById('ann-tbody').innerHTML = _ann.length ? _ann.map(r => `<tr>
+    <td><div class="strong">${esc(r.title)}</div><div class="muted">${esc(r.description||'').slice(0,60)}${r.description?.length>60?'…':''}</div></td>
+    <td><span class="badge b-trial">${esc(r.badge_text)}</span></td>
+    <td><span style="display:inline-flex;align-items:center;gap:6px">
+      <span style="width:14px;height:14px;border-radius:50%;background:${esc(r.accent_color)};display:inline-block;flex-shrink:0"></span>
+      <span class="mono" style="font-size:11px">${esc(r.accent_color)}</span>
+    </span></td>
+    <td class="mono">${r.sort_order}</td>
+    <td><span class="badge ${r.is_active?'b-active':'b-suspended'}">${r.is_active?'Active':'Hidden'}</span></td>
+    <td style="white-space:nowrap">
+      <button class="bsm b" onclick="showAnnouncementModal(${JSON.stringify(r).replace(/"/g,'&quot;')})">Edit</button>
+      <button class="bsm ${r.is_active?'y':'g'}" onclick="toggleAnnouncement('${r.id}',${!r.is_active})">${r.is_active?'Hide':'Show'}</button>
+      <button class="bsm r" onclick="deleteAnnouncement('${r.id}','${esc(r.title)}')">Delete</button>
+    </td>
+  </tr>`).join('') : `<tr><td colspan="6" style="text-align:center;padding:20px;color:#475569">No announcements yet. Click "+ New Announcement" to create one.</td></tr>`
+}
+
+function showAnnouncementModal (r) {
+  const mo = document.createElement('div')
+  mo.className = 'mo'
+  mo.style.display = 'flex'
+  mo.innerHTML = `<div class="mb" style="max-width:520px">
+    <h3>${r ? 'Edit Announcement' : 'New Announcement'}</h3>
+    <div class="sub">Shown on the POS login screen to market new modules</div>
+    <div class="mf">
+      <label>Title *</label><input id="ann-title" type="text" value="${esc(r?.title||'')}" placeholder="e.g. Delivery Module Now Available">
+      <label>Description</label><textarea id="ann-desc" rows="3" style="width:100%;padding:10px 12px;background:var(--bg);border:1.5px solid var(--bd);border-radius:8px;font-size:13px;color:var(--t1);outline:none;margin-bottom:12px;font-family:inherit;resize:vertical">${esc(r?.description||'')}</textarea>
+      <div class="mg">
+        <div><label>Badge Text</label><input id="ann-badge" type="text" value="${esc(r?.badge_text||'New')}" placeholder="New Module"></div>
+        <div><label>Sort Order</label><input id="ann-order" type="number" value="${r?.sort_order??0}" min="0" step="1"></div>
+      </div>
+      <label>Accent Color</label>
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px">
+        <input type="color" id="ann-color-pick" value="${r?.accent_color||'#f97316'}" style="width:44px;height:36px;border:1.5px solid var(--bd);border-radius:8px;background:var(--bg);cursor:pointer;padding:2px" oninput="document.getElementById('ann-color').value=this.value">
+        <input id="ann-color" type="text" value="${esc(r?.accent_color||'#f97316')}" placeholder="#f97316" style="flex:1;padding:10px 12px;background:var(--bg);border:1.5px solid var(--bd);border-radius:8px;font-size:13px;color:var(--t1);outline:none;font-family:monospace" oninput="document.getElementById('ann-color-pick').value=this.value">
+      </div>
+    </div>
+    <div class="ma">
+      <button class="btn btn-o" onclick="this.closest('.mo').remove()">Cancel</button>
+      <button class="btn btn-p" onclick="saveAnnouncement('${r?.id||''}',this)">Save</button>
+    </div>
+  </div>`
+  document.body.appendChild(mo)
+  mo.addEventListener('click', e => { if (e.target === mo) mo.remove() })
+  document.getElementById('ann-title').focus()
+}
+
+async function saveAnnouncement (id, btn) {
+  const title = document.getElementById('ann-title').value.trim()
+  if (!title) { alert('Title is required'); return }
+  btn.disabled = true; btn.textContent = 'Saving…'
+  try {
+    const body = {
+      title,
+      description:  document.getElementById('ann-desc').value.trim(),
+      badge_text:   document.getElementById('ann-badge').value.trim() || 'New',
+      accent_color: document.getElementById('ann-color').value.trim() || '#f97316',
+      sort_order:   parseInt(document.getElementById('ann-order').value) || 0,
+    }
+    if (id) await api('PUT',  `/announcements/admin/${id}`, body)
+    else    await api('POST', '/announcements/admin', body)
+    btn.closest('.mo').remove()
+    loadAnnouncements()
+  } catch(e) { alert('Error: '+e.message); btn.disabled=false; btn.textContent='Save' }
+}
+
+async function toggleAnnouncement (id, is_active) {
+  try { await api('PUT', `/announcements/admin/${id}`, { is_active }); loadAnnouncements() }
+  catch(e) { alert('Error: '+e.message) }
+}
+
+async function deleteAnnouncement (id, title) {
+  if (!confirm(`Delete "${title}"? It will be removed from the POS login screen.`)) return
+  try { await api('DELETE', `/announcements/admin/${id}`); loadAnnouncements() }
   catch(e) { alert('Error: '+e.message) }
 }
 
