@@ -85,16 +85,20 @@ module.exports = function reportsRouter (sql) {
     const { start, end } = dateRange(from, to)
     const rid = req.user.brand_id
     try {
+      if (outlet_id) {
+        const [owned] = await sql`SELECT id FROM outlets WHERE id = ${outlet_id} AND brand_id = ${rid}`
+        if (!owned) return res.status(403).json({ error: 'Outlet not found in your brand' })
+      }
       const exps = outlet_id
         ? await sql`
             SELECT * FROM expenses
             WHERE created_at >= ${start} AND created_at < ${end}
-              AND outlet_id = ${outlet_id}
+              AND outlet_id = ${outlet_id} AND brand_id = ${rid}
             ORDER BY created_at DESC`
         : await sql`
             SELECT * FROM expenses
             WHERE created_at >= ${start} AND created_at < ${end}
-              AND (brand_id = ${rid} OR brand_id IS NULL)
+              AND brand_id = ${rid}
             ORDER BY created_at DESC`
       res.json({ expenses: exps })
     } catch (e) { serverError(res, e) }
@@ -145,6 +149,10 @@ module.exports = function reportsRouter (sql) {
     const { start, end } = dateRange(from, to)
     const rid = req.user.brand_id
     try {
+      if (outlet_id) {
+        const [owned] = await sql`SELECT id FROM outlets WHERE id = ${outlet_id} AND brand_id = ${rid}`
+        if (!owned) return res.status(403).json({ error: 'Outlet not found in your brand' })
+      }
       const rows = outlet_id
         ? await sql`
             SELECT o.order_number, o.order_type, o.cashier_name, o.total,
@@ -160,7 +168,7 @@ module.exports = function reportsRouter (sql) {
             LEFT JOIN order_items oi ON oi.order_id = o.id
             WHERE o.created_at >= ${start} AND o.created_at < ${end}
               AND o.status IN ('void','cancelled')
-              AND o.outlet_id = ${outlet_id}
+              AND o.outlet_id = ${outlet_id} AND o.brand_id = ${rid}
             GROUP BY o.id
             ORDER BY o.created_at DESC`
         : await sql`
@@ -203,7 +211,7 @@ module.exports = function reportsRouter (sql) {
         FROM audit_log
         WHERE created_at >= ${from} AND created_at <= ${to}
           AND terminal_id IS NOT NULL
-          AND (brand_id = ${rid} OR brand_id IS NULL)
+          AND brand_id = ${rid}
         GROUP BY terminal_id
         ORDER BY event_count DESC`
       res.json({ rows })
