@@ -678,7 +678,12 @@ function updatePinDots() {
 async function doLogin(pin) {
   if (!selectedLoginCashier) return;
   try {
-    const data = await api('/waiter/auth', 'POST', { cashier_id: selectedLoginCashier.id, pin });
+    const data = await api('/waiter/auth', 'POST', {
+      cashier_id: selectedLoginCashier.id,
+      pin,
+      brand_id:  getWaiterBrandId()  || undefined,
+      outlet_id: getWaiterOutletId() || undefined,
+    });
     token   = data.token;
     cashier = data.cashier;
     localStorage.setItem('waiter_token', token);

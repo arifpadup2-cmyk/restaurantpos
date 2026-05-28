@@ -15,6 +15,11 @@ module.exports = function deliveryRouter (sql) {
     try {
       const brandId  = req.query.brand_id  || null
       const outletId = req.query.outlet_id || null
+      // Validate outlet belongs to brand before returning staff list
+      if (brandId && outletId) {
+        const [owned] = await sql`SELECT id FROM outlets WHERE id = ${outletId} AND brand_id = ${brandId}`
+        if (!owned) return res.status(403).json({ error: 'Outlet not in this brand', boys: [] })
+      }
       const boys = brandId && outletId
         ? await sql`
             SELECT id, name, role FROM cashiers
@@ -47,7 +52,7 @@ module.exports = function deliveryRouter (sql) {
 
   // POST /delivery/auth — PIN login
   router.post('/auth', async (req, res) => {
-    const { boy_id, pin } = req.body || {}
+    const { boy_id, pin, brand_id, outlet_id } = req.body || {}
     if (!boy_id || !pin)
       return res.status(400).json({ error: 'boy_id and pin required' })
     try {
@@ -58,6 +63,14 @@ module.exports = function deliveryRouter (sql) {
         return res.status(401).json({ error: 'Staff not found' })
       if (boy.role !== 'delivery')
         return res.status(403).json({ error: 'This role cannot access the delivery app' })
+
+      // Validate delivery staff belongs to the device's brand
+      if (brand_id && boy.brand_id && boy.brand_id !== brand_id)
+        return res.status(403).json({ error: 'Staff not registered to this brand' })
+
+      // Validate outlet — staff must be unassigned OR assigned to this outlet
+      if (outlet_id && boy.outlet_id && boy.outlet_id !== outlet_id)
+        return res.status(403).json({ error: 'Staff not assigned to this outlet' })
 
       let pinOk = false
       if (boy.pin_hash) {
@@ -154,9 +167,14 @@ module.exports = function deliveryRouter (sql) {
     const boy    = req.user
     try {
       const [order] = await sql`
-        SELECT id, delivery_boy_id, brand_id, status FROM orders WHERE id = ${id}`
+        SELECT id, delivery_boy_id, brand_id, outlet_id, status FROM orders WHERE id = ${id}`
       if (!order)
         return res.status(404).json({ error: 'Order not found' })
+      // Verify order belongs to this delivery boy's brand + outlet
+      if (boy.brand_id  && order.brand_id  && order.brand_id  !== boy.brand_id)
+        return res.status(403).json({ error: 'Order not in your brand' })
+      if (boy.outlet_id && order.outlet_id && order.outlet_id !== boy.outlet_id)
+        return res.status(403).json({ error: 'Order belongs to another outlet' })
       if (order.status !== 'active')
         return res.status(409).json({ error: 'Order is not active' })
       if (order.delivery_boy_id)
@@ -187,10 +205,16 @@ module.exports = function deliveryRouter (sql) {
     if (!valid.includes(status))
       return res.status(400).json({ error: 'Invalid status' })
     try {
+      const boy = req.user
       const [order] = await sql`
-        SELECT id, delivery_boy_id, brand_id, status FROM orders WHERE id = ${id}`
+        SELECT id, delivery_boy_id, brand_id, outlet_id, status FROM orders WHERE id = ${id}`
       if (!order)
         return res.status(404).json({ error: 'Order not found' })
+      // Verify order belongs to this delivery boy's brand + outlet
+      if (boy.brand_id  && order.brand_id  && order.brand_id  !== boy.brand_id)
+        return res.status(403).json({ error: 'Order not in your brand' })
+      if (boy.outlet_id && order.outlet_id && order.outlet_id !== boy.outlet_id)
+        return res.status(403).json({ error: 'Order belongs to another outlet' })
       if (order.delivery_boy_id && order.delivery_boy_id !== req.user.id)
         return res.status(403).json({ error: 'Order assigned to another delivery staff' })
 

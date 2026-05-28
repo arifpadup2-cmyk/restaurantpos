@@ -611,8 +611,10 @@ async function markItemDone(orderId, itemId, done) {
   item.done = done;
   renderOrders();
   try {
-    const brandId = getKdsBrandId();
-    const qs = brandId ? '?brand_id=' + encodeURIComponent(brandId) : '';
+    const brandId  = getKdsBrandId();
+    const outletId = getKdsOutletId();
+    let qs = brandId  ? '?brand_id='  + encodeURIComponent(brandId)  : '';
+    if (outletId) qs += (qs ? '&' : '?') + 'outlet_id=' + encodeURIComponent(outletId);
     await fetch(`${BASE}/kitchen/items/${itemId}/done${qs}`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
@@ -630,8 +632,10 @@ async function markOrderDone(orderId) {
   order.items.forEach(i => i.done = true);
   renderOrders();
   try {
-    const brandId = getKdsBrandId();
-    const qs = brandId ? '?brand_id=' + encodeURIComponent(brandId) : '';
+    const brandId  = getKdsBrandId();
+    const outletId = getKdsOutletId();
+    let qs = brandId  ? '?brand_id='  + encodeURIComponent(brandId)  : '';
+    if (outletId) qs += (qs ? '&' : '?') + 'outlet_id=' + encodeURIComponent(outletId);
     await fetch(`${BASE}/kitchen/orders/${orderId}/done${qs}`, { method:'PATCH' });
   } catch {
     order.items.forEach(i => i.done = false);

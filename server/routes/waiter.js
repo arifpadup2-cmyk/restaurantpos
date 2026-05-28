@@ -18,6 +18,11 @@ module.exports = function waiterRouter (sql) {
     try {
       const brandId  = req.query.brand_id  || null
       const outletId = req.query.outlet_id || null
+      // Validate outlet belongs to brand before returning cashiers
+      if (brandId && outletId) {
+        const [owned] = await sql`SELECT id FROM outlets WHERE id = ${outletId} AND brand_id = ${brandId}`
+        if (!owned) return res.status(403).json({ error: 'Outlet not in this brand', cashiers: [] })
+      }
       const cashiers = brandId && outletId
         ? await sql`
             SELECT id, name, role, 1 AS active FROM cashiers
@@ -50,7 +55,7 @@ module.exports = function waiterRouter (sql) {
 
   // POST /waiter/auth — cashier PIN login for waiter app
   router.post('/auth', async (req, res) => {
-    const { cashier_id, pin } = req.body || {}
+    const { cashier_id, pin, brand_id, outlet_id } = req.body || {}
     if (!cashier_id || !pin)
       return res.status(400).json({ error: 'cashier_id and pin required' })
 
@@ -64,6 +69,14 @@ module.exports = function waiterRouter (sql) {
 
       if (!['waiter', 'cashier'].includes(cashier.role))
         return res.status(403).json({ error: 'This role cannot access the waiter app' })
+
+      // Validate cashier belongs to the device's brand
+      if (brand_id && cashier.brand_id && cashier.brand_id !== brand_id)
+        return res.status(403).json({ error: 'Cashier not registered to this brand' })
+
+      // Validate outlet — cashier must be unassigned OR assigned to this outlet
+      if (outlet_id && cashier.outlet_id && cashier.outlet_id !== outlet_id)
+        return res.status(403).json({ error: 'Cashier not assigned to this outlet' })
 
       // Prefer bcrypt hash; fall back to plain-text and migrate lazily
       let pinOk = false
@@ -104,10 +117,15 @@ module.exports = function waiterRouter (sql) {
 
   // GET /waiter/menu — authenticated menu fetch (includes image_url)
   router.get('/menu', jwtAuth, async (req, res) => {
+    const brandId = req.user?.brand_id || null
     try {
       const [categories, items] = await Promise.all([
-        sql`SELECT id, name, sort_order, color, active FROM categories WHERE active = 1 ORDER BY sort_order, name`,
-        sql`SELECT id, category_id, name, price, description, short_description, long_description, image_url, active FROM menu_items WHERE active = 1 ORDER BY name`
+        brandId
+          ? sql`SELECT id, name, sort_order, color, active FROM categories WHERE active = 1 AND brand_id = ${brandId} ORDER BY sort_order, name`
+          : sql`SELECT id, name, sort_order, color, active FROM categories WHERE active = 1 ORDER BY sort_order, name`,
+        brandId
+          ? sql`SELECT id, category_id, name, price, description, short_description, long_description, image_url, active FROM menu_items WHERE active = 1 AND brand_id = ${brandId} ORDER BY name`
+          : sql`SELECT id, category_id, name, price, description, short_description, long_description, image_url, active FROM menu_items WHERE active = 1 ORDER BY name`,
       ])
       res.json({ categories, items })
     } catch (e) { serverError(res, e) }
@@ -115,36 +133,54 @@ module.exports = function waiterRouter (sql) {
 
   // GET /waiter/settings — currency + tax_rate for waiter app
   router.get('/settings', jwtAuth, async (req, res) => {
+    const brandId  = req.user?.brand_id  || null
+    const outletId = req.user?.outlet_id || null
     try {
-      const rows = await sql`SELECT key, value FROM settings WHERE key IN ('currency','tax_rate','restaurant_name')`
-      const map = Object.fromEntries(rows.map(r => [r.key, r.value]))
-      res.json({ settings: rows, restaurant_name: map.restaurant_name || '' })
+      const rows = brandId
+        ? outletId
+          ? await sql`SELECT key, value FROM settings WHERE key IN ('currency','tax_rate','restaurant_name') AND brand_id = ${brandId} AND (outlet_id = ${outletId} OR outlet_id IS NULL) ORDER BY outlet_id NULLS LAST`
+          : await sql`SELECT key, value FROM settings WHERE key IN ('currency','tax_rate','restaurant_name') AND brand_id = ${brandId}`
+        : await sql`SELECT key, value FROM settings WHERE key IN ('currency','tax_rate','restaurant_name')`
+      // Deduplicate: prefer outlet-scoped values over brand-level (first row wins per key)
+      const seen = new Set()
+      const deduped = rows.filter(r => seen.has(r.key) ? false : seen.add(r.key))
+      const map = Object.fromEntries(deduped.map(r => [r.key, r.value]))
+      res.json({ settings: deduped, restaurant_name: map.restaurant_name || '' })
     } catch (e) { serverError(res, e) }
   })
 
   // ── Orders ────────────────────────────────────────────────────────────────
 
-  // GET /waiter/orders — active orders for this cashier
+  // GET /waiter/orders — active orders for this cashier scoped to brand + outlet
   router.get('/orders', jwtAuth, async (req, res) => {
     const cashierId = req.user.id
+    const brandId   = req.user?.brand_id  || null
+    const outletId  = req.user?.outlet_id || null
     try {
-      const orders = await sql`
-        SELECT o.id, o.order_number, o.order_type, o.table_id, o.table_name,
-               o.customer_name, o.status, o.total, o.created_at,
-               json_agg(
-                 json_build_object(
-                   'id',         oi.id,
-                   'item_name',  oi.item_name,
-                   'quantity',   oi.quantity,
-                   'unit_price', oi.unit_price,
-                   'notes',      oi.notes
-                 )
-               ) AS items
-        FROM orders o
-        JOIN order_items oi ON oi.order_id = o.id
-        WHERE o.status = 'active' AND o.cashier_id = ${cashierId}
-        GROUP BY o.id
-        ORDER BY o.created_at DESC`
+      const orders = brandId && outletId
+        ? await sql`
+            SELECT o.id, o.order_number, o.order_type, o.table_id, o.table_name,
+                   o.customer_name, o.status, o.total, o.created_at,
+                   json_agg(json_build_object('id',oi.id,'item_name',oi.item_name,'quantity',oi.quantity,'unit_price',oi.unit_price,'notes',oi.notes)) AS items
+            FROM orders o JOIN order_items oi ON oi.order_id = o.id
+            WHERE o.status = 'active' AND o.cashier_id = ${cashierId}
+              AND o.brand_id = ${brandId} AND o.outlet_id = ${outletId}
+            GROUP BY o.id ORDER BY o.created_at DESC`
+        : brandId
+        ? await sql`
+            SELECT o.id, o.order_number, o.order_type, o.table_id, o.table_name,
+                   o.customer_name, o.status, o.total, o.created_at,
+                   json_agg(json_build_object('id',oi.id,'item_name',oi.item_name,'quantity',oi.quantity,'unit_price',oi.unit_price,'notes',oi.notes)) AS items
+            FROM orders o JOIN order_items oi ON oi.order_id = o.id
+            WHERE o.status = 'active' AND o.cashier_id = ${cashierId} AND o.brand_id = ${brandId}
+            GROUP BY o.id ORDER BY o.created_at DESC`
+        : await sql`
+            SELECT o.id, o.order_number, o.order_type, o.table_id, o.table_name,
+                   o.customer_name, o.status, o.total, o.created_at,
+                   json_agg(json_build_object('id',oi.id,'item_name',oi.item_name,'quantity',oi.quantity,'unit_price',oi.unit_price,'notes',oi.notes)) AS items
+            FROM orders o JOIN order_items oi ON oi.order_id = o.id
+            WHERE o.status = 'active' AND o.cashier_id = ${cashierId}
+            GROUP BY o.id ORDER BY o.created_at DESC`
       res.json({ orders })
     } catch (e) { serverError(res, e) }
   })
@@ -265,8 +301,13 @@ module.exports = function waiterRouter (sql) {
     const { items = [] } = req.body || {}
 
     try {
-      const [order] = await sql`SELECT id, status FROM orders WHERE id = ${id}`
-      if (!order)         return res.status(404).json({ error: 'Order not found' })
+      const [order] = await sql`SELECT id, status, brand_id, outlet_id FROM orders WHERE id = ${id}`
+      if (!order) return res.status(404).json({ error: 'Order not found' })
+      // Verify order belongs to this brand + outlet
+      if (req.user.brand_id  && order.brand_id  && order.brand_id  !== req.user.brand_id)
+        return res.status(403).json({ error: 'Order not in your brand' })
+      if (req.user.outlet_id && order.outlet_id && order.outlet_id !== req.user.outlet_id)
+        return res.status(403).json({ error: 'Order belongs to another outlet' })
       if (order.status !== 'active')
         return res.status(409).json({ error: 'Order is not active' })
 

@@ -497,7 +497,12 @@ async function doLogin() {
     const r = await fetch(BASE + '/delivery/auth', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ boy_id: selectedBoy.id, pin: pinBuffer })
+      body: JSON.stringify({
+        boy_id:    selectedBoy.id,
+        pin:       pinBuffer,
+        brand_id:  getBrandId()  || undefined,
+        outlet_id: getOutletId() || undefined,
+      })
     })
     const data = await r.json()
     if (!r.ok) {

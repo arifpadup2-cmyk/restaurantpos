@@ -81,16 +81,22 @@ module.exports = function kitchenRouter (sql) {
   router.patch('/items/:itemId/done', authAny, async (req, res) => {
     const { itemId } = req.params
     const { done = true } = req.body || {}
-    const { brand_id } = scope(req)
+    const { brand_id, outlet_id } = scope(req)
     try {
-      // Verify item belongs to caller's brand via order
-      const [item] = await sql`
-        SELECT oi.id, oi.order_id, o.brand_id, o.outlet_id
-        FROM order_items oi
-        JOIN orders o ON o.id = oi.order_id
-        WHERE oi.id = ${itemId} AND o.brand_id = ${brand_id}`
+      // Verify item belongs to caller's brand and outlet
+      const [item] = outlet_id
+        ? await sql`
+            SELECT oi.id, oi.order_id, o.brand_id, o.outlet_id
+            FROM order_items oi
+            JOIN orders o ON o.id = oi.order_id
+            WHERE oi.id = ${itemId} AND o.brand_id = ${brand_id} AND o.outlet_id = ${outlet_id}`
+        : await sql`
+            SELECT oi.id, oi.order_id, o.brand_id, o.outlet_id
+            FROM order_items oi
+            JOIN orders o ON o.id = oi.order_id
+            WHERE oi.id = ${itemId} AND o.brand_id = ${brand_id}`
       if (!item) return res.status(404).json({ error: 'Item not found' })
-      if (req.terminal?.outlet_id && item.outlet_id && item.outlet_id !== req.terminal.outlet_id)
+      if (outlet_id && item.outlet_id && item.outlet_id !== outlet_id)
         return res.status(403).json({ error: 'Item belongs to another outlet' })
 
       await sql`UPDATE order_items SET done = ${done} WHERE id = ${itemId}`
@@ -102,13 +108,13 @@ module.exports = function kitchenRouter (sql) {
   // PATCH /kitchen/orders/:id/done — mark entire order as ready
   router.patch('/orders/:id/done', authAny, async (req, res) => {
     const { id } = req.params
-    const { brand_id } = scope(req)
+    const { brand_id, outlet_id } = scope(req)
     try {
-      const [order] = await sql`
-        SELECT id, brand_id, outlet_id FROM orders
-        WHERE id = ${id} AND brand_id = ${brand_id}`
+      const [order] = outlet_id
+        ? await sql`SELECT id, brand_id, outlet_id FROM orders WHERE id = ${id} AND brand_id = ${brand_id} AND outlet_id = ${outlet_id}`
+        : await sql`SELECT id, brand_id, outlet_id FROM orders WHERE id = ${id} AND brand_id = ${brand_id}`
       if (!order) return res.status(404).json({ error: 'Order not found' })
-      if (req.terminal?.outlet_id && order.outlet_id && order.outlet_id !== req.terminal.outlet_id)
+      if (outlet_id && order.outlet_id && order.outlet_id !== outlet_id)
         return res.status(403).json({ error: 'Order belongs to another outlet' })
 
       await sql`UPDATE order_items SET done = true WHERE order_id = ${id}`
