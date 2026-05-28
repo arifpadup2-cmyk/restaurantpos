@@ -409,20 +409,20 @@ module.exports = function menuRouter (sql) {
   })
 
   router.post('/modifier-groups', async (req, res) => {
-    const { name, min_select, max_select, required } = req.body || {}
+    const { name, min_select, max_select, required, type } = req.body || {}
     if (!name) return res.status(400).json({ error: 'name required' })
     try {
       const rid = req.user?.brand_id || null
       const row = await sql`
-        INSERT INTO modifier_groups (id, brand_id, name, min_select, max_select, required, created_at)
-        VALUES (${uid()}, ${rid}, ${name}, ${min_select || 0}, ${max_select || 1}, ${required || false}, ${Date.now()})
+        INSERT INTO modifier_groups (id, brand_id, name, min_select, max_select, required, type, created_at)
+        VALUES (${uid()}, ${rid}, ${name}, ${min_select || 0}, ${max_select || 1}, ${required || false}, ${type || 'modifier'}, ${Date.now()})
         RETURNING *`
       res.json({ ok: true, group: { ...row[0], options: [] } })
     } catch (e) { serverError(res, e) }
   })
 
   router.put('/modifier-groups/:id', async (req, res) => {
-    const { name, min_select, max_select, required } = req.body || {}
+    const { name, min_select, max_select, required, type } = req.body || {}
     const rid = req.user?.brand_id || null
     try {
       const row = await sql`
@@ -430,7 +430,8 @@ module.exports = function menuRouter (sql) {
           name       = COALESCE(${name ?? null}, name),
           min_select = COALESCE(${min_select ?? null}, min_select),
           max_select = COALESCE(${max_select ?? null}, max_select),
-          required   = COALESCE(${required ?? null}, required)
+          required   = COALESCE(${required ?? null}, required),
+          type       = COALESCE(${type ?? null}, type)
         WHERE id = ${req.params.id} AND brand_id = ${rid}
         RETURNING *`
       if (!row.length) return res.status(404).json({ error: 'not found' })

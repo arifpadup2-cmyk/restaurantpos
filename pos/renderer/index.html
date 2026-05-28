@@ -877,6 +877,10 @@ textarea:focus-visible {
 .mpick-opt.selected .mpick-opt-check{opacity:1}
 .mpick-opt-name{font-size:13px;font-weight:700;color:var(--text);line-height:1.3;word-break:break-word}
 .mpick-opt-price{font-size:12px;font-weight:800;color:var(--primary)}
+.mpick-section-hdr{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);padding:8px 0 4px;border-top:1px solid var(--border);margin-top:8px}
+.mpick-section-hdr:first-child{border-top:none;margin-top:0}
+.mpick-addon-hdr{color:var(--primary)}
+.mpick-addon-price{font-size:13px;font-weight:800;color:var(--primary);background:#fff7ed;padding:2px 8px;border-radius:20px}
 .op-item-variant{font-size:11px;color:var(--primary);font-weight:700;margin-top:1px}
 .op-item-mods{font-size:10px;color:#8b5cf6;margin-top:1px}
 /* Order panel */
@@ -5343,26 +5347,43 @@ function openModifierPrompt(item, preSelections) {
   _pendingModSelections = {};
   document.getElementById('mp-item-name').textContent = item.name;
   const groups = item.mod_groups || [];
-  const html = groups.map(g => {
-    const opts = (g.options || []).filter(o => o.active !== false && o.active !== 0);
-    const isMulti = g.max_select > 1;
-    return `<div class="mpick-group" id="mpg-${g.id}">
-      <div class="mpick-group-title">
-        ${esc(g.name)}
-        ${g.required ? '<span class="mpick-required-badge">Required</span>' : '<span style="font-size:10px;color:var(--muted)">(Optional)</span>'}
-        ${!isMulti ? '<span style="font-size:10px;color:var(--muted)">Choose 1</span>' : `<span style="font-size:10px;color:var(--muted)">Up to ${g.max_select}</span>`}
-      </div>
-      <div class="mpick-opts-grid">
-        ${opts.map(o => `
-          <div class="mpick-opt" id="mopt-${g.id}-${o.id}" onclick="toggleModOption('${g.id}','${o.id}',${g.max_select},${JSON.stringify(o).replace(/"/g,'&quot;')})">
-            <span class="mpick-opt-check">✓</span>
-            <span class="mpick-opt-name">${esc(o.name)}</span>
-            ${parseFloat(o.price) > 0 ? `<span class="mpick-opt-price">+${settings.currency} ${parseFloat(o.price).toFixed(2)}</span>` : ''}
-          </div>`).join('')}
-      </div>
-    </div>`;
-  }).join('');
-  document.getElementById('mp-groups').innerHTML = html || '<p style="color:var(--muted);text-align:center;font-size:13px">No modifier options available.</p>';
+  const modifierGroups = groups.filter(g => (g.type || 'modifier') === 'modifier');
+  const addonGroups = groups.filter(g => g.type === 'addon');
+
+  const renderGroups = (groupsToRender) => {
+    return groupsToRender.map(g => {
+      const opts = (g.options || []).filter(o => o.active !== false && o.active !== 0);
+      const isMulti = g.max_select > 1;
+      const isAddon = g.type === 'addon';
+      return `<div class="mpick-group" id="mpg-${g.id}">
+        <div class="mpick-group-title">
+          ${esc(g.name)}
+          ${g.required ? '<span class="mpick-required-badge">Required</span>' : '<span style="font-size:10px;color:var(--muted)">(Optional)</span>'}
+          ${!isMulti ? '<span style="font-size:10px;color:var(--muted)">Choose 1</span>' : `<span style="font-size:10px;color:var(--muted)">Up to ${g.max_select}</span>`}
+        </div>
+        <div class="mpick-opts-grid">
+          ${opts.map(o => `
+            <div class="mpick-opt" id="mopt-${g.id}-${o.id}" onclick="toggleModOption('${g.id}','${o.id}',${g.max_select},${JSON.stringify(o).replace(/"/g,'&quot;')})">
+              <span class="mpick-opt-check">✓</span>
+              <span class="mpick-opt-name">${esc(o.name)}</span>
+              ${isAddon && parseFloat(o.price) > 0 ? `<span class="mpick-addon-price">+${settings.currency} ${parseFloat(o.price).toFixed(2)}</span>` : parseFloat(o.price) > 0 ? `<span class="mpick-opt-price">+${settings.currency} ${parseFloat(o.price).toFixed(2)}</span>` : ''}
+            </div>`).join('')}
+        </div>
+      </div>`;
+    }).join('');
+  };
+
+  let html = '';
+  if (modifierGroups.length) {
+    html += '<div class="mpick-section-hdr">Customise</div>';
+    html += renderGroups(modifierGroups);
+  }
+  if (addonGroups.length) {
+    html += '<div class="mpick-section-hdr mpick-addon-hdr">Add-ons</div>';
+    html += renderGroups(addonGroups);
+  }
+  if (!html) html = '<p style="color:var(--muted);text-align:center;font-size:13px">No modifier options available.</p>';
+  document.getElementById('mp-groups').innerHTML = html;
   document.getElementById('modal-modifier-prompt').style.display = 'flex';
 }
 

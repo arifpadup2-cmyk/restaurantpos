@@ -3173,24 +3173,48 @@ input:checked+.toggle-slider:before{transform:translateX(17px)}
           </div>
         </div>
 
-        <!-- Modifier Groups -->
+        <!-- Modifiers -->
         <div class="ie-card">
           <div class="ie-card-hdr">
             <h3>
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
-              Modifier Groups
+              Modifiers
               <span class="cfg-badge" id="ie-mod-count" style="font-size:10px;min-width:16px">0</span>
             </h3>
-            <button class="btn btn-outline btn-sm" onclick="ieShowModPicker()">
-              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71"/></svg> Link Group
+            <button class="btn btn-outline btn-sm" onclick="ieShowModPicker('modifier')">
+              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71"/></svg> Link Modifier
             </button>
           </div>
           <div class="ie-card-body">
+            <p class="ie-card-hint" style="font-size:12px;color:#64748b;margin-bottom:12px">Customisations — spice level, no onions, cooking style.</p>
             <div id="ie-mods-list"></div>
             <div id="ie-mods-empty" class="ie-empty-state">
               <div class="ie-empty-state-icon">🧩</div>
-              <div class="ie-empty-state-title">No modifier groups linked</div>
-              <div class="ie-empty-state-sub">Modifier groups let customers customise their order — add-ons, spice levels, sauces.<br><a href="#" onclick="showConfigTab('modifier-groups');return false" style="color:var(--primary)">Create a group in Configuration →</a></div>
+              <div class="ie-empty-state-title">No modifiers linked</div>
+              <div class="ie-empty-state-sub">Let customers customise their order.<br><a href="#" onclick="showConfigTab('modifier-groups');return false" style="color:var(--primary)">Create in Configuration →</a></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Add-ons -->
+        <div class="ie-card">
+          <div class="ie-card-hdr">
+            <h3>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="1"/><path d="M12 2v6m0 4v6M2 12h6m4 0h6"/></svg>
+              Add-ons
+              <span class="cfg-badge" id="ie-addon-count" style="font-size:10px;min-width:16px">0</span>
+            </h3>
+            <button class="btn btn-outline btn-sm" onclick="ieShowModPicker('addon')">
+              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71"/></svg> Link Add-on
+            </button>
+          </div>
+          <div class="ie-card-body">
+            <p class="ie-card-hint" style="font-size:12px;color:#64748b;margin-bottom:12px">Priced extras — Extra Cheese +RM2, Extra Sauce +RM1. Added to item total.</p>
+            <div id="ie-addons-list"></div>
+            <div id="ie-addons-empty" class="ie-empty-state">
+              <div class="ie-empty-state-icon">✨</div>
+              <div class="ie-empty-state-title">No add-ons linked</div>
+              <div class="ie-empty-state-sub">Offer premium extras for additional cost.<br><a href="#" onclick="showConfigTab('modifier-groups');return false" style="color:var(--primary)">Create in Configuration →</a></div>
             </div>
           </div>
         </div>
@@ -3402,7 +3426,7 @@ input:checked+.toggle-slider:before{transform:translateX(17px)}
 <!-- Modifier Group Picker Modal -->
 <div class="modal-overlay" id="modal-mod-picker">
   <div class="modal" style="max-width:480px">
-    <h3>Link Modifier Group</h3>
+    <h3 id="modal-mod-picker-title">Link Modifier Group</h3>
     <p style="font-size:12px;color:var(--muted);margin-bottom:12px">Select modifier groups to link to this item. Already linked groups are highlighted.</p>
     <div id="mod-pick-list" style="max-height:320px;overflow-y:auto;display:flex;flex-direction:column;gap:6px"></div>
     <div class="modal-footer" style="margin-top:16px">
@@ -5684,38 +5708,70 @@ function ieRemoveVariant (key) {
 }
 
 function ieRenderModGroups () {
-  const list  = document.getElementById('ie-mods-list')
-  const empty = document.getElementById('ie-mods-empty')
-  const count = document.getElementById('ie-mod-count')
-  if (count) count.textContent = _ieLinkedMods.length
-  document.getElementById('ies-mods').textContent = _ieLinkedMods.length
-  if (!_ieLinkedMods.length) {
-    if (list) list.innerHTML = ''
-    if (empty) empty.style.display = ''
-    return
+  const mods = _ieLinkedMods.filter(g => (g.type || 'modifier') === 'modifier')
+  const addons = _ieLinkedMods.filter(g => g.type === 'addon')
+
+  // Render modifiers
+  const modsList  = document.getElementById('ie-mods-list')
+  const modsEmpty = document.getElementById('ie-mods-empty')
+  const modCount  = document.getElementById('ie-mod-count')
+  if (modCount) modCount.textContent = mods.length
+  if (!mods.length && modsList) {
+    modsList.innerHTML = ''
+    if (modsEmpty) modsEmpty.style.display = ''
+  } else {
+    if (modsEmpty) modsEmpty.style.display = 'none'
+    if (modsList) modsList.innerHTML = mods.map(g => `
+      <div class="ie-mod-chip">
+        <div style="flex:1">
+          <div class="ie-mod-chip-name">${g.name}</div>
+          <div class="ie-mod-chip-opts">${(g.options||[]).length} option${(g.options||[]).length!==1?'s':''} · ${g.required?'Required':'Optional'} · Pick ${g.min_select}–${g.max_select}</div>
+        </div>
+        <button class="btn btn-outline btn-sm btn-icon" onclick="ieUnlinkMod('${g.id}')"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+      </div>`).join('')
   }
-  if (empty) empty.style.display = 'none'
-  list.innerHTML = _ieLinkedMods.map(g => `
-    <div class="ie-mod-chip">
-      <div style="flex:1">
-        <div class="ie-mod-chip-name">${g.name}</div>
-        <div class="ie-mod-chip-opts">${(g.options||[]).length} option${(g.options||[]).length!==1?'s':''} · ${g.required?'Required':'Optional'} · Pick ${g.min_select}–${g.max_select}</div>
-      </div>
-      <button class="btn btn-outline btn-sm btn-icon" onclick="ieUnlinkMod('${g.id}')"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
-    </div>`).join('')
+
+  // Render add-ons
+  const addonsList  = document.getElementById('ie-addons-list')
+  const addonsEmpty = document.getElementById('ie-addons-empty')
+  const addonCount  = document.getElementById('ie-addon-count')
+  if (addonCount) addonCount.textContent = addons.length
+  if (!addons.length && addonsList) {
+    addonsList.innerHTML = ''
+    if (addonsEmpty) addonsEmpty.style.display = ''
+  } else {
+    if (addonsEmpty) addonsEmpty.style.display = 'none'
+    if (addonsList) addonsList.innerHTML = addons.map(g => `
+      <div class="ie-mod-chip">
+        <div style="flex:1">
+          <div class="ie-mod-chip-name">${g.name}</div>
+          <div class="ie-mod-chip-opts">${(g.options||[]).length} option${(g.options||[]).length!==1?'s':''} · ${g.required?'Required':'Optional'} · Pick ${g.min_select}–${g.max_select}</div>
+        </div>
+        <button class="btn btn-outline btn-sm btn-icon" onclick="ieUnlinkMod('${g.id}')"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+      </div>`).join('')
+  }
 }
 
-async function ieShowModPicker () {
+let _ieModPickerFilterType = 'modifier'
+
+async function ieShowModPicker (filterType) {
+  _ieModPickerFilterType = filterType || 'modifier'
   if (!_allModGroups.length) {
     try { const { groups } = await apiFetch('GET', '/menu/modifier-groups'); _allModGroups = groups || [] } catch (_) {}
   }
   const list = document.getElementById('mod-pick-list')
+  const title = document.getElementById('modal-mod-picker-title')
   if (!list) return
+
+  // Update modal title
+  if (title) title.textContent = filterType === 'addon' ? 'Link Add-on Group' : 'Link Modifier Group'
+
   if (!_allModGroups.length) {
     list.innerHTML = `<div style="text-align:center;padding:20px;color:var(--muted);font-size:13px">No modifier groups yet. <a href="#" onclick="closeModal('modal-mod-picker');showConfigTab('modifier-groups');return false" style="color:var(--primary)">Create one first</a>.</div>`
   } else {
-    const linkedIds = new Set(_ieLinkedMods.map(m => m.id))
-    list.innerHTML = _allModGroups.map(g => `
+    const filtered = _allModGroups.filter(g => (g.type || 'modifier') === filterType)
+    const linkedIds = new Set(_ieLinkedMods.filter(m => (m.type || 'modifier') === filterType).map(m => m.id))
+    list.innerHTML = filtered.map(g => `
       <div class="mod-pick-item ${linkedIds.has(g.id)?'linked':''}" onclick="ieToggleMod('${g.id}')">
         <div style="flex:1">
           <div style="font-size:13px;font-weight:600">${g.name}</div>
@@ -5985,6 +6041,14 @@ async function cfgLoadModifierGroups () {
 function cfgAddModifierGroup () { cfgOpenModGroupModal(null) }
 function cfgEditModifierGroup (g) { cfgOpenModGroupModal(g) }
 
+function setMgmType (type) {
+  const typeInput = document.getElementById('mgm-type')
+  if (typeInput) typeInput.value = type
+  document.querySelectorAll('.seg-btn[data-type]').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.type === type)
+  })
+}
+
 function cfgOpenModGroupModal (g) {
   const isEdit = !!g
   const html = `
@@ -5999,6 +6063,14 @@ function cfgOpenModGroupModal (g) {
           <div class="form-group"><label>Required?</label>
             <div style="padding:8px 0"><label class="toggle-switch"><input type="checkbox" id="mgm-req" ${g?.required?'checked':''}><span class="toggle-slider"></span></label></div>
           </div>
+        </div>
+        <div class="form-group">
+          <label>Group Type</label>
+          <div style="display:flex;gap:8px;margin-top:6px">
+            <button type="button" class="btn seg-btn ${(!g?.type || g?.type==='modifier')?'active':''}" data-type="modifier" onclick="setMgmType('modifier')" style="flex:1">Modifier</button>
+            <button type="button" class="btn seg-btn ${g?.type==='addon'?'active':''}" data-type="addon" onclick="setMgmType('addon')" style="flex:1">Add-on</button>
+          </div>
+          <input type="hidden" id="mgm-type" value="${g?.type||'modifier'}">
         </div>
         <div style="margin:10px 0 6px;font-size:12px;font-weight:700">Options</div>
         <div id="mgm-opts-list" style="display:flex;flex-direction:column;gap:6px;margin-bottom:8px">
@@ -6041,6 +6113,7 @@ async function cfgSaveModifierGroup () {
     min_select: parseInt(document.getElementById('mgm-min').value) || 0,
     max_select: parseInt(document.getElementById('mgm-max').value) || 1,
     required:   document.getElementById('mgm-req').checked,
+    type:       document.getElementById('mgm-type').value || 'modifier',
   }
   try {
     let groupId = id
