@@ -2147,43 +2147,61 @@ textarea:focus-visible {
             </div>
           </div>
 
-          <!-- ── BILL PRINTER CONFIGURATION ── -->
-          <div class="settings-section" id="bill-printer-section">
-            <h3 style="display:flex;align-items:center;gap:8px"><span style="font-size:18px">🧾</span>Bill Printer Configuration</h3>
-            <p style="font-size:13px;color:var(--muted);margin-bottom:14px">Printer for customer receipts and bills.</p>
-            <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-bottom:14px">
-              <select id="bill-printer-sel" style="flex:1;min-width:200px;padding:8px 10px;border:1.5px solid var(--border);border-radius:7px;background:var(--card);color:var(--text);font-size:13px">
-                <option value="">— Not configured (will ask when printing) —</option>
-              </select>
-              <button class="btn-primary" onclick="savePrinterAssignments()" style="white-space:nowrap">Save</button>
-            </div>
-            <p id="bill-printer-status" style="font-size:12px;color:var(--muted);margin:0"></p>
-          </div>
+          <!-- ── PRINTER ASSIGNMENT TABS ── -->
+          <div style="margin-top:28px;padding-top:28px;border-top:1.5px solid var(--border)">
+            <h2 style="font-size:15px;font-weight:700;margin-bottom:14px">Printer Assignments</h2>
 
-          <!-- ── MASTER KOT PRINTER CONFIGURATION ── -->
-          <div class="settings-section" id="master-kot-section">
-            <h3 style="display:flex;align-items:center;gap:8px"><span style="font-size:18px">🖨</span>Master KOT Printer Configuration</h3>
-            <p style="font-size:13px;color:var(--muted);margin-bottom:14px">Single printer receives one KOT with all items. Takes priority over kitchen-wise routing.</p>
-            <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-bottom:14px">
-              <select id="master-kot-sel" style="flex:1;min-width:200px;padding:8px 10px;border:1.5px solid var(--border);border-radius:7px;background:var(--card);color:var(--text);font-size:13px">
-                <option value="">— Not configured —</option>
-              </select>
-              <button class="btn-primary" onclick="savePrinterAssignments()" style="white-space:nowrap">Save</button>
+            <!-- Tab Buttons -->
+            <div style="display:flex;gap:8px;margin-bottom:16px;border-bottom:1.5px solid var(--border);padding-bottom:0">
+              <button class="assignment-tab active" onclick="showAssignmentTab('bill')" style="padding:10px 16px;border:none;background:none;cursor:pointer;font-size:13px;font-weight:600;color:var(--text);border-bottom:3px solid transparent;transition:all .2s;position:relative;bottom:-1.5px">🧾 Bill Printer</button>
+              <button class="assignment-tab" onclick="showAssignmentTab('master')" style="padding:10px 16px;border:none;background:none;cursor:pointer;font-size:13px;font-weight:600;color:var(--text);border-bottom:3px solid transparent;transition:all .2s;position:relative;bottom:-1.5px">🖨️ Master KOT</button>
+              <button class="assignment-tab" onclick="showAssignmentTab('kitchen')" style="padding:10px 16px;border:none;background:none;cursor:pointer;font-size:13px;font-weight:600;color:var(--text);border-bottom:3px solid transparent;transition:all .2s;position:relative;bottom:-1.5px">🍳 Kitchen-wise</button>
             </div>
-            <p id="master-kot-status" style="font-size:12px;color:var(--muted);margin:0"></p>
-          </div>
 
-          <!-- ── KITCHEN DEPARTMENT-WISE KOT CONFIGURATION ── -->
-          <div class="settings-section" id="kitchen-kot-section">
-            <h3 style="display:flex;align-items:center;gap:8px"><span style="font-size:18px">🍳</span>Kitchen Department-wise KOT Configuration</h3>
-            <p style="font-size:13px;color:var(--muted);margin-bottom:14px">Assign printer per kitchen. Items routed by category → kitchen. Local only, no server sync. Used when Master KOT not set.</p>
-            <div id="kitchen-printer-rows" style="margin-bottom:14px;border:1px solid var(--border);border-radius:8px;overflow:hidden">Loading kitchens…</div>
-            <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px">
-              <button class="btn-primary" onclick="saveKitchenPrinterConfig()">Save Kitchen Config</button>
-              <button class="btn-outline" onclick="loadPrinterAssignments()">↻ Refresh</button>
+            <!-- Bill Printer Tab -->
+            <div id="assignment-tab-bill" class="assignment-tab-content" style="display:block">
+              <div class="settings-section" id="bill-printer-section">
+                <h3 style="display:flex;align-items:center;gap:8px;margin-top:0"><span style="font-size:18px">🧾</span>Bill Printer Configuration</h3>
+                <p style="font-size:13px;color:var(--muted);margin-bottom:14px">Printer for customer receipts and bills.</p>
+                <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-bottom:14px">
+                  <select id="bill-printer-sel" style="flex:1;min-width:200px;padding:8px 10px;border:1.5px solid var(--border);border-radius:7px;background:var(--card);color:var(--text);font-size:13px">
+                    <option value="">— Not configured (will ask when printing) —</option>
+                  </select>
+                  <button class="btn-primary" onclick="savePrinterAssignments()" style="white-space:nowrap">Save</button>
+                </div>
+                <p id="bill-printer-status" style="font-size:12px;color:var(--muted);margin:0"></p>
+              </div>
             </div>
+
+            <!-- Master KOT Tab -->
+            <div id="assignment-tab-master" class="assignment-tab-content" style="display:none">
+              <div class="settings-section" id="master-kot-section">
+                <h3 style="display:flex;align-items:center;gap:8px;margin-top:0"><span style="font-size:18px">🖨️</span>Master KOT Printer Configuration</h3>
+                <p style="font-size:13px;color:var(--muted);margin-bottom:14px">Single printer receives one KOT with all items. Takes priority over kitchen-wise routing.</p>
+                <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-bottom:14px">
+                  <select id="master-kot-sel" style="flex:1;min-width:200px;padding:8px 10px;border:1.5px solid var(--border);border-radius:7px;background:var(--card);color:var(--text);font-size:13px">
+                    <option value="">— Not configured —</option>
+                  </select>
+                  <button class="btn-primary" onclick="savePrinterAssignments()" style="white-space:nowrap">Save</button>
+                </div>
+                <p id="master-kot-status" style="font-size:12px;color:var(--muted);margin:0"></p>
+              </div>
+            </div>
+
+            <!-- Kitchen-wise Tab -->
+            <div id="assignment-tab-kitchen" class="assignment-tab-content" style="display:none">
+              <div class="settings-section" id="kitchen-kot-section">
+                <h3 style="display:flex;align-items:center;gap:8px;margin-top:0"><span style="font-size:18px">🍳</span>Kitchen Department-wise KOT Configuration</h3>
+                <p style="font-size:13px;color:var(--muted);margin-bottom:14px">Assign printer per kitchen. Items routed by category → kitchen. Local only, no server sync. Used when Master KOT not set.</p>
+                <div id="kitchen-printer-rows" style="margin-bottom:14px;border:1px solid var(--border);border-radius:8px;overflow:hidden">Loading kitchens…</div>
+                <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px">
+                  <button class="btn-primary" onclick="saveKitchenPrinterConfig()">Save Kitchen Config</button>
+                  <button class="btn-outline" onclick="loadPrinterAssignments()">↻ Refresh</button>
+                </div>
                 <p id="kitchen-printer-status" style="font-size:12px;color:var(--muted);margin:0"></p>
               </div>
+            </div>
+          </div>
               </div>
             </div>
 
@@ -6837,6 +6855,38 @@ function renderThemeSwatches() {
       <span style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:var(--muted)">🌙 Dark</span>
       <div style="display:flex;flex-wrap:wrap;gap:14px;margin-top:10px">${renderGroup(darkThemes)}</div>
     </div>`;
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  PRINTER ASSIGNMENT TABS
+// ═══════════════════════════════════════════════════════════════
+function showAssignmentTab(tabId) {
+  // Hide all tabs
+  const tabs = document.querySelectorAll('.assignment-tab-content');
+  tabs.forEach(t => t.style.display = 'none');
+
+  // Show selected tab
+  const selected = document.getElementById(`assignment-tab-${tabId}`);
+  if (selected) selected.style.display = 'block';
+
+  // Update tab button styling
+  const buttons = document.querySelectorAll('.assignment-tab');
+  buttons.forEach(b => {
+    b.style.borderBottomColor = 'transparent';
+    b.style.color = 'var(--text)';
+  });
+
+  const activeBtn = Array.from(buttons).find(b => {
+    const text = b.textContent.toLowerCase();
+    return (tabId === 'bill' && text.includes('bill')) ||
+           (tabId === 'master' && text.includes('master')) ||
+           (tabId === 'kitchen' && text.includes('kitchen'));
+  });
+
+  if (activeBtn) {
+    activeBtn.style.borderBottomColor = 'var(--primary)';
+    activeBtn.style.color = 'var(--primary)';
+  }
 }
 
 // ═══════════════════════════════════════════════════════════════
