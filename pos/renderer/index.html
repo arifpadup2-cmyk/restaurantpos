@@ -725,12 +725,11 @@ textarea:focus-visible {
 .orders-header{display:flex;align-items:center;padding:12px 18px;background:#fff;border-bottom:1px solid var(--border);flex-shrink:0;gap:10px}
 .orders-header-left{display:flex;align-items:center;gap:10px;flex:1}
 .orders-header-left h2{font-size:18px;font-weight:800;color:var(--secondary);white-space:nowrap}
-.orders-header-center{flex:2;display:flex;justify-content:center;align-items:center}
 .orders-refresh-btn{width:32px;height:32px;border-radius:8px;background:var(--bg);border:1.5px solid var(--border);color:var(--muted);font-size:16px;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;transition:.15s}
 .orders-refresh-btn:hover{border-color:var(--primary);color:var(--primary)}
 .orders-count-badge{background:#eff6ff;color:#1d4ed8;font-size:12px;font-weight:700;padding:3px 10px;border-radius:20px;white-space:nowrap}
-.orders-header-right{display:flex;align-items:center;gap:8px;flex:1;justify-content:flex-end;min-width:0}
-.orders-search-wrap{display:flex;align-items:center;gap:8px;background:var(--bg);border:1.5px solid var(--border);border-radius:8px;padding:7px 12px;width:100%;max-width:420px}
+.orders-header-right{display:flex;align-items:center;gap:10px;flex:2;min-width:0}
+.orders-search-wrap{display:flex;align-items:center;gap:8px;background:var(--bg);border:1.5px solid var(--border);border-radius:8px;padding:7px 12px;flex:1;min-width:0}
 .orders-search-wrap svg{flex-shrink:0;color:var(--muted)}
 .orders-search-wrap input{flex:1;border:none;background:none;font-size:13px;color:var(--text);outline:none;min-width:0}
 .orders-search-wrap input::placeholder{color:var(--muted)}
@@ -744,33 +743,31 @@ textarea:focus-visible {
 .otab-count{background:var(--bg);border-radius:10px;font-size:11px;font-weight:700;padding:1px 7px;min-width:20px;text-align:center}
 .otab.active .otab-count{background:var(--primary);color:#fff}
 .orders-tabs-spacer{flex:1;min-width:8px}
-.new-order-btn{align-self:center;padding:12px 28px;background:var(--primary);color:#fff;border-radius:12px;font-size:16px;font-weight:800;cursor:pointer;white-space:nowrap;border:none;flex-shrink:0;margin:4px 0;transition:.15s;box-shadow:0 4px 12px rgba(232,93,4,.35);letter-spacing:.01em;min-height:48px}
-.new-order-btn:hover{background:var(--primary-d);box-shadow:0 6px 18px rgba(232,93,4,.45);transform:translateY(-1px)}
-.new-order-btn:active{transform:translateY(0);box-shadow:0 2px 8px rgba(232,93,4,.3)}
+.new-order-btn{align-self:center;padding:10px 22px;background:linear-gradient(135deg,#f97316,#ea580c);color:#fff;border-radius:100px;font-size:14px;font-weight:700;cursor:pointer;white-space:nowrap;border:none;flex-shrink:0;margin:4px 0;transition:.2s;box-shadow:0 4px 14px rgba(232,93,4,.4);letter-spacing:.01em;min-height:40px;display:inline-flex;align-items:center;gap:7px}
+.new-order-btn:hover{box-shadow:0 6px 20px rgba(232,93,4,.5);transform:translateY(-1px)}
+.new-order-btn:active{transform:scale(.97);box-shadow:0 2px 8px rgba(232,93,4,.3)}
 .orders-grid-area{flex:1;overflow-y:auto;padding:14px 18px;background:var(--bg)}
-.orders-card-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(195px,1fr));gap:12px;align-content:start}
-/* Order cards */
-.ocard{background:#fff;border-radius:12px;padding:14px 14px 12px;cursor:pointer;border:1.5px solid var(--border);transition:.2s;position:relative;overflow:hidden}
-.ocard:hover{border-color:var(--primary);box-shadow:0 4px 16px rgba(249,115,22,.12);transform:translateY(-1px)}
-.ocard:active{transform:scale(.98)}
-.ocard-bar{position:absolute;left:0;top:0;bottom:0;width:4px}
+.orders-card-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:14px;align-content:start}
+/* Order cards — modern elevation style */
+.ocard{background:#fff;border-radius:16px;padding:0;cursor:pointer;border:none;box-shadow:0 2px 8px rgba(0,0,0,.06),0 0 0 1px rgba(0,0,0,.05);transition:transform .15s ease,box-shadow .15s ease;overflow:hidden;display:flex;flex-direction:column}
+.ocard:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(0,0,0,.1),0 0 0 1px rgba(0,0,0,.06)}
+.ocard:active{transform:scale(.98);box-shadow:0 2px 8px rgba(0,0,0,.06)}
+.ocard-accent{height:4px;flex-shrink:0;border-radius:16px 16px 0 0}
+.ocard-body{padding:14px 14px 12px;display:flex;flex-direction:column;flex:1}
 .ocard-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
-.ocard-status{font-size:11px;font-weight:700;padding:3px 10px;border-radius:20px;display:inline-flex;align-items:center;gap:4px;white-space:nowrap}
-.ocard-new{background:var(--warning-bg);color:var(--warning);border:1px solid var(--warning-border)}
-.ocard-ready{background:var(--success-bg);color:var(--success);border:1px solid var(--success-border)}
-.ocard-priority{background:var(--info-bg);color:var(--info);border:1px solid var(--info-border)}
-.ocard-delivery{background:var(--info-bg);color:#0369a1;border:1px solid var(--info-border)}
-.ocard-time{font-size:11px;color:var(--muted);font-weight:500}
-.ocard-num{font-size:15px;font-weight:800;color:var(--secondary);margin-bottom:8px}
-.ocard-info-row{display:flex;align-items:center;gap:8px;margin-bottom:10px;padding:7px 9px;background:var(--bg);border-radius:8px}
-.ocard-type-icon{width:26px;height:26px;border-radius:7px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:13px}
-.ocard-info-text{font-size:12px;font-weight:600;color:var(--text);line-height:1.3;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.ocard-footer{display:flex;align-items:center;justify-content:space-between;border-top:1px solid var(--border);padding-top:8px;margin-top:2px}
-.ocard-items-count{font-size:12px;color:var(--muted)}
-.ocard-total{font-size:15px;font-weight:800;color:#15803d}
-.ocard-cashier{font-size:11px;color:var(--muted);font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:110px}
-.ocard-cust{font-size:12px;color:var(--secondary);font-weight:600;padding:2px 0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:flex;align-items:center;gap:4px}
-.ocard-agg-id{font-size:11px;color:#0369a1;background:#eff6ff;border-radius:6px;padding:2px 7px;display:inline-block;margin:2px 0 4px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;box-sizing:border-box}
+.ocard-type-chip{display:inline-flex;align-items:center;gap:5px;padding:4px 10px 4px 7px;border-radius:100px;font-size:11px;font-weight:700;letter-spacing:.3px}
+.ocard-time{font-size:11px;color:var(--muted);font-weight:500;background:var(--bg);padding:3px 8px;border-radius:100px;white-space:nowrap;flex-shrink:0}
+.ocard-num{font-size:18px;font-weight:800;color:var(--secondary);margin-bottom:8px;letter-spacing:-.3px}
+.ocard-info-row{display:flex;align-items:center;gap:6px;margin-bottom:10px;font-size:13px;font-weight:600;color:var(--text);min-width:0}
+.ocard-info-text{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1;min-width:0}
+.ocard-footer{display:flex;align-items:center;justify-content:space-between;border-top:1px solid rgba(0,0,0,.06);padding-top:10px;margin-top:auto;gap:6px}
+.ocard-cashier{font-size:11px;color:var(--muted);font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:120px;display:flex;align-items:center;gap:4px;flex-shrink:1;min-width:0}
+.ocard-total{font-size:16px;font-weight:800;flex-shrink:0}
+.ocard-agg-id{font-size:11px;color:#0369a1;background:#eff6ff;border-radius:6px;padding:3px 8px;display:inline-flex;align-items:center;gap:4px;margin-bottom:8px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;box-sizing:border-box}
+.ocard-items-badge{font-size:10px;font-weight:700;background:var(--bg);color:var(--muted);border:1px solid var(--border);border-radius:10px;padding:1px 7px;white-space:nowrap;flex-shrink:0;margin-left:auto}
+.ocard-overdue{box-shadow:0 2px 8px rgba(220,38,38,.15),0 0 0 1.5px rgba(220,38,38,.3)}
+.ocard-overdue:hover{box-shadow:0 8px 24px rgba(220,38,38,.2),0 0 0 1.5px rgba(220,38,38,.35)}
+.ocard-overdue-badge{display:inline-flex;align-items:center;justify-content:center;width:16px;height:16px;border-radius:50%;background:#ef4444;color:#fff;font-size:9px;font-weight:900;flex-shrink:0;line-height:1}
 /* Chair picker */
 .chair-table-wrap{display:flex;justify-content:center;padding:8px 0}
 .chair-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(62px,1fr));gap:8px;max-width:360px;width:100%}
@@ -1331,6 +1328,8 @@ textarea:focus-visible {
     <button class="menu-toggle" onclick="openDrawer()" title="Menu"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="22" height="22"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg></button>
     <div class="header-logo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="18" height="18" style="vertical-align:middle;margin-right:4px"><path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 002-2V2"/><path d="M7 2v20"/><path d="M21 15V2a5 5 0 00-5 5v6c0 1.1.9 2 2 2h3zm0 0v7"/></svg><span id="hdr-rest-name">Restaurant POS</span></div>
     <div class="header-info">
+      <span id="hdr-brand-info" style="display:none">Brand: <b id="hdr-brand">—</b></span>
+      <span id="hdr-outlet-info" style="display:none">Outlet: <b id="hdr-outlet">—</b></span>
       <span>Cashier: <b id="hdr-cashier">—</b></span>
       <span>Shift #<b id="hdr-shift">—</b></span>
       <span>Started: <b id="hdr-shift-time">—</b></span>
@@ -1413,27 +1412,25 @@ textarea:focus-visible {
           <!-- Header -->
           <div class="orders-header">
             <div class="orders-header-left">
-              <h2>All Open Orders</h2>
+              <h2 id="orders-header-title">All Open Orders</h2>
               <button class="orders-refresh-btn" onclick="loadActiveOrders()" title="Refresh">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="16" height="16"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"/></svg>
               </button>
               <span id="orders-count-badge" class="orders-count-badge" style="display:none"></span>
             </div>
-            <div class="orders-header-center">
+            <div class="orders-header-right">
+              <button class="new-order-btn" onclick="showNewOrderDialog()"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>New Order</button>
               <div class="orders-search-wrap">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="15" height="15"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-                <input type="text" id="orders-search" placeholder="Search by Order ID, Table or Customer..." oninput="renderOrderCards()">
+                <input type="text" id="orders-search" placeholder="Search by Order #, Table or Customer..." oninput="renderOrderCards()">
               </div>
             </div>
-            <div class="orders-header-right"></div>
           </div>
           <!-- Filter tabs (populated by renderOrderTabs()) -->
           <div class="orders-tabs-bar" id="orders-tabs-bar">
             <button class="otab active" onclick="filterOrderCards('all',this)" data-type="all">
               <span class="otab-dot" style="background:#6366f1"></span>All Orders<span class="otab-count" id="otc-all">0</span>
             </button>
-            <div class="orders-tabs-spacer"></div>
-            <button class="new-order-btn" onclick="showNewOrderDialog()">+ New Order</button>
           </div>
           <!-- Section sub-filter (shown for dine-in when sections exist) -->
           <div class="orders-section-bar" id="orders-section-bar" style="display:none"></div>
@@ -3280,8 +3277,7 @@ function renderOrderTabs() {
   }).join('');
   bar.innerHTML = `<button class="otab active" onclick="filterOrderCards('all',this)" data-type="all">
     <span class="otab-dot" style="background:#6366f1"></span>All Orders<span class="otab-count" id="otc-all">0</span>
-  </button>` + typeBtns + `<div class="orders-tabs-spacer"></div>
-  <button class="new-order-btn" onclick="showNewOrderDialog()">+ New Order</button>`;
+  </button>` + typeBtns;
 }
 
 function showCustomerDetailsModal() {
@@ -4114,6 +4110,20 @@ function enterPOS() {
   document.getElementById('hdr-cashier').textContent    = cashier.name;
   document.getElementById('hdr-shift').textContent      = (shift.id || '').substring(0,6).toUpperCase();
   document.getElementById('hdr-shift-time').textContent = new Date(shift.opened_at).toLocaleTimeString();
+
+  const cfg = window._posConfig || {};
+  const brandName  = cfg.restaurantName || settings.restaurant_name || '';
+  const outletName = cfg.outletName     || settings.branch_name     || '';
+  const brandEl  = document.getElementById('hdr-brand-info');
+  const outletEl = document.getElementById('hdr-outlet-info');
+  if (brandEl && brandName) {
+    document.getElementById('hdr-brand').textContent = brandName;
+    brandEl.style.display = '';
+  }
+  if (outletEl && outletName) {
+    document.getElementById('hdr-outlet').textContent = outletName;
+    outletEl.style.display = '';
+  }
   document.getElementById('screen-login').style.display = 'none';
   document.getElementById('app').style.display = 'flex';
   applyRoleRestrictions(cashier.role);
@@ -4753,6 +4763,11 @@ function renderOrderCards() {
     badge.textContent   = `${activeOrders.length} open`;
   }
 
+  // update header title based on active filter
+  const _titleMap = { all:'All Open Orders', 'dine-in':'Dine-in Orders', takeaway:'Takeaway Orders', delivery:'Delivery Orders', online:'Online Orders' };
+  const titleEl = document.getElementById('orders-header-title');
+  if (titleEl) titleEl.textContent = _titleMap[orderCardFilter] || 'Open Orders';
+
   // Section sub-filter bar (shown only for dine-in when 2+ sections exist)
   const secBar = document.getElementById('orders-section-bar');
   const tableSections = [...new Set(tables.filter(t => t.section_name).map(t => t.section_name))];
@@ -4823,38 +4838,56 @@ function renderOrderCards() {
     return;
   }
 
+  const _icDineIn  = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 002-2V2"/><path d="M7 2v20"/><path d="M21 15V2a5 5 0 00-5 5v6c0 1.1.9 2 2 2h3zm0 0v7"/></svg>';
+  const _icTakeaway = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 01-8 0"/></svg>';
+  const _icDelivery = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="3" width="15" height="13"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>';
+  const _icOnline   = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="2" width="14" height="20" rx="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg>';
+  const _icTable    = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9M15 21V9"/></svg>';
+  const _icPerson   = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>';
+  const _icCashier  = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>';
+  const _icLink     = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71"/></svg>';
+
   const typeConfig = {
-    'dine-in':  { bar:'#2563eb', icon:'🍽️', iconBg:'#eff6ff' },
-    'takeaway': { bar:'#16a34a', icon:'🛍️', iconBg:'#f0fdf4' },
-    'delivery': { bar:'#ea580c', icon:'🚗', iconBg:'#fff7ed' },
-    'online':   { bar:'#9333ea', icon:'📱', iconBg:'#fdf4ff' },
+    'dine-in':  { color:'#2563eb', chipBg:'#eff6ff', chipColor:'#1d4ed8', icon:_icDineIn,   label:'Dine In' },
+    'takeaway': { color:'#16a34a', chipBg:'#f0fdf4', chipColor:'#15803d', icon:_icTakeaway, label:'Takeaway' },
+    'delivery': { color:'#ea580c', chipBg:'#fff7ed', chipColor:'#c2410c', icon:_icDelivery, label:'Delivery' },
+    'online':   { color:'#9333ea', chipBg:'#fdf4ff', chipColor:'#7e22ce', icon:_icOnline,   label:'Online' },
   };
 
   grid.innerHTML = pageOrders.map(o => {
-    const tc      = typeConfig[o.order_type] || { bar:'#64748b', icon:'📋', iconBg:'#f1f5f9' };
-    const elapsed = timeAgo(o.created_at);
-    const infoLine = o.order_type === 'dine-in'
-      ? (o.table_name ? `🪑 ${esc(o.table_name)}` : 'No Table')
-      : (o.customer_name ? `👤 ${esc(o.customer_name)}` : '—');
-    const showCust = o.order_type !== 'dine-in' && o.customer_name; // dine-in shows table, others show cust in info
+    const tc       = typeConfig[o.order_type] || { color:'#64748b', chipBg:'#f1f5f9', chipColor:'#475569', icon:'', label:'Order' };
+    const elapsed  = timeAgo(o.created_at);
+    const isOverdue = (Date.now() - o.created_at) > 30 * 60 * 1000;
+    const infoIcon = o.order_type === 'dine-in' ? _icTable : _icPerson;
+    const infoText = o.order_type === 'dine-in'
+      ? (o.table_name ? esc(o.table_name) : 'No Table')
+      : (o.customer_name ? esc(o.customer_name) : '—');
     const aggLine  = o.aggregator_order_id
-      ? `<div class="ocard-agg-id">🔗 ${esc(o.aggregator_order_id)}</div>` : '';
-    return `<div class="ocard" onclick="openOrderInEntry('${o.id}')">
-      <div class="ocard-bar" style="background:${tc.bar}"></div>
-      <div class="ocard-top">
-        <div style="display:flex;align-items:center;gap:6px;min-width:0;overflow:hidden">
-          <div class="ocard-type-icon" style="background:${tc.iconBg};flex-shrink:0">${tc.icon}</div>
-          <span class="ocard-num" style="font-size:14px;font-weight:800;color:var(--secondary);white-space:nowrap">#${o.order_number}</span>
+      ? `<div class="ocard-agg-id">${_icLink}${esc(o.aggregator_order_id)}</div>` : '';
+    const itemCount = parseInt(o.item_count || 0);
+    const itemsBadge = itemCount > 0
+      ? `<span class="ocard-items-badge">${itemCount} item${itemCount !== 1 ? 's' : ''}</span>` : '';
+    return `<div class="ocard${isOverdue ? ' ocard-overdue' : ''}" onclick="openOrderInEntry('${o.id}')">
+      <div class="ocard-accent" style="background:${tc.color}"></div>
+      <div class="ocard-body">
+        <div class="ocard-top">
+          <div class="ocard-type-chip" style="background:${tc.chipBg};color:${tc.chipColor}">${tc.icon}${tc.label}</div>
+          <div style="display:flex;align-items:center;gap:5px">
+            ${isOverdue ? '<span class="ocard-overdue-badge" title="Order waiting over 30 minutes">!</span>' : ''}
+            <span class="ocard-time">${elapsed}</span>
+          </div>
         </div>
-        <span class="ocard-time">${elapsed}</span>
-      </div>
-      <div class="ocard-info-row" style="margin-bottom:4px">
-        <div class="ocard-info-text">${infoLine}</div>
-      </div>
-      ${aggLine}
-      <div class="ocard-footer">
-        <span class="ocard-cashier" title="${esc(o.cashier_name||'')}">◷ ${esc(o.cashier_name||'—')}</span>
-        <span class="ocard-total">${cur} ${parseFloat(o.total||0).toFixed(2)}</span>
+        <div class="ocard-num">#${o.order_number}</div>
+        <div class="ocard-info-row">
+          <span style="color:var(--muted);flex-shrink:0">${infoIcon}</span>
+          <span class="ocard-info-text">${infoText}</span>
+          ${itemsBadge}
+        </div>
+        ${aggLine}
+        <div class="ocard-footer">
+          <span class="ocard-cashier">${_icCashier}${esc(o.cashier_name||'—')}</span>
+          <span class="ocard-total" style="color:${tc.color}">${cur} ${parseFloat(o.total||0).toFixed(2)}</span>
+        </div>
       </div>
     </div>`;
   }).join('');
@@ -5793,15 +5826,14 @@ async function loadReceipts() {
   let sql = `SELECT * FROM orders WHERE status='paid'`;
   const params = [];
   if (dateFilter === 'today') {
-    const today = todayStr();
-    const start = new Date(today).getTime();
-    sql += ` AND created_at>=? AND created_at<?`;
+    const start = localDayStart(todayStr());
+    sql += ` AND COALESCE(billed_at,created_at)>=? AND COALESCE(billed_at,created_at)<?`;
     params.push(start, start + 86400000);
   } else if (dateFilter === '7days') {
-    sql += ` AND created_at>=?`;
+    sql += ` AND COALESCE(billed_at,created_at)>=?`;
     params.push(now - 7 * 86400000);
   } else if (dateFilter === '30days') {
-    sql += ` AND created_at>=?`;
+    sql += ` AND COALESCE(billed_at,created_at)>=?`;
     params.push(now - 30 * 86400000);
   }
   sql += ` ORDER BY billed_at DESC`;
@@ -5826,7 +5858,7 @@ function renderReceipts() {
     (o.table_name || '').toLowerCase().includes(search)
   );
   const cur = settings.currency;
-  const total = list.reduce((s, o) => s + (o.total || 0), 0);
+  const total = list.reduce((s, o) => s + parseFloat(o.total || 0), 0);
   document.getElementById('rc-count').textContent = `${list.length} receipt${list.length !== 1 ? 's' : ''}`;
   document.getElementById('rc-total').textContent = `${cur} ${total.toFixed(2)}`;
 
@@ -5840,13 +5872,14 @@ function renderReceipts() {
   tbody.innerHTML = list.map(o => {
     const tp   = tc[o.order_type] || {bg:'#f1f5f9',c:'#64748b'};
     const info = o.order_type === 'dine-in' ? (o.table_name || '—') : (o.customer_name || '—');
-    const dt   = new Date(o.billed_at || o.created_at);
+    const ts  = Number(o.billed_at) || Number(o.created_at) || Date.now();
+    const dt  = new Date(ts);
     const dateStr = dt.toLocaleDateString('en-GB', {day:'2-digit', month:'short', year:'numeric'});
     const timeStr = dt.toLocaleTimeString('en-US', {hour:'2-digit', minute:'2-digit'});
     return `<tr onclick="openReceiptDetail('${o.id}')">
       <td class="rc-order-num">#${o.order_number}</td>
       <td style="white-space:nowrap;font-size:12px">${dateStr}<br><span style="color:var(--muted)">${timeStr}</span></td>
-      <td><span style="background:${tp.bg};color:${tp.c};padding:2px 8px;border-radius:10px;font-size:11px;font-weight:600">${o.order_type.toUpperCase().replace('-',' ')}</span></td>
+      <td><span style="background:${tp.bg};color:${tp.c};padding:2px 8px;border-radius:10px;font-size:11px;font-weight:600">${(o.order_type||'').toUpperCase().replace('-',' ')}</span></td>
       <td>${esc(info)}</td>
       <td style="color:var(--muted);font-size:12px">${esc(o.cashier_name || '—')}</td>
       <td><span class="rc-pay-badge ${payClass(o.payment_method)}">${(o.payment_method || '—').toUpperCase()}</span></td>
@@ -6103,11 +6136,11 @@ async function addExpense() {
 
 async function loadTodayExpenses() {
   const today = todayStr();
-  const start = new Date(today).getTime();
+  const start = localDayStart(today);
   const end   = start + 86400000;
   const r     = await db.all('SELECT * FROM expenses WHERE created_at>=? AND created_at<? ORDER BY created_at DESC', [start, end]);
   const rows  = r.ok ? r.data : [];
-  const total = rows.reduce((s, e) => s + e.amount, 0);
+  const total = rows.reduce((s, e) => s + parseFloat(e.amount || 0), 0);
 
   document.getElementById('exp-date-label').textContent = `Today's Expenses — ${today}`;
   document.getElementById('exp-total').textContent = `${settings.currency} ${total.toFixed(2)}`;
@@ -6139,9 +6172,9 @@ async function loadShiftSummary() {
   const orders = r.ok ? r.data : [];
   const expRows = exps.ok ? exps.data : [];
 
-  const sales    = orders.reduce((s, o) => s + o.total, 0);
-  const expTotal = expRows.reduce((s, e) => s + e.amount, 0);
-  const cash     = orders.filter(o=>o.payment_method==='cash').reduce((s,o)=>s+o.total,0);
+  const sales    = orders.reduce((s, o) => s + parseFloat(o.total || 0), 0);
+  const expTotal = expRows.reduce((s, e) => s + parseFloat(e.amount || 0), 0);
+  const cash     = orders.filter(o=>o.payment_method==='cash').reduce((s,o)=>s+parseFloat(o.total||0),0);
 
   const expectedCash = (shift.opening_cash||0) + cash - expTotal;
   const variancePct = expectedCash > 0 ? Math.abs(settings.cash_variance_alert_pct) : 0;
@@ -6195,22 +6228,22 @@ async function closeShift() {
 // ═══════════════════════════════════════════════════════════════
 async function loadDaySummary() {
   const today = todayStr();
-  const start = new Date(today).getTime();
+  const start = localDayStart(today);
   const end   = start + 86400000;
   const cur   = settings.currency;
 
   document.getElementById('day-close-date').textContent = today;
 
-  const r    = await db.all(`SELECT * FROM orders WHERE created_at>=? AND created_at<? AND status='paid'`, [start, end]);
+  const r    = await db.all(`SELECT * FROM orders WHERE COALESCE(billed_at,created_at)>=? AND COALESCE(billed_at,created_at)<? AND status='paid'`, [start, end]);
   const exps = await db.all(`SELECT * FROM expenses WHERE created_at>=? AND created_at<?`, [start, end]);
   const orders  = r.ok ? r.data : [];
   const expRows = exps.ok ? exps.data : [];
 
-  const sales     = orders.reduce((s,o)=>s+o.total,0);
-  const expTotal  = expRows.reduce((s,e)=>s+e.amount,0);
-  const cash      = orders.filter(o=>o.payment_method==='cash').reduce((s,o)=>s+o.total,0);
-  const card      = orders.filter(o=>o.payment_method==='card').reduce((s,o)=>s+o.total,0);
-  const onlinePay = orders.filter(o=>o.payment_method==='online').reduce((s,o)=>s+o.total,0);
+  const sales     = orders.reduce((s,o)=>s+parseFloat(o.total||0),0);
+  const expTotal  = expRows.reduce((s,e)=>s+parseFloat(e.amount||0),0);
+  const cash      = orders.filter(o=>o.payment_method==='cash').reduce((s,o)=>s+parseFloat(o.total||0),0);
+  const card      = orders.filter(o=>o.payment_method==='card').reduce((s,o)=>s+parseFloat(o.total||0),0);
+  const onlinePay = orders.filter(o=>o.payment_method==='online').reduce((s,o)=>s+parseFloat(o.total||0),0);
   const dineIn    = orders.filter(o=>o.order_type==='dine-in').length;
   const takeaway  = orders.filter(o=>o.order_type==='takeaway').length;
   const delivery  = orders.filter(o=>o.order_type==='delivery').length;
@@ -6295,7 +6328,8 @@ async function _doPlaceOrder() {
     // Update existing order — save new items then print KOT
     await saveCartToOrder();
     await print.kot({
-      orderNumber: cart.orderNumber, orderType: cart.type,
+      orderNumber: cart.orderNumber, kotNumber: getNextKotNumber(),
+      orderType: cart.type,
       tableName: cart.tableName, customerName: cart.customerName,
       cashierName: cashier.name, createdAt: now,
       items: cart.items, printerName: kotPrinter
@@ -6337,7 +6371,8 @@ async function _doPlaceOrder() {
       await db.run(`UPDATE tables_layout SET status='occupied',current_order_id=?,locked_by=NULL WHERE id=?`, [activeOrderId, cart.tableId]);
 
     await print.kot({
-      orderNumber: activeOrderNum, orderType: cart.type,
+      orderNumber: activeOrderNum, kotNumber: getNextKotNumber(),
+      orderType: cart.type,
       tableName: cart.tableName, customerName: cart.customerName,
       cashierName: cashier.name, createdAt: now,
       items: cart.items, printerName: kotPrinter
@@ -6415,7 +6450,7 @@ function cancelKotReturnTimer() {
 async function loadDashboard() {
   const cur   = settings.currency;
   const today = todayStr();
-  const start = new Date(today).getTime();
+  const start = localDayStart(today);
   const end   = start + 86400000;
 
   document.getElementById('dash-date').textContent = new Date(today).toLocaleDateString('en-US', {weekday:'long', year:'numeric', month:'long', day:'numeric'});
@@ -6468,7 +6503,7 @@ async function loadDashboard() {
   }
 
   // Load live data
-  const ordersR  = await db.all(`SELECT * FROM orders WHERE status='paid' AND created_at>=? AND created_at<? ORDER BY billed_at DESC`, [start, end]);
+  const ordersR  = await db.all(`SELECT * FROM orders WHERE status='paid' AND COALESCE(billed_at,created_at)>=? AND COALESCE(billed_at,created_at)<? ORDER BY billed_at DESC`, [start, end]);
   const activeR  = await db.all(`SELECT * FROM orders WHERE status='active' AND created_at>=? AND created_at<?`, [start, end]);
   const expR     = await db.all(`SELECT * FROM expenses WHERE created_at>=? AND created_at<?`, [start, end]);
 
@@ -6476,8 +6511,8 @@ async function loadDashboard() {
   const actives  = activeR.ok  ? activeR.data  : [];
   const expenses = expR.ok     ? expR.data     : [];
 
-  const totalSales = orders.reduce((s, o) => s + (o.total || 0), 0);
-  const totalExp   = expenses.reduce((s, e) => s + (e.amount || 0), 0);
+  const totalSales = orders.reduce((s, o) => s + parseFloat(o.total || 0), 0);
+  const totalExp   = expenses.reduce((s, e) => s + parseFloat(e.amount || 0), 0);
   const netRev     = totalSales - totalExp;
   const avgOrder   = orders.length ? totalSales / orders.length : 0;
 
@@ -6491,9 +6526,9 @@ async function loadDashboard() {
   const cashOrders  = orders.filter(o => o.payment_method === 'cash');
   const cardOrders  = orders.filter(o => o.payment_method === 'card');
   const otherOrders = orders.filter(o => o.payment_method !== 'cash' && o.payment_method !== 'card');
-  const cashAmt     = cashOrders.reduce((s, o) => s + o.total, 0);
-  const cardAmt     = cardOrders.reduce((s, o) => s + o.total, 0);
-  const otherAmt    = otherOrders.reduce((s, o) => s + o.total, 0);
+  const cashAmt     = cashOrders.reduce((s, o) => s + parseFloat(o.total || 0), 0);
+  const cardAmt     = cardOrders.reduce((s, o) => s + parseFloat(o.total || 0), 0);
+  const otherAmt    = otherOrders.reduce((s, o) => s + parseFloat(o.total || 0), 0);
 
   [['cash', cashAmt, cashOrders, '#16a34a'],
    ['card', cardAmt, cardOrders, '#2563eb'],
@@ -6560,12 +6595,12 @@ async function loadDashboard() {
   const catR   = await db.all(
     `SELECT oi.category_name, SUM(oi.quantity) as qty, SUM(oi.total_price) as total
      FROM order_items oi INNER JOIN orders o ON oi.order_id=o.id
-     WHERE o.status='paid' AND o.created_at>=? AND o.created_at<?
+     WHERE o.status='paid' AND COALESCE(o.billed_at,o.created_at)>=? AND COALESCE(o.billed_at,o.created_at)<?
      GROUP BY oi.category_name ORDER BY total DESC`, [start, end]);
   const itemsR = await db.all(
     `SELECT oi.item_name, oi.category_name, SUM(oi.quantity) as qty, SUM(oi.total_price) as total
      FROM order_items oi INNER JOIN orders o ON oi.order_id=o.id
-     WHERE o.status='paid' AND o.created_at>=? AND o.created_at<?
+     WHERE o.status='paid' AND COALESCE(o.billed_at,o.created_at)>=? AND COALESCE(o.billed_at,o.created_at)<?
      GROUP BY oi.item_name ORDER BY qty DESC LIMIT 10`, [start, end]);
 
   const cats  = catR.ok   ? catR.data   : [];
@@ -6804,15 +6839,24 @@ async function getKotPrinter() {
 //  HELPERS
 // ═══════════════════════════════════════════════════════════════
 async function getNextOrderNumber() {
-  const today = todayStr();
-  const prefix = today.replace(/-/g,'');
-  // Count today's orders directly from DB — robust across multiple terminals
+  const dayStart = localDayStart(todayStr());
+  const dayEnd   = dayStart + 86400000;
   const r = await db.get(
-    "SELECT COUNT(*) AS cnt FROM orders WHERE order_number LIKE ?",
-    [prefix + '-%']
+    `SELECT COUNT(*) AS cnt FROM orders WHERE created_at >= ? AND created_at < ?`,
+    [dayStart, dayEnd]
   );
   const cnt = (r.ok && r.data ? parseInt(r.data.cnt) : 0) + 1;
-  return `${prefix}-${String(cnt).padStart(3,'0')}`;
+  return String(cnt).padStart(3,'0');
+}
+
+function getNextKotNumber() {
+  const today = todayStr();
+  let state = { date: '', seq: 0 };
+  try { state = JSON.parse(localStorage.getItem('kot_daily_seq') || '{}'); } catch(_) {}
+  if (state.date !== today) state = { date: today, seq: 0 };
+  state.seq += 1;
+  localStorage.setItem('kot_daily_seq', JSON.stringify(state));
+  return String(state.seq).padStart(3,'0');
 }
 
 function uid() {
@@ -6855,7 +6899,13 @@ function showToast(msg, type = 'info') {
   setTimeout(() => { t.style.transition='opacity .4s'; t.style.opacity='0'; setTimeout(()=>t.remove(),400); }, 2600);
 }
 function todayStr() {
-  return new Date().toISOString().split('T')[0];
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+}
+
+function localDayStart(dateStr) {
+  const [y, m, d] = dateStr.split('-').map(Number);
+  return new Date(y, m - 1, d).getTime();
 }
 function esc(s) {
   return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');

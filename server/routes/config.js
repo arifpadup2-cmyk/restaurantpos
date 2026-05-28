@@ -8,7 +8,7 @@ const { randomUUID } = require('crypto')
 function newId () { return randomUUID().replace(/-/g, '').slice(0, 20) }
 function outletId () { return randomUUID().replace(/-/g, '').slice(0, 10).toUpperCase() }
 
-const OUTLET_CODE_CHARS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%&*'
+const OUTLET_CODE_CHARS = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789'
 async function generateOutletCode (sql) {
   for (let i = 0; i < 50; i++) {
     let code = ''

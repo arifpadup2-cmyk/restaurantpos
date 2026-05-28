@@ -431,6 +431,7 @@ tr{border-bottom:1px dashed #aaa}
 .div{border-top:2px dashed #000;margin:8px 0}
 </style></head><body>
 <div class="kothead">★ K O T ★</div>
+${d.kotNumber ? `<p style="font-size:18px;font-weight:bold">KOT #${d.kotNumber}</p>` : ''}
 <p>Order #${d.orderNumber} — ${type}</p>
 <p>${new Date(d.createdAt).toLocaleTimeString()}</p>
 ${d.tableName ? `<p style="font-size:15px;font-weight:bold">TABLE: ${d.tableName}</p>` : ''}
