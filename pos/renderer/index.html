@@ -6887,6 +6887,11 @@ function showAssignmentTab(tabId) {
     activeBtn.style.borderBottomColor = 'var(--primary)';
     activeBtn.style.color = 'var(--primary)';
   }
+
+  // Load kitchen data when kitchen tab clicked
+  if (tabId === 'kitchen') {
+    loadPrinterAssignments();
+  }
 }
 
 // ═══════════════════════════════════════════════════════════════
