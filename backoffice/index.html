@@ -8918,7 +8918,7 @@ function cfgAddKitchen () {
     })
   }
 
-  openModal('modal-kitchen')
+  showModal('modal-kitchen')
   document.getElementById('kitchen-name').focus()
 }
 
@@ -8929,7 +8929,7 @@ function cfgEditKitchen (id, name, color) {
   document.getElementById('kitchen-color').value = color
   document.getElementById('kitchen-modal-title').textContent = 'Edit Kitchen'
 
-  openModal('modal-kitchen')
+  showModal('modal-kitchen')
   document.getElementById('kitchen-name').focus()
 }
 
