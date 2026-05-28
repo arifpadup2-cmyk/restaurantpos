@@ -469,6 +469,7 @@ textarea:focus-visible {
 .modal-sm{min-width:360px}
 .modal h3{font-size:17px;font-weight:700;margin-bottom:20px}
 .modal-footer{display:flex;gap:10px;justify-content:flex-end;margin-top:20px}
+.modal-footer .btn{min-height:44px;padding:12px 16px;font-size:14px;font-weight:600}
 .payment-methods{display:flex;gap:10px;margin-bottom:20px}
 .pm-btn{flex:1;min-height:76px;padding:16px 8px;border-radius:10px;border:2px solid var(--border);
   font-size:16px;font-weight:800;background:var(--bg);color:var(--text);text-align:center;transition:.15s}
@@ -1566,7 +1567,8 @@ textarea:focus-visible {
                   <span>Cart is empty</span>
                   <span style="font-size:12px">Tap items to add</span>
                 </div>
-                <div id="cart-items" class="op-items" style="display:none"></div>
+                <div id="cart-items" class="op-items" style="display:none" aria-live="polite" aria-label="Order items" role="region"></div>
+                <div id="cart-status" style="position:absolute;left:-9999px;width:1px;height:1px;overflow:hidden" aria-live="polite" aria-atomic="true"></div>
               </div>
 
               <!-- Hidden legacy compatibility elements -->
@@ -2706,11 +2708,10 @@ textarea:focus-visible {
 </div>
 
 <!-- Variant Picker Modal -->
-<div class="modal-overlay" id="modal-variant-picker" style="display:none">
+<div class="modal-overlay" id="modal-variant-picker" style="display:none" role="dialog" aria-modal="true" aria-labelledby="vp-item-name" aria-describedby="vp-description">
   <div class="modal" style="max-width:520px;width:94vw">
     <h3 id="vp-item-name">Choose Option</h3>
-    <p style="font-size:13px;color:var(--muted);margin:-6px 0 10px">Select a size or variant to continue</p>
-    <p style="font-size:12px;color:var(--muted);margin-bottom:12px">Select a size or variant</p>
+    <p style="font-size:13px;color:var(--muted);margin:-6px 0 16px" id="vp-description">Select a size or variant to continue</p>
     <div id="vp-list" class="vpick-grid"></div>
     <div class="modal-footer">
       <button class="btn btn-outline" onclick="document.getElementById('modal-variant-picker').style.display='none';_pendingItem=null">Cancel</button>
@@ -2719,8 +2720,8 @@ textarea:focus-visible {
 </div>
 
 <!-- Modifier Prompt Modal -->
-<div class="modal-overlay" id="modal-modifier-prompt" style="display:none">
-  <div class="modal" style="max-width:560px;width:94vw;max-height:88vh;display:flex;flex-direction:column">
+<div class="modal-overlay" id="modal-modifier-prompt" style="display:none" role="dialog" aria-modal="true" aria-labelledby="mp-item-name">
+  <div class="modal" style="max-width:560px;width:94vw;max-height:88vh;display:flex;flex-direction:column;contain:layout">
     <h3 id="mp-item-name" style="flex-shrink:0">Customize</h3>
     <div id="mp-groups" style="overflow-y:auto;flex:1;margin:8px 0;padding-right:4px"></div>
     <div class="modal-footer" style="flex-shrink:0">
@@ -5472,12 +5473,24 @@ function confirmModifiers() {
       }
     }
   }
+  // Disable button during submission
+  const addBtn = document.querySelector('#modal-modifier-prompt .btn-primary');
+  if (addBtn) { addBtn.disabled = true; addBtn.style.opacity = '0.5'; }
+
   // Flatten modifiers
   const modifiers = Object.values(_pendingModSelections).flat().map(o => ({ id: o.id, name: o.name, price: parseFloat(o.price) || 0 }));
   document.getElementById('modal-modifier-prompt').style.display = 'none';
   pushToCart(item, _pendingItem?.variantId, _pendingItem?.variantName, _pendingItem?.variantPrice, modifiers);
+
+  // Announce to screen readers
+  const statusEl = document.getElementById('cart-status');
+  if (statusEl) statusEl.textContent = `${item.name} added to order`;
+
   _pendingItem = null;
   _pendingModSelections = {};
+
+  // Re-enable button
+  if (addBtn) { addBtn.disabled = false; addBtn.style.opacity = '1'; }
 }
 
 function pushToCart(item, variantId, variantName, variantPrice, modifiers) {
