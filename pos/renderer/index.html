@@ -2034,6 +2034,12 @@ textarea:focus-visible {
             <p style="font-size:13px;color:var(--muted);margin-bottom:14px">
               Printers are stored in the local database. Add a Windows OS printer or a network thermal printer.
             </p>
+            <div style="display:flex;gap:10px;margin-bottom:14px">
+              <button class="btn-primary" onclick="openPrinterModal(null)" style="display:inline-flex;align-items:center;gap:6px">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="15" height="15"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Add Printer
+              </button>
+              <button class="btn-outline" onclick="loadPrinterSettings()">↻ Refresh</button>
+            </div>
             <div id="printer-list-wrap" style="margin-bottom:14px">
               <table style="width:100%;border-collapse:collapse;font-size:13px">
                 <thead>
@@ -2052,13 +2058,7 @@ textarea:focus-visible {
                 </tbody>
               </table>
             </div>
-            <div style="display:flex;gap:10px">
-              <button class="btn-primary" onclick="openPrinterModal(null)" style="display:inline-flex;align-items:center;gap:6px">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="15" height="15"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Add Printer
-              </button>
-              <button class="btn-outline" onclick="loadPrinterSettings()">↻ Refresh</button>
-            </div>
-                <p id="printer-status-msg" style="font-size:13px;margin-top:8px"></p>
+            <p id="printer-status-msg" style="font-size:13px;margin-top:8px"></p>
               </div>
 
               <!-- PRINTER ASSIGNMENTS SUBSECTION -->
