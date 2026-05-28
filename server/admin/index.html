@@ -1608,6 +1608,8 @@ function showAnnouncementModal (r) {
         <input type="color" id="ann-color-pick" value="${r?.accent_color||'#f97316'}" style="width:44px;height:36px;border:1.5px solid var(--bd);border-radius:8px;background:var(--bg);cursor:pointer;padding:2px" oninput="document.getElementById('ann-color').value=this.value">
         <input id="ann-color" type="text" value="${esc(r?.accent_color||'#f97316')}" placeholder="#f97316" style="flex:1;padding:10px 12px;background:var(--bg);border:1.5px solid var(--bd);border-radius:8px;font-size:13px;color:var(--t1);outline:none;font-family:monospace" oninput="document.getElementById('ann-color-pick').value=this.value">
       </div>
+      <label>Image URL <span style="color:var(--t3);font-weight:400;text-transform:none">(optional — overrides gradient background)</span></label>
+      <input id="ann-img" type="url" value="${esc(r?.image_url||'')}" placeholder="https://… or leave blank for auto gradient">
     </div>
     <div class="ma">
       <button class="btn btn-o" onclick="this.closest('.mo').remove()">Cancel</button>
@@ -1629,6 +1631,7 @@ async function saveAnnouncement (id, btn) {
       description:  document.getElementById('ann-desc').value.trim(),
       badge_text:   document.getElementById('ann-badge').value.trim() || 'New',
       accent_color: document.getElementById('ann-color').value.trim() || '#f97316',
+      image_url:    document.getElementById('ann-img').value.trim() || null,
       sort_order:   parseInt(document.getElementById('ann-order').value) || 0,
     }
     if (id) await api('PUT',  `/announcements/admin/${id}`, body)

@@ -12,7 +12,7 @@ module.exports = function announcementsRouter (sql) {
   router.get('/', async (_req, res) => {
     try {
       const rows = await sql`
-        SELECT id, title, description, badge_text, accent_color, sort_order
+        SELECT id, title, description, badge_text, accent_color, image_url, sort_order
         FROM   announcements
         WHERE  is_active = true
         ORDER  BY sort_order, created_at`
@@ -30,13 +30,13 @@ module.exports = function announcementsRouter (sql) {
 
   // POST /announcements/admin — create
   router.post('/admin', jwtAuth, async (req, res) => {
-    const { title, description = '', badge_text = 'New', accent_color = '#f97316', sort_order = 0 } = req.body || {}
+    const { title, description = '', badge_text = 'New', accent_color = '#f97316', image_url = null, sort_order = 0 } = req.body || {}
     if (!title?.trim()) return res.status(400).json({ error: 'title required' })
     try {
       const id = randomUUID().replace(/-/g, '').slice(0, 20)
       const [row] = await sql`
-        INSERT INTO announcements (id, title, description, badge_text, accent_color, sort_order)
-        VALUES (${id}, ${title.trim()}, ${description}, ${badge_text}, ${accent_color}, ${sort_order})
+        INSERT INTO announcements (id, title, description, badge_text, accent_color, image_url, sort_order)
+        VALUES (${id}, ${title.trim()}, ${description}, ${badge_text}, ${accent_color}, ${image_url}, ${sort_order})
         RETURNING *`
       res.status(201).json({ announcement: row })
     } catch (e) { serverError(res, e) }
@@ -45,7 +45,7 @@ module.exports = function announcementsRouter (sql) {
   // PUT /announcements/admin/:id — update
   router.put('/admin/:id', jwtAuth, async (req, res) => {
     const { id } = req.params
-    const { title, description, badge_text, accent_color, sort_order, is_active } = req.body || {}
+    const { title, description, badge_text, accent_color, image_url, sort_order, is_active } = req.body || {}
     try {
       const [row] = await sql`
         UPDATE announcements SET
@@ -53,6 +53,7 @@ module.exports = function announcementsRouter (sql) {
           description  = COALESCE(${description ?? null}, description),
           badge_text   = COALESCE(${badge_text ?? null}, badge_text),
           accent_color = COALESCE(${accent_color ?? null}, accent_color),
+          image_url    = COALESCE(${image_url ?? null}, image_url),
           sort_order   = COALESCE(${sort_order ?? null}, sort_order),
           is_active    = COALESCE(${is_active ?? null}, is_active),
           updated_at   = now()

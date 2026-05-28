@@ -582,6 +582,7 @@ async function start () {
   sql = makeSql()
   await seedAdminUser()
   await migratePinHashes()
+  await seedDefaultAnnouncements()
 
   // Start cloud sync daemon (local server only; cloud server is a no-op)
   await initCloudSync(sql, {
@@ -734,6 +735,26 @@ async function seedAdminUser () {
     console.log(`  ✓ Admin account created: ${ADMIN_UN}`)
   } catch (e) {
     console.error(`  ✗ Admin seed failed: ${e.message}`)
+  }
+}
+
+async function seedDefaultAnnouncements () {
+  try {
+    const [{ c }] = await sql`SELECT COUNT(*)::int AS c FROM announcements`
+    if (c > 0) return
+    const defaults = [
+      { id: 'feat-pos-001', title: 'POS Terminal', description: 'Fast order entry, table management, split bills and multiple payment methods — all in one screen.', badge_text: 'Core Feature', accent_color: '#f97316', sort_order: 1 },
+      { id: 'feat-kds-002', title: 'Kitchen Display System', description: 'Real-time order display for your kitchen. Auto-bump when ready, routing by station — no more paper tickets.', badge_text: 'Core Feature', accent_color: '#ef4444', sort_order: 2 },
+      { id: 'feat-wtr-003', title: 'Waiter App', description: 'Your waitstaff take orders on any phone or tablet and send them directly to the kitchen in seconds.', badge_text: 'Core Feature', accent_color: '#06b6d4', sort_order: 3 },
+      { id: 'feat-bo-004',  title: 'Back Office', description: 'Manage your full menu, staff PINs, categories, pricing tiers and business settings from any browser.', badge_text: 'Core Feature', accent_color: '#6366f1', sort_order: 4 },
+      { id: 'feat-rpt-005', title: 'Reports & Analytics', description: 'Shift reports, daily sales, expense tracking, receipt history and performance insights — fully exportable.', badge_text: 'Core Feature', accent_color: '#22c55e', sort_order: 5 },
+    ]
+    for (const d of defaults) {
+      await sql`INSERT INTO announcements ${sql(d)} ON CONFLICT (id) DO NOTHING`
+    }
+    console.log('  ✓ Default feature announcements seeded')
+  } catch (e) {
+    console.error('  ⚠ Announcement seed failed:', e.message)
   }
 }
 
