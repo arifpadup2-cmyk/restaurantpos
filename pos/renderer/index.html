@@ -167,6 +167,9 @@ textarea:focus-visible {
 .header-logo span{color:var(--primary)}
 .header-info{display:flex;gap:16px;flex:1;font-size:12px;color:#94a3b8}
 .header-info b{color:#fff}
+.hdr-day{font-size:12px;font-weight:600;padding:3px 10px;border-radius:20px;cursor:default}
+.hdr-day.open{background:#dcfce7;color:#166534}
+.hdr-day.closed{background:#fee2e2;color:#991b1b}
 .header-right{display:flex;align-items:center;gap:10px}
 .sync-dot{width:8px;height:8px;border-radius:50%;background:#64748b;display:inline-block;margin-right:4px}
 .sync-dot.online{background:var(--success)}
@@ -1352,6 +1355,7 @@ textarea:focus-visible {
     <div class="header-info">
       <span id="hdr-brand-info" style="display:none">Brand: <b id="hdr-brand">—</b></span>
       <span id="hdr-outlet-info" style="display:none">Outlet: <b id="hdr-outlet">—</b></span>
+      <span id="hdr-day-status" class="hdr-day closed" title="No active business day">📅 Day Closed</span>
       <span>Cashier: <b id="hdr-cashier">—</b></span>
       <span>Shift #<b id="hdr-shift">—</b></span>
       <span>Started: <b id="hdr-shift-time">—</b></span>
@@ -2772,6 +2776,21 @@ textarea:focus-visible {
   </div>
 </div>
 
+<!-- Day Open Modal -->
+<div id="day-open-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:3000;align-items:center;justify-content:center">
+  <div style="background:var(--card);border-radius:16px;padding:32px 28px;width:90%;max-width:380px;text-align:center;box-shadow:0 8px 32px rgba(0,0,0,.18)">
+    <div style="font-size:48px;margin-bottom:12px">📅</div>
+    <h2 style="margin:0 0 6px;font-size:20px;font-weight:700">Open Business Day</h2>
+    <p id="day-open-date-lbl" style="color:var(--muted);font-size:14px;margin:0 0 20px"></p>
+    <textarea id="day-open-notes" rows="2" placeholder="Opening notes (optional)..."
+      style="width:100%;padding:10px;border:1.5px solid var(--border);border-radius:8px;font-size:13px;resize:none;margin-bottom:16px;box-sizing:border-box;background:var(--bg)"></textarea>
+    <button onclick="confirmOpenDay()"
+      style="width:100%;padding:14px;font-size:15px;font-weight:700;border-radius:10px;background:var(--primary);color:#fff;border:none;cursor:pointer">
+      Open Day &amp; Start Selling
+    </button>
+  </div>
+</div>
+
 <!-- Online Order Notification Toast -->
 <div id="online-toast">
   <h4 style="display:flex;align-items:center;gap:7px"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="16" height="16"><rect x="5" y="2" width="14" height="20" rx="2" ry="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg>New Online Order!</h4>
@@ -2830,6 +2849,7 @@ const print = window.posAPI.print;
 
 let cashier   = null; // { id, name, pin, role }
 let shift     = null; // { id, cashier_name, opening_cash, opened_at }
+let _activeDay = null; // { id, date, outlet_id, opened_by, opened_at } — set when day is open
 let loginCashiers  = [];
 let selectedCashier = null;
 let pinBuffer  = '';
@@ -2883,6 +2903,7 @@ async function init() {
   });
   await loadSettings();
   await loadTheme();
+  await checkActiveDaySession();
   document.getElementById('login-rest-name').textContent = settings.restaurant_name;
   document.getElementById('hdr-rest-name').textContent  = settings.restaurant_name;
 
@@ -4252,6 +4273,7 @@ async function verifyPin() {
       // Shift already open — go straight to POS
       cashier = selectedCashier;
       shift   = existingShift;
+      await ensureDayOpen();
       enterPOS();
     } else {
       // New shift — ask opening cash
@@ -4278,6 +4300,7 @@ async function startShift() {
   await db.run(`INSERT INTO shifts (id,cashier_id,cashier_name,opening_cash,status,terminal_id,opened_at)
     VALUES (?,?,?,?,?,?,?)`, [shiftId, cashier.id||cashier.name, cashier.name, cash, 'open', MACHINE_ID, now]);
   shift = { id: shiftId, cashier_name: cashier.name, opening_cash: cash, opened_at: now };
+  await ensureDayOpen();
   enterPOS();
 }
 
@@ -4290,6 +4313,65 @@ function applyRoleRestrictions(role) {
   document.querySelectorAll('.nav-section').forEach(el => {
     if (el.textContent.trim() === 'Finance') el.style.display = isWaiter ? 'none' : '';
   });
+}
+
+async function checkActiveDaySession() {
+  const outletId = window._posConfig?.outletId || null;
+  const r = await db.get(
+    "SELECT * FROM day_openings WHERE outlet_id=? AND status='open' ORDER BY opened_at DESC LIMIT 1",
+    [outletId]
+  );
+  if (r.ok && r.data) { _activeDay = r.data; return true; }
+  return false;
+}
+
+function ensureDayOpen() {
+  return new Promise(async resolve => {
+    if (_activeDay) { resolve(true); return; }
+    if (await checkActiveDaySession()) { resolve(true); return; }
+    document.getElementById('day-open-date-lbl').textContent = `Business Date: ${todayStr()}`;
+    document.getElementById('day-open-notes').value = '';
+    document.getElementById('day-open-overlay').style.display = 'flex';
+    window._dayOpenResolve = resolve;
+  });
+}
+
+async function confirmOpenDay() {
+  const today = todayStr();
+  const outletId = window._posConfig?.outletId || null;
+  const existing = await db.get(
+    "SELECT * FROM day_openings WHERE date=? AND outlet_id=? AND status='open'",
+    [today, outletId]
+  );
+  if (existing.ok && existing.data) {
+    _activeDay = existing.data;
+  } else {
+    const id = uid(), now = Date.now();
+    const notes = document.getElementById('day-open-notes').value.trim();
+    await db.run(
+      'INSERT INTO day_openings(id,date,outlet_id,terminal_id,opened_by,opened_at,status,notes,synced) VALUES(?,?,?,?,?,?,?,?,?)',
+      [id, today, outletId, MACHINE_ID, cashier.name, now, 'open', notes||null, 0]
+    );
+    _activeDay = { id, date: today, outlet_id: outletId, opened_by: cashier.name, opened_at: now, status: 'open' };
+  }
+  updateDayStatusUI();
+  document.getElementById('day-open-overlay').style.display = 'none';
+  showToast(`Business day ${_activeDay.date} is now open.`, 'success');
+  if (window._dayOpenResolve) { window._dayOpenResolve(true); window._dayOpenResolve = null; }
+}
+
+function updateDayStatusUI() {
+  const el = document.getElementById('hdr-day-status');
+  if (!el) return;
+  if (_activeDay) {
+    el.textContent = `📅 ${_activeDay.date}`;
+    el.className = 'hdr-day open';
+    el.title = `Opened by ${_activeDay.opened_by} at ${new Date(_activeDay.opened_at).toLocaleTimeString()}`;
+  } else {
+    el.textContent = '📅 Day Closed';
+    el.className = 'hdr-day closed';
+    el.title = 'No active business day';
+  }
 }
 
 function enterPOS() {
@@ -4313,6 +4395,7 @@ function enterPOS() {
   document.getElementById('screen-login').style.display = 'none';
   document.getElementById('app').style.display = 'flex';
   applyRoleRestrictions(cashier.role);
+  updateDayStatusUI();
   loadMenu();
   loadTables();
   loadActiveOrders();
@@ -6469,7 +6552,12 @@ async function loadDaySummary() {
 
   document.getElementById('day-close-date').textContent = today;
 
-  const r    = await db.all(`SELECT * FROM orders WHERE COALESCE(billed_at,created_at)>=? AND COALESCE(billed_at,created_at)<? AND status='paid'`, [start, end]);
+  let r;
+  if (_activeDay) {
+    r = await db.all("SELECT * FROM orders WHERE business_date=? AND status='paid'", [_activeDay.date]);
+  } else {
+    r = await db.all(`SELECT * FROM orders WHERE COALESCE(billed_at,created_at)>=? AND COALESCE(billed_at,created_at)<? AND status='paid'`, [start, end]);
+  }
   const exps = await db.all(`SELECT * FROM expenses WHERE created_at>=? AND created_at<?`, [start, end]);
   const orders  = r.ok ? r.data : [];
   const expRows = exps.ok ? exps.data : [];
@@ -6517,6 +6605,12 @@ async function closeDay() {
        s.expTotal||0, (s.sales||0)-(s.expTotal||0),
        s.dineIn||0, s.takeaway||0, s.delivery||0, s.online||0,
        cashier.name, Date.now(), notes, 0]);
+    await db.run(
+      "UPDATE day_openings SET status='closed',closed_at=?,closed_by=? WHERE date=? AND outlet_id=?",
+      [Date.now(), cashier.name, today, window._posConfig?.outletId || null]
+    );
+    _activeDay = null;
+    updateDayStatusUI();
     await syncUnsyncedData();
     showToast(`Day ${today} closed. Z-Report saved.`, 'success');
     if (document.getElementById('v-dashboard').classList.contains('active')) loadDashboard();
@@ -6538,6 +6632,10 @@ async function closeDay() {
 //  PLACE ORDER (KOT)
 // ═══════════════════════════════════════════════════════════════
 async function placeOrder() {
+  if (!_activeDay) {
+    showToast('Business day is not open. Please open the day before taking orders.', 'warning');
+    return;
+  }
   if (!cart.items.length) { showToast('Cart is empty — add items first.', 'warning'); return; }
   if (cart.type === 'dine-in' && !cart.tableId) {
     showConfirmModal(
@@ -6592,8 +6690,8 @@ async function _doPlaceOrder() {
     const _dbr = await db.run(`INSERT INTO orders
       (id,order_number,order_type,table_id,table_name,customer_name,customer_phone,customer_address,
        status,subtotal,tax_rate,tax_amount,discount_type,discount_value,discount_amount,total,
-       notes,cashier_id,cashier_name,shift_id,terminal_id,outlet_id,brand_id,section_name,aggregator_order_id,created_at,updated_at,synced)
-      VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`,
+       notes,cashier_id,cashier_name,shift_id,terminal_id,outlet_id,brand_id,section_name,aggregator_order_id,created_at,updated_at,synced,business_date)
+      VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`,
       [activeOrderId, activeOrderNum, cart.type,
        cart.tableId||null, cart.tableName||null, cart.customerName||null,
        cart.customerPhone||null, cart.customerAddress||null,
@@ -6601,7 +6699,7 @@ async function _doPlaceOrder() {
        cart.discountType||null, cart.discountValue||0, discAmt, total,
        cart.notes||null, cashier.id||cashier.name, cashier.name, shift.id, MACHINE_ID,
        window._posConfig?.outletId||null, window._posConfig?.brandId||null,
-       _sectionName, _aggOrderId, now, now, 0]);
+       _sectionName, _aggOrderId, now, now, 0, _activeDay?.date || todayStr()]);
     if (!_dbr.ok) throw new Error(_dbr.error || 'DB insert failed');
 
     for (const item of cart.items) {

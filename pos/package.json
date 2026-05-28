@@ -21,7 +21,8 @@
   },
   "devDependencies": {
     "electron": "^31.0.0",
-    "electron-builder": "^24.13.3"
+    "electron-builder": "^24.13.3",
+    "playwright": "^1.60.0"
   },
   "build": {
     "appId": "com.restaurant.pos",
