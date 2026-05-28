@@ -5750,8 +5750,12 @@ async function showItemEditor (item) {
   try {
     // Get current outlet context - ensure it's set
     const outletId = document.getElementById('ctx-outlet')?.value || _ctxOutlet || ''
+    console.log('Kitchen dropdown: outletId =', outletId)
     const qs = outletId ? `?outlet_id=${outletId}` : ''
-    const { rows: kitchens } = await apiFetch('GET', `/config/kitchens${qs}`)
+    console.log('Kitchen dropdown: API path = /config/kitchens' + qs)
+    const kitchensResp = await apiFetch('GET', `/config/kitchens${qs}`)
+    const kitchens = kitchensResp?.rows || []
+    console.log('Kitchen dropdown: got', kitchens.length, 'kitchens')
     const pgSel = document.getElementById('ie-printer-grp')
     pgSel.innerHTML = '<option value="">— Default (all KOT printers) —</option>' +
       (kitchens || []).map(k => `<option value="${esc(k.name)}">${esc(k.name)}</option>`).join('')
@@ -5760,7 +5764,8 @@ async function showItemEditor (item) {
     kIdSel.innerHTML = '<option value="">— Not assigned (uses category default) —</option>' +
       (kitchens || []).map(k => `<option value="${esc(k.id)}">${esc(k.name)}</option>`).join('')
     kIdSel.value = s(item?.kitchen_id)
-  } catch (_) {
+  } catch (e) {
+    console.error('Kitchen dropdown error:', e.message)
     document.getElementById('ie-printer-grp').value = s(item?.printer_group)
     document.getElementById('ie-kitchen-id').value = s(item?.kitchen_id)
   }
