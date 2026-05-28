@@ -28,7 +28,31 @@ textarea:focus-visible {
 
 /* ── SCREEN LOGIN ───────────────────────────── */
 #screen-login{position:fixed;inset:0;background:linear-gradient(135deg,#1e293b 0%,#0f172a 100%);
-  display:flex;align-items:center;justify-content:center;z-index:1000;flex-direction:column;gap:20px}
+  display:flex;align-items:stretch;z-index:1000;flex-direction:row}
+#login-main{display:flex;flex:1;flex-direction:column;align-items:center;justify-content:center;gap:20px;padding:40px 24px}
+#login-ads-panel{display:none;flex:0 0 58%;height:100%;background:rgba(255,255,255,.025);
+  border-right:1px solid rgba(255,255,255,.07);padding:52px;flex-direction:column;justify-content:center;overflow:hidden}
+#login-ads-panel.visible{display:flex}
+.ads-wn-badge{display:inline-flex;align-items:center;gap:6px;background:rgba(249,115,22,.12);
+  border:1px solid rgba(249,115,22,.25);color:#f97316;padding:5px 14px;border-radius:100px;
+  font-size:10px;font-weight:800;letter-spacing:.8px;text-transform:uppercase;margin-bottom:16px}
+.ads-title-block{margin-bottom:32px}
+.ads-title-block h2{font-size:30px;font-weight:800;color:#fff;margin-bottom:6px;line-height:1.15}
+.ads-title-block p{font-size:14px;color:#475569}
+.ads-viewport{flex:1;overflow:hidden;position:relative}
+.ads-track{display:flex;flex-direction:column;transition:transform .45s cubic-bezier(.4,0,.2,1)}
+.ads-card{border-radius:16px;padding:32px;background:rgba(255,255,255,.055);
+  border:1px solid rgba(255,255,255,.09);flex-shrink:0;margin-bottom:16px;
+  position:relative;overflow:hidden;min-height:190px}
+.ads-card-bar{position:absolute;top:0;left:0;right:0;height:3px}
+.ads-card-badge{display:inline-block;padding:3px 12px;border-radius:100px;font-size:10px;
+  font-weight:800;letter-spacing:.8px;text-transform:uppercase;margin-bottom:14px;
+  background:rgba(255,255,255,.08);color:#cbd5e1;border:1px solid rgba(255,255,255,.1)}
+.ads-card h3{font-size:22px;font-weight:700;color:#fff;margin-bottom:10px;line-height:1.2}
+.ads-card p{font-size:13px;color:#94a3b8;line-height:1.65}
+.ads-dots{display:flex;gap:7px;margin-top:20px}
+.ads-dot{width:6px;height:6px;border-radius:50%;background:rgba(255,255,255,.2);cursor:pointer;transition:.25s}
+.ads-dot.active{width:22px;border-radius:3px;background:#f97316}
 .login-header{text-align:center;color:#fff}
 .login-header h1{font-size:28px;font-weight:700;margin-top:10px}
 .login-header p{color:#94a3b8;font-size:14px;margin-top:4px}
@@ -1250,53 +1274,73 @@ textarea:focus-visible {
 
 <!-- ═══════ LOGIN SCREEN ═══════ -->
 <div id="screen-login" style="position:relative">
-  <div class="login-header">
-    <div style="width:60px;height:60px;color:var(--primary)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="60" height="60"><path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 002-2V2"/><path d="M7 2v20"/><path d="M21 15V2a5 5 0 00-5 5v6c0 1.1.9 2 2 2h3zm0 0v7"/></svg></div>
-    <h1 id="login-rest-name">Restaurant POS</h1>
-    <p id="login-outlet-name" style="color:#f97316;font-weight:600;font-size:13px;margin-top:2px"></p>
-  </div>
-  <!-- Settings gear button -->
+  <!-- Settings gear button (absolutely positioned, top-right) -->
   <button class="pos-qs-btn" onclick="openPosQS()">
     <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
     Settings
     <span class="pos-qs-badge local" id="pos-qs-badge">Local</span>
   </button>
 
-  <!-- PIN pad (direct — no cashier selection step) -->
-  <div class="pin-box show" id="pin-box">
-    <div class="pin-cashier">Enter your PIN</div>
-    <div class="pin-dots" id="pin-dots">
-      <div class="pin-dot" id="pd0"></div>
-      <div class="pin-dot" id="pd1"></div>
-      <div class="pin-dot" id="pd2"></div>
-      <div class="pin-dot" id="pd3"></div>
+  <!-- Ads panel (left side — visible only when announcements are available) -->
+  <div id="login-ads-panel">
+    <div class="ads-wn-badge">
+      <svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+      What's New
     </div>
-    <div class="pinpad">
-      <button class="pp-btn" onclick="pinKey('1')">1</button>
-      <button class="pp-btn" onclick="pinKey('2')">2</button>
-      <button class="pp-btn" onclick="pinKey('3')">3</button>
-      <button class="pp-btn" onclick="pinKey('4')">4</button>
-      <button class="pp-btn" onclick="pinKey('5')">5</button>
-      <button class="pp-btn" onclick="pinKey('6')">6</button>
-      <button class="pp-btn" onclick="pinKey('7')">7</button>
-      <button class="pp-btn" onclick="pinKey('8')">8</button>
-      <button class="pp-btn" onclick="pinKey('9')">9</button>
-      <button class="pp-btn" onclick="pinBack()" style="color:var(--danger)">⌫</button>
-      <button class="pp-btn" onclick="pinKey('0')">0</button>
-      <button class="pp-btn" onclick="pinBuffer='';updatePinDots();" style="font-size:13px;color:var(--muted)">✕</button>
+    <div class="ads-title-block">
+      <h2>Grow Your Business</h2>
+      <p>New modules available for your restaurant</p>
     </div>
-    <div class="pin-error" id="pin-error"></div>
+    <div class="ads-viewport">
+      <div class="ads-track" id="ads-track"></div>
+    </div>
+    <div class="ads-dots" id="ads-dots"></div>
   </div>
 
-  <!-- Opening cash (only shown for new shift) -->
-  <div class="cash-box" id="cash-box">
-    <h3 id="cash-cashier-name">Good day!</h3>
-    <label id="cash-currency-label">Opening Cash</label>
-    <input id="login-cash" type="number" placeholder="0.00" min="0" step="0.01"
-      onkeydown="if(event.key==='Enter')startShift()">
-    <button class="btn-login" onclick="startShift()">▶ Start Shift</button>
-    <p class="login-note" onclick="pinBuffer='';updatePinDots();document.getElementById('pin-box').classList.add('show');document.getElementById('cash-box').classList.remove('show');"
-      style="cursor:pointer;margin-top:10px">← Back</p>
+  <!-- Main login panel (right side, or full width when no ads) -->
+  <div id="login-main">
+    <div class="login-header">
+      <div style="width:60px;height:60px;color:var(--primary)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="60" height="60"><path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 002-2V2"/><path d="M7 2v20"/><path d="M21 15V2a5 5 0 00-5 5v6c0 1.1.9 2 2 2h3zm0 0v7"/></svg></div>
+      <h1 id="login-rest-name">Restaurant POS</h1>
+      <p id="login-outlet-name" style="color:#f97316;font-weight:600;font-size:13px;margin-top:2px"></p>
+    </div>
+
+    <!-- PIN pad (direct — no cashier selection step) -->
+    <div class="pin-box show" id="pin-box">
+      <div class="pin-cashier">Enter your PIN</div>
+      <div class="pin-dots" id="pin-dots">
+        <div class="pin-dot" id="pd0"></div>
+        <div class="pin-dot" id="pd1"></div>
+        <div class="pin-dot" id="pd2"></div>
+        <div class="pin-dot" id="pd3"></div>
+      </div>
+      <div class="pinpad">
+        <button class="pp-btn" onclick="pinKey('1')">1</button>
+        <button class="pp-btn" onclick="pinKey('2')">2</button>
+        <button class="pp-btn" onclick="pinKey('3')">3</button>
+        <button class="pp-btn" onclick="pinKey('4')">4</button>
+        <button class="pp-btn" onclick="pinKey('5')">5</button>
+        <button class="pp-btn" onclick="pinKey('6')">6</button>
+        <button class="pp-btn" onclick="pinKey('7')">7</button>
+        <button class="pp-btn" onclick="pinKey('8')">8</button>
+        <button class="pp-btn" onclick="pinKey('9')">9</button>
+        <button class="pp-btn" onclick="pinBack()" style="color:var(--danger)">⌫</button>
+        <button class="pp-btn" onclick="pinKey('0')">0</button>
+        <button class="pp-btn" onclick="pinBuffer='';updatePinDots();" style="font-size:13px;color:var(--muted)">✕</button>
+      </div>
+      <div class="pin-error" id="pin-error"></div>
+    </div>
+
+    <!-- Opening cash (only shown for new shift) -->
+    <div class="cash-box" id="cash-box">
+      <h3 id="cash-cashier-name">Good day!</h3>
+      <label id="cash-currency-label">Opening Cash</label>
+      <input id="login-cash" type="number" placeholder="0.00" min="0" step="0.01"
+        onkeydown="if(event.key==='Enter')startShift()">
+      <button class="btn-login" onclick="startShift()">▶ Start Shift</button>
+      <p class="login-note" onclick="pinBuffer='';updatePinDots();document.getElementById('pin-box').classList.add('show');document.getElementById('cash-box').classList.remove('show');"
+        style="cursor:pointer;margin-top:10px">← Back</p>
+    </div>
   </div>
 </div>
 
@@ -2986,6 +3030,7 @@ async function checkApiConnectivity() {
     fetchMenuFromApi().catch(() => {});
     fetchCashiersFromApi().catch(() => {});
     fetchOrderTypesFromApi().catch(() => {});
+    loadAnnouncements().catch(() => {});
   } catch {
     _posHealthFails++;
     setSyncStatus(false);
@@ -7108,6 +7153,61 @@ async function toggleFullscreen() {
     }
   }
 })();
+
+// ── ANNOUNCEMENTS / LOGIN ADS ─────────────────────────────────────────────
+function escHtml(s) {
+  return String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+let _adsIdx   = 0;
+let _adsTotal = 0;
+let _adsTimer = null;
+
+async function loadAnnouncements() {
+  if (!apiUrl) return;
+  const data = await apiFetch('GET', '/announcements');
+  if (Array.isArray(data.announcements) && data.announcements.length) {
+    renderAnnouncements(data.announcements);
+  }
+}
+
+function renderAnnouncements(items) {
+  const panel  = document.getElementById('login-ads-panel');
+  const track  = document.getElementById('ads-track');
+  const dotsEl = document.getElementById('ads-dots');
+  if (!panel || !track || !dotsEl) return;
+
+  _adsTotal = items.length;
+  _adsIdx   = 0;
+
+  track.innerHTML = items.map(item => `
+    <div class="ads-card">
+      <div class="ads-card-bar" style="background:${escHtml(item.accent_color || '#f97316')}"></div>
+      <div class="ads-card-badge">${escHtml(item.badge_text || 'New')}</div>
+      <h3>${escHtml(item.title)}</h3>
+      <p>${escHtml(item.description)}</p>
+    </div>`).join('');
+
+  dotsEl.innerHTML = items.map((_, i) =>
+    `<div class="ads-dot${i === 0 ? ' active' : ''}" onclick="adsGoTo(${i})"></div>`
+  ).join('');
+
+  panel.classList.add('visible');
+  if (_adsTimer) clearInterval(_adsTimer);
+  if (_adsTotal > 1) {
+    _adsTimer = setInterval(() => adsGoTo((_adsIdx + 1) % _adsTotal), 5000);
+  }
+}
+
+function adsGoTo(idx) {
+  _adsIdx = idx;
+  const track = document.getElementById('ads-track');
+  const cards = track?.querySelectorAll('.ads-card');
+  if (!cards?.length) return;
+  const cardH = cards[0].offsetHeight + 16;
+  track.style.transform = `translateY(${-idx * cardH}px)`;
+  document.querySelectorAll('.ads-dot').forEach((d, i) => d.classList.toggle('active', i === idx));
+}
 </script>
 
 

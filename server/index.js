@@ -30,7 +30,8 @@ const signupRouter     = require('./routes/signup')
 const adminAuthRouter  = require('./routes/admin-auth')
 const configRouter     = require('./routes/config')
 const ownerRouter      = require('./routes/owner')
-const imagesRouter     = require('./routes/images')
+const imagesRouter          = require('./routes/images')
+const announcementsRouter   = require('./routes/announcements')
 
 const { apiKey, initApiKey } = require('./middleware/apiKey')
 const { serverError } = require('./middleware/serverError')
@@ -615,6 +616,7 @@ async function start () {
   app.use('/config',         configRouter(sql))
   app.use('/owner',          ownerRouter(sql))
   app.use('/images',         imagesRouter())
+  app.use('/announcements',  announcementsRouter(sql))
 
   // Onboarding SPA route — serve onboarding.html for /onboarding/:id
   app.get('/onboarding/:id', (_req, res) => {
