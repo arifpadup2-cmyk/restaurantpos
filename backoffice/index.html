@@ -2961,6 +2961,34 @@ input:checked+.toggle-slider:before{transform:translateX(17px)}
   </div>
 </div>
 
+<!-- ══ KITCHEN CREATION MODAL ═══════════════════════════════════════════════ -->
+<div class="modal-overlay" id="modal-kitchen">
+  <div class="modal" style="min-width:420px">
+    <h3 id="kitchen-modal-title">Add Kitchen</h3>
+    <input type="hidden" id="kitchen-id">
+    <div class="form-group">
+      <label>Kitchen Name *</label>
+      <input id="kitchen-name" type="text" placeholder="e.g. Main Kitchen, Bar, Grill" autofocus>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>Color</label>
+        <input id="kitchen-color" type="color" value="#6366f1" style="height:40px;padding:2px 6px">
+      </div>
+    </div>
+    <div class="form-group">
+      <label>Outlet Assignment</label>
+      <select id="kitchen-outlet">
+        <option value="">— Brand-wide (all outlets) —</option>
+      </select>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('modal-kitchen')">Cancel</button>
+      <button class="btn btn-primary" onclick="saveKitchen()"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg> Save Kitchen</button>
+    </div>
+  </div>
+</div>
+
 <!-- ══ ITEM EDITOR (full-page view) ══════════════════════════════════════════ -->
 <div class="view" id="v-item-editor" style="padding:0;max-width:none">
 
@@ -8865,20 +8893,67 @@ async function cfgLoadKitchens () {
 }
 
 function cfgAddKitchen () {
-  const name = prompt('Kitchen name (e.g. Main Kitchen, Bar, Grill):')
-  if (!name) return
-  const color = prompt('Color (hex, e.g. #6366f1):') || '#6366f1'
-  apiFetch('POST', '/config/kitchens', { name, color, outlet_id: _ctxOutlet || null })
-    .then(() => { showToast('Kitchen added', 'success'); cfgLoadKitchens() })
-    .catch(e => showToast(friendlyError(e.message), 'error'))
+  // Reset form
+  document.getElementById('kitchen-id').value = ''
+  document.getElementById('kitchen-name').value = ''
+  document.getElementById('kitchen-color').value = '#6366f1'
+  document.getElementById('kitchen-outlet').value = _ctxOutlet || ''
+  document.getElementById('kitchen-modal-title').textContent = 'Add Kitchen'
+
+  // Populate outlet dropdown
+  const outletSel = document.getElementById('kitchen-outlet')
+  const currentOutlets = Array.from(outletSel.options)
+  if (currentOutlets.length === 1) {
+    // Load outlets if not already loaded
+    apiFetch('GET', '/config/outlets').then(resp => {
+      const outlets = resp.rows || []
+      outletSel.innerHTML = '<option value="">— Brand-wide (all outlets) —</option>'
+      outlets.forEach(o => {
+        const opt = document.createElement('option')
+        opt.value = o.id
+        opt.textContent = o.name
+        outletSel.appendChild(opt)
+      })
+      outletSel.value = _ctxOutlet || ''
+    })
+  }
+
+  openModal('modal-kitchen')
+  document.getElementById('kitchen-name').focus()
 }
 
 function cfgEditKitchen (id, name, color) {
-  const newName  = prompt('Kitchen name:', name)
-  if (newName === null) return
-  const newColor = prompt('Color (hex):', color) || color
-  apiFetch('PATCH', '/config/kitchens/' + id, { name: newName, color: newColor })
-    .then(() => { showToast('Saved', 'success'); cfgLoadKitchens() })
+  // Reset and populate form for edit
+  document.getElementById('kitchen-id').value = id
+  document.getElementById('kitchen-name').value = name
+  document.getElementById('kitchen-color').value = color
+  document.getElementById('kitchen-modal-title').textContent = 'Edit Kitchen'
+
+  openModal('modal-kitchen')
+  document.getElementById('kitchen-name').focus()
+}
+
+function saveKitchen () {
+  const id = document.getElementById('kitchen-id').value
+  const name = document.getElementById('kitchen-name').value.trim()
+  const color = document.getElementById('kitchen-color').value
+  const outletId = document.getElementById('kitchen-outlet').value || null
+
+  if (!name) {
+    showToast('Kitchen name is required', 'error')
+    return
+  }
+
+  const payload = { name, color, outlet_id: outletId }
+  const method = id ? 'PATCH' : 'POST'
+  const url = id ? `/config/kitchens/${id}` : '/config/kitchens'
+
+  apiFetch(method, url, payload)
+    .then(() => {
+      showToast(id ? 'Kitchen updated' : 'Kitchen added', 'success')
+      closeModal('modal-kitchen')
+      cfgLoadKitchens()
+    })
     .catch(e => showToast(friendlyError(e.message), 'error'))
 }
 
