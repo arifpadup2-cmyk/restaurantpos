@@ -20,6 +20,7 @@ module.exports = function staffRouter (sql) {
   // Strip sensitive fields from cashier rows before sending to client
   function safeCashier (row) {
     const { pin, pin_hash, ...safe } = row
+    safe.has_pin = !!(pin || pin_hash)
     return safe
   }
 

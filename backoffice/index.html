@@ -6547,7 +6547,7 @@ async function loadStaff () {
       ? cashiers.map(s => `<tr>
           <td><b>${esc(s.name)}</b></td>
           <td><span class="badge badge-blue">${s.role||'cashier'}</span></td>
-          <td style="letter-spacing:4px;font-weight:700">${s.pin ? '●●●●' : '<span style="color:var(--danger)">Not set</span>'}</td>
+          <td style="letter-spacing:4px;font-weight:700">${s.has_pin || s.pin ? '●●●●' : '<span style="color:var(--danger)">Not set</span>'}</td>
           <td><span class="badge ${s.active?'badge-green':'badge-red'}">${s.active?'Active':'Inactive'}</span></td>
           <td>${new Date(parseInt(s.created_at)||0).toLocaleDateString()}</td>
           <td>
