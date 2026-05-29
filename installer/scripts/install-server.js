@@ -15,7 +15,7 @@ const getLocalIP = () => {
   return '127.0.0.1'
 }
 
-const installServer = async (outletId, outletCode, dbName, dbUser, dbPassword, onLog) => {
+const installServer = async (brandId, outletId, outletCode, dbName, dbUser, dbPassword, onLog) => {
   try {
     const serverInstallDir = 'C:\\Program Files\\Restaurant POS Server'
     const sourceDir = path.join(__dirname, '..', '..', 'server')
@@ -40,6 +40,7 @@ API_KEY=pos-api-key-2026
 JWT_SECRET=bo-jwt-secret-change-in-production-2026
 NODE_ENV=production
 CLOUD_SYNC_URL=https://restaurantpos.example.com
+BRAND_ID=${brandId}
 OUTLET_ID=${outletId}
 OUTLET_CODE=${outletCode}
 `.trim()
@@ -48,6 +49,7 @@ OUTLET_CODE=${outletCode}
 
     // Also save outlet info as JSON
     const outletConfig = {
+      brandId,
       outletId,
       outletCode,
       database: dbName,

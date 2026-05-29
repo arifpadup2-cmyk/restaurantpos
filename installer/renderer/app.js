@@ -32,11 +32,12 @@ const goToServerInfo = () => {
 }
 
 const startServerInstallation = async () => {
+  const brandId = document.getElementById('brand-id').value
   const outletId = document.getElementById('outlet-id').value
   const outletCode = document.getElementById('outlet-code').value
 
-  if (!outletId.trim() || !outletCode.trim()) {
-    alert('Please enter outlet ID and code')
+  if (!brandId.trim() || !outletId.trim() || !outletCode.trim()) {
+    alert('Please enter brand ID, outlet ID, and outlet code')
     return
   }
 
@@ -45,6 +46,7 @@ const startServerInstallation = async () => {
 
   window.installAPI.startInstall({
     mode: 'server',
+    brandId,
     outletId,
     outletCode
   })

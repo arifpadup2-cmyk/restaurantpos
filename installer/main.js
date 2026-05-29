@@ -43,16 +43,16 @@ ipcMain.handle('check-system', async () => {
 })
 
 ipcMain.handle('start-install', async (event, config) => {
-  const { mode, outletId, outletCode, serverIP } = config
+  const { mode, brandId, outletId, outletCode, serverIP } = config
 
   if (mode === 'server') {
-    return await startServerInstallation(outletId, outletCode)
+    return await startServerInstallation(brandId, outletId, outletCode)
   } else if (mode === 'terminal') {
     return await startTerminalInstallation(serverIP)
   }
 })
 
-const startServerInstallation = async (outletId, outletCode) => {
+const startServerInstallation = async (brandId, outletId, outletCode) => {
   const steps = 7
   let serverIP = '127.0.0.1'
   let psqlPath = null
@@ -115,7 +115,7 @@ const startServerInstallation = async (outletId, outletCode) => {
       message: 'Installing server...',
       status: 'running'
     })
-    serverIP = await installServer(outletId, outletCode, dbConfig.dbName, dbConfig.dbUser, dbConfig.dbPassword, (msg) => {
+    serverIP = await installServer(brandId, outletId, outletCode, dbConfig.dbName, dbConfig.dbUser, dbConfig.dbPassword, (msg) => {
       mainWindow.webContents.send('install-log', msg)
     })
     mainWindow.webContents.send('install-progress', {
