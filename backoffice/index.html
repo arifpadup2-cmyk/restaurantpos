@@ -7840,7 +7840,7 @@ async function loadServerInfo () {
       // Brand fetch failed, continue with default
     }
 
-    // Build server info rows
+    // Build server info rows (always show)
     let serverInfoRows = `
       <div><div style="font-size:11px;font-weight:700;color:#94a3b8;text-transform:uppercase;margin-bottom:4px">🏢 Brand ID</div>
            <div style="font-size:15px;font-weight:700;color:#8b5cf6;font-family:monospace">${brandId}</div></div>
@@ -7854,15 +7854,17 @@ async function loadServerInfo () {
            <div style="font-size:13px;color:#475569">Staff: ${d.counts.cashiers} &nbsp;|&nbsp; Menu: ${d.counts.menu_items} items &nbsp;|&nbsp; Orders: ${d.counts.orders}</div></div>
     `
 
-    // Add outlet-specific details if outlet is selected
-    let outletInfoRows = ''
+    // Always try to get current outlet details
+    let outletInfoRows = `
+      <div style="grid-column: 1/-1; border-top: 1px solid #e2e8f0; padding-top: 12px; margin-top: 8px;"></div>
+    `
+
     if (_ctxOutlet) {
       try {
         const outlets = await apiFetch('GET', '/outlets')
         const outlet = outlets.find(o => o.id === _ctxOutlet)
         if (outlet) {
-          outletInfoRows = `
-            <div style="grid-column: 1/-1; border-top: 1px solid #e2e8f0; padding-top: 12px; margin-top: 8px;"></div>
+          outletInfoRows += `
             <div><div style="font-size:11px;font-weight:700;color:#94a3b8;text-transform:uppercase;margin-bottom:4px">📍 Current Outlet</div>
                  <div style="font-size:15px;font-weight:700;color:#1f2937">${outlet.name}</div></div>
             <div><div style="font-size:11px;font-weight:700;color:#94a3b8;text-transform:uppercase;margin-bottom:4px">Outlet ID</div>
@@ -7881,6 +7883,10 @@ async function loadServerInfo () {
       } catch (e) {
         // Outlet fetch failed, continue with server info only
       }
+    } else {
+      outletInfoRows += `
+        <div style="color:#94a3b8;font-size:13px">💡 Select an outlet from the header to view outlet-specific details (Outlet ID, Outlet Code, Database configuration).</div>
+      `
     }
 
     body.innerHTML = serverInfoRows + outletInfoRows
@@ -7888,7 +7894,6 @@ async function loadServerInfo () {
     body.innerHTML = `<div style="color:#ef4444;font-size:13px">Error loading: ${e.message}</div>`
   }
 }
-
 async function loadInstallerFiles () {
   const list = document.getElementById('installer-file-list')
   const upd  = document.getElementById('update-files-list')
