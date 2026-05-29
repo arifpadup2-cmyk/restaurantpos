@@ -2989,6 +2989,7 @@ async function init() {
   if (document.getElementById('set-api-key')) document.getElementById('set-api-key').value = apiKey;
 
   await checkApiConnectivity();
+  await pullSyncOutletData();
   setInterval(checkApiConnectivity, 60000);   // re-check every 60s
   setInterval(syncUnsyncedData, 300000);      // background sync every 5 min
   loadDeliveryPartners();                     // pre-load delivery partners for order dialog
@@ -3754,6 +3755,42 @@ async function fetchCashiersFromApi() {
     await db.run('INSERT OR REPLACE INTO cashiers (id,name,pin,role,active,synced,created_at) VALUES (?,?,?,?,?,?,?)',
       [c.id, c.name, c.pin||'', c.role||'cashier', c.active?1:0, 1, c.created_at||Date.now()]);
   loadCashiersForLogin();
+}
+
+async function pullSyncOutletData() {
+  const _cfg = window._posConfig || {};
+  if (!_cfg.outletId) return;
+
+  try {
+    const backup = await apiFetch('GET', `/downloads/backup?outlet_id=${encodeURIComponent(_cfg.outletId)}`);
+    if (!backup.meta) return;
+
+    // Only sync configuration data — exclude sales history
+    const configTables = [
+      ['settings', backup.settings],
+      ['cashiers', backup.cashiers],
+      ['categories', backup.categories],
+      ['menu_items', backup.menu_items],
+      ['tables_layout', backup.tables_layout],
+      ['customers', backup.customers],
+      ['printers', backup.printers],
+    ];
+
+    for (const [tbl, rows] of configTables) {
+      if (!rows?.length) continue;
+      for (const row of rows) {
+        const cols = Object.keys(row);
+        const vals = Object.values(row);
+        const placeholders = cols.map(_=>'?').join(',');
+        try {
+          await db.run(`INSERT OR REPLACE INTO ${tbl} (${cols.join(',')}) VALUES (${placeholders})`, vals);
+        } catch (_) {}
+      }
+    }
+
+    loadMenu();
+    loadCashiersForLogin();
+  } catch (_) {}
 }
 
 function showOnlineOrderToast(order) {

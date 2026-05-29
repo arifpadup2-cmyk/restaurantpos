@@ -5,6 +5,7 @@ const express  = require('express')
 const fs       = require('fs')
 const path     = require('path')
 const { jwtAuth } = require('../middleware/jwtAuth')
+const { apiKey } = require('../middleware/apiKey')
 const { serverError } = require('../middleware/serverError')
 
 const DATA_DIR    = process.env.DATA_DIR || path.join(__dirname, '..')
@@ -90,10 +91,10 @@ module.exports = function downloadsRouter (sql) {
   })
 
   // GET /downloads/backup — full JSON export; ?outlet_id=X scopes to one outlet
-  router.get('/backup', jwtAuth, async (req, res) => {
+  router.get('/backup', apiKey, async (req, res) => {
     try {
       const { outlet_id } = req.query
-      const rid = req.user.brand_id || ''
+      const rid = req.terminal?.brand_id || ''
 
       let orders, order_items, outlet_name = null
       if (outlet_id) {
