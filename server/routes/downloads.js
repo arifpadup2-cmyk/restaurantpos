@@ -322,13 +322,62 @@ module.exports = function downloadsRouter (sql) {
         <span class="step-num">2</span>
         <div class="step-title">Initialize Database</div>
         <div class="step-content">
-          <p>Run the database setup script to create the POS database and user:</p>
-          <div class="code-block"><pre>psql -U postgres -f setup-database.sql</pre></div>
-          <p style="margin-top: 12px; font-size: 13px;">When prompted, enter the postgres password from step 1.</p>
-          <button class="btn" onclick="copyCode('setup-db')">📋 Copy</button>
-          <div id="setup-db" style="display:none">psql -U postgres -f setup-database.sql</div>
-          <p style="margin-top: 12px; color: var(--muted); font-size: 13px;">✅ You should see messages about creating user and database.</p>
-          <div class="checkbox"><input type="checkbox" id="step2"> <label for="step2">Database initialized</label></div>
+          <p style="font-weight: 600; margin-bottom: 12px;">Set up the database using the setup script:</p>
+
+          <div style="background: var(--bg); padding: 16px; border-radius: 8px; margin-bottom: 16px;">
+            <h4 style="margin-bottom: 12px; color: var(--text);">Step 2.1: Open Command Prompt</h4>
+            <p style="margin-bottom: 8px;">1. Press <strong>Windows Key + R</strong> on your keyboard</p>
+            <p style="margin-bottom: 8px;">2. Type: <code>cmd</code></p>
+            <p style="margin-bottom: 8px;">3. Press <strong>Enter</strong></p>
+            <p style="color: var(--muted); font-size: 12px;">A black window (Command Prompt) will open</p>
+          </div>
+
+          <div style="background: var(--bg); padding: 16px; border-radius: 8px; margin-bottom: 16px;">
+            <h4 style="margin-bottom: 12px; color: var(--text);">Step 2.2: Navigate to Setup Folder</h4>
+            <p style="margin-bottom: 8px;">In the Command Prompt, type this exactly (look for where you extracted the files):</p>
+            <div class="code-block"><pre>cd C:\Users\YourUsername\Downloads\POS-Setup-Demo-DEMO001</pre></div>
+            <p style="margin-bottom: 8px; color: var(--muted); font-size: 12px;">⚠️ Replace "YourUsername" with your Windows username</p>
+            <p style="margin-bottom: 8px; color: var(--muted); font-size: 12px;">⚠️ Replace "POS-Setup-Demo-DEMO001" with your actual folder name</p>
+            <p style="color: var(--muted); font-size: 12px;">Press <strong>Enter</strong></p>
+          </div>
+
+          <div style="background: var(--bg); padding: 16px; border-radius: 8px; margin-bottom: 16px;">
+            <h4 style="margin-bottom: 12px; color: var(--text);">Step 2.3: Run the Setup Script</h4>
+            <p style="margin-bottom: 12px;">Copy and paste this command into Command Prompt:</p>
+            <div class="code-block"><pre>psql -U postgres -f setup-database.sql</pre></div>
+            <button class="btn" onclick="copyCode('setup-db')">📋 Copy Command</button>
+            <div id="setup-db" style="display:none">psql -U postgres -f setup-database.sql</div>
+            <p style="margin-top: 12px; margin-bottom: 8px; color: var(--muted); font-size: 12px;">Press <strong>Enter</strong></p>
+          </div>
+
+          <div style="background: var(--bg); padding: 16px; border-radius: 8px; margin-bottom: 16px;">
+            <h4 style="margin-bottom: 12px; color: var(--text);">Step 2.4: Enter Password</h4>
+            <p style="margin-bottom: 8px;">You will be asked: <code>Password for user postgres:</code></p>
+            <p style="margin-bottom: 8px; font-weight: 600;">Enter the password you created in Step 1.6</p>
+            <p style="margin-bottom: 8px; color: var(--muted); font-size: 12px;">⚠️ You won't see the password as you type (that's normal!)</p>
+            <p style="color: var(--muted); font-size: 12px;">Press <strong>Enter</strong></p>
+          </div>
+
+          <div style="background: #e8f5e9; padding: 16px; border-radius: 8px; margin-bottom: 16px; border-left: 4px solid #4caf50;">
+            <h4 style="margin-bottom: 12px; color: #2e7d32;">✅ Success! You should see:</h4>
+            <p style="color: #2e7d32; font-family: monospace; margin-bottom: 8px;">CREATE ROLE</p>
+            <p style="color: #2e7d32; font-family: monospace; margin-bottom: 8px;">CREATE DATABASE</p>
+            <p style="color: #2e7d32; margin-bottom: 8px;">The prompt returns (no errors shown)</p>
+            <p style="color: #2e7d32; font-size: 12px;">✓ This means the database is ready!</p>
+          </div>
+
+          <div style="background: #fff3cd; padding: 16px; border-radius: 8px; margin-bottom: 16px; border-left: 4px solid #ffc107;">
+            <h4 style="margin-bottom: 12px; color: #856404;">❓ Having trouble?</h4>
+            <p style="color: #856404; margin-bottom: 8px;"><strong>Error: "command not found"</strong></p>
+            <p style="color: #856404; margin-bottom: 12px;">→ PostgreSQL Command Line Tools weren't installed. Go back to Step 1 and make sure to CHECK "Command Line Tools"</p>
+
+            <p style="color: #856404; margin-bottom: 8px;"><strong>Error: "password authentication failed"</strong></p>
+            <p style="color: #856404; margin-bottom: 12px;">→ The password you entered doesn't match. Check that you're using the exact password from Step 1.6</p>
+
+            <p style="color: #856404;">→ Contact your administrator for help</p>
+          </div>
+
+          <div class="checkbox" style="margin-top: 16px;"><input type="checkbox" id="step2"> <label for="step2">Database initialized successfully</label></div>
         </div>
       </div>
 
