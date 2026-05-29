@@ -7865,12 +7865,7 @@ async function loadServerInfo () {
 
     if (_ctxOutlet) {
       try {
-        const resp = await apiFetch('GET', '/config/outlets')
-        console.log('Response:', resp)
-        const outlets = Array.isArray(resp) ? resp : (resp.rows || [])
-        console.log('Outlets array:', outlets, 'Looking for:', _ctxOutlet)
-        const outlet = outlets.find(o => o.id === _ctxOutlet)
-        console.log('Found outlet:', outlet)
+        const outlet = (_rptFilterData.outlets || []).find(o => o.id === _ctxOutlet)
         if (outlet) {
           outletInfoRows += `
             <div><div style="font-size:11px;font-weight:700;color:#94a3b8;text-transform:uppercase;margin-bottom:4px">📍 Current Outlet</div>
