@@ -1157,7 +1157,7 @@ textarea:focus-visible {
             <label>🖥️ Server IP Address</label>
             <input id="setup-ip" type="text" placeholder="e.g. 192.168.1.100" autocomplete="off"
               style="font-size:15px;letter-spacing:0.5px"
-              onkeydown="if(event.key==='Enter')setupManualConnect()">
+              onkeydown="if(event.key==='Enter'){event.preventDefault();setupManualConnect()}else{event.stopPropagation()}">
             <span class="setup-hint">The IP address of the computer running the POS server (ask your admin if unsure)</span>
           </div>
           <!-- Advanced DB options -->
@@ -1192,7 +1192,7 @@ textarea:focus-visible {
         <div class="setup-field">
           <label>Cloud Server URL</label>
           <input id="setup-cloud-url" type="url" placeholder="https://mypos.railway.app" autocomplete="off"
-            style="font-size:15px" onkeydown="if(event.key==='Enter')setupCloudConnect()">
+            style="font-size:15px" onkeydown="if(event.key==='Enter'){event.preventDefault();setupCloudConnect()}else{event.stopPropagation()}">
           <span class="setup-hint">Full URL of your cloud-hosted POS server (requires internet)</span>
         </div>
         <div class="setup-error" id="setup-cloud-error"></div>
@@ -1213,6 +1213,7 @@ textarea:focus-visible {
         <label>🏢 Brand ID</label>
         <input id="setup-brand-id" type="text" placeholder="e.g. REST-AB3X9K" autocomplete="off" autocapitalize="none" autocorrect="off"
           oninput="setupCodeChanged()"
+          onkeydown="event.stopPropagation()"
           style="font-family:monospace;letter-spacing:0.5px">
         <span class="setup-hint">Your restaurant chain's unique identifier (enter: REST-GPPE8G)</span>
       </div>
@@ -1222,7 +1223,7 @@ textarea:focus-visible {
         <label>🏪 Outlet Code</label>
         <input id="setup-outlet-code" type="text" placeholder="e.g. OUTLET001" autocomplete="off" autocapitalize="none" autocorrect="off"
           oninput="setupCodeChanged()"
-          onkeydown="if(event.key==='Enter')setupVerifyCode()"
+          onkeydown="if(event.key==='Enter'){event.preventDefault();setupVerifyCode()}else{event.stopPropagation()}"
           style="font-family:monospace;font-size:16px;letter-spacing:1px;text-align:left">
         <span class="setup-hint">The outlet code (enter: OUTLET001)</span>
       </div>
@@ -1239,7 +1240,8 @@ textarea:focus-visible {
       <!-- Terminal Name Field -->
       <div class="setup-field">
         <label>💻 Terminal/Device Name</label>
-        <input id="setup-mid" type="text" placeholder="e.g. POS-01 or CASHIER-2" autocomplete="off">
+        <input id="setup-mid" type="text" placeholder="e.g. POS-01 or CASHIER-2" autocomplete="off"
+          onkeydown="event.stopPropagation()">
         <span class="setup-hint">A friendly name for this device (used in logs and reports)</span>
       </div>
 
