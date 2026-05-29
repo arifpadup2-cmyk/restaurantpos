@@ -961,9 +961,6 @@ input:checked+.toggle-slider:before{transform:translateX(17px)}
   #sidebar-backdrop{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:199;display:none}
   #sidebar-backdrop.open{display:block}
 }
-.outlet-ctx-inner{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
-.outlet-ctx-label{font-size:11px;font-weight:700;color:var(--primary);text-transform:uppercase;letter-spacing:.5px;white-space:nowrap}
-.outlet-ctx-badge{font-size:12px;font-weight:600;color:var(--primary);background:rgba(99,102,241,.08);padding:3px 10px;border-radius:20px;white-space:nowrap}
 /* ── MENU TABS ──────────────────────────────────────────────── */
 .menu-tab-bar{display:flex;gap:4px;margin-bottom:20px;border-bottom:2px solid var(--border);padding-bottom:0}
 .menu-tab{padding:9px 18px;font-size:13px;font-weight:600;color:var(--muted);cursor:pointer;border:none;background:none;border-bottom:3px solid transparent;margin-bottom:-2px;border-radius:4px 4px 0 0;transition:.15s}
@@ -1450,16 +1447,10 @@ input:checked+.toggle-slider:before{transform:translateX(17px)}
       </div>
     </header>
     <!-- Outlet context bar — always visible -->
-    <div id="outlet-ctx-bar">
-      <div class="outlet-ctx-inner">
-        <span class="outlet-ctx-label">Outlet:</span>
-        <select id="ctx-brand" onchange="ctxCascade()" style="font-size:12px;padding:5px 9px;border:1.5px solid var(--border);border-radius:6px;background:var(--card);color:var(--text)"><option value="">All Brands</option></select>
-        <span id="ctx-brand-badge" class="outlet-ctx-badge" style="display:none"></span>
-        <select id="ctx-market" onchange="ctxCascade()" style="font-size:12px;padding:5px 9px;border:1.5px solid var(--border);border-radius:6px;background:var(--card);color:var(--text)"><option value="">All Markets</option></select>
-        <span id="ctx-market-badge" class="outlet-ctx-badge" style="display:none"></span>
-        <select id="ctx-outlet" onchange="ctxOutletChange()" style="font-size:12px;padding:5px 9px;border:1.5px solid var(--border);border-radius:6px;background:var(--card);color:var(--text);min-width:160px"><option value="">-- Select Outlet --</option></select>
-        <span id="ctx-outlet-badge" class="outlet-ctx-badge" style="display:none"></span>
-      </div>
+    <div id="outlet-ctx-bar" style="padding:8px 16px;display:flex;gap:8px;align-items:center;border-bottom:1px solid var(--border)">
+      <select id="ctx-brand" onchange="ctxCascade()" style="font-size:12px;padding:6px 10px;border:1.5px solid var(--border);border-radius:6px;background:var(--card);color:var(--text);cursor:pointer"><option value="">All Brands</option></select>
+      <select id="ctx-market" onchange="ctxCascade()" style="font-size:12px;padding:6px 10px;border:1.5px solid var(--border);border-radius:6px;background:var(--card);color:var(--text);cursor:pointer"><option value="">All Markets</option></select>
+      <select id="ctx-outlet" onchange="ctxOutletChange()" style="font-size:12px;padding:6px 10px;border:1.5px solid var(--border);border-radius:6px;background:var(--card);color:var(--text);cursor:pointer;min-width:160px"><option value="">Select Outlet</option></select>
     </div>
     <div id="view-container">
     <!-- Hard outlet gate — blocks all outlet-required views until an outlet is chosen -->
@@ -4793,16 +4784,6 @@ function ctxCascade () {
 function ctxOutletChange () {
   _ctxOutlet = document.getElementById('ctx-outlet')?.value || ''
   try { localStorage.setItem('pos_ctx_outlet', _ctxOutlet) } catch (_) {}
-  const badge = document.getElementById('ctx-outlet-badge')
-  if (badge) {
-    if (_ctxOutlet) {
-      const outlet = (_rptFilterData.outlets||[]).find(o=>o.id===_ctxOutlet)
-      badge.textContent = outlet?.name || _ctxOutlet
-      badge.style.display = ''
-    } else {
-      badge.style.display = 'none'
-    }
-  }
   // Sync outlet to all outlet inputs/selects in views (hidden inputs + visible selects)
   const outletSyncIds = ['dash-outlet','orders-outlet','rpt-outlet','exp-outlet',
     'perf-outlet','ic-outlet','wast-outlet','isr-outlet','ci-outlet','cb-outlet',
