@@ -234,12 +234,85 @@ module.exports = function downloadsRouter (sql) {
         <span class="step-num">1</span>
         <div class="step-title">Install PostgreSQL 16</div>
         <div class="step-content">
-          <p>Download and install PostgreSQL from the official website:</p>
-          <p><a href="https://www.postgresql.org/download/windows/" target="_blank">Download PostgreSQL 16</a></p>
-          <p style="margin-top: 12px; font-size: 13px; color: var(--muted);">
-            ℹ️ When prompted during installation, remember the postgres superuser password you set. You'll need it in the next step.
+          <p style="font-weight: 600; margin-bottom: 12px;">Follow these steps carefully to install PostgreSQL:</p>
+
+          <div style="background: var(--bg); padding: 16px; border-radius: 8px; margin-bottom: 16px;">
+            <h4 style="margin-bottom: 12px; color: var(--text);">Step 1.1: Download the Installer</h4>
+            <p style="margin-bottom: 8px;">1. Go to <a href="https://www.enterprisedb.com/downloads/postgres-postgresql-downloads" target="_blank">PostgreSQL Downloads</a></p>
+            <p style="margin-bottom: 8px;">2. Select <strong>Windows x86-64</strong> version (64-bit)</p>
+            <p style="margin-bottom: 8px;">3. Click the download button for <strong>PostgreSQL 16</strong></p>
+            <p style="color: var(--muted); font-size: 12px;">✓ File size: ~170 MB (may take a few minutes)</p>
+          </div>
+
+          <div style="background: var(--bg); padding: 16px; border-radius: 8px; margin-bottom: 16px;">
+            <h4 style="margin-bottom: 12px; color: var(--text);">Step 1.2: Welcome & License</h4>
+            <p style="margin-bottom: 8px;">1. Double-click the downloaded installer to start</p>
+            <p style="margin-bottom: 8px;">2. Click <strong>[Next]</strong> on the Welcome screen</p>
+            <p style="margin-bottom: 8px;">3. Accept the license agreement → Click <strong>[Next]</strong></p>
+          </div>
+
+          <div style="background: var(--bg); padding: 16px; border-radius: 8px; margin-bottom: 16px;">
+            <h4 style="margin-bottom: 12px; color: var(--text);">Step 1.3: Installation Directory</h4>
+            <p style="margin-bottom: 8px;">Default location: <code>C:\\Program Files\\PostgreSQL\\16</code></p>
+            <p style="margin-bottom: 8px; color: var(--muted); font-size: 12px;">✓ Leave this as default → Click <strong>[Next]</strong></p>
+          </div>
+
+          <div style="background: var(--bg); padding: 16px; border-radius: 8px; margin-bottom: 16px;">
+            <h4 style="margin-bottom: 12px; color: var(--text);">Step 1.4: Select Components</h4>
+            <p style="margin-bottom: 8px; font-weight: 600; color: var(--primary);">✓ Make sure these are CHECKED:</p>
+            <ul style="margin-left: 20px; color: var(--muted); margin-bottom: 12px;">
+              <li>☑ PostgreSQL Server</li>
+              <li>☑ pgAdmin 4</li>
+              <li>☑ Stack Builder</li>
+              <li>☑ Command Line Tools</li>
+            </ul>
+            <p style="color: var(--muted); font-size: 12px;">Click <strong>[Next]</strong></p>
+          </div>
+
+          <div style="background: var(--bg); padding: 16px; border-radius: 8px; margin-bottom: 16px;">
+            <h4 style="margin-bottom: 12px; color: var(--text);">Step 1.5: Data Directory</h4>
+            <p style="margin-bottom: 8px;">Default location: <code>C:\\Program Files\\PostgreSQL\\16\\data</code></p>
+            <p style="margin-bottom: 8px; color: var(--muted); font-size: 12px;">✓ Leave as default → Click <strong>[Next]</strong></p>
+          </div>
+
+          <div style="background: #fff3cd; padding: 16px; border-radius: 8px; margin-bottom: 16px; border-left: 4px solid #ffc107;">
+            <h4 style="margin-bottom: 12px; color: #856404;">⚠️ Step 1.6: Set PostgreSQL Password (IMPORTANT!)</h4>
+            <p style="margin-bottom: 8px; color: #856404;">You will be asked to set a password for the <strong>postgres</strong> superuser account.</p>
+            <p style="margin-bottom: 8px; color: #856404; font-weight: 600;">✏️ Example: <code>SecurePass123!</code></p>
+            <p style="margin-bottom: 8px; color: #856404;">⚠️ <strong>REMEMBER THIS PASSWORD!</strong> You will need it in Step 2 (Initialize Database)</p>
+            <p style="margin-bottom: 8px; color: #856404;">→ Enter password → Click <strong>[Next]</strong></p>
+          </div>
+
+          <div style="background: var(--bg); padding: 16px; border-radius: 8px; margin-bottom: 16px;">
+            <h4 style="margin-bottom: 12px; color: var(--text);">Step 1.7: Port Number</h4>
+            <p style="margin-bottom: 8px;">Default port: <strong>5432</strong></p>
+            <p style="margin-bottom: 8px; color: var(--muted); font-size: 12px;">✓ Leave as default → Click <strong>[Next]</strong></p>
+          </div>
+
+          <div style="background: var(--bg); padding: 16px; border-radius: 8px; margin-bottom: 16px;">
+            <h4 style="margin-bottom: 12px; color: var(--text);">Step 1.8: Locale & Service</h4>
+            <p style="margin-bottom: 8px;">Default locale: Your system locale</p>
+            <p style="margin-bottom: 8px; color: var(--muted); font-size: 12px;">✓ Leave as default → Click <strong>[Next]</strong></p>
+          </div>
+
+          <div style="background: var(--bg); padding: 16px; border-radius: 8px; margin-bottom: 16px;">
+            <h4 style="margin-bottom: 12px; color: var(--text);">Step 1.9: Ready to Install</h4>
+            <p style="margin-bottom: 8px;">Review the installation summary</p>
+            <p style="margin-bottom: 8px; color: var(--muted); font-size: 12px;">→ Click <strong>[Next]</strong> to begin installation (may take 2-3 minutes)</p>
+          </div>
+
+          <div style="background: var(--bg); padding: 16px; border-radius: 8px; margin-bottom: 16px;">
+            <h4 style="margin-bottom: 12px; color: var(--text);">Step 1.10: Installation Complete</h4>
+            <p style="margin-bottom: 8px;">When complete, you'll see "PostgreSQL Wizard Completion"</p>
+            <p style="margin-bottom: 8px; font-weight: 600; color: var(--primary);">⚠️ Uncheck "Stack Builder Enabled"</p>
+            <p style="margin-bottom: 8px; color: var(--muted); font-size: 12px;">→ Click <strong>[Finish]</strong></p>
+          </div>
+
+          <p style="margin-top: 16px; padding: 12px; background: #e8f5e9; border-radius: 8px; color: #2e7d32; border-left: 4px solid #4caf50;">
+            ✅ PostgreSQL is now installed! You should see pgAdmin 4 open automatically. Close it and move to Step 2.
           </p>
-          <div class="checkbox"><input type="checkbox" id="step1"> <label for="step1">PostgreSQL installed</label></div>
+
+          <div class="checkbox" style="margin-top: 16px;"><input type="checkbox" id="step1"> <label for="step1">PostgreSQL 16 successfully installed</label></div>
         </div>
       </div>
 
