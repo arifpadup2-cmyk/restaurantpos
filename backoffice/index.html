@@ -7831,14 +7831,8 @@ async function loadServerInfo () {
     const d = await apiFetch('GET', '/downloads/info')
     const s = d.server
 
-    // Fetch brand info
-    let brandId = 'N/A'
-    try {
-      const settings = await apiFetch('GET', '/settings')
-      brandId = settings.brand_id || 'N/A'
-    } catch (e) {
-      // Brand fetch failed, continue with default
-    }
+    // Get brand info from current user
+    const brandId = currentUser?.brand_id || 'N/A'
 
     // Build server info rows (always show)
     let serverInfoRows = `
