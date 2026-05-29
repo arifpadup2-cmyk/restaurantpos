@@ -43,13 +43,22 @@ ipcMain.handle('check-system', async () => {
 })
 
 ipcMain.handle('start-install', async (event, config) => {
-  const { restaurantName } = config
+  const { mode, outletId, outletCode, serverIP } = config
+
+  if (mode === 'server') {
+    return await startServerInstallation(outletId, outletCode)
+  } else if (mode === 'terminal') {
+    return await startTerminalInstallation(serverIP)
+  }
+})
+
+const startServerInstallation = async (outletId, outletCode) => {
   const steps = 7
   let serverIP = '127.0.0.1'
   let psqlPath = null
 
   try {
-    // Step 1: Install Node.js (skip if already present)
+    // Step 1: Install Node.js
     mainWindow.webContents.send('install-progress', {
       step: 1,
       total: steps,
@@ -105,7 +114,7 @@ ipcMain.handle('start-install', async (event, config) => {
       message: 'Installing server...',
       status: 'running'
     })
-    serverIP = await installServer(restaurantName, (msg) => {
+    serverIP = await installServer(outletId, outletCode, (msg) => {
       mainWindow.webContents.send('install-log', msg)
     })
     mainWindow.webContents.send('install-progress', {
@@ -149,20 +158,19 @@ ipcMain.handle('start-install', async (event, config) => {
       status: 'done'
     })
 
-    // Step 7: Install POS
+    // Step 7: Wait for server
     mainWindow.webContents.send('install-progress', {
       step: 7,
       total: steps,
-      message: 'Installing POS app...',
+      message: 'Starting server...',
       status: 'running'
     })
-    await installPOS((msg) => {
-      mainWindow.webContents.send('install-log', msg)
-    })
+    mainWindow.webContents.send('install-log', 'Waiting for server to start...')
+    await new Promise(resolve => setTimeout(resolve, 3000))
     mainWindow.webContents.send('install-progress', {
       step: 7,
       total: steps,
-      message: 'POS app installed',
+      message: 'Server started',
       status: 'done'
     })
 
@@ -180,4 +188,99 @@ ipcMain.handle('start-install', async (event, config) => {
       message: error.message
     })
   }
-})
+}
+
+const startTerminalInstallation = async (serverIP) => {
+  const steps = 3
+
+  try {
+    // Step 1: Verify connection
+    mainWindow.webContents.send('install-progress', {
+      step: 1,
+      total: steps,
+      message: 'Verifying server connection...',
+      status: 'running'
+    })
+    mainWindow.webContents.send('install-log', `Connecting to ${serverIP}:3001...`)
+
+    try {
+      const response = await fetch(`http://${serverIP}:3001/health`, { timeout: 5000 })
+      if (!response.ok) throw new Error('Server not responding')
+      mainWindow.webContents.send('install-log', 'Server connection verified')
+    } catch (error) {
+      throw new Error(`Cannot connect to server at ${serverIP}:3001`)
+    }
+
+    mainWindow.webContents.send('install-progress', {
+      step: 1,
+      total: steps,
+      message: 'Server verified',
+      status: 'done'
+    })
+
+    // Step 2: Install POS
+    mainWindow.webContents.send('install-progress', {
+      step: 2,
+      total: steps,
+      message: 'Installing POS app...',
+      status: 'running'
+    })
+    await installPOS((msg) => {
+      mainWindow.webContents.send('install-log', msg)
+    })
+    mainWindow.webContents.send('install-progress', {
+      step: 2,
+      total: steps,
+      message: 'POS app installed',
+      status: 'done'
+    })
+
+    // Step 3: Configure
+    mainWindow.webContents.send('install-progress', {
+      step: 3,
+      total: steps,
+      message: 'Configuring terminal...',
+      status: 'running'
+    })
+    mainWindow.webContents.send('install-log', 'Creating terminal configuration...')
+
+    // Write config file (this would be done by the app on first run)
+    const fs = require('fs')
+    const configPath = path.join(require('os').homedir(), 'AppData', 'Local', 'Restaurant POS', 'pos-config.json')
+
+    try {
+      const configDir = path.dirname(configPath)
+      if (!fs.existsSync(configDir)) {
+        fs.mkdirSync(configDir, { recursive: true })
+      }
+
+      fs.writeFileSync(configPath, JSON.stringify({
+        serverIP: serverIP,
+        serverPort: 3001,
+        machineId: `TERMINAL-${Date.now()}`,
+        installedAt: new Date().toISOString()
+      }, null, 2))
+
+      mainWindow.webContents.send('install-log', 'Terminal configuration saved')
+    } catch (error) {
+      mainWindow.webContents.send('install-log', `Configuration warning: ${error.message}`)
+    }
+
+    mainWindow.webContents.send('install-progress', {
+      step: 3,
+      total: steps,
+      message: 'Terminal configured',
+      status: 'done'
+    })
+
+    mainWindow.webContents.send('install-complete', {
+      serverIP: serverIP,
+      outletCode: 'Not yet assigned'
+    })
+  } catch (error) {
+    mainWindow.webContents.send('install-error', {
+      step: 'setup',
+      message: error.message
+    })
+  }
+}

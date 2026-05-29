@@ -15,7 +15,7 @@ const getLocalIP = () => {
   return '127.0.0.1'
 }
 
-const installServer = async (restaurantName, onLog) => {
+const installServer = async (outletId, outletCode, onLog) => {
   try {
     const serverInstallDir = 'C:\\Program Files\\Restaurant POS Server'
     const sourceDir = path.join(__dirname, '..', '..', 'server')
@@ -40,10 +40,22 @@ API_KEY=pos-api-key-2026
 JWT_SECRET=bo-jwt-secret-change-in-production-2026
 NODE_ENV=production
 CLOUD_SYNC_URL=https://restaurantpos.example.com
-RESTAURANT_NAME=${restaurantName}
+OUTLET_ID=${outletId}
+OUTLET_CODE=${outletCode}
 `.trim()
 
     fs.writeFileSync(path.join(serverInstallDir, '.env'), envContent)
+
+    // Also save outlet info as JSON
+    const outletConfig = {
+      outletId,
+      outletCode,
+      createdAt: new Date().toISOString()
+    }
+    fs.writeFileSync(
+      path.join(serverInstallDir, 'outlet-config.json'),
+      JSON.stringify(outletConfig, null, 2)
+    )
 
     onLog('Installing dependencies...')
     execSync('npm install --omit=dev', {

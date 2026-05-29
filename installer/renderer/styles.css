@@ -126,6 +126,35 @@ h3 {
   background: #e0e0e0;
 }
 
+.btn-choice {
+  background: white;
+  color: #333;
+  border: 2px solid #ddd;
+  padding: 20px;
+  margin: 0;
+  text-align: left;
+  height: auto;
+  transition: all 0.3s;
+}
+
+.btn-choice:hover {
+  border-color: #2a5298;
+  background: #f8f9ff;
+  transform: translateX(4px);
+}
+
+.choice-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 6px;
+}
+
+.choice-desc {
+  font-size: 12px;
+  color: #888;
+}
+
 .button-group {
   display: flex;
   gap: 12px;

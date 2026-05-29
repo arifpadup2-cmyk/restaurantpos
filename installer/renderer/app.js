@@ -1,35 +1,97 @@
 let systemStatus = {}
+let installMode = null // 'server' or 'terminal'
+let serverIP = null
 
 const showScreen = (screenId) => {
   document.querySelectorAll('.screen').forEach(s => s.style.display = 'none')
   document.getElementById(screenId).style.display = 'flex'
 }
 
-const goToSystemCheck = async () => {
-  showScreen('system-check-screen')
+const goToWelcome = () => {
+  showScreen('welcome-screen')
+}
+
+const selectServerSetup = () => {
+  installMode = 'server'
+  showScreen('server-check-screen')
   checkSystem()
 }
 
-const goToRestaurantInfo = () => {
-  showScreen('restaurant-info-screen')
-  document.getElementById('restaurant-name').focus()
+const selectTerminalSetup = () => {
+  installMode = 'terminal'
+  showScreen('terminal-check-screen')
+  checkTerminalSystem()
 }
 
-const startInstallation = async () => {
-  const restaurantName = document.getElementById('restaurant-name').value
-  if (!restaurantName.trim()) {
-    alert('Please enter a restaurant name')
+const goToServerCheck = () => {
+  showScreen('server-check-screen')
+}
+
+const goToServerInfo = () => {
+  showScreen('server-info-screen')
+}
+
+const startServerInstallation = async () => {
+  const outletId = document.getElementById('outlet-id').value
+  const outletCode = document.getElementById('outlet-code').value
+
+  if (!outletId.trim() || !outletCode.trim()) {
+    alert('Please enter outlet ID and code')
     return
   }
 
-  showScreen('installing-screen')
-  clearLog()
+  showScreen('server-installing-screen')
+  clearLog('server')
 
-  window.installAPI.startInstall({ restaurantName })
+  window.installAPI.startInstall({
+    mode: 'server',
+    outletId,
+    outletCode
+  })
 }
 
-const goToRestaurantInfo2 = () => {
-  showScreen('restaurant-info-screen')
+const startTerminalInstallation = async () => {
+  const serverIp = document.getElementById('server-ip').value
+
+  if (!serverIp.trim()) {
+    alert('Please enter server IP address')
+    return
+  }
+
+  showScreen('terminal-installing-screen')
+  clearLog('terminal')
+
+  window.installAPI.startInstall({
+    mode: 'terminal',
+    serverIP: serverIp
+  })
+}
+
+const verifyServerConnection = async () => {
+  const serverIp = document.getElementById('server-ip').value
+  if (!serverIp.trim()) {
+    alert('Please enter server IP')
+    return
+  }
+
+  document.getElementById('verify-btn').textContent = 'Verifying...'
+  document.getElementById('verify-btn').disabled = true
+
+  try {
+    // Try to connect to server:3001
+    const response = await fetch(`http://${serverIp}:3001/health`, { timeout: 5000 })
+    if (response.ok) {
+      serverIP = serverIp
+      document.getElementById('verify-btn').textContent = 'Verified ✓'
+      setTimeout(() => startTerminalInstallation(), 500)
+    } else {
+      throw new Error('Server not responding')
+    }
+  } catch (error) {
+    alert(`Could not connect to server at ${serverIp}:3001. Please check the IP and try again.`)
+    document.getElementById('verify-btn').textContent = 'Verify Connection'
+    document.getElementById('verify-btn').disabled = false
+  }
 }
 
 const checkSystem = async () => {
@@ -52,19 +114,34 @@ const checkSystem = async () => {
   }
 }
 
+const checkTerminalSystem = async () => {
+  try {
+    const result = await window.installAPI.checkSystem()
+    updateCheck('ports-term', result.portsAvailable)
+    document.getElementById('verify-btn').style.display = 'block'
+  } catch (error) {
+    updateCheck('ports-term', false, error.message)
+  }
+}
+
 const updateCheck = (id, status, message = '') => {
   const element = document.getElementById(`check-${id}`)
+  if (!element) return
+
   if (status) {
-    element.innerHTML = `<span class="check-icon">✓</span><span>${element.querySelector('span:last-child').textContent}</span>`
+    element.innerHTML = `<span class="check-icon">✓</span><span>${element.querySelector('span:last-child')?.textContent || 'Check'}</span>`
     element.classList.add('done')
   } else {
-    element.innerHTML = `<span class="check-icon error">✗</span><span>${element.querySelector('span:last-child').textContent}</span>`
+    element.innerHTML = `<span class="check-icon error">✗</span><span>${element.querySelector('span:last-child')?.textContent || 'Check'}</span>`
     element.classList.add('error')
   }
 }
 
-const addLog = (message) => {
-  const logDiv = document.getElementById('install-log')
+const addLog = (message, mode = installMode) => {
+  const logId = mode === 'terminal' ? 'install-log-term' : 'install-log-server'
+  const logDiv = document.getElementById(logId)
+  if (!logDiv) return
+
   const line = document.createElement('div')
   line.className = 'log-line'
   line.textContent = message
@@ -72,15 +149,23 @@ const addLog = (message) => {
   logDiv.scrollTop = logDiv.scrollHeight
 }
 
-const clearLog = () => {
-  document.getElementById('install-log').innerHTML = ''
+const clearLog = (mode = installMode) => {
+  const logId = mode === 'terminal' ? 'install-log-term' : 'install-log-server'
+  const element = document.getElementById(logId)
+  if (element) element.innerHTML = ''
 }
 
 // Listen for progress updates
 window.installAPI.onProgress((data) => {
+  const progressBarId = installMode === 'terminal' ? 'progress-bar-term' : 'progress-bar'
+  const progressTextId = installMode === 'terminal' ? 'progress-text-term' : 'progress-text-server'
+
   const percentage = (data.step / data.total) * 100
-  document.getElementById('progress-bar').style.width = percentage + '%'
-  document.getElementById('progress-text').textContent = `Step ${data.step}/${data.total}: ${data.message}`
+  const bar = document.getElementById(progressBarId)
+  const text = document.getElementById(progressTextId)
+
+  if (bar) bar.style.width = percentage + '%'
+  if (text) text.textContent = `Step ${data.step}/${data.total}: ${data.message}`
 })
 
 window.installAPI.onLog((message) => {
@@ -88,22 +173,28 @@ window.installAPI.onLog((message) => {
 })
 
 window.installAPI.onComplete((data) => {
-  document.getElementById('server-url').textContent = data.ip
-  document.getElementById('admin-url').textContent = data.adminUrl
-  document.getElementById('password').textContent = data.credentials.password
-  showScreen('complete-screen')
+  if (installMode === 'server') {
+    document.getElementById('server-url').textContent = data.ip
+    document.getElementById('admin-url').textContent = data.adminUrl
+    document.getElementById('password').textContent = data.credentials.password
+    showScreen('server-complete-screen')
+  } else {
+    document.getElementById('term-server-ip').textContent = data.serverIP
+    document.getElementById('term-outlet-code').textContent = data.outletCode
+    showScreen('terminal-complete-screen')
+  }
 })
 
 window.installAPI.onError((data) => {
   addLog(`ERROR at ${data.step}: ${data.message}`)
   setTimeout(() => {
     alert(`Installation failed: ${data.message}`)
-    showScreen('restaurant-info-screen')
+    showScreen('welcome-screen')
   }, 2000)
 })
 
 const launchPOS = () => {
-  // Launch the POS app (this would be handled by main.js)
+  // Launch the POS app
   window.installAPI.launchPOS?.()
 }
 
