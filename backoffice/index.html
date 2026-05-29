@@ -7865,7 +7865,7 @@ async function loadServerInfo () {
 
     if (_ctxOutlet) {
       try {
-        const outlets = await apiFetch('GET', '/outlets')
+        const outlets = await apiFetch('GET', '/config/outlets')
         console.log('Outlets fetched:', outlets, 'Looking for:', _ctxOutlet)
         const outlet = outlets.find(o => o.id === _ctxOutlet)
         console.log('Found outlet:', outlet)
