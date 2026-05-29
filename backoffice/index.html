@@ -3885,9 +3885,10 @@ let reportData    = []
 
 // ─── API HELPER ───────────────────────────────────────────────────
 async function apiFetch (method, endpoint, body) {
+  const currentToken = localStorage.getItem('bo_token') || token || ''
   const opts = {
     method,
-    headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+    headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + currentToken },
   }
   if (body !== undefined) opts.body = JSON.stringify(body)
   const res = await fetch(API_BASE + endpoint, opts)
