@@ -15,7 +15,6 @@ const createWindow = () => {
   })
 
   mainWindow.loadFile(path.join(__dirname, 'renderer', 'index.html'))
-  mainWindow.webDevTools.openDevTools()
 
   mainWindow.on('closed', () => {
     mainWindow = null
