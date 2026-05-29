@@ -1716,6 +1716,7 @@ input:checked+.toggle-slider:before{transform:translateX(17px)}
           <tbody id="orders-tbody"></tbody>
         </table>
       </div>
+      <div style="padding:16px;border-top:1px solid var(--border);display:flex;justify-content:center" id="orders-pagination"></div>
     </div>
   </div>
 
@@ -6370,31 +6371,52 @@ function setSubPreset (fromId, toId, preset, btn, loadFn) {
   if (loadFn) loadFn()
 }
 
+let _ordersPage = 1
+const _ordersPageSize = 50
+
 async function loadOrders () {
   const from   = document.getElementById('orders-from')?.value  || todayStr()
   const to     = document.getElementById('orders-to')?.value    || from
   const outlet = _ctxOutlet || ''
+
+  // Show loading indicator
+  const tbody = document.getElementById('orders-tbody')
+  if (tbody) tbody.innerHTML = '<tr><td colspan="11" style="text-align:center;padding:20px;color:var(--muted)">⏳ Loading invoices...</td></tr>'
+
   try {
     let qs = `/orders?from=${from}&to=${to}`
     if (outlet) qs += '&outlet_id=' + encodeURIComponent(outlet)
     const { orders } = await apiFetch('GET', qs)
     allOrders = orders
+    _ordersPage = 1
     renderOrdersView()
-  } catch (e) { console.error(e) }
+  } catch (e) {
+    console.error(e)
+    if (tbody) tbody.innerHTML = `<tr><td colspan="11" style="text-align:center;padding:20px;color:var(--danger)">Error: ${e.message}</td></tr>`
+  }
 }
 
 function filterOrdersView (type, btn) {
   ordersViewFilter = type
   document.querySelectorAll('.filter-bar .filter-chip').forEach(b => b.classList.remove('active'))
   if (btn) btn.classList.add('active')
+  _ordersPage = 1
   renderOrdersView()
 }
 
 function renderOrdersView () {
   const cur   = boSettings.currency
   const items = ordersViewFilter === 'all' ? allOrders : allOrders.filter(o => o.order_type === ordersViewFilter)
-  document.getElementById('orders-tbody').innerHTML = items.length
-    ? items.map(o => `
+
+  // Calculate pagination
+  const totalPages = Math.ceil(items.length / _ordersPageSize)
+  const startIdx = (_ordersPage - 1) * _ordersPageSize
+  const endIdx = startIdx + _ordersPageSize
+  const pageItems = items.slice(startIdx, endIdx)
+
+  // Render table rows
+  document.getElementById('orders-tbody').innerHTML = pageItems.length
+    ? pageItems.map(o => `
       <tr>
         <td><b>#${o.order_number}</b></td>
         <td><span class="badge badge-${typeBadge(o.order_type)}">${o.order_type}</span></td>
@@ -6409,6 +6431,30 @@ function renderOrdersView () {
         <td>${new Date(parseInt(o.created_at)).toLocaleString()}</td>
       </tr>`).join('')
     : `<tr><td colspan="11" class="empty-state">No orders found</td></tr>`
+
+  // Update pagination info
+  const paginationEl = document.getElementById('orders-pagination')
+  if (paginationEl) {
+    const showing = pageItems.length ? `${startIdx + 1}–${startIdx + pageItems.length}` : '0'
+    paginationEl.innerHTML = `
+      <div style="display:flex;align-items:center;gap:12px;font-size:12px;color:var(--muted)">
+        <span>Showing ${showing} of ${items.length}</span>
+        <button onclick="goOrdersPage('prev')" ${_ordersPage===1?'disabled':''} style="padding:4px 8px;border:1px solid var(--border);border-radius:4px;cursor:${_ordersPage===1?'not-allowed':'pointer'};opacity:${_ordersPage===1?'0.5':'1'}">← Prev</button>
+        <span style="min-width:80px;text-align:center">Page ${_ordersPage} of ${totalPages || 1}</span>
+        <button onclick="goOrdersPage('next')" ${_ordersPage===totalPages||!totalPages?'disabled':''} style="padding:4px 8px;border:1px solid var(--border);border-radius:4px;cursor:${_ordersPage===totalPages||!totalPages?'not-allowed':'pointer'};opacity:${_ordersPage===totalPages||!totalPages?'0.5':'1'}">Next →</button>
+      </div>`
+  }
+}
+
+function goOrdersPage (direction) {
+  if (direction === 'prev' && _ordersPage > 1) _ordersPage--
+  else if (direction === 'next') {
+    const items = ordersViewFilter === 'all' ? allOrders : allOrders.filter(o => o.order_type === ordersViewFilter)
+    const totalPages = Math.ceil(items.length / _ordersPageSize)
+    if (_ordersPage < totalPages) _ordersPage++
+  }
+  renderOrdersView()
+  document.getElementById('orders-tbody')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
 }
 
 // ─── REPORT DATE PRESETS & FILTERS ──────────────────────────────
