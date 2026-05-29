@@ -382,24 +382,46 @@ module.exports = function downloadsRouter (sql) {
               <p style="color: #2e7d32;">5. This copies the exact path - we'll paste it below</p>
             </div>
 
-            <p style="margin-bottom: 12px; font-weight: 600; color: var(--text);">Now type in Command Prompt:</p>
+            <p style="margin-bottom: 16px; font-weight: 600; color: var(--text);">Generate Your Command (Easy Way):</p>
 
-            <p style="margin-bottom: 8px; color: var(--muted); font-size: 12px;">Option A - If you copied the path:</p>
-            <p style="margin-bottom: 8px;">Type: <code style="background: #fff9c4; padding: 4px 8px;">cd </code> (then right-click to paste the path you copied)</p>
+            <div style="background: #f5f5f5; padding: 16px; border-radius: 8px; margin-bottom: 16px; border: 2px solid #e0e0e0;">
+              <p style="margin-bottom: 12px; font-weight: 600; color: var(--text);">Step 1: Paste Your Folder Path Here</p>
+              <input type="text" id="folderPath2_2" placeholder="Paste the path you copied (e.g., C:\Users\John\Downloads\POS-Setup-Demo-DEMO001)" style="width: 100%; padding: 12px; border: 1.5px solid #ccc; border-radius: 6px; font-size: 13px; font-family: monospace; box-sizing: border-box; margin-bottom: 12px;">
+              <button style="background: var(--primary); color: white; padding: 10px 16px; border: none; border-radius: 6px; cursor: pointer; font-weight: 600; width: 100%;" onclick="generateCommand2_2()">✨ Generate Command</button>
+            </div>
 
-            <p style="margin-bottom: 8px; color: var(--muted); font-size: 12px;">Option B - If you want to type it manually:</p>
-            <div class="code-block"><pre>cd C:\Users\YourUsername\Downloads\POS-Setup-Demo-DEMO001</pre></div>
-            <p style="margin-bottom: 8px; color: var(--muted); font-size: 12px;">Replace:</p>
-            <ul style="margin-left: 20px; color: var(--muted); font-size: 12px; margin-bottom: 12px;">
-              <li><code>YourUsername</code> → Your Windows username (example: C:\Users\<strong>John</strong>\...)</li>
-              <li><code>POS-Setup-Demo-DEMO001</code> → Your actual folder name (you'll see it in File Explorer)</li>
-            </ul>
-
-            <p style="margin-bottom: 8px; color: var(--muted); font-size: 12px; font-weight: 600;">When done typing (or pasting), press <strong>Enter</strong></p>
+            <div id="commandOutput2_2" style="display: none; background: #e8f5e9; padding: 16px; border-radius: 8px; margin-bottom: 16px; border-left: 4px solid #4caf50;">
+              <p style="margin-bottom: 12px; color: #2e7d32; font-weight: 600;">Your Command (Copy & Paste into Command Prompt):</p>
+              <div class="code-block"><pre id="generatedCmd2_2" style="color: #2e7d32; margin: 0;">cd C:\Users\YourUsername\Downloads\POS-Setup</pre></div>
+              <button class="btn" onclick="copyCmdGenerated('generatedCmd2_2')" style="background: #4caf50; width: 100%; margin-top: 8px;">📋 Copy This Command</button>
+              <p style="margin-top: 12px; color: #2e7d32; font-size: 12px;">Then paste it into Command Prompt and press <strong>Enter</strong></p>
+            </div>
 
             <p style="background: #e1f5fe; padding: 10px; border-radius: 6px; color: #01579b; font-size: 12px;">
               ✓ If it worked, the prompt will show the folder path (like <code>C:\Users\John\Downloads\POS-Setup-Demo-DEMO001&gt;</code>)
             </p>
+
+            <script>
+              function generateCommand2_2() {
+                const folderPath = document.getElementById('folderPath2_2').value.trim();
+                if (!folderPath) {
+                  alert('Please paste your folder path first!');
+                  return;
+                }
+                const command = 'cd ' + folderPath;
+                document.getElementById('generatedCmd2_2').textContent = command;
+                document.getElementById('commandOutput2_2').style.display = 'block';
+              }
+
+              function copyCmdGenerated(elemId) {
+                const text = document.getElementById(elemId).textContent;
+                navigator.clipboard.writeText(text).then(() => {
+                  alert('✅ Command copied to clipboard!\\nNow paste it into Command Prompt and press Enter.');
+                }).catch(() => {
+                  alert('Copy failed - please try again');
+                });
+              }
+            </script>
           </div>
 
           <div style="background: var(--bg); padding: 16px; border-radius: 8px; margin-bottom: 16px;">
