@@ -2371,6 +2371,40 @@ input:checked+.toggle-slider:before{transform:translateX(17px)}
       </div>
     </div>
 
+    <!-- Main Installer Download -->
+    <div class="card" style="max-width:760px;margin-bottom:20px">
+      <div class="card-header"><h3>Restaurant POS Installer (Main)</h3></div>
+      <div style="padding:16px">
+        <p style="font-size:13px;color:#64748b;margin-bottom:16px">Download the main installer executable. Use this on any Windows PC — it will guide you through Server or Terminal setup with your outlet configuration.</p>
+        <div id="installer-info" style="margin-bottom:16px;padding:12px;background:#f0f9ff;border:1.5px solid #bfdbfe;border-radius:8px;font-size:12px;color:#0c4a6e">
+          <div style="font-weight:600;margin-bottom:8px">Features:</div>
+          <ul style="margin:0;padding-left:16px;line-height:1.8">
+            <li>Multi-outlet database isolation</li>
+            <li>Automatic cloud backup on day close</li>
+            <li>One-click Windows installer</li>
+            <li>Server and Terminal setup modes</li>
+          </ul>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px;font-size:12px">
+          <div><span style="color:#94a3b8;display:block;margin-bottom:4px">Version</span><span style="font-weight:600">3.10.0</span></div>
+          <div><span style="color:#94a3b8;display:block;margin-bottom:4px">Released</span><span style="font-weight:600">2026-05-29</span></div>
+          <div><span style="color:#94a3b8;display:block;margin-bottom:4px">File Size</span><span style="font-weight:600" id="installer-size">~72.64 MB</span></div>
+          <div><span style="color:#94a3b8;display:block;margin-bottom:4px">Status</span><span style="font-weight:600;color:#15803d">Ready</span></div>
+        </div>
+        <button class="btn btn-primary" onclick="downloadMainInstaller()" style="width:100%;justify-content:center;margin-bottom:12px">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          Download Installer
+        </button>
+        <div id="installer-download-status" style="font-size:12px;color:#64748b;display:none;padding:10px;background:#f8fafc;border-radius:6px;text-align:center"></div>
+        <div style="margin-top:16px;padding:12px;background:#fef3c7;border-radius:8px;font-size:12px;color:#92400e">
+          <b>Quick Start:</b><br>
+          1. Download this installer &nbsp;→&nbsp; 2. Run on Server PC → Choose "Server Setup"<br>
+          3. Note the Server IP shown at end &nbsp;→&nbsp; 4. Run installer on each Terminal PC → Choose "Terminal Setup" + enter Server IP<br>
+          5. Close day → Automatic backup to cloud ✅
+        </div>
+      </div>
+    </div>
+
     <!-- Per-Outlet Setup Package -->
     <div class="card" style="max-width:760px;margin-bottom:20px">
       <div class="card-header"><h3>Per-Outlet Setup Package</h3></div>
@@ -7509,6 +7543,7 @@ async function clearTransactionData () {
 
 async function loadDownloadsPage () {
   loadServerInfo()
+  loadMainInstallerInfo()
   loadInstallerFiles()
   loadSetupPackageOutlets()
   const base = window.location.origin
@@ -7541,6 +7576,68 @@ async function loadSetupPackageOutlets () {
     console.error('Failed to load setup package outlets:', e)
     const sel = document.getElementById('setup-package-outlet')
     if (sel) sel.innerHTML = '<option value="">-- Error loading outlets --</option>'
+  }
+}
+
+async function loadMainInstallerInfo () {
+  try {
+    const info = await apiFetch('GET', '/downloads/installer/info')
+    if (info.ok && info.installer) {
+      const inst = info.installer
+      const infDiv = document.getElementById('installer-info')
+      if (infDiv && inst.features) {
+        infDiv.innerHTML = `
+          <div style="font-weight:600;margin-bottom:8px">Features:</div>
+          <ul style="margin:0;padding-left:16px;line-height:1.8">
+            ${inst.features.map(f => `<li>${f}</li>`).join('')}
+          </ul>
+        `
+      }
+      const sizeDiv = document.getElementById('installer-size')
+      if (sizeDiv) sizeDiv.textContent = inst.fileSize || '~72.64 MB'
+      if (!inst.exists) {
+        showToast('⚠️ Installer not found on server. Upload the .exe to continue.','warning')
+      }
+    }
+  } catch (e) {
+    console.warn('Failed to load installer info:', e.message)
+  }
+}
+
+async function downloadMainInstaller () {
+  const status = document.getElementById('installer-download-status')
+  const btn = event.target.closest('button')
+
+  try {
+    status.style.display = 'block'
+    status.textContent = '⏳ Preparing download...'
+    status.style.color = '#475569'
+
+    const tkn = localStorage.getItem('bo_token')
+    const resp = await fetch('/api/downloads/installer/exe', {
+      headers: { Authorization: 'Bearer ' + tkn }
+    })
+
+    if (!resp.ok) {
+      const err = await resp.json().catch(() => ({ error: resp.statusText }))
+      throw new Error(err.error || err.message || 'Download failed')
+    }
+
+    const blob = await resp.blob()
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = 'Restaurant POS Installer Setup 1.0.0.exe'
+    a.click()
+    URL.revokeObjectURL(url)
+
+    status.textContent = '✅ Download started! Check your Downloads folder.'
+    status.style.color = '#15803d'
+    showToast('Installer downloaded successfully!','success')
+  } catch (e) {
+    status.textContent = '❌ ' + e.message
+    status.style.color = '#dc2626'
+    showToast('Download failed: ' + e.message,'error')
   }
 }
 

@@ -755,5 +755,92 @@ module.exports = function downloadsRouter (sql) {
     } catch (e) { serverError(res, e) }
   })
 
+  // GET /downloads/installer/info — get installer info and download URL
+  router.get('/installer/info', jwtAuth, (req, res) => {
+    try {
+      const installerName = 'Restaurant POS Installer Setup 1.0.0.exe'
+      const installerPath = path.join(DATA_DIR, 'public', 'installers', installerName)
+
+      const info = {
+        ok: true,
+        installer: {
+          name: installerName,
+          version: '3.10.0',
+          releaseDate: '2026-05-29',
+          features: [
+            'Multi-outlet database isolation',
+            'Automatic cloud backup on day close',
+            'One-click Windows installer',
+            'Server and Terminal setup modes',
+            'Pre-configured outlet settings'
+          ],
+          systemRequirements: {
+            os: 'Windows 10 Pro or later',
+            ram: '4GB minimum (8GB recommended)',
+            storage: '20GB SSD',
+            network: '100Mbps LAN (for multi-terminal)'
+          },
+          downloadUrl: '/api/downloads/installer/exe',
+          fileSize: '~72.64 MB',
+          exists: fs.existsSync(installerPath)
+        },
+        instructions: {
+          server: {
+            title: 'Server Setup (One-Time)',
+            steps: [
+              'Run Restaurant POS Installer Setup 1.0.0.exe',
+              'Choose "Server Setup" at welcome screen',
+              'Enter your outlet ID (e.g., cairo, giza)',
+              'Enter outlet code (e.g., CAIRO-001)',
+              'Wait for installation (7 steps, ~5 minutes)',
+              'Note the Server IP shown at completion',
+              'Access Back Office at: http://{server-ip}:3001'
+            ]
+          },
+          terminal: {
+            title: 'Terminal Setup (Per Terminal)',
+            steps: [
+              'Run Restaurant POS Installer Setup 1.0.0.exe',
+              'Choose "Terminal Setup" at welcome screen',
+              'Enter server IP (from server setup above)',
+              'Wait for installation (3 steps, ~2 minutes)',
+              'POS launches automatically',
+              'All terminals connect to same server'
+            ]
+          }
+        }
+      }
+
+      res.json(info)
+    } catch (e) { serverError(res, e) }
+  })
+
+  // GET /downloads/installer/exe — download the installer executable
+  router.get('/installer/exe', jwtAuth, (req, res) => {
+    try {
+      const installerName = 'Restaurant POS Installer Setup 1.0.0.exe'
+      const installerPath = path.join(DATA_DIR, 'public', 'installers', installerName)
+
+      if (!fs.existsSync(installerPath)) {
+        return res.status(404).json({
+          ok: false,
+          error: 'Installer file not found on server',
+          message: 'Please contact administrator to upload the installer'
+        })
+      }
+
+      res.setHeader('Content-Type', 'application/octet-stream')
+      res.setHeader('Content-Disposition', `attachment; filename="${installerName}"`)
+      res.setHeader('Cache-Control', 'no-cache')
+
+      const fileStream = fs.createReadStream(installerPath)
+      fileStream.pipe(res)
+
+      fileStream.on('error', () => {
+        res.status(500).json({ ok: false, error: 'Download failed' })
+      })
+    } catch (e) { serverError(res, e) }
+  })
+
   return router
 }
