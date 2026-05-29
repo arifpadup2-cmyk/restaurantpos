@@ -160,7 +160,7 @@ const clearLog = (mode = installMode) => {
 // Listen for progress updates
 window.installAPI.onProgress((data) => {
   const progressBarId = installMode === 'terminal' ? 'progress-bar-term' : 'progress-bar'
-  const progressTextId = installMode === 'terminal' ? 'progress-text-term' : 'progress-text-server'
+  const progressTextId = installMode === 'terminal' ? 'progress-text-term' : 'progress-text'
 
   const percentage = (data.step / data.total) * 100
   const bar = document.getElementById(progressBarId)
@@ -176,13 +176,10 @@ window.installAPI.onLog((message) => {
 
 window.installAPI.onComplete((data) => {
   if (installMode === 'server') {
-    document.getElementById('server-url').textContent = data.ip
-    document.getElementById('admin-url').textContent = data.adminUrl
-    document.getElementById('password').textContent = data.credentials.password
+    document.getElementById('complete-ip').textContent = data.ip
+    document.getElementById('complete-url').textContent = `http://${data.ip}:3001`
     showScreen('server-complete-screen')
   } else {
-    document.getElementById('term-server-ip').textContent = data.serverIP
-    document.getElementById('term-outlet-code').textContent = data.outletCode
     showScreen('terminal-complete-screen')
   }
 })
@@ -194,6 +191,15 @@ window.installAPI.onError((data) => {
     showScreen('welcome-screen')
   }, 2000)
 })
+
+const openBackOffice = () => {
+  const ip = document.getElementById('complete-ip').textContent
+  if (ip && ip !== '192.168.1.100') {
+    window.installAPI.openBackOffice?.(`http://${ip}:3001`)
+  } else {
+    window.installAPI.openBackOffice?.('http://localhost:3001')
+  }
+}
 
 const launchPOS = () => {
   // Launch the POS app
