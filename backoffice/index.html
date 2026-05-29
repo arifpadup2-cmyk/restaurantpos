@@ -4768,6 +4768,7 @@ function ctxCascade () {
 
 function ctxOutletChange () {
   _ctxOutlet = document.getElementById('ctx-outlet')?.value || ''
+  console.log('🔄 ctxOutletChange triggered:', {_ctxOutlet, timestamp: new Date().toLocaleTimeString()})
   try { localStorage.setItem('pos_ctx_outlet', _ctxOutlet) } catch (_) {}
   // Sync outlet to all outlet inputs/selects in views (hidden inputs + visible selects)
   const outletSyncIds = ['dash-outlet','orders-outlet','rpt-outlet','exp-outlet',
@@ -4783,15 +4784,16 @@ function ctxOutletChange () {
   const activeView = document.querySelector('.nav-sub.active')?.id ||
                      document.querySelector('.nav-item.active')?.id ||
                      document.querySelector('.nav-group-hdr.active')?.id
-  if (activeView === 'nav-dashboard') loadDashboard()
-  if (activeView === 'nav-live') loadLiveOrders()
-  if (activeView === 'nav-kds') loadKdsView()
-  if (activeView === 'nav-staff') loadStaff()
-  if (activeView === 'nav-reports') loadReport()
-  if (activeView === 'nav-orders') loadOrders()
-  if (activeView === 'nav-audit') loadAuditLog()
-  if (activeView === 'nav-downloads') loadDownloadsPage()
-  if (activeView === 'nav-bo-settings') loadBOSettings()
+  console.log('🔍 Active view detected:', activeView)
+  if (activeView === 'nav-dashboard') { console.log('📊 Calling loadDashboard'); loadDashboard() }
+  if (activeView === 'nav-live') { console.log('📋 Calling loadLiveOrders'); loadLiveOrders() }
+  if (activeView === 'nav-kds') { console.log('🍳 Calling loadKdsView'); loadKdsView() }
+  if (activeView === 'nav-staff') { console.log('👥 Calling loadStaff'); loadStaff() }
+  if (activeView === 'nav-reports') { console.log('📈 Calling loadReport'); loadReport() }
+  if (activeView === 'nav-orders') { console.log('🧾 Calling loadOrders'); loadOrders() }
+  if (activeView === 'nav-audit') { console.log('🔐 Calling loadAuditLog'); loadAuditLog() }
+  if (activeView === 'nav-downloads') { console.log('⬇️ Calling loadDownloadsPage'); loadDownloadsPage() }
+  if (activeView === 'nav-bo-settings') { console.log('⚙️ Calling loadBOSettings'); loadBOSettings() }
 }
 
 // ── Global breadcrumb (header) — always visible ─────────────────
@@ -5071,12 +5073,15 @@ async function loadDashboard () {
   const brand  = _ctxBrand || ''
   const market = _ctxMarket || ''
   const cur  = boSettings.currency
+  console.log('📊 loadDashboard called with:', {from, to, outlet, brand, market})
   try {
     let qs = `/reports/dashboard?from=${from}&to=${to}`
     if (outlet) qs += '&outlet_id=' + encodeURIComponent(outlet)
     if (brand)  qs += '&brand_id='  + encodeURIComponent(brand)
     if (market) qs += '&market_id=' + encodeURIComponent(market)
+    console.log('🌐 API call:', qs)
     const { orders, expenses: exps } = await apiFetch('GET', qs)
+    console.log('✅ Dashboard data received:', {orderCount: orders.length, expCount: exps.length})
 
     const sales    = orders.reduce((s, o) => s + (parseFloat(o.total) || 0), 0)
     const expTotal = exps.reduce((s, e) => s + (parseFloat(e.amount) || 0), 0)
