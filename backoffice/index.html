@@ -1455,7 +1455,9 @@ input:checked+.toggle-slider:before{transform:translateX(17px)}
       <div class="outlet-ctx-inner">
         <span class="outlet-ctx-label">Outlet:</span>
         <select id="ctx-brand" onchange="ctxCascade()" style="font-size:12px;padding:5px 9px;border:1.5px solid var(--border);border-radius:6px;background:var(--card);color:var(--text)"><option value="">All Brands</option></select>
+        <span id="ctx-brand-badge" class="outlet-ctx-badge" style="display:none"></span>
         <select id="ctx-market" onchange="ctxCascade()" style="font-size:12px;padding:5px 9px;border:1.5px solid var(--border);border-radius:6px;background:var(--card);color:var(--text)"><option value="">All Markets</option></select>
+        <span id="ctx-market-badge" class="outlet-ctx-badge" style="display:none"></span>
         <select id="ctx-outlet" onchange="ctxOutletChange()" style="font-size:12px;padding:5px 9px;border:1.5px solid var(--border);border-radius:6px;background:var(--card);color:var(--text);min-width:160px"><option value="">-- Select Outlet --</option></select>
         <span id="ctx-outlet-badge" class="outlet-ctx-badge" style="display:none"></span>
       </div>
@@ -4754,6 +4756,21 @@ function autoSelectSingle (...ids) {
   })
 }
 
+function smartCtxSelect (selId) {
+  const sel = document.getElementById(selId)
+  if (!sel) return
+  const opts = [...sel.options].filter(o => o.value)
+  const badge = document.getElementById(selId + '-badge')
+  if (opts.length === 1) {
+    sel.value = opts[0].value
+    sel.style.display = 'none'
+    if (badge) { badge.textContent = opts[0].text; badge.style.display = '' }
+  } else {
+    sel.style.display = opts.length === 0 ? 'none' : ''
+    if (badge) badge.style.display = 'none'
+  }
+}
+
 // ─── OUTLET CONTEXT BAR ──────────────────────────────────────────
 let _ctxOutlet = ''
 function initCtxBar () {
@@ -4763,7 +4780,7 @@ function initCtxBar () {
   const brands = _rptFilterData.brands || []
   const prevB = bSel.value
   bSel.innerHTML = '<option value="">All Brands</option>' + brands.map(b=>`<option value="${b.id}"${b.id===prevB?' selected':''}>${b.name}</option>`).join('')
-  autoSelectSingle('ctx-brand')
+  smartCtxSelect('ctx-brand')
   ctxCascade()
   restoreCtxOutlet()
 }
@@ -4776,7 +4793,7 @@ function ctxCascade () {
     const markets = (_rptFilterData.markets || []).filter(m => !brand || m.brand_id === brand)
     const prevM = mSel.value
     mSel.innerHTML = '<option value="">All Markets</option>' + markets.map(m=>`<option value="${m.id}"${m.id===prevM?' selected':''}>${m.name}</option>`).join('')
-    autoSelectSingle('ctx-market')
+    smartCtxSelect('ctx-market')
   }
   const oSel = document.getElementById('ctx-outlet')
   if (oSel) {
@@ -4785,7 +4802,7 @@ function ctxCascade () {
       (!document.getElementById('ctx-market')?.value || o.market_id === document.getElementById('ctx-market')?.value))
     const prevO = oSel.value
     oSel.innerHTML = '<option value="">-- Select Outlet --</option>' + outlets.map(o=>`<option value="${o.id}"${o.id===prevO?' selected':''}>${o.name}</option>`).join('')
-    autoSelectSingle('ctx-outlet')
+    smartCtxSelect('ctx-outlet')
   }
   ctxOutletChange()
 }
