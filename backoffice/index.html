@@ -7853,15 +7853,16 @@ async function loadServerInfo () {
           outletInfoRows = `
             <div style="grid-column: 1/-1; border-top: 1px solid #e2e8f0; padding-top: 12px; margin-top: 8px;"></div>
             <div><div style="font-size:11px;font-weight:700;color:#94a3b8;text-transform:uppercase;margin-bottom:4px">📍 Current Outlet</div>
-                 <div style="font-size:14px;font-weight:700;color:#1f2937">${outlet.name}</div></div>
+                 <div style="font-size:15px;font-weight:700;color:#1f2937">${outlet.name}</div></div>
             <div><div style="font-size:11px;font-weight:700;color:#94a3b8;text-transform:uppercase;margin-bottom:4px">Outlet ID</div>
-                 <div style="font-size:14px;font-weight:600;font-family:monospace">${outlet.id}</div></div>
+                 <div style="font-size:15px;font-weight:700;color:#0ea5e9;font-family:monospace">${outlet.id}</div></div>
             <div><div style="font-size:11px;font-weight:700;color:#94a3b8;text-transform:uppercase;margin-bottom:4px">Outlet Code</div>
-                 <div style="font-size:14px;font-weight:600;font-family:monospace">${outlet.code || 'N/A'}</div></div>
+                 <div style="font-size:15px;font-weight:700;color:#0ea5e9;font-family:monospace">${outlet.code || '—'}</div></div>
+            <div style="grid-column: 1/-1;"><div style="font-size:11px;font-weight:700;color:#94a3b8;text-transform:uppercase;margin-bottom:4px;margin-top:8px">Database Configuration</div></div>
             <div><div style="font-size:11px;font-weight:700;color:#94a3b8;text-transform:uppercase;margin-bottom:4px">Database Name</div>
-                 <div style="font-size:14px;font-weight:600;font-family:monospace">pos_outlet_${outlet.id}</div></div>
+                 <div style="font-size:13px;font-weight:600;font-family:monospace;color:#475569">pos_outlet_${outlet.id}</div></div>
             <div><div style="font-size:11px;font-weight:700;color:#94a3b8;text-transform:uppercase;margin-bottom:4px">DB User</div>
-                 <div style="font-size:14px;font-weight:600;font-family:monospace">pos_${outlet.id}_user</div></div>
+                 <div style="font-size:13px;font-weight:600;font-family:monospace;color:#475569">pos_${outlet.id}_user</div></div>
             <div><div style="font-size:11px;font-weight:700;color:#94a3b8;text-transform:uppercase;margin-bottom:4px">Created</div>
                  <div style="font-size:13px;color:#475569">${new Date(outlet.created_at).toLocaleDateString()}</div></div>
           `
