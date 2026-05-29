@@ -4785,15 +4785,19 @@ function ctxOutletChange () {
                      document.querySelector('.nav-item.active')?.id ||
                      document.querySelector('.nav-group-hdr.active')?.id
   console.log('🔍 Active view detected:', activeView)
-  if (activeView === 'nav-dashboard') { console.log('📊 Calling loadDashboard'); loadDashboard() }
-  if (activeView === 'nav-live') { console.log('📋 Calling loadLiveOrders'); loadLiveOrders() }
-  if (activeView === 'nav-kds') { console.log('🍳 Calling loadKdsView'); loadKdsView() }
-  if (activeView === 'nav-staff') { console.log('👥 Calling loadStaff'); loadStaff() }
-  if (activeView === 'nav-reports') { console.log('📈 Calling loadReport'); loadReport() }
-  if (activeView === 'nav-orders') { console.log('🧾 Calling loadOrders'); loadOrders() }
-  if (activeView === 'nav-audit') { console.log('🔐 Calling loadAuditLog'); loadAuditLog() }
-  if (activeView === 'nav-downloads') { console.log('⬇️ Calling loadDownloadsPage'); loadDownloadsPage() }
-  if (activeView === 'nav-bo-settings') { console.log('⚙️ Calling loadBOSettings'); loadBOSettings() }
+
+  // Handle report sub-pages (navsub-rpt-*)
+  if (activeView?.startsWith('navsub-rpt-')) { console.log('📈 Calling loadReport (report sub-page)'); loadReport() }
+  // Handle other pages
+  else if (activeView === 'nav-dashboard') { console.log('📊 Calling loadDashboard'); loadDashboard() }
+  else if (activeView === 'nav-live') { console.log('📋 Calling loadLiveOrders'); loadLiveOrders() }
+  else if (activeView === 'nav-kds') { console.log('🍳 Calling loadKdsView'); loadKdsView() }
+  else if (activeView === 'nav-staff') { console.log('👥 Calling loadStaff'); loadStaff() }
+  else if (activeView === 'nav-reports') { console.log('📈 Calling loadReport'); loadReport() }
+  else if (activeView === 'nav-orders') { console.log('🧾 Calling loadOrders'); loadOrders() }
+  else if (activeView === 'nav-audit') { console.log('🔐 Calling loadAuditLog'); loadAuditLog() }
+  else if (activeView === 'nav-downloads') { console.log('⬇️ Calling loadDownloadsPage'); loadDownloadsPage() }
+  else if (activeView === 'nav-bo-settings') { console.log('⚙️ Calling loadBOSettings'); loadBOSettings() }
 }
 
 // ── Global breadcrumb (header) — always visible ─────────────────
