@@ -4778,11 +4778,16 @@ function ctxOutletChange () {
   });
   refreshForceOutletGate()
   // Refresh current view data when outlet changes
-  const activeView = document.querySelector('.nav-item.active, .nav-group-item.active')?.id
+  const activeView = document.querySelector('.nav-item.active, .nav-group-hdr.active, .nav-sub.active')?.id
   if (activeView === 'nav-dashboard') loadDashboard()
+  if (activeView === 'nav-live') loadLiveOrders()
+  if (activeView === 'nav-kds') loadKdsView()
+  if (activeView === 'nav-staff') loadStaff()
   if (activeView === 'nav-reports') loadReport()
   if (activeView === 'nav-orders') loadOrders()
-  if (activeView === 'nav-kds') loadKdsView()
+  if (activeView === 'nav-audit') loadAuditLog()
+  if (activeView === 'nav-downloads') loadDownloadsPage()
+  if (activeView === 'nav-bo-settings') loadBOSettings()
 }
 
 // ── Global breadcrumb (header) — always visible ─────────────────
