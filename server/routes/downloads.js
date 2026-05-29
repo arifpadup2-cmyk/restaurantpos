@@ -282,11 +282,17 @@ module.exports = function downloadsRouter (sql) {
 
           <div style="background: var(--bg); padding: 16px; border-radius: 8px; margin-bottom: 16px;">
             <h4 style="margin-bottom: 12px; color: var(--text);">Step 1.4: Select Components</h4>
+
+            <div style="background: #ffebee; padding: 12px; border-radius: 8px; margin-bottom: 12px; border-left: 4px solid #d32f2f;">
+              <p style="color: #b71c1c; font-weight: 600; margin: 0;">⚠️ CRITICAL: Command Line Tools MUST be checked!</p>
+              <p style="color: #b71c1c; font-size: 12px; margin-top: 4px;">Without it, you'll get "psql is not recognized" error in Step 2</p>
+            </div>
+
             <p style="margin-bottom: 8px; font-weight: 600; color: var(--primary);">✓ Make sure these are CHECKED:</p>
             <ul style="margin-left: 20px; color: var(--muted); margin-bottom: 12px;">
               <li>☑ PostgreSQL Server (required)</li>
               <li>☑ pgAdmin 4 (for database management)</li>
-              <li>☑ Command Line Tools (required for setup)</li>
+              <li>☑ Command Line Tools (REQUIRED - don't skip this!)</li>
             </ul>
             <p style="margin-bottom: 8px; font-weight: 600; color: #d32f2f;">✗ Make sure this is UNCHECKED:</p>
             <ul style="margin-left: 20px; color: var(--muted); margin-bottom: 12px;">
@@ -414,13 +420,27 @@ module.exports = function downloadsRouter (sql) {
 
           <div style="background: #fff3cd; padding: 16px; border-radius: 8px; margin-bottom: 16px; border-left: 4px solid #ffc107;">
             <h4 style="margin-bottom: 12px; color: #856404;">❓ Having trouble?</h4>
-            <p style="color: #856404; margin-bottom: 8px;"><strong>Error: "command not found"</strong></p>
-            <p style="color: #856404; margin-bottom: 12px;">→ PostgreSQL Command Line Tools weren't installed. Go back to Step 1 and make sure to CHECK "Command Line Tools"</p>
 
-            <p style="color: #856404; margin-bottom: 8px;"><strong>Error: "password authentication failed"</strong></p>
-            <p style="color: #856404; margin-bottom: 12px;">→ The password you entered doesn't match. Check that you're using the exact password from Step 1.6</p>
+            <p style="color: #856404; margin-bottom: 8px; font-weight: 600;">Error: "'psql' is not recognized as an internal or external command"</p>
+            <p style="color: #856404; margin-bottom: 12px;">
+              ⚠️ <strong>This means PostgreSQL Command Line Tools were NOT installed!</strong><br>
+              <strong>How to fix:</strong><br>
+              1. Go to Windows Control Panel → Programs → Programs and Features<br>
+              2. Find "PostgreSQL 16" in the list<br>
+              3. Click it → Click "Uninstall"<br>
+              4. Go back to Step 1 and reinstall PostgreSQL<br>
+              5. <strong>IMPORTANT:</strong> In Step 1.4, make sure to CHECK all 3 boxes:<br>
+              &nbsp;&nbsp;&nbsp;&nbsp;✅ PostgreSQL Server<br>
+              &nbsp;&nbsp;&nbsp;&nbsp;✅ pgAdmin 4<br>
+              &nbsp;&nbsp;&nbsp;&nbsp;✅ Command Line Tools (THIS IS CRITICAL!)<br>
+              6. Complete the installation<br>
+              7. Then come back to Step 2 and try again
+            </p>
 
-            <p style="color: #856404;">→ Contact your administrator for help</p>
+            <p style="color: #856404; margin-bottom: 8px; font-weight: 600;">Error: "password authentication failed"</p>
+            <p style="color: #856404; margin-bottom: 12px;">→ The password you entered doesn't match. Check that you're using the exact password from Step 1.6 (must be typed exactly, including uppercase/lowercase)</p>
+
+            <p style="color: #856404;"><strong>Still stuck?</strong> Contact your administrator for help</p>
           </div>
 
           <div class="checkbox" style="margin-top: 16px;"><input type="checkbox" id="step2"> <label for="step2">Database initialized successfully</label></div>
