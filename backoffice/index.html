@@ -7831,8 +7831,19 @@ async function loadServerInfo () {
     const d = await apiFetch('GET', '/downloads/info')
     const s = d.server
 
+    // Fetch brand info
+    let brandId = 'N/A'
+    try {
+      const settings = await apiFetch('GET', '/settings')
+      brandId = settings.brand_id || 'N/A'
+    } catch (e) {
+      // Brand fetch failed, continue with default
+    }
+
     // Build server info rows
     let serverInfoRows = `
+      <div><div style="font-size:11px;font-weight:700;color:#94a3b8;text-transform:uppercase;margin-bottom:4px">🏢 Brand ID</div>
+           <div style="font-size:15px;font-weight:700;color:#8b5cf6;font-family:monospace">${brandId}</div></div>
       <div><div style="font-size:11px;font-weight:700;color:#94a3b8;text-transform:uppercase;margin-bottom:4px">Server IP (for POS setup)</div>
            <div style="font-size:18px;font-weight:700;color:#f97316">${window.location.hostname}</div></div>
       <div><div style="font-size:11px;font-weight:700;color:#94a3b8;text-transform:uppercase;margin-bottom:4px">API Port</div>
