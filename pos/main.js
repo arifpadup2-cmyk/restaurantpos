@@ -329,20 +329,42 @@ ipcMain.handle('print-kot', (_e, data) => {
   return { ok: true };
 });
 
+ipcMain.handle('start-update-download', () => {
+  try { if (autoUpdater) autoUpdater.downloadUpdate(); } catch (_) {}
+});
+
+ipcMain.handle('install-update', () => {
+  try { if (autoUpdater) autoUpdater.quitAndInstall(); } catch (_) {}
+});
+
 // ── Auto-updater ──────────────────────────────────────────────────────────────
+
+let autoUpdater = null;
 
 function setupAutoUpdater(serverIp) {
   if (!serverIp) return;
   const updateUrl = `http://${serverIp}:3001/updates/`;
   try {
-    const { autoUpdater } = require('electron-updater');
+    autoUpdater = require('electron-updater').autoUpdater;
     autoUpdater.setFeedURL({ provider: 'generic', url: updateUrl });
-    autoUpdater.autoDownload    = true;
+    autoUpdater.autoDownload    = false;     // ASK user first before downloading
     autoUpdater.autoInstallOnAppQuit = true;
 
+    // Step 1: Update found → ask user
+    autoUpdater.on('update-available', (info) => {
+      if (mainWindow) mainWindow.webContents.send('update-available', { version: info.version });
+    });
+
+    // Step 2: Download progress → show to user
+    autoUpdater.on('download-progress', (prog) => {
+      if (mainWindow) mainWindow.webContents.send('download-progress', { percent: Math.round(prog.percent) });
+    });
+
+    // Step 3: Download done → ask to restart
     autoUpdater.on('update-downloaded', () => {
       if (mainWindow) mainWindow.webContents.send('update-ready');
     });
+
     autoUpdater.on('error', () => {}); // suppress update errors silently
 
     // Check on startup + every 4 hours

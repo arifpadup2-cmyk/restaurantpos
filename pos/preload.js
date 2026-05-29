@@ -14,7 +14,11 @@ contextBridge.exposeInMainWorld('posAPI', {
   saveConfig:       (cfg) => ipcRenderer.invoke('save-config', cfg),
   testConnection:   (cfg) => ipcRenderer.invoke('test-connection', cfg),
   notifyServer:     (event, payload) => ipcRenderer.invoke('notify-server', event, payload),
-  onUpdateReady:    (cb) => ipcRenderer.on('update-ready', cb),
+  onUpdateAvailable:    (cb) => ipcRenderer.on('update-available', (_e, info) => cb(info)),
+  onDownloadProgress:   (cb) => ipcRenderer.on('download-progress', (_e, prog) => cb(prog)),
+  onUpdateReady:        (cb) => ipcRenderer.on('update-ready', cb),
+  startUpdateDownload:  () => ipcRenderer.invoke('start-update-download'),
+  installUpdate:        () => ipcRenderer.invoke('install-update'),
   reloadApp:        () => ipcRenderer.invoke('reload-app'),
   openExternal:     (url) => ipcRenderer.invoke('open-external', url),
   print: {
