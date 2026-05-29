@@ -6585,7 +6585,7 @@ async function loadReport () {
 async function loadExpReport () {
   const from      = document.getElementById('exp-rep-from').value
   const to        = document.getElementById('exp-rep-to').value
-  const outlet_id = document.getElementById('exp-outlet')?.value || ''
+  const outlet_id = _ctxOutlet || ''
   const cur       = boSettings.currency
   try {
     const qs = `from=${from}&to=${to}${outlet_id ? `&outlet_id=${outlet_id}` : ''}`
@@ -6809,7 +6809,7 @@ function exportAuditCSV () {
 async function loadCashierPerformance () {
   const from      = document.getElementById('perf-from').value
   const to        = document.getElementById('perf-to').value
-  const outlet_id = document.getElementById('perf-outlet')?.value || ''
+  const outlet_id = _ctxOutlet || ''
   try {
     const qs = `from=${from}&to=${to}${outlet_id ? `&outlet_id=${outlet_id}` : ''}`
     const { orders } = await apiFetch('GET', `/reports?${qs}`) || { orders: [] }
@@ -6855,7 +6855,8 @@ async function loadVoidReport () {
   const toTs   = to   ? new Date(to).getTime() + 86399999 : Date.now()
   try {
     const params = `from=${fromTs}&to=${toTs}&action=ORDER_CANCELLED,ITEM_VOIDED,DISCOUNT_MGR_APPROVED&limit=500`
-    const rows = await apiFetch('GET', `/audit?from=${fromTs}&to=${toTs}&limit=500`)
+    const qs = _ctxOutlet ? `&outlet_id=${_ctxOutlet}` : ''
+    const rows = await apiFetch('GET', `/audit?from=${fromTs}&to=${toTs}&limit=500${qs}`)
     const filtered = rows.filter(r => ['ORDER_CANCELLED','ITEM_VOIDED','DISCOUNT_MGR_APPROVED','MGR_APPROVAL'].includes(r.action))
     document.getElementById('void-rep-tbody').innerHTML = filtered.length
       ? filtered.map(r => `<tr>
@@ -6916,7 +6917,7 @@ let _icRows = []
 async function loadItemConsumption () {
   initRptDates('ic-from','ic-to')
   const { from, to } = rptDateRange('ic-from','ic-to')
-  const outlet_id = document.getElementById('ic-outlet')?.value || ''
+  const outlet_id = _ctxOutlet || ''
   const cur = boSettings.currency
   const tbody = document.getElementById('ic-tbody')
   tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:20px;color:var(--muted)">Loading…</td></tr>'
@@ -6962,7 +6963,7 @@ let _wastRows = []
 async function loadWastageReport () {
   initRptDates('wast-from','wast-to')
   const { from, to } = rptDateRange('wast-from','wast-to')
-  const outlet_id = document.getElementById('wast-outlet')?.value || ''
+  const outlet_id = _ctxOutlet || ''
   const cur = boSettings.currency
   const tbody = document.getElementById('wast-tbody')
   tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:20px;color:var(--muted)">Loading…</td></tr>'
@@ -7017,7 +7018,7 @@ let _isrRows = []
 async function loadItemSalesReport () {
   initRptDates('isr-from','isr-to')
   const { from, to } = rptDateRange('isr-from','isr-to')
-  const outlet_id = document.getElementById('isr-outlet')?.value || ''
+  const outlet_id = _ctxOutlet || ''
   const cur = boSettings.currency
   const tbody = document.getElementById('isr-tbody')
   tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:20px;color:var(--muted)">Loading…</td></tr>'
@@ -7059,7 +7060,7 @@ let _ciRows = []
 async function loadCanceledItemsReport () {
   initRptDates('ci-from','ci-to')
   const { from, to } = rptDateRange('ci-from','ci-to')
-  const outlet_id = document.getElementById('ci-outlet')?.value || ''
+  const outlet_id = _ctxOutlet || ''
   const cur = boSettings.currency
   const tbody = document.getElementById('ci-tbody')
   tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:20px;color:var(--muted)">Loading…</td></tr>'
@@ -7103,7 +7104,7 @@ let _cbRows = []
 async function loadCanceledBillsReport () {
   initRptDates('cb-from','cb-to')
   const { from, to } = rptDateRange('cb-from','cb-to')
-  const outlet_id = document.getElementById('cb-outlet')?.value || ''
+  const outlet_id = _ctxOutlet || ''
   const cur = boSettings.currency
   const tbody = document.getElementById('cb-tbody')
   tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:20px;color:var(--muted)">Loading…</td></tr>'
@@ -7151,7 +7152,7 @@ let _cobRows = []
 async function loadCompBillsReport () {
   initRptDates('cob-from','cob-to')
   const { from, to } = rptDateRange('cob-from','cob-to')
-  const outlet_id = document.getElementById('cob-outlet')?.value || ''
+  const outlet_id = _ctxOutlet || ''
   const cur = boSettings.currency
   const tbody = document.getElementById('cob-tbody')
   tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:20px;color:var(--muted)">Loading…</td></tr>'
@@ -7197,7 +7198,7 @@ let _coiRows = []
 async function loadCompItemsReport () {
   initRptDates('coi-from','coi-to')
   const { from, to } = rptDateRange('coi-from','coi-to')
-  const outlet_id = document.getElementById('coi-outlet')?.value || ''
+  const outlet_id = _ctxOutlet || ''
   const cur = boSettings.currency
   const tbody = document.getElementById('coi-tbody')
   tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:20px;color:var(--muted)">Loading…</td></tr>'
