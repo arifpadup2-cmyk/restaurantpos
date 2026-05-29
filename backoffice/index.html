@@ -2507,6 +2507,16 @@ input:checked+.toggle-slider:before{transform:translateX(17px)}
       </div>
     </div>
 
+    <!-- Advanced Options Toggle Button -->
+    <div style="margin-bottom:20px">
+      <button onclick="toggleAdvancedOptions()" style="background:#e2e8f0;color:#334155;border:none;border-radius:8px;padding:12px 16px;font-weight:600;cursor:pointer;font-size:14px;display:flex;align-items:center;gap:8px">
+        <span id="advanced-options-icon">⬇️</span> Advanced Options
+      </button>
+    </div>
+
+    <!-- Advanced Options Container (Hidden by default) -->
+    <div id="advanced-options-container" style="display:none">
+
     <!-- Main Installer Download -->
     <div class="card" style="max-width:760px;margin-bottom:20px">
       <div class="card-header"><h3>Restaurant POS Installer (Main)</h3></div>
@@ -2634,6 +2644,8 @@ input:checked+.toggle-slider:before{transform:translateX(17px)}
         </ol>
         <div style="margin-top:12px;display:flex;gap:10px;flex-wrap:wrap" id="update-files-list"></div>
       </div>
+    </div>
+
     </div>
   </div>
 
@@ -7686,6 +7698,19 @@ function toggleMoreOptions () {
     icon.textContent = '⬆️'
   } else {
     grid.style.display = 'none'
+    icon.textContent = '⬇️'
+  }
+}
+
+function toggleAdvancedOptions () {
+  const container = document.getElementById('advanced-options-container')
+  const icon = document.getElementById('advanced-options-icon')
+
+  if (container.style.display === 'none') {
+    container.style.display = 'block'
+    icon.textContent = '⬆️'
+  } else {
+    container.style.display = 'none'
     icon.textContent = '⬇️'
   }
 }
