@@ -261,10 +261,13 @@ module.exports = function downloadsRouter (sql) {
             <h4 style="margin-bottom: 12px; color: var(--text);">Step 1.4: Select Components</h4>
             <p style="margin-bottom: 8px; font-weight: 600; color: var(--primary);">✓ Make sure these are CHECKED:</p>
             <ul style="margin-left: 20px; color: var(--muted); margin-bottom: 12px;">
-              <li>☑ PostgreSQL Server</li>
-              <li>☑ pgAdmin 4</li>
-              <li>☑ Stack Builder</li>
-              <li>☑ Command Line Tools</li>
+              <li>☑ PostgreSQL Server (required)</li>
+              <li>☑ pgAdmin 4 (for database management)</li>
+              <li>☑ Command Line Tools (required for setup)</li>
+            </ul>
+            <p style="margin-bottom: 8px; font-weight: 600; color: #d32f2f;">✗ Make sure this is UNCHECKED:</p>
+            <ul style="margin-left: 20px; color: var(--muted); margin-bottom: 12px;">
+              <li>☐ Stack Builder (not needed for POS)</li>
             </ul>
             <p style="color: var(--muted); font-size: 12px;">Click <strong>[Next]</strong></p>
           </div>
@@ -304,7 +307,6 @@ module.exports = function downloadsRouter (sql) {
           <div style="background: var(--bg); padding: 16px; border-radius: 8px; margin-bottom: 16px;">
             <h4 style="margin-bottom: 12px; color: var(--text);">Step 1.10: Installation Complete</h4>
             <p style="margin-bottom: 8px;">When complete, you'll see "PostgreSQL Wizard Completion"</p>
-            <p style="margin-bottom: 8px; font-weight: 600; color: var(--primary);">⚠️ Uncheck "Stack Builder Enabled"</p>
             <p style="margin-bottom: 8px; color: var(--muted); font-size: 12px;">→ Click <strong>[Finish]</strong></p>
           </div>
 
