@@ -1213,18 +1213,18 @@ textarea:focus-visible {
         <label>🏢 Brand ID</label>
         <input id="setup-brand-id" type="text" placeholder="e.g. REST-AB3X9K" autocomplete="off" autocapitalize="none" autocorrect="off"
           oninput="setupCodeChanged()"
-          style="font-family:monospace;letter-spacing:0.5px;text-transform:uppercase">
-        <span class="setup-hint">Your restaurant chain's unique identifier (all uppercase, same for all locations)</span>
+          style="font-family:monospace;letter-spacing:0.5px">
+        <span class="setup-hint">Your restaurant chain's unique identifier (enter: REST-GPPE8G)</span>
       </div>
 
       <!-- Outlet Code Field -->
       <div class="setup-field">
         <label>🏪 Outlet Code</label>
-        <input id="setup-outlet-code" type="text" maxlength="8" placeholder="e.g. OUTLET001" autocomplete="off" autocapitalize="none" autocorrect="off"
+        <input id="setup-outlet-code" type="text" placeholder="e.g. OUTLET001" autocomplete="off" autocapitalize="none" autocorrect="off"
           oninput="setupCodeChanged()"
           onkeydown="if(event.key==='Enter')setupVerifyCode()"
-          style="font-family:monospace;font-size:16px;letter-spacing:1px;text-transform:uppercase;text-align:left">
-        <span class="setup-hint">The specific code for this restaurant location (case-sensitive - match exactly as given)</span>
+          style="font-family:monospace;font-size:16px;letter-spacing:1px;text-align:left">
+        <span class="setup-hint">The outlet code (enter: OUTLET001)</span>
       </div>
 
       <!-- Verification Button -->
