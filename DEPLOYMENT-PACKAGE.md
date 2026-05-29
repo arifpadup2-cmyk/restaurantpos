@@ -77,8 +77,8 @@ On each POS terminal PC:
 
 ### For the Restaurant/Provider:
 
-1. **Provide the following files:**
-   - [ ] Restaurant POS Installer Setup 1.0.0.exe
+1. **Provide the following:**
+   - [ ] Download link: https://github.com/arifpadup2-cmyk/restaurantpos/releases/download/v3.10.0/Restaurant%20POS%20Installer%20Setup%201.0.0.exe
    - [ ] DEPLOYMENT-GUIDE.md (printed or digital)
    - [ ] verify-deployment.mjs (optional, for verification)
 

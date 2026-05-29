@@ -53,23 +53,25 @@ Before starting, make sure you have:
 
 ## 🚀 STEP 1: Get the Installer
 
-### Option A: Download from Back Office (Easiest)
+### Option A: Download from GitHub (Recommended)
+```
+1. Go to: https://github.com/arifpadup2-cmyk/restaurantpos/releases
+2. Download: Restaurant POS Installer Setup 1.0.0.exe
+   Link: https://github.com/arifpadup2-cmyk/restaurantpos/releases/download/v3.10.0/Restaurant%20POS%20Installer%20Setup%201.0.0.exe
+3. File size: 72.64 MB
+4. Copy to USB drive or email to team
+```
+
+### Option B: Download from Back Office (If Already Running)
 ```
 1. If you already have a Back Office running:
    └─ Go to: http://{server-ip}:3001
    └─ Login: admin / Admin@1234
    └─ Click: "Downloads & System"
    └─ Click: "Download Installer" button
-   └─ File downloads: Restaurant POS Installer Setup 1.0.0.exe
+   └─ File downloads from GitHub automatically
 
 2. Copy file to USB drive or email to team
-```
-
-### Option B: Download from GitHub
-```
-1. Go to: https://github.com/arifpadup2-cmyk/restaurantpos/releases
-2. Download: Restaurant POS Installer Setup 1.0.0.exe
-3. Copy to USB or email to team
 ```
 
 ### Option C: File from Your Provider
