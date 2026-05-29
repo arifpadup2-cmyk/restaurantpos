@@ -4778,7 +4778,10 @@ function ctxOutletChange () {
   });
   refreshForceOutletGate()
   // Refresh current view data when outlet changes
-  const activeView = document.querySelector('.nav-item.active, .nav-group-hdr.active, .nav-sub.active')?.id
+  // Check nav-sub FIRST (more specific), then nav-item, then nav-group-hdr
+  const activeView = document.querySelector('.nav-sub.active')?.id ||
+                     document.querySelector('.nav-item.active')?.id ||
+                     document.querySelector('.nav-group-hdr.active')?.id
   if (activeView === 'nav-dashboard') loadDashboard()
   if (activeView === 'nav-live') loadLiveOrders()
   if (activeView === 'nav-kds') loadKdsView()
