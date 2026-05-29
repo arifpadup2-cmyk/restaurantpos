@@ -4522,7 +4522,7 @@ async function initApp () {
   await loadMenu()
   await loadDashboard()
   await loadStaff()
-  loadRptFilterOptions()
+  await loadRptFilterOptions()
   loadBrandContext()
 }
 
@@ -4747,6 +4747,8 @@ function smartCtxSelect (selId) {
 }
 
 // ─── OUTLET CONTEXT BAR ──────────────────────────────────────────
+let _ctxBrand = ''
+let _ctxMarket = ''
 let _ctxOutlet = ''
 function initCtxBar () {
   const bSel = document.getElementById('ctx-brand')
@@ -4763,6 +4765,9 @@ function initCtxBar () {
 function ctxCascade () {
   const brand  = document.getElementById('ctx-brand')?.value  || ''
   const market = document.getElementById('ctx-market')?.value || ''
+
+  _ctxBrand = brand
+
   const mSel = document.getElementById('ctx-market')
   if (mSel) {
     const markets = (_rptFilterData.markets || []).filter(m => !brand || m.brand_id === brand)
@@ -4770,6 +4775,9 @@ function ctxCascade () {
     mSel.innerHTML = '<option value="">All Markets</option>' + markets.map(m=>`<option value="${m.id}"${m.id===prevM?' selected':''}>${m.name}</option>`).join('')
     smartCtxSelect('ctx-market')
   }
+
+  _ctxMarket = market
+
   const oSel = document.getElementById('ctx-outlet')
   if (oSel) {
     let outlets = (_rptFilterData.outlets || []).filter(o =>
