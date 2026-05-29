@@ -229,26 +229,49 @@ module.exports = function downloadsRouter (sql) {
       <div class="outlet-info">Outlet: ${outlet.name} (${outlet.outlet_code})</div>
     </header>
 
+    <div style="background: #e3f2fd; padding: 20px; border-radius: 12px; margin-bottom: 24px; border-left: 4px solid #1976d2;">
+      <h3 style="color: #1565c0; margin-bottom: 12px;">📚 What You're About to Do:</h3>
+      <p style="color: #0d47a1; margin-bottom: 10px;"><strong>Step 1:</strong> Install PostgreSQL (a database system - it stores all your restaurant data)</p>
+      <p style="color: #0d47a1; margin-bottom: 10px;"><strong>Step 2:</strong> Set up the database (prepare it to store POS information)</p>
+      <p style="color: #0d47a1; margin-bottom: 10px;"><strong>Steps 3-7:</strong> Download and install the POS app and connect it to your database</p>
+      <p style="color: #0d47a1; font-size: 13px;">⏱️ Total time: About 20-30 minutes</p>
+    </div>
+
     <div class="steps">
       <div class="step">
         <span class="step-num">1</span>
-        <div class="step-title">Install PostgreSQL 16</div>
+        <div class="step-title">Install PostgreSQL 16 (The Database)</div>
         <div class="step-content">
+          <p style="background: #fff8e1; padding: 12px; border-radius: 8px; margin-bottom: 16px; color: #f57f17;">
+            <strong>What is PostgreSQL?</strong> It's a secure filing cabinet that stores all your restaurant data (menu items, orders, cashier info, etc.). Your POS system will save and read data from this.
+          </p>
           <p style="font-weight: 600; margin-bottom: 12px;">Follow these steps carefully to install PostgreSQL:</p>
 
           <div style="background: var(--bg); padding: 16px; border-radius: 8px; margin-bottom: 16px;">
-            <h4 style="margin-bottom: 12px; color: var(--text);">Step 1.1: Download the Installer</h4>
-            <p style="margin-bottom: 8px;">1. Go to <a href="https://www.enterprisedb.com/downloads/postgres-postgresql-downloads" target="_blank">PostgreSQL Downloads</a></p>
-            <p style="margin-bottom: 8px;">2. Select <strong>Windows x86-64</strong> version (64-bit)</p>
-            <p style="margin-bottom: 8px;">3. Click the download button for <strong>PostgreSQL 16</strong></p>
-            <p style="color: var(--muted); font-size: 12px;">✓ File size: ~170 MB (may take a few minutes)</p>
+            <h4 style="margin-bottom: 12px; color: var(--text);">Step 1.1: Download the Installer (The Setup File)</h4>
+            <p style="margin-bottom: 12px; font-size: 13px;"><em>You're downloading a file that will install PostgreSQL on your computer.</em></p>
+            <p style="margin-bottom: 8px;"><strong>1.</strong> Click this link: <a href="https://www.enterprisedb.com/downloads/postgres-postgresql-downloads" target="_blank">PostgreSQL Download Page</a></p>
+            <p style="margin-bottom: 8px;"><strong>2.</strong> Look for <strong>"Windows"</strong> section</p>
+            <p style="margin-bottom: 8px;"><strong>3.</strong> Click <strong>"x86-64"</strong> (this is for most computers)</p>
+            <p style="margin-bottom: 8px;"><strong>4.</strong> The file will download to your Downloads folder</p>
+            <p style="background: #e8f5e9; padding: 10px; border-radius: 6px; color: #2e7d32; font-size: 12px;">
+              ✓ <strong>File size:</strong> ~170 MB (about the size of a movie)<br>
+              ✓ <strong>Download time:</strong> 5-15 minutes depending on your internet speed
+            </p>
           </div>
 
           <div style="background: var(--bg); padding: 16px; border-radius: 8px; margin-bottom: 16px;">
-            <h4 style="margin-bottom: 12px; color: var(--text);">Step 1.2: Welcome & License</h4>
-            <p style="margin-bottom: 8px;">1. Double-click the downloaded installer to start</p>
-            <p style="margin-bottom: 8px;">2. Click <strong>[Next]</strong> on the Welcome screen</p>
-            <p style="margin-bottom: 8px;">3. Accept the license agreement → Click <strong>[Next]</strong></p>
+            <h4 style="margin-bottom: 12px; color: var(--text);">Step 1.2: Start the Installer</h4>
+            <p style="margin-bottom: 12px; font-size: 13px;"><em>Now you'll run the file you downloaded to start the installation.</em></p>
+            <p style="margin-bottom: 8px;"><strong>1.</strong> Go to your <strong>Downloads</strong> folder</p>
+            <p style="margin-bottom: 8px;"><strong>2.</strong> Find the file named <strong>"postgresql-16-*.exe"</strong></p>
+            <p style="margin-bottom: 8px;"><strong>3.</strong> Double-click it to start the installation</p>
+            <p style="margin-bottom: 8px;"><strong>4.</strong> A window will open with "Welcome to PostgreSQL Setup"</p>
+            <p style="margin-bottom: 8px;"><strong>5.</strong> Click the big <strong>[Next &gt;]</strong> button</p>
+            <p style="margin-bottom: 8px;"><strong>6.</strong> You'll see a legal agreement - Click <strong>[Next &gt;]</strong> again</p>
+            <p style="background: #fff3cd; padding: 10px; border-radius: 6px; color: #856404; font-size: 12px;">
+              ⚠️ Don't worry about the legal text - just click Next to continue
+            </p>
           </div>
 
           <div style="background: var(--bg); padding: 16px; border-radius: 8px; margin-bottom: 16px;">
@@ -320,16 +343,23 @@ module.exports = function downloadsRouter (sql) {
 
       <div class="step">
         <span class="step-num">2</span>
-        <div class="step-title">Initialize Database</div>
+        <div class="step-title">Set Up the Database (Prepare Storage)</div>
         <div class="step-content">
-          <p style="font-weight: 600; margin-bottom: 12px;">Set up the database using the setup script:</p>
+          <p style="background: #f3e5f5; padding: 12px; border-radius: 8px; margin-bottom: 16px; color: #6a1b9a;">
+            <strong>What's happening?</strong> PostgreSQL is now installed. Now we need to set it up and create a "workspace" for your POS data. We'll run a setup script (an automated instruction file) to do this.
+          </p>
+          <p style="font-weight: 600; margin-bottom: 12px;">Follow these steps to prepare the database:</p>
 
           <div style="background: var(--bg); padding: 16px; border-radius: 8px; margin-bottom: 16px;">
-            <h4 style="margin-bottom: 12px; color: var(--text);">Step 2.1: Open Command Prompt</h4>
-            <p style="margin-bottom: 8px;">1. Press <strong>Windows Key + R</strong> on your keyboard</p>
-            <p style="margin-bottom: 8px;">2. Type: <code>cmd</code></p>
-            <p style="margin-bottom: 8px;">3. Press <strong>Enter</strong></p>
-            <p style="color: var(--muted); font-size: 12px;">A black window (Command Prompt) will open</p>
+            <h4 style="margin-bottom: 12px; color: var(--text);">Step 2.1: Open Command Prompt (Text Terminal)</h4>
+            <p style="margin-bottom: 12px; font-size: 13px;"><em>Command Prompt is a text-based way to give commands to your computer. Don't be intimidated - we'll type simple commands.</em></p>
+            <p style="margin-bottom: 8px;"><strong>1.</strong> Hold down <strong>Windows Key</strong> (bottom left of keyboard) and press <strong>R</strong></p>
+            <p style="margin-bottom: 8px;"><strong>2.</strong> A small box appears - Type: <code style="background: #fff9c4; padding: 4px 8px;">cmd</code></p>
+            <p style="margin-bottom: 8px;"><strong>3.</strong> Press <strong>Enter</strong></p>
+            <p style="margin-bottom: 8px;"><strong>Result:</strong> A black/dark window will open</p>
+            <p style="background: #e1f5fe; padding: 10px; border-radius: 6px; color: #01579b; font-size: 12px;">
+              ✓ This is normal! You're now in "Command Prompt" mode where we can type setup instructions
+            </p>
           </div>
 
           <div style="background: var(--bg); padding: 16px; border-radius: 8px; margin-bottom: 16px;">
