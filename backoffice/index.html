@@ -8906,10 +8906,17 @@ async function cfgLoadOutlets () {
           <button class="btn btn-sm" onclick="event.stopPropagation();cfgOpenOutletModal(${JSON.stringify(r).replace(/"/g,'&quot;')})">Edit</button>
           <button class="btn btn-sm btn-danger" style="margin-left:4px" onclick="event.stopPropagation();cfgDeleteOutlet('${r.id}','${r.name}')">Delete</button>
         </div>
-        <div style="display:flex;align-items:center;gap:8px;background:var(--bg-secondary,#f8fafc);border-radius:6px;padding:7px 12px;font-size:12px" onclick="event.stopPropagation()">
-          <span style="color:var(--muted);font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.4px;flex-shrink:0">Outlet ID</span>
-          <span style="font-family:monospace;font-weight:700;color:var(--primary,#2563eb);flex:1;word-break:break-all">${r.id}</span>
-          <button class="btn btn-sm" style="padding:3px 10px;font-size:11px;flex-shrink:0" onclick="navigator.clipboard.writeText('${r.id}').then(()=>showToast('Outlet ID copied','success')).catch(()=>{})">Copy</button>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+          <div style="display:flex;align-items:center;gap:8px;background:var(--bg-secondary,#f8fafc);border-radius:6px;padding:7px 12px;font-size:12px;flex:1;min-width:200px" onclick="event.stopPropagation()">
+            <span style="color:var(--muted);font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.4px;flex-shrink:0">Outlet ID</span>
+            <span style="font-family:monospace;font-weight:700;color:var(--primary,#2563eb);flex:1;word-break:break-all">${r.id}</span>
+            <button class="btn btn-sm" style="padding:3px 10px;font-size:11px;flex-shrink:0" onclick="navigator.clipboard.writeText('${r.id}').then(()=>showToast('Outlet ID copied','success')).catch(()=>{})">Copy</button>
+          </div>
+          <div style="display:flex;align-items:center;gap:8px;background:var(--bg-secondary,#f8fafc);border-radius:6px;padding:7px 12px;font-size:12px;flex:1;min-width:200px" onclick="event.stopPropagation()">
+            <span style="color:var(--muted);font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.4px;flex-shrink:0">Outlet Code</span>
+            <span style="font-family:monospace;font-weight:700;color:#0ea5e9;flex:1;word-break:break-all">${r.outlet_code || '—'}</span>
+            <button class="btn btn-sm" style="padding:3px 10px;font-size:11px;flex-shrink:0" onclick="navigator.clipboard.writeText('${r.outlet_code || ''}').then(()=>showToast('Outlet Code copied','success')).catch(()=>{})">Copy</button>
+          </div>
         </div>
       </div>`).join('')
   } catch (e) { showToast(friendlyError(e.message), 'error') }
