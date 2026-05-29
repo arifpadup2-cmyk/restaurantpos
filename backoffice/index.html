@@ -7542,25 +7542,48 @@ async function loadDownloadsPage () {
 
 async function loadSetupPackageOutlets () {
   try {
-    const response = await apiFetch('GET', '/config/outlets')
-    const outlets = response.outlets || response || []
+    console.log('DEBUG: Starting loadSetupPackageOutlets')
     const sel = document.getElementById('setup-package-outlet')
     if (!sel) {
-      console.warn('setup-package-outlet select element not found')
+      console.error('ERROR: setup-package-outlet select element not found')
       return
     }
-    if (!Array.isArray(outlets) || outlets.length === 0) {
-      console.warn('No outlets returned from API:', response)
+
+    console.log('DEBUG: Fetching /config/outlets')
+    const response = await apiFetch('GET', '/config/outlets')
+    console.log('DEBUG: API Response:', response)
+
+    // Handle different response formats
+    let outlets = []
+    if (Array.isArray(response)) {
+      outlets = response
+    } else if (response?.outlets && Array.isArray(response.outlets)) {
+      outlets = response.outlets
+    } else if (response?.data && Array.isArray(response.data)) {
+      outlets = response.data
+    }
+
+    console.log('DEBUG: Processed outlets:', outlets)
+
+    if (!outlets || outlets.length === 0) {
+      console.warn('WARNING: No outlets returned from API')
       sel.innerHTML = '<option value="">-- No outlets available --</option>'
       return
     }
-    sel.innerHTML = '<option value="">-- Choose an outlet --</option>' +
-      outlets.map(o => `<option value="${o.id}">${o.name}${o.brand_name ? ' ('+o.brand_name+')' : ''}</option>`).join('')
-    console.log('Setup package outlets loaded:', outlets.length)
+
+    console.log('DEBUG: Creating dropdown options for ' + outlets.length + ' outlets')
+    const options = outlets.map(o => {
+      console.log('DEBUG: Processing outlet:', o.id, o.name)
+      return `<option value="${o.id}">${o.name}${o.brand_name ? ' ('+o.brand_name+')' : ''}</option>`
+    }).join('')
+
+    sel.innerHTML = '<option value="">-- Choose an outlet --</option>' + options
+    console.log('✅ Setup package outlets loaded successfully:', outlets.length)
   } catch (e) {
-    console.error('Failed to load outlets for setup package:', e)
+    console.error('❌ FATAL: Failed to load outlets for setup package:', e.message)
+    console.error('Stack:', e.stack)
     const sel = document.getElementById('setup-package-outlet')
-    if (sel) sel.innerHTML = '<option value="">-- Error loading outlets --</option>'
+    if (sel) sel.innerHTML = '<option value="">-- Error: ' + e.message.substring(0,30) + ' --</option>'
   }
 }
 
