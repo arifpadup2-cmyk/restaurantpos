@@ -7682,23 +7682,24 @@ async function downloadMainInstaller () {
 
   try {
     status.style.display = 'block'
-    status.textContent = '⏳ Starting download...'
+    status.textContent = '⏳ Starting download from GitHub...'
     status.style.color = '#475569'
 
-    // Download from local server
-    const serverUrl = '/api/downloads/installer/exe'
+    // Download from GitHub Release (cloud distribution)
+    const githubUrl = 'https://github.com/arifpadup2-cmyk/restaurantpos/releases/download/v3.10.0/Restaurant.POS.Installer.Setup.1.0.0.exe'
 
     // Create download link
     const a = document.createElement('a')
-    a.href = serverUrl
+    a.href = githubUrl
     a.download = 'Restaurant POS Installer Setup 1.0.0.exe'
+    a.target = '_blank'
     document.body.appendChild(a)
     a.click()
     document.body.removeChild(a)
 
     status.textContent = '✅ Download started! Check your Downloads folder.'
     status.style.color = '#15803d'
-    showToast('Installer downloading - v3.10.0 (72.64 MB)','success')
+    showToast('Installer downloading from GitHub - v3.10.0 (76.17 MB)','success')
   } catch (e) {
     status.textContent = '❌ ' + e.message
     status.style.color = '#dc2626'
