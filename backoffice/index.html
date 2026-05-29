@@ -7805,20 +7805,48 @@ async function loadServerInfo () {
   try {
     const d = await apiFetch('GET', '/downloads/info')
     const s = d.server
-    body.innerHTML = `
+
+    // Build server info rows
+    let serverInfoRows = `
       <div><div style="font-size:11px;font-weight:700;color:#94a3b8;text-transform:uppercase;margin-bottom:4px">Server IP (for POS setup)</div>
            <div style="font-size:18px;font-weight:700;color:#f97316">${window.location.hostname}</div></div>
       <div><div style="font-size:11px;font-weight:700;color:#94a3b8;text-transform:uppercase;margin-bottom:4px">API Port</div>
            <div style="font-size:18px;font-weight:700">${s.port}</div></div>
-      <div><div style="font-size:11px;font-weight:700;color:#94a3b8;text-transform:uppercase;margin-bottom:4px">Database Name</div>
-           <div style="font-size:14px;font-weight:600;font-family:monospace">${s.db_name}</div></div>
-      <div><div style="font-size:11px;font-weight:700;color:#94a3b8;text-transform:uppercase;margin-bottom:4px">DB User</div>
-           <div style="font-size:14px;font-weight:600;font-family:monospace">${s.db_user}</div></div>
       <div><div style="font-size:11px;font-weight:700;color:#94a3b8;text-transform:uppercase;margin-bottom:4px">PostgreSQL</div>
            <div style="font-size:13px;color:#475569">${d.database.pg_version}</div></div>
       <div><div style="font-size:11px;font-weight:700;color:#94a3b8;text-transform:uppercase;margin-bottom:4px">Data Summary</div>
            <div style="font-size:13px;color:#475569">Staff: ${d.counts.cashiers} &nbsp;|&nbsp; Menu: ${d.counts.menu_items} items &nbsp;|&nbsp; Orders: ${d.counts.orders}</div></div>
     `
+
+    // Add outlet-specific details if outlet is selected
+    let outletInfoRows = ''
+    if (_ctxOutlet) {
+      try {
+        const outlets = await apiFetch('GET', '/outlets')
+        const outlet = outlets.find(o => o.id === _ctxOutlet)
+        if (outlet) {
+          outletInfoRows = `
+            <div style="grid-column: 1/-1; border-top: 1px solid #e2e8f0; padding-top: 12px; margin-top: 8px;"></div>
+            <div><div style="font-size:11px;font-weight:700;color:#94a3b8;text-transform:uppercase;margin-bottom:4px">📍 Current Outlet</div>
+                 <div style="font-size:14px;font-weight:700;color:#1f2937">${outlet.name}</div></div>
+            <div><div style="font-size:11px;font-weight:700;color:#94a3b8;text-transform:uppercase;margin-bottom:4px">Outlet ID</div>
+                 <div style="font-size:14px;font-weight:600;font-family:monospace">${outlet.id}</div></div>
+            <div><div style="font-size:11px;font-weight:700;color:#94a3b8;text-transform:uppercase;margin-bottom:4px">Outlet Code</div>
+                 <div style="font-size:14px;font-weight:600;font-family:monospace">${outlet.code || 'N/A'}</div></div>
+            <div><div style="font-size:11px;font-weight:700;color:#94a3b8;text-transform:uppercase;margin-bottom:4px">Database Name</div>
+                 <div style="font-size:14px;font-weight:600;font-family:monospace">pos_outlet_${outlet.id}</div></div>
+            <div><div style="font-size:11px;font-weight:700;color:#94a3b8;text-transform:uppercase;margin-bottom:4px">DB User</div>
+                 <div style="font-size:14px;font-weight:600;font-family:monospace">pos_${outlet.id}_user</div></div>
+            <div><div style="font-size:11px;font-weight:700;color:#94a3b8;text-transform:uppercase;margin-bottom:4px">Created</div>
+                 <div style="font-size:13px;color:#475569">${new Date(outlet.created_at).toLocaleDateString()}</div></div>
+          `
+        }
+      } catch (e) {
+        // Outlet fetch failed, continue with server info only
+      }
+    }
+
+    body.innerHTML = serverInfoRows + outletInfoRows
   } catch (e) {
     body.innerHTML = `<div style="color:#ef4444;font-size:13px">Error loading: ${e.message}</div>`
   }
