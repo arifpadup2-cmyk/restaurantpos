@@ -6872,7 +6872,7 @@ async function loadAuditLog () {
   const fromTs = from ? new Date(from).getTime() : 0
   const toTs   = to   ? new Date(to).getTime() + 86399999 : Date.now()
   try {
-    const params = `from=${fromTs}&to=${toTs}${action ? '&action='+action : ''}&limit=500`
+    const params = `from=${fromTs}&to=${toTs}${action ? '&action='+action : ''}${_ctxOutlet ? '&outlet_id='+_ctxOutlet : ''}&limit=500`
     const rows = await apiFetch('GET', `/audit?${params}`)
     document.getElementById('audit-tbody').innerHTML = rows.length
       ? rows.map(r => `<tr>
