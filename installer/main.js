@@ -94,16 +94,17 @@ const startServerInstallation = async (outletId, outletCode) => {
     mainWindow.webContents.send('install-progress', {
       step: 3,
       total: steps,
-      message: 'Creating database...',
+      message: 'Creating outlet database...',
       status: 'running'
     })
-    await createDatabase(psqlPath, (msg) => {
+    let dbConfig = {}
+    dbConfig = await createDatabase(psqlPath, outletId, (msg) => {
       mainWindow.webContents.send('install-log', msg)
     })
     mainWindow.webContents.send('install-progress', {
       step: 3,
       total: steps,
-      message: 'Database created',
+      message: 'Outlet database created',
       status: 'done'
     })
 
@@ -114,7 +115,7 @@ const startServerInstallation = async (outletId, outletCode) => {
       message: 'Installing server...',
       status: 'running'
     })
-    serverIP = await installServer(outletId, outletCode, (msg) => {
+    serverIP = await installServer(outletId, outletCode, dbConfig.dbName, dbConfig.dbUser, dbConfig.dbPassword, (msg) => {
       mainWindow.webContents.send('install-log', msg)
     })
     mainWindow.webContents.send('install-progress', {

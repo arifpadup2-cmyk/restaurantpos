@@ -15,7 +15,7 @@ const getLocalIP = () => {
   return '127.0.0.1'
 }
 
-const installServer = async (outletId, outletCode, onLog) => {
+const installServer = async (outletId, outletCode, dbName, dbUser, dbPassword, onLog) => {
   try {
     const serverInstallDir = 'C:\\Program Files\\Restaurant POS Server'
     const sourceDir = path.join(__dirname, '..', '..', 'server')
@@ -28,13 +28,13 @@ const installServer = async (outletId, outletCode, onLog) => {
     onLog('Copying server files...')
     copyRecursive(sourceDir, serverInstallDir, ['node_modules', '.git', '.env', '.env.local'])
 
-    onLog('Writing configuration...')
+    onLog('Writing outlet-specific configuration...')
     const envContent = `
 DB_HOST=127.0.0.1
 DB_PORT=5432
-DB_NAME=restaurant_pos_central
-DB_USER=pos_central_user
-DB_PASS=pos_secure_2024!
+DB_NAME=${dbName}
+DB_USER=${dbUser}
+DB_PASS=${dbPassword}
 PORT=3001
 API_KEY=pos-api-key-2026
 JWT_SECRET=bo-jwt-secret-change-in-production-2026
@@ -50,6 +50,8 @@ OUTLET_CODE=${outletCode}
     const outletConfig = {
       outletId,
       outletCode,
+      database: dbName,
+      dbUser: dbUser,
       createdAt: new Date().toISOString()
     }
     fs.writeFileSync(
@@ -63,7 +65,7 @@ OUTLET_CODE=${outletCode}
       stdio: 'pipe'
     })
 
-    onLog('✓ Server installed successfully')
+    onLog('✓ Server installed with outlet-specific database')
     return getLocalIP()
   } catch (error) {
     throw new Error(`Server installation failed: ${error.message}`)

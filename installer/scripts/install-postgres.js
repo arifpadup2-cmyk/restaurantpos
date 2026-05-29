@@ -62,14 +62,16 @@ const installPostgreSQL = async (onLog) => {
   }
 }
 
-const createDatabase = async (psqlPath, onLog) => {
+const createDatabase = async (psqlPath, outletId, onLog) => {
   try {
-    const password = 'POS_Admin_2026!'
-    const dbUser = 'pos_central_user'
-    const dbPassword = 'pos_secure_2024!'
-    const dbName = 'restaurant_pos_central'
+    const postgresPassword = 'POS_Admin_2026!'
 
-    onLog('Checking database...')
+    // Outlet-specific database and user
+    const dbName = `pos_outlet_${outletId.toLowerCase().replace(/[^a-z0-9]/g, '_')}`
+    const dbUser = `pos_${outletId.toLowerCase().replace(/[^a-z0-9]/g, '_')}_user`
+    const dbPassword = `pos_${outletId}_secure_2024!`
+
+    onLog(`Creating database: ${dbName}`)
 
     const sqlScript = `
 DO $$ BEGIN
@@ -87,18 +89,20 @@ GRANT ALL ON SCHEMA public TO ${dbUser};
 `.trim()
 
     // Save SQL to temp file
-    const tempSqlFile = path.join(require('os').tmpdir(), 'pos-setup.sql')
+    const tempSqlFile = path.join(require('os').tmpdir(), `pos-setup-${outletId}.sql`)
     fs.writeFileSync(tempSqlFile, sqlScript)
 
     // Execute SQL script
-    const env = { ...process.env, PGPASSWORD: password }
+    const env = { ...process.env, PGPASSWORD: postgresPassword }
     execSync(
       `"${psqlPath}" -U postgres -h 127.0.0.1 -p 5432 -f "${tempSqlFile}"`,
       { env, stdio: 'pipe' }
     )
 
     fs.unlinkSync(tempSqlFile)
-    onLog('✓ Database and user created successfully')
+    onLog(`✓ Outlet database created: ${dbName}`)
+
+    return { dbName, dbUser, dbPassword }
   } catch (error) {
     throw new Error(`Database setup failed: ${error.message}`)
   }
