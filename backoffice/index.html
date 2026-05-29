@@ -4782,8 +4782,10 @@ function ctxOutletChange () {
   const activeView = document.querySelector('.nav-sub.active')?.id ||
                      document.querySelector('.nav-item.active')?.id ||
                      document.querySelector('.nav-group-hdr.active')?.id
-  // Handle report sub-pages (navsub-rpt-*)
-  if (activeView?.startsWith('navsub-rpt-')) loadReport()
+
+  // Handle all nested nav-sub pages
+  if (activeView?.startsWith('navsub-rpt-')) loadReport()           // Report sub-pages
+  else if (activeView?.startsWith('navsub-menu-')) loadMenu()       // Menu sub-pages
   else if (activeView === 'nav-dashboard') loadDashboard()
   else if (activeView === 'nav-live') loadLiveOrders()
   else if (activeView === 'nav-kds') loadKdsView()
