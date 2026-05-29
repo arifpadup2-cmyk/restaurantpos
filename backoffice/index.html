@@ -4779,10 +4779,10 @@ function ctxOutletChange () {
   refreshForceOutletGate()
   // Refresh current view data when outlet changes
   const activeView = document.querySelector('.nav-item.active, .nav-group-item.active')?.id
-  if (activeView === 'navg-dashboard') loadDashboard()
-  if (activeView === 'navg-reports') loadReport()
-  if (activeView === 'navg-orders') loadOrders()
-  if (activeView === 'navg-kds') loadKdsView()
+  if (activeView === 'nav-dashboard') loadDashboard()
+  if (activeView === 'nav-reports') loadReport()
+  if (activeView === 'nav-orders') loadOrders()
+  if (activeView === 'nav-kds') loadKdsView()
 }
 
 // ── Global breadcrumb (header) — always visible ─────────────────
