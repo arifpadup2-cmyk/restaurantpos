@@ -687,5 +687,73 @@ module.exports = function downloadsRouter (sql) {
     } catch (e) { serverError(res, e) }
   })
 
+  // POST /downloads/day-close-backup — upload day close data to cloud backup
+  router.post('/day-close-backup', apiKey, async (req, res) => {
+    try {
+      const { outletId, outletCode, date, dayClosingData, orders, dayStats } = req.body
+
+      if (!outletId || !date || !dayClosingData) {
+        return res.status(400).json({ error: 'Missing required fields: outletId, date, dayClosingData' })
+      }
+
+      const backupDir = path.join(DATA_DIR, 'backups', 'day-close')
+      if (!fs.existsSync(backupDir)) {
+        fs.mkdirSync(backupDir, { recursive: true })
+      }
+
+      const filename = `day-close-${outletId}-${date}-${Date.now()}.json`
+      const filepath = path.join(backupDir, filename)
+
+      const backupPayload = {
+        meta: {
+          outletId,
+          outletCode,
+          date,
+          uploadedAt: new Date().toISOString(),
+          dataSize: Buffer.byteLength(JSON.stringify({ orders, dayStats }))
+        },
+        dayClosingData,
+        orders: orders || [],
+        dayStats: dayStats || {}
+      }
+
+      fs.writeFileSync(filepath, JSON.stringify(backupPayload, null, 2))
+
+      // Also log to audit log
+      await sql`INSERT INTO audit_log (action, actor, details)
+                VALUES ('day_close_backup', ?, ?)`
+        .bind([outletCode, JSON.stringify({ outletId, date, filename })])
+
+      res.json({
+        ok: true,
+        message: 'Day close backed up to cloud',
+        filename,
+        uploadedAt: new Date().toISOString(),
+        backupPath: `/api/downloads/day-close-backup/${outletId}/${filename}`
+      })
+    } catch (e) { serverError(res, e) }
+  })
+
+  // GET /downloads/day-close-backup/:outlet_id/:filename — download day close backup
+  router.get('/day-close-backup/:outlet_id/:filename', jwtAuth, (req, res) => {
+    try {
+      const { outlet_id, filename } = req.params
+
+      if (!filename.startsWith('day-close-') || !filename.endsWith('.json')) {
+        return res.status(400).json({ error: 'Invalid filename' })
+      }
+
+      const filepath = path.join(DATA_DIR, 'backups', 'day-close', filename)
+
+      if (!fs.existsSync(filepath)) {
+        return res.status(404).json({ error: 'Backup not found' })
+      }
+
+      res.setHeader('Content-Type', 'application/json')
+      res.setHeader('Content-Disposition', `attachment; filename="${filename}"`)
+      fs.createReadStream(filepath).pipe(res)
+    } catch (e) { serverError(res, e) }
+  })
+
   return router
 }

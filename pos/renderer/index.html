@@ -6717,25 +6717,85 @@ async function closeDay() {
   const hasOpenShifts = openShifts.ok && openShifts.data.c > 0;
 
   const _doCloseDay = async () => {
-    const notes = document.getElementById('dc-notes').value.trim();
-    const s = window._dayStats || {};
-    await db.run(`INSERT INTO day_closings
-      (id,date,total_orders,total_sales,cash_sales,card_sales,online_payment_sales,total_expenses,net_sales,
-       dine_in_count,takeaway_count,delivery_count,online_count,closed_by,closed_at,notes,synced)
-      VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`,
-      [uid(), today, (s.orders||[]).length, s.sales||0, s.cash||0, s.card||0, s.onlinePay||0,
-       s.expTotal||0, (s.sales||0)-(s.expTotal||0),
-       s.dineIn||0, s.takeaway||0, s.delivery||0, s.online||0,
-       cashier.name, Date.now(), notes, 0]);
-    await db.run(
-      "UPDATE day_openings SET status='closed',closed_at=?,closed_by=? WHERE date=? AND outlet_id=?",
-      [Date.now(), cashier.name, today, window._posConfig?.outletId || null]
-    );
-    _activeDay = null;
-    updateDayStatusUI();
-    await syncUnsyncedData();
-    showToast(`Day ${today} closed. Z-Report saved.`, 'success');
-    if (document.getElementById('v-dashboard').classList.contains('active')) loadDashboard();
+    try {
+      const notes = document.getElementById('dc-notes').value.trim();
+      const s = window._dayStats || {};
+      const dayClosingId = uid();
+
+      showToast('Closing day and uploading to cloud backup...', 'info');
+
+      await db.run(`INSERT INTO day_closings
+        (id,date,total_orders,total_sales,cash_sales,card_sales,online_payment_sales,total_expenses,net_sales,
+         dine_in_count,takeaway_count,delivery_count,online_count,closed_by,closed_at,notes,synced)
+        VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`,
+        [dayClosingId, today, (s.orders||[]).length, s.sales||0, s.cash||0, s.card||0, s.onlinePay||0,
+         s.expTotal||0, (s.sales||0)-(s.expTotal||0),
+         s.dineIn||0, s.takeaway||0, s.delivery||0, s.online||0,
+         cashier.name, Date.now(), notes, 0]);
+
+      await db.run(
+        "UPDATE day_openings SET status='closed',closed_at=?,closed_by=? WHERE date=? AND outlet_id=?",
+        [Date.now(), cashier.name, today, window._posConfig?.outletId || null]
+      );
+
+      const ordersResult = await db.all(
+        "SELECT * FROM orders WHERE DATE(created_at) = ? ORDER BY created_at DESC",
+        [today]
+      );
+      const orders = ordersResult.ok ? ordersResult.data : [];
+
+      const dayClosingResult = await db.get(
+        "SELECT * FROM day_closings WHERE id = ?",
+        [dayClosingId]
+      );
+      const dayClosingData = dayClosingResult.ok ? dayClosingResult.data : null;
+
+      if (dayClosingData && window._posConfig?.serverIp) {
+        try {
+          const cfg = window._posConfig;
+          const serverUrl = `http://${cfg.serverIp}:3001`;
+          const apiKey = process.env.API_KEY || cfg.apiKey || '';
+
+          const response = await fetch(`${serverUrl}/api/downloads/day-close-backup`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'x-api-key': apiKey
+            },
+            body: JSON.stringify({
+              outletId: cfg.outletId || cfg.outlet_id || 'unknown',
+              outletCode: cfg.outletCode || cfg.outlet_code || 'unknown',
+              date: today,
+              dayClosingData,
+              orders,
+              dayStats: s
+            })
+          });
+
+          if (response.ok) {
+            const result = await response.json();
+            if (result.ok) {
+              showToast('✅ Day backed up to cloud successfully!', 'success');
+            }
+          } else {
+            console.warn('Cloud backup failed:', response.statusText);
+            showToast('⚠️ Cloud backup failed but day is closed locally', 'warning');
+          }
+        } catch (uploadErr) {
+          console.warn('Cloud backup error:', uploadErr.message);
+          showToast('⚠️ Cloud backup not available, but day is closed locally', 'warning');
+        }
+      }
+
+      _activeDay = null;
+      updateDayStatusUI();
+      await syncUnsyncedData();
+      showToast(`Day ${today} closed. Data backed up to cloud. Z-Report saved.`, 'success');
+      if (document.getElementById('v-dashboard').classList.contains('active')) loadDashboard();
+    } catch (err) {
+      showToast(`Error closing day: ${err.message}`, 'danger');
+      console.error('closeDay error:', err);
+    }
   };
 
   if (hasOpenShifts) {
