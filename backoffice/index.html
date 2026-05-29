@@ -6370,7 +6370,7 @@ function setSubPreset (fromId, toId, preset, btn, loadFn) {
 async function loadOrders () {
   const from   = document.getElementById('orders-from')?.value  || todayStr()
   const to     = document.getElementById('orders-to')?.value    || from
-  const outlet = document.getElementById('orders-outlet')?.value || ''
+  const outlet = _ctxOutlet || ''
   try {
     let qs = `/orders?from=${from}&to=${to}`
     if (outlet) qs += '&outlet_id=' + encodeURIComponent(outlet)
