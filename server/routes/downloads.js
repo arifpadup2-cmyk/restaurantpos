@@ -363,12 +363,43 @@ module.exports = function downloadsRouter (sql) {
           </div>
 
           <div style="background: var(--bg); padding: 16px; border-radius: 8px; margin-bottom: 16px;">
-            <h4 style="margin-bottom: 12px; color: var(--text);">Step 2.2: Navigate to Setup Folder</h4>
-            <p style="margin-bottom: 8px;">In the Command Prompt, type this exactly (look for where you extracted the files):</p>
+            <h4 style="margin-bottom: 12px; color: var(--text);">Step 2.2: Tell Command Prompt Where the Setup Files Are</h4>
+            <p style="margin-bottom: 12px; font-size: 13px;"><em>"Navigate" means we're telling Command Prompt to go to the folder where you extracted the setup files.</em></p>
+
+            <div style="background: #fff9c4; padding: 12px; border-radius: 8px; margin-bottom: 12px; border-left: 4px solid #fbc02d;">
+              <p style="margin-bottom: 8px; font-weight: 600; color: #f57f17;">First, find your username:</p>
+              <p style="margin-bottom: 8px; color: #f57f17;">1. Open <strong>File Explorer</strong> (yellow folder icon on taskbar)</p>
+              <p style="margin-bottom: 8px; color: #f57f17;">2. Look at the left side for <strong>"This PC"</strong> or your <strong>username</strong></p>
+              <p style="color: #f57f17;">3. Your username is what appears there (example: "John", "Admin", "User1", etc.)</p>
+            </div>
+
+            <div style="background: #e8f5e9; padding: 12px; border-radius: 8px; margin-bottom: 12px; border-left: 4px solid #4caf50;">
+              <p style="margin-bottom: 8px; font-weight: 600; color: #2e7d32;">Second, find where you extracted the files:</p>
+              <p style="margin-bottom: 8px; color: #2e7d32;">1. Open <strong>File Explorer</strong></p>
+              <p style="margin-bottom: 8px; color: #2e7d32;">2. Look for the folder you extracted (might be in <strong>Downloads</strong>, <strong>Desktop</strong>, or <strong>Documents</strong>)</p>
+              <p style="margin-bottom: 8px; color: #2e7d32;">3. The folder name starts with <strong>"POS-Setup-"</strong></p>
+              <p style="margin-bottom: 8px; color: #2e7d32;">4. <strong>Right-click the folder</strong> → Select <strong>"Copy as path"</strong></p>
+              <p style="color: #2e7d32;">5. This copies the exact path - we'll paste it below</p>
+            </div>
+
+            <p style="margin-bottom: 12px; font-weight: 600; color: var(--text);">Now type in Command Prompt:</p>
+
+            <p style="margin-bottom: 8px; color: var(--muted); font-size: 12px;">Option A - If you copied the path:</p>
+            <p style="margin-bottom: 8px;">Type: <code style="background: #fff9c4; padding: 4px 8px;">cd </code> (then right-click to paste the path you copied)</p>
+
+            <p style="margin-bottom: 8px; color: var(--muted); font-size: 12px;">Option B - If you want to type it manually:</p>
             <div class="code-block"><pre>cd C:\Users\YourUsername\Downloads\POS-Setup-Demo-DEMO001</pre></div>
-            <p style="margin-bottom: 8px; color: var(--muted); font-size: 12px;">⚠️ Replace "YourUsername" with your Windows username</p>
-            <p style="margin-bottom: 8px; color: var(--muted); font-size: 12px;">⚠️ Replace "POS-Setup-Demo-DEMO001" with your actual folder name</p>
-            <p style="color: var(--muted); font-size: 12px;">Press <strong>Enter</strong></p>
+            <p style="margin-bottom: 8px; color: var(--muted); font-size: 12px;">Replace:</p>
+            <ul style="margin-left: 20px; color: var(--muted); font-size: 12px; margin-bottom: 12px;">
+              <li><code>YourUsername</code> → Your Windows username (example: C:\Users\<strong>John</strong>\...)</li>
+              <li><code>POS-Setup-Demo-DEMO001</code> → Your actual folder name (you'll see it in File Explorer)</li>
+            </ul>
+
+            <p style="margin-bottom: 8px; color: var(--muted); font-size: 12px; font-weight: 600;">When done typing (or pasting), press <strong>Enter</strong></p>
+
+            <p style="background: #e1f5fe; padding: 10px; border-radius: 6px; color: #01579b; font-size: 12px;">
+              ✓ If it worked, the prompt will show the folder path (like <code>C:\Users\John\Downloads\POS-Setup-Demo-DEMO001&gt;</code>)
+            </p>
           </div>
 
           <div style="background: var(--bg); padding: 16px; border-radius: 8px; margin-bottom: 16px;">
