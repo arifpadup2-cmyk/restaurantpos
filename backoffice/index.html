@@ -2408,6 +2408,26 @@ input:checked+.toggle-slider:before{transform:translateX(17px)}
       </div>
     </div>
 
+    <!-- Per-Outlet Setup Package -->
+    <div class="card" style="max-width:760px;margin-bottom:20px">
+      <div class="card-header"><h3>Per-Outlet Setup Package</h3></div>
+      <div style="padding:16px">
+        <p style="font-size:13px;color:#64748b;margin-bottom:16px">Generate a setup package for any outlet. Includes pre-configured files and step-by-step guide for the POS terminal.</p>
+        <div style="display:flex;gap:12px;align-items:flex-end">
+          <div style="flex:1;min-width:200px">
+            <label style="display:block;font-size:12px;font-weight:600;margin-bottom:6px;color:#475569">Select Outlet</label>
+            <select id="setup-package-outlet" style="width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-size:13px;background:white;cursor:pointer">
+              <option value="">-- Choose an outlet --</option>
+            </select>
+          </div>
+          <button class="btn btn-primary" onclick="downloadOutletSetupPackage(document.getElementById('setup-package-outlet').value)" style="white-space:nowrap">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            Download
+          </button>
+        </div>
+      </div>
+    </div>
+
     <!-- POS Installer -->
     <div class="card" style="max-width:760px;margin-bottom:20px">
       <div class="card-header"><h3>POS Terminal Installer</h3><button class="btn btn-outline" onclick="loadInstallerFiles()"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 11-2.12-9.36L23 10"/></svg> Refresh</button></div>
@@ -3611,6 +3631,41 @@ input:checked+.toggle-slider:before{transform:translateX(17px)}
         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
         Save Outlet
       </button>
+    </div>
+  </div>
+</div>
+
+<!-- Outlet Setup Success Modal -->
+<div class="modal-overlay" id="modal-outlet-setup" style="display:none">
+  <div class="modal" style="min-width:460px;max-width:540px;text-align:center">
+    <div style="font-size:48px;margin-bottom:16px">✅</div>
+    <h3 style="margin-bottom:8px">Outlet Created Successfully!</h3>
+    <p style="color:var(--muted);margin-bottom:20px;font-size:14px">Your POS outlet is ready to configure</p>
+
+    <div style="background:var(--primary);color:white;padding:16px;border-radius:12px;margin-bottom:20px;text-align:left">
+      <div style="font-size:18px;font-weight:700;margin-bottom:8px" id="outlet-setup-name">Fresh Test Outlet</div>
+      <div style="font-size:13px;opacity:0.9">
+        Outlet Code: <code style="background:rgba(255,255,255,0.2);padding:2px 6px;border-radius:4px;font-weight:600" id="outlet-setup-code">AB3K7M</code>
+        <button class="btn" style="background:rgba(255,255,255,0.3);color:white;padding:4px 8px;margin-left:8px;font-size:12px" onclick="copyOutletCode()">📋 Copy</button>
+      </div>
+    </div>
+
+    <div style="background:var(--primary);background:linear-gradient(135deg,#f97316 0%,#ea6c00 100%);padding:16px;border-radius:12px;margin-bottom:20px;color:white;text-align:left">
+      <div style="font-weight:700;margin-bottom:12px">📦 Download POS Setup Package</div>
+      <p style="font-size:13px;margin-bottom:12px;opacity:0.95">Includes everything needed to set up your POS terminal on Windows:</p>
+      <ul style="margin-left:20px;font-size:13px;opacity:0.9;margin-bottom:12px">
+        <li>✓ Step-by-step setup guide</li>
+        <li>✓ Pre-configured connection file</li>
+        <li>✓ Database setup script</li>
+      </ul>
+    </div>
+
+    <input type="hidden" id="outlet-setup-id">
+    <div class="modal-footer" style="flex-direction:column;gap:12px">
+      <button class="btn btn-primary" id="btn-download-setup" style="width:100%;font-weight:600" onclick="downloadOutletSetupPackage(document.getElementById('outlet-setup-id').value)">
+        <span>⬇️ Download Setup Package</span>
+      </button>
+      <button class="btn btn-outline" style="width:100%" onclick="closeModal('modal-outlet-setup')">Done — I'll download later</button>
     </div>
   </div>
 </div>
@@ -7475,6 +7530,7 @@ async function loadDownloadsPage () {
   loadServerInfo()
   loadInstallerFiles()
   loadBackupOutlets()
+  loadSetupPackageOutlets()
   const base = window.location.origin
   document.getElementById('link-waiter').href   = base + '/waiter-app/'
   document.getElementById('link-kds').href      = base + '/kds/'
@@ -7482,6 +7538,18 @@ async function loadDownloadsPage () {
   document.getElementById('link-delivery').href = base + '/delivery-app/'
   const last = localStorage.getItem('pos_last_backup')
   if (last) document.getElementById('last-backup-info').textContent = 'Last backup: ' + new Date(last).toLocaleString()
+}
+
+async function loadSetupPackageOutlets () {
+  try {
+    const { outlets } = await apiFetch('GET', '/config/outlets')
+    const sel = document.getElementById('setup-package-outlet')
+    if (!sel) return
+    sel.innerHTML = '<option value="">-- Choose an outlet --</option>' +
+      (outlets || []).map(o => `<option value="${o.id}">${o.name}${o.brand_name ? ' ('+o.brand_name+')' : ''}</option>`).join('')
+  } catch (e) {
+    console.error('Failed to load outlets for setup package:', e)
+  }
 }
 
 async function loadBackupOutlets () {
@@ -8650,11 +8718,12 @@ async function cfgSaveOutletModal () {
     currency_symbol: document.getElementById('outlet-currency-symbol').value.trim() || '$',
   }
   try {
-    id ? await apiFetch('PATCH', '/config/outlets/' + id, body)
-       : await apiFetch('POST',  '/config/outlets', body)
+    const result = id ? await apiFetch('PATCH', '/config/outlets/' + id, body)
+                      : await apiFetch('POST',  '/config/outlets', body)
     closeModal('modal-outlet')
     showToast(id ? 'Outlet updated' : 'Outlet added', 'success')
     cfgLoadOutlets(); cfgLoadBrands()
+    if (!id && result?.id) showOutletSetupModal(result)
   } catch (e) { showToast(friendlyError(e.message), 'error') }
 }
 
@@ -8665,6 +8734,52 @@ async function cfgDeleteOutlet (id, name) {
     showToast('Outlet deleted', 'success')
     cfgLoadOutlets()
   } catch (e) { showToast(friendlyError(e.message), 'error') }
+}
+
+function showOutletSetupModal (outlet) {
+  document.getElementById('outlet-setup-name').textContent = outlet.name
+  document.getElementById('outlet-setup-code').textContent = outlet.outlet_code
+  document.getElementById('outlet-setup-id').value = outlet.id
+  document.getElementById('modal-outlet-setup').style.display = 'flex'
+}
+
+function copyOutletCode () {
+  const code = document.getElementById('outlet-setup-code').textContent
+  navigator.clipboard.writeText(code).then(() => {
+    showToast('Outlet code copied to clipboard', 'success')
+  }).catch(() => {
+    showToast('Failed to copy outlet code', 'error')
+  })
+}
+
+async function downloadOutletSetupPackage (outletId) {
+  if (!outletId) { showToast('Outlet ID missing', 'error'); return }
+  const btn = document.getElementById('btn-download-setup')
+  const origText = btn.innerHTML
+  btn.disabled = true
+  btn.innerHTML = '⏳ Preparing...'
+  try {
+    const res = await fetch(`/downloads/setup-package/${outletId}`, {
+      headers: { Authorization: 'Bearer ' + localStorage.getItem('bo_token') }
+    })
+    if (!res.ok) throw new Error(`HTTP ${res.status}`)
+    const blob = await res.blob()
+    const cd = res.headers.get('Content-Disposition') || ''
+    const match = cd.match(/filename="?([^"]+)"?/)
+    const filename = match ? match[1] : 'POS-Setup.zip'
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = filename
+    a.click()
+    URL.revokeObjectURL(url)
+    showToast('Setup package downloaded successfully', 'success')
+  } catch (e) {
+    showToast('Download failed: ' + e.message, 'error')
+  } finally {
+    btn.disabled = false
+    btn.innerHTML = origText
+  }
 }
 
 // ─── TABLES ──────────────────────────────────────────────────────────────────
