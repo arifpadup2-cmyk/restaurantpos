@@ -1,0 +1,316 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+  background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.container {
+  width: 100%;
+  height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.screen {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 40px;
+}
+
+.content {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  padding: 60px;
+  max-width: 500px;
+  width: 100%;
+  text-align: center;
+}
+
+/* Welcome Screen */
+.logo {
+  font-size: 80px;
+  margin-bottom: 20px;
+  display: block;
+}
+
+h1 {
+  font-size: 28px;
+  color: #333;
+  margin-bottom: 10px;
+  font-weight: 600;
+}
+
+h2 {
+  font-size: 24px;
+  color: #333;
+  margin-bottom: 20px;
+  font-weight: 600;
+}
+
+h3 {
+  font-size: 16px;
+  color: #333;
+  margin-top: 20px;
+  margin-bottom: 10px;
+  font-weight: 600;
+  text-align: left;
+}
+
+.subtitle {
+  font-size: 16px;
+  color: #666;
+  margin-bottom: 30px;
+}
+
+.description {
+  font-size: 14px;
+  color: #888;
+  line-height: 1.6;
+  margin-bottom: 40px;
+}
+
+.info-text {
+  font-size: 13px;
+  color: #999;
+  margin-top: 15px;
+  font-style: italic;
+}
+
+/* Buttons */
+.btn {
+  padding: 12px 24px;
+  border: none;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+  color: white;
+  width: 100%;
+  padding: 14px 24px;
+  margin-top: 20px;
+}
+
+.btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(30, 60, 114, 0.3);
+}
+
+.btn-secondary {
+  background: #f0f0f0;
+  color: #333;
+  padding: 12px 20px;
+}
+
+.btn-secondary:hover {
+  background: #e0e0e0;
+}
+
+.button-group {
+  display: flex;
+  gap: 12px;
+  margin-top: 30px;
+}
+
+.button-group .btn {
+  flex: 1;
+  margin: 0;
+}
+
+/* System Checks */
+.system-checks {
+  margin: 40px 0;
+  text-align: left;
+}
+
+.check-item {
+  display: flex;
+  align-items: center;
+  padding: 15px;
+  margin-bottom: 12px;
+  background: #f5f5f5;
+  border-radius: 6px;
+  font-size: 14px;
+  color: #333;
+}
+
+.spinner {
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  border: 2px solid #ddd;
+  border-top-color: #2a5298;
+  border-radius: 50%;
+  animation: spin 0.6s linear infinite;
+  margin-right: 12px;
+  flex-shrink: 0;
+}
+
+.check-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  margin-right: 10px;
+  font-size: 12px;
+  font-weight: bold;
+  border-radius: 50%;
+  background: #4caf50;
+  color: white;
+  flex-shrink: 0;
+}
+
+.check-icon.error {
+  background: #f44336;
+}
+
+.check-item.done {
+  background: #e8f5e9;
+}
+
+.check-item.error {
+  background: #ffebee;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* Form */
+.form-group {
+  margin-bottom: 20px;
+  text-align: left;
+}
+
+label {
+  display: block;
+  font-size: 13px;
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 8px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+input {
+  width: 100%;
+  padding: 12px;
+  border: 2px solid #ddd;
+  border-radius: 6px;
+  font-size: 14px;
+  transition: border-color 0.3s;
+}
+
+input:focus {
+  outline: none;
+  border-color: #2a5298;
+}
+
+/* Progress */
+.progress-container {
+  width: 100%;
+  height: 8px;
+  background: #e0e0e0;
+  border-radius: 4px;
+  overflow: hidden;
+  margin: 30px 0 20px;
+}
+
+.progress-bar {
+  height: 100%;
+  background: linear-gradient(90deg, #1e3c72 0%, #2a5298 100%);
+  width: 0%;
+  transition: width 0.3s;
+  border-radius: 4px;
+}
+
+.progress-text {
+  font-size: 13px;
+  color: #666;
+  margin-bottom: 15px;
+}
+
+.install-log {
+  background: #1e1e1e;
+  color: #00ff00;
+  padding: 12px;
+  border-radius: 6px;
+  font-family: 'Courier New', monospace;
+  font-size: 11px;
+  height: 150px;
+  overflow-y: auto;
+  text-align: left;
+  margin-top: 20px;
+}
+
+.log-line {
+  padding: 2px 0;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+/* Success Screen */
+.success-icon {
+  font-size: 64px;
+  color: #4caf50;
+  margin-bottom: 20px;
+}
+
+.credentials-box {
+  background: #f5f5f5;
+  padding: 20px;
+  border-radius: 6px;
+  margin: 30px 0;
+  text-align: left;
+}
+
+.credentials-box p {
+  font-size: 13px;
+  color: #333;
+  margin-bottom: 10px;
+  word-break: break-all;
+}
+
+.credentials-box strong {
+  color: #1e3c72;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .content {
+    padding: 40px 20px;
+  }
+
+  h1 {
+    font-size: 22px;
+  }
+
+  .logo {
+    font-size: 60px;
+  }
+
+  .button-group {
+    flex-direction: column;
+  }
+}

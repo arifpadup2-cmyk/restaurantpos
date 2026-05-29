@@ -1,0 +1,64 @@
+{
+  "name": "restaurant-pos-installer",
+  "version": "1.0.0",
+  "description": "One-click Windows installer for Restaurant POS",
+  "main": "main.js",
+  "homepage": "./",
+  "scripts": {
+    "start": "electron .",
+    "build": "electron-builder",
+    "dev": "electron . --dev"
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "electron": "^28.0.0",
+    "electron-builder": "^24.6.4"
+  },
+  "build": {
+    "appId": "com.restaurant.pos.installer",
+    "productName": "Restaurant POS Installer",
+    "directories": {
+      "output": "dist",
+      "buildResources": "assets"
+    },
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": ["x64"]
+        }
+      ],
+      "certificateFile": null,
+      "certificatePassword": null,
+      "signingHashAlgorithms": ["sha256"],
+      "requestedExecutionLevel": "requireAdministrator"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": false,
+      "createDesktopShortcut": false,
+      "createStartMenuShortcut": false,
+      "shortcutName": "Restaurant POS Installer"
+    },
+    "extraResources": [
+      {
+        "from": "deps/",
+        "to": "deps/",
+        "filter": ["**/*"]
+      },
+      {
+        "from": "scripts/",
+        "to": "scripts/",
+        "filter": ["**/*.js"]
+      }
+    ],
+    "files": [
+      "main.js",
+      "preload.js",
+      "renderer/**/*",
+      "scripts/**/*.js",
+      "node_modules/**/*",
+      "package.json"
+    ]
+  }
+}

@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Restaurant POS Installer</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="container">
+    <!-- Screen 1: Welcome -->
+    <div class="screen" id="welcome-screen" style="display: flex;">
+      <div class="content">
+        <div class="logo">🍔</div>
+        <h1>Restaurant POS System</h1>
+        <p class="subtitle">v2.1.0</p>
+        <p class="description">One-click installation of the complete Restaurant POS system</p>
+        <button class="btn btn-primary" onclick="goToSystemCheck()">Install Now</button>
+      </div>
+    </div>
+
+    <!-- Screen 2: System Check -->
+    <div class="screen" id="system-check-screen" style="display: none;">
+      <div class="content">
+        <h2>System Check</h2>
+        <p class="subtitle">Checking your system...</p>
+        <div class="system-checks">
+          <div class="check-item" id="check-nodejs">
+            <span class="spinner"></span>
+            <span>Node.js</span>
+          </div>
+          <div class="check-item" id="check-postgresql">
+            <span class="spinner"></span>
+            <span>PostgreSQL</span>
+          </div>
+          <div class="check-item" id="check-ports">
+            <span class="spinner"></span>
+            <span>Ports (3001, 5432)</span>
+          </div>
+        </div>
+        <button class="btn btn-primary" id="proceed-btn" onclick="goToRestaurantInfo()" style="display: none;">Proceed</button>
+      </div>
+    </div>
+
+    <!-- Screen 3: Restaurant Info -->
+    <div class="screen" id="restaurant-info-screen" style="display: none;">
+      <div class="content">
+        <h2>Restaurant Information</h2>
+        <p class="subtitle">Configure your restaurant</p>
+        <div class="form-group">
+          <label for="restaurant-name">Restaurant Name</label>
+          <input type="text" id="restaurant-name" placeholder="e.g., My Awesome Restaurant" required>
+        </div>
+        <p class="info-text">All other settings will be configured automatically.</p>
+        <div class="button-group">
+          <button class="btn btn-secondary" onclick="goToSystemCheck()">Back</button>
+          <button class="btn btn-primary" onclick="startInstallation()">Start Installation</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Screen 4: Installing -->
+    <div class="screen" id="installing-screen" style="display: none;">
+      <div class="content">
+        <h2>Installing...</h2>
+        <div class="progress-container">
+          <div class="progress-bar" id="progress-bar"></div>
+        </div>
+        <p class="progress-text" id="progress-text">Initializing installation...</p>
+        <div class="install-log" id="install-log"></div>
+      </div>
+    </div>
+
+    <!-- Screen 5: Complete -->
+    <div class="screen" id="complete-screen" style="display: none;">
+      <div class="content">
+        <div class="success-icon">✓</div>
+        <h2>Installation Complete!</h2>
+        <div class="credentials-box">
+          <h3>Server Information</h3>
+          <p><strong>Server URL:</strong> <span id="server-url"></span></p>
+          <p><strong>Admin Panel:</strong> <span id="admin-url"></span></p>
+          <h3>Login Credentials</h3>
+          <p><strong>Username:</strong> <span id="username">admin</span></p>
+          <p><strong>Password:</strong> <span id="password"></span></p>
+          <p class="info-text">Save these credentials in a safe place.</p>
+        </div>
+        <button class="btn btn-primary" onclick="launchPOS()">Launch POS App</button>
+        <button class="btn btn-secondary" onclick="closeInstaller()">Close Installer</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
