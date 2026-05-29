@@ -588,5 +588,104 @@ module.exports = function downloadsRouter (sql) {
     } catch (e) { serverError(res, e) }
   })
 
+  // POST /downloads/setup-file/:outlet_id — generate branded setup exe for an outlet
+  router.post('/setup-file/:outlet_id', jwtAuth, async (req, res) => {
+    try {
+      const { outlet_id } = req.params
+      const { brand_id } = req.auth || {}
+
+      // Verify outlet exists and belongs to brand
+      const [outlet] = await sql`
+        SELECT id, name FROM outlets
+        WHERE id = ${outlet_id} AND brand_id = ${brand_id}`
+
+      if (!outlet) {
+        return res.status(404).json({ error: 'Outlet not found' })
+      }
+
+      // Get server IP from environment or request
+      const serverIP = process.env.SERVER_IP ||
+                       req.get('x-server-ip') ||
+                       req.hostname
+
+      // Generate outlet code from outlet name or use custom
+      const outletCode = req.body?.outletCode ||
+                        outlet.name.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 6) ||
+                        outlet_id.toUpperCase().slice(0, 6)
+
+      // Call setup-generator CLI
+      const { execSync } = require('child_process')
+      const setupGenPath = path.join(__dirname, '..', '..', 'setup-generator', 'generate.js')
+      const downloadsDir = path.join(DATA_DIR, 'downloads')
+
+      // Ensure downloads directory exists
+      if (!fs.existsSync(downloadsDir)) {
+        fs.mkdirSync(downloadsDir, { recursive: true })
+      }
+
+      try {
+        execSync(`node "${setupGenPath}" ` +
+          `--outlet "${outlet_id}" ` +
+          `--code "${outletCode}" ` +
+          `--brandName "${outlet.name}" ` +
+          `--serverIP "${serverIP}" ` +
+          `--output "${downloadsDir}"`,
+          { stdio: 'pipe' }
+        )
+      } catch (error) {
+        return res.status(500).json({
+          error: 'Failed to generate setup file',
+          details: error.message
+        })
+      }
+
+      // Return download link
+      const filename = `setup-${outlet_id}.exe`
+      const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString()
+
+      // Log setup file generation
+      await sql`
+        INSERT INTO audit_log (event_type, details, created_by)
+        VALUES ('setup_file_generated', ${JSON.stringify({
+          outlet_id, filename, serverIP, outletCode, expiresAt
+        })}, ${req.auth?.user_id || 'system'})`
+
+      res.json({
+        ok: true,
+        fileName: filename,
+        downloadUrl: `/api/downloads/setup-file/${outlet_id}/${filename}`,
+        expiresAt,
+        instructions: {
+          server: 'Run on one server machine. Choose "Server Setup"',
+          terminal: `Run on each terminal. Choose "Terminal Setup". Pre-configured for: ${outletCode}`
+        }
+      })
+    } catch (e) { serverError(res, e) }
+  })
+
+  // GET /downloads/setup-file/:outlet_id/:filename — download generated setup exe
+  router.get('/setup-file/:outlet_id/:filename', jwtAuth, (req, res) => {
+    try {
+      const { outlet_id, filename } = req.params
+      const { brand_id } = req.auth || {}
+
+      // Security: validate filename format
+      if (!filename.startsWith('setup-') || !filename.endsWith('.exe')) {
+        return res.status(400).json({ error: 'Invalid filename' })
+      }
+
+      const filepath = path.join(DATA_DIR, 'downloads', filename)
+
+      if (!fs.existsSync(filepath)) {
+        return res.status(404).json({ error: 'Setup file not found or expired' })
+      }
+
+      res.setHeader('Content-Type', 'application/octet-stream')
+      res.setHeader('Content-Disposition', `attachment; filename="${filename}"`)
+      res.setHeader('Cache-Control', 'no-cache')
+      fs.createReadStream(filepath).pipe(res)
+    } catch (e) { serverError(res, e) }
+  })
+
   return router
 }

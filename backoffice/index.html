@@ -2387,6 +2387,23 @@ input:checked+.toggle-slider:before{transform:translateX(17px)}
       </div>
     </div>
 
+    <!-- Branded Setup File Generator -->
+    <div class="card" style="max-width:760px;margin-bottom:20px">
+      <div class="card-header"><h3>Branded Setup File Generator</h3></div>
+      <div style="padding:16px">
+        <p style="font-size:13px;color:#64748b;margin-bottom:16px">Generate a single branded installer for an outlet. Use this file on both server and terminal machines — it auto-detects which one to install.</p>
+        <div style="display:flex;gap:12px;align-items:center;padding:12px;background:#dbeafe;border:1.5px solid #93c5fd;border-radius:8px;margin-bottom:16px">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#1e40af" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+          <span style="font-size:13px;color:#1e40af;font-weight:500">Pre-configured for the outlet in header</span>
+        </div>
+        <button class="btn btn-primary" id="btn-gen-setup-file" onclick="generateBrandedSetupFile()" style="width:100%;justify-content:center">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          Download Branded Setup File
+        </button>
+        <div id="setup-file-status" style="margin-top:12px;font-size:12px;color:#64748b;display:none"></div>
+      </div>
+    </div>
+
     <!-- POS Installer -->
     <div class="card" style="max-width:760px;margin-bottom:20px">
       <div class="card-header"><h3>POS Terminal Installer</h3><button class="btn btn-outline" onclick="loadInstallerFiles()"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 11-2.12-9.36L23 10"/></svg> Refresh</button></div>
@@ -8752,6 +8769,50 @@ function downloadOutletSetupPackageAuto () {
     return
   }
   downloadOutletSetupPackage(_ctxOutlet)
+}
+
+// Generate branded setup file for outlet
+async function generateBrandedSetupFile () {
+  if (!_ctxOutlet) {
+    showToast('Please select an outlet from the header first', 'warning')
+    return
+  }
+
+  const btn = document.getElementById('btn-gen-setup-file')
+  const statusEl = document.getElementById('setup-file-status')
+  btn.disabled = true
+  statusEl.innerHTML = '⏳ Generating setup file...'
+  statusEl.style.display = 'block'
+
+  try {
+    const res = await apiFetch('POST', `/downloads/setup-file/${_ctxOutlet}`, {})
+
+    if (!res.ok) {
+      throw new Error(res.error || 'Failed to generate setup file')
+    }
+
+    // Trigger download
+    const link = document.createElement('a')
+    link.href = res.downloadUrl
+    link.download = res.fileName
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+
+    statusEl.innerHTML = `✓ Setup file downloaded: <strong>${res.fileName}</strong><br>` +
+      `<span style="color:#666;font-size:11px">Expires: ${new Date(res.expiresAt).toLocaleString()}</span><br>` +
+      `<span style="color:#16a34a;font-weight:500;margin-top:6px;display:block">` +
+      `Server: Choose "Server Setup" | Terminal: Choose "Terminal Setup"</span>`
+    statusEl.style.color = '#16a34a'
+
+    showToast('Setup file generated! Download started...', 'success')
+  } catch (error) {
+    statusEl.innerHTML = `✗ Error: ${error.message}`
+    statusEl.style.color = '#ef4444'
+    showToast('Failed to generate setup file: ' + error.message, 'danger')
+  } finally {
+    btn.disabled = false
+  }
 }
 
 // ─── TABLES ──────────────────────────────────────────────────────────────────
