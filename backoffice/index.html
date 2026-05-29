@@ -626,7 +626,6 @@ input:checked+.toggle-slider:before{transform:translateX(17px)}
   /* Downloads: web app links full-width for proper touch targets */
   #web-app-links a{width:100%;box-sizing:border-box}
   /* Downloads: outlet backup row stack vertically */
-  #backup-outlet-sel{width:100%}
   /* Staff: hide Created column so Actions isn't clipped */
   #v-staff .data-table th:nth-child(5),
   #v-staff .data-table td:nth-child(5){display:none}
@@ -1546,14 +1545,7 @@ input:checked+.toggle-slider:before{transform:translateX(17px)}
         <label>To</label><input type="date" id="dash-to">
         <button class="btn-apply-range" onclick="applyMoreRange('dash-qfbar','dash-more',loadDashboard)">Apply</button>
       </div>
-      <div class="more-extra">
-        <label>Brand</label>
-        <select id="dash-brand" onchange="loadDashboard()"><option value="">All Brands</option></select>
-        <label>Market</label>
-        <select id="dash-market" onchange="loadDashboard()"><option value="">All Markets</option></select>
-      </div>
     </div>
-    <input type="hidden" id="dash-outlet">
     <input type="hidden" id="dash-date">
 
     <!-- KPI ROW -->
@@ -1790,12 +1782,6 @@ input:checked+.toggle-slider:before{transform:translateX(17px)}
         <button class="btn-apply-range" onclick="applyMoreRange('rpt-qfbar','rpt-more',loadReport)">Apply</button>
       </div>
       <div class="more-extra">
-        <label>Brand</label>
-        <select id="rpt-brand" onchange="cascadeRptFilters()" style="font-size:12px;padding:5px 8px;border:1.5px solid var(--border);border-radius:6px;color:var(--text)"><option value="">All Brands</option></select>
-        <label>Market</label>
-        <select id="rpt-market" onchange="cascadeRptFilters()" style="font-size:12px;padding:5px 8px;border:1.5px solid var(--border);border-radius:6px;color:var(--text)"><option value="">All Markets</option></select>
-        <label>Outlet</label>
-        <select id="rpt-outlet" onchange="loadReport()" style="font-size:12px;padding:5px 8px;border:1.5px solid var(--border);border-radius:6px;color:var(--text)"><option value="">All Outlets</option></select>
         <button class="btn-apply-range" onclick="loadReport()">Apply Filter</button>
         <button class="btn-apply-range" style="background:#64748b" onclick="exportCSV()">Export CSV</button>
       </div>
@@ -2464,16 +2450,6 @@ input:checked+.toggle-slider:before{transform:translateX(17px)}
           <button class="btn btn-primary" onclick="downloadBackup()"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> Download Full System Backup</button>
           <button class="btn btn-outline" id="btn-schedule-backup" onclick="toggleScheduledBackup()"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> Auto Backup: <span id="auto-backup-status">OFF</span></button>
         </div>
-        <div style="padding:12px;background:#f8fafc;border-radius:8px;border:1px solid #e2e8f0">
-          <div style="font-size:12px;font-weight:700;color:#374151;margin-bottom:8px">Per-Outlet Backup</div>
-          <p style="font-size:12px;color:#64748b;margin-bottom:10px">Download backup scoped to a single outlet — includes only that outlet's orders &amp; items. Shared data (menu, staff, settings) included for context.</p>
-          <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
-            <select id="backup-outlet-sel" style="padding:6px 10px;border:1.5px solid #d1d5db;border-radius:7px;font-size:12px;color:#374151;background:#fff;min-width:180px">
-              <option value="">— Select Outlet —</option>
-            </select>
-            <button class="btn btn-outline btn-sm" onclick="downloadOutletBackup()"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> Download Outlet Backup</button>
-          </div>
-        </div>
         <div style="margin-top:12px;font-size:12px;color:#94a3b8" id="last-backup-info"></div>
         <div style="margin-top:16px;padding:14px;background:#fef3c7;border-radius:8px;font-size:12px;color:#92400e">
           <b>Recovery instructions:</b><br>
@@ -2775,7 +2751,6 @@ input:checked+.toggle-slider:before{transform:translateX(17px)}
           <div><div class="ls-chip-val" id="kds-completion-pct">0%</div><div class="ls-chip-lbl">Completion</div></div>
         </div>
         <div class="ls-spacer"></div>
-        <select id="kds-outlet-filter" onchange="loadKdsView()" style="font-size:12px;padding:5px 8px;border:1.5px solid rgba(255,255,255,.12);border-radius:6px;color:#94a3b8;background:rgba(255,255,255,.06)"><option value="">All Outlets</option></select>
         <span class="kds-badge">View Only</span>
         <div class="ls-refresh-chip">
           <div class="ls-pulse" id="kds-pulse-dot"></div>
@@ -4904,27 +4879,7 @@ function restoreCtxOutlet () {
 }
 
 // ─── DASHBOARD FILTERS ───────────────────────────────────────────
-function cascadeDashFilters () {
-  const brand  = document.getElementById('dash-brand')?.value  || ''
-  const market = document.getElementById('dash-market')?.value || ''
-  const markets = (_rptFilterData.markets || []).filter(m => !brand || m.brand_id === brand)
-  const mSel = document.getElementById('dash-market')
-  if (mSel) {
-    const curM = mSel.value
-    mSel.innerHTML = '<option value="">All Markets</option>' + markets.map(m=>`<option value="${m.id}"${m.id===curM?' selected':''}>${m.name}</option>`).join('')
-  }
-  autoSelectSingle('dash-brand','dash-market')
-}
-
-function populateDashFilters () {
-  const brands = _rptFilterData.brands || []
-  const bSel = document.getElementById('dash-brand')
-  if (!bSel) return
-  const bv = bSel.value
-  bSel.innerHTML = '<option value="">All Brands</option>' + brands.map(b=>`<option value="${b.id}"${b.id===bv?' selected':''}>${b.name}</option>`).join('')
-  autoSelectSingle('dash-brand')
-  cascadeDashFilters()
-}
+// Dashboard now uses header context values only (_ctxBrand, _ctxMarket, _ctxOutlet)
 
 function populateOutletSelectors () {
   const allOutlets = _rptFilterData.outlets || []
@@ -4933,14 +4888,7 @@ function populateOutletSelectors () {
   const outlets = permittedIds && permittedIds.length
     ? allOutlets.filter(o => permittedIds.includes(o.id))
     : allOutlets
-  // Only populate selects that are still real dropdowns (kds-outlet-filter)
-  const selectors = ['kds-outlet-filter']
-  selectors.forEach(id => {
-    const sel = document.getElementById(id); if (!sel) return
-    const cur = sel.value
-    sel.innerHTML = '<option value="">All Outlets</option>' + outlets.map(o=>`<option value="${o.id}"${o.id===cur?' selected':''}>${o.name}</option>`).join('')
-  })
-  populateDashFilters()
+  // All outlet/brand/market selections now use header context only
 }
 
 // ─── REPORTS SUB-NAV ─────────────────────────────────────────────
@@ -5132,9 +5080,9 @@ function setDashPreset (preset, btn) {
 async function loadDashboard () {
   const from   = document.getElementById('dash-from')?.value   || todayStr()
   const to     = document.getElementById('dash-to')?.value     || from
-  const outlet = document.getElementById('dash-outlet')?.value  || ''
-  const brand  = document.getElementById('dash-brand')?.value   || ''
-  const market = document.getElementById('dash-market')?.value  || ''
+  const outlet = _ctxOutlet || ''
+  const brand  = _ctxBrand || ''
+  const market = _ctxMarket || ''
   const cur  = boSettings.currency
   try {
     let qs = `/reports/dashboard?from=${from}&to=${to}`
@@ -6484,48 +6432,14 @@ async function loadRptFilterOptions () {
   try {
     const d = await apiFetch('GET', '/reports/filter-options')
     _rptFilterData = d
-    const bsel = document.getElementById('rpt-brand')
-    if (bsel) {
-      const prev = bsel.value
-      bsel.innerHTML = '<option value="">All Brands</option>' +
-        d.brands.map(b => `<option value="${b.id}"${b.id===prev?' selected':''}>${b.name}</option>`).join('')
-    }
-    autoSelectSingle('rpt-brand')
-    cascadeRptFilters()
     populateOutletSelectors()
     initCtxBar()
     updateCtxBreadcrumb()
     refreshForceOutletGate()
-    const brandSel  = document.getElementById('rpt-brand')
-    const marketSel = document.getElementById('rpt-market')
-    const brandWrap  = brandSel?.closest('.form-group')
-    const marketWrap = marketSel?.closest('.form-group')
-    if (brandWrap)  brandWrap.style.display  = (brandSel.options.length  <= 2) ? 'none' : ''
-    if (marketWrap) marketWrap.style.display = (marketSel.options.length <= 2) ? 'none' : ''
   } catch (_) {}
 }
 
-function cascadeRptFilters () {
-  const brand  = document.getElementById('rpt-brand')?.value  || ''
-  const market = document.getElementById('rpt-market')?.value || ''
-  const msel = document.getElementById('rpt-market')
-  if (msel) {
-    const markets = (_rptFilterData.markets || []).filter(m => !brand || m.brand_id === brand)
-    const prevM = msel.value
-    msel.innerHTML = '<option value="">All Markets</option>' +
-      markets.map(m => `<option value="${m.id}"${m.id===prevM?' selected':''}>${m.name}</option>`).join('')
-    autoSelectSingle('rpt-market')
-  }
-  const osel = document.getElementById('rpt-outlet')
-  if (!osel) return
-  const prevOut = osel.value || _ctxOutlet  // fall back to global ctx outlet when no selection yet
-  let outlets = _rptFilterData.outlets || []
-  if (brand)  outlets = outlets.filter(o => o.brand_id  === brand)
-  if (market) outlets = outlets.filter(o => o.market_id === market)
-  osel.innerHTML = '<option value="">All Outlets</option>' +
-    outlets.map(o => `<option value="${o.id}"${o.id===prevOut?' selected':''}>${o.name}</option>`).join('')
-  autoSelectSingle('rpt-outlet')
-}
+// Reports now use header context values only (_ctxBrand, _ctxMarket, _ctxOutlet)
 
 function setRptPreset (preset, btn) {
   document.querySelectorAll('.rpt-preset-btn').forEach(b => b.classList.remove('active'))
@@ -6619,9 +6533,9 @@ async function loadReport () {
     const toEl = document.getElementById('rep-to');   if (toEl) toEl.value = to
   }
 
-  const brand_id   = document.getElementById('rpt-brand')?.value   || ''
-  const market_id  = document.getElementById('rpt-market')?.value  || ''
-  const outlet_id  = document.getElementById('rpt-outlet')?.value  || _ctxOutlet || ''
+  const brand_id   = _ctxBrand || ''
+  const market_id  = _ctxMarket || ''
+  const outlet_id  = _ctxOutlet || ''
 
   const params = new URLSearchParams({ from, to })
   if (brand_id)  params.set('brand_id',  brand_id)
@@ -7543,7 +7457,6 @@ async function clearTransactionData () {
 async function loadDownloadsPage () {
   loadServerInfo()
   loadInstallerFiles()
-  loadBackupOutlets()
   loadSetupPackageOutlets()
   const base = window.location.origin
   document.getElementById('link-waiter').href   = base + '/waiter-app/'
@@ -7578,21 +7491,9 @@ async function loadSetupPackageOutlets () {
   }
 }
 
-async function loadBackupOutlets () {
-  try {
-    const response = await apiFetch('GET', '/config/outlets')
-    const outlets = response?.rows || response?.outlets || response || []
-    const sel = document.getElementById('backup-outlet-sel')
-    if (!sel) return
-    sel.innerHTML = '<option value="">— Select Outlet —</option>' +
-      (outlets || []).map(o => `<option value="${o.id}">${o.name}${o.brand_name ? ' ('+o.brand_name+')' : ''}</option>`).join('')
-  } catch (_) {}
-}
-
 async function downloadOutletBackup () {
-  const sel = document.getElementById('backup-outlet-sel')
-  const outlet_id = sel?.value
-  if (!outlet_id) { showToast('Select an outlet first','warning'); return }
+  const outlet_id = _ctxOutlet
+  if (!outlet_id) { showToast('Select an outlet from header first','warning'); return }
   try {
     const tkn  = localStorage.getItem('bo_token')
     const resp = await fetch('/downloads/backup?outlet_id=' + encodeURIComponent(outlet_id), { headers: { Authorization: 'Bearer ' + tkn } })
@@ -8149,7 +8050,7 @@ let _kdsOrders = []
 
 async function loadKdsView () {
   try {
-    const outlet = document.getElementById('kds-outlet-filter')?.value || ''
+    const outlet = _ctxOutlet || ''
     const qs     = outlet ? '/kitchen/orders?outlet_id=' + encodeURIComponent(outlet) : '/kitchen/orders'
     const { orders } = await apiFetch('GET', qs)
     _kdsOrders = orders || []
