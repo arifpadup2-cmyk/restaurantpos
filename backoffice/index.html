@@ -4768,7 +4768,6 @@ function ctxCascade () {
 
 function ctxOutletChange () {
   _ctxOutlet = document.getElementById('ctx-outlet')?.value || ''
-  console.log('🔄 ctxOutletChange triggered:', {_ctxOutlet, timestamp: new Date().toLocaleTimeString()})
   try { localStorage.setItem('pos_ctx_outlet', _ctxOutlet) } catch (_) {}
   // Sync outlet to all outlet inputs/selects in views (hidden inputs + visible selects)
   const outletSyncIds = ['dash-outlet','orders-outlet','rpt-outlet','exp-outlet',
@@ -4780,24 +4779,20 @@ function ctxOutletChange () {
   });
   refreshForceOutletGate()
   // Refresh current view data when outlet changes
-  // Check nav-sub FIRST (more specific), then nav-item, then nav-group-hdr
   const activeView = document.querySelector('.nav-sub.active')?.id ||
                      document.querySelector('.nav-item.active')?.id ||
                      document.querySelector('.nav-group-hdr.active')?.id
-  console.log('🔍 Active view detected:', activeView)
-
   // Handle report sub-pages (navsub-rpt-*)
-  if (activeView?.startsWith('navsub-rpt-')) { console.log('📈 Calling loadReport (report sub-page)'); loadReport() }
-  // Handle other pages
-  else if (activeView === 'nav-dashboard') { console.log('📊 Calling loadDashboard'); loadDashboard() }
-  else if (activeView === 'nav-live') { console.log('📋 Calling loadLiveOrders'); loadLiveOrders() }
-  else if (activeView === 'nav-kds') { console.log('🍳 Calling loadKdsView'); loadKdsView() }
-  else if (activeView === 'nav-staff') { console.log('👥 Calling loadStaff'); loadStaff() }
-  else if (activeView === 'nav-reports') { console.log('📈 Calling loadReport'); loadReport() }
-  else if (activeView === 'nav-orders') { console.log('🧾 Calling loadOrders'); loadOrders() }
-  else if (activeView === 'nav-audit') { console.log('🔐 Calling loadAuditLog'); loadAuditLog() }
-  else if (activeView === 'nav-downloads') { console.log('⬇️ Calling loadDownloadsPage'); loadDownloadsPage() }
-  else if (activeView === 'nav-bo-settings') { console.log('⚙️ Calling loadBOSettings'); loadBOSettings() }
+  if (activeView?.startsWith('navsub-rpt-')) loadReport()
+  else if (activeView === 'nav-dashboard') loadDashboard()
+  else if (activeView === 'nav-live') loadLiveOrders()
+  else if (activeView === 'nav-kds') loadKdsView()
+  else if (activeView === 'nav-staff') loadStaff()
+  else if (activeView === 'nav-reports') loadReport()
+  else if (activeView === 'nav-orders') loadOrders()
+  else if (activeView === 'nav-audit') loadAuditLog()
+  else if (activeView === 'nav-downloads') loadDownloadsPage()
+  else if (activeView === 'nav-bo-settings') loadBOSettings()
 }
 
 // ── Global breadcrumb (header) — always visible ─────────────────
@@ -5077,15 +5072,12 @@ async function loadDashboard () {
   const brand  = _ctxBrand || ''
   const market = _ctxMarket || ''
   const cur  = boSettings.currency
-  console.log('📊 loadDashboard called with:', {from, to, outlet, brand, market})
   try {
     let qs = `/reports/dashboard?from=${from}&to=${to}`
     if (outlet) qs += '&outlet_id=' + encodeURIComponent(outlet)
     if (brand)  qs += '&brand_id='  + encodeURIComponent(brand)
     if (market) qs += '&market_id=' + encodeURIComponent(market)
-    console.log('🌐 API call:', qs)
     const { orders, expenses: exps } = await apiFetch('GET', qs)
-    console.log('✅ Dashboard data received:', {orderCount: orders.length, expCount: exps.length})
 
     const sales    = orders.reduce((s, o) => s + (parseFloat(o.total) || 0), 0)
     const expTotal = exps.reduce((s, e) => s + (parseFloat(e.amount) || 0), 0)
