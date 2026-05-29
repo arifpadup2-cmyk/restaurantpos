@@ -244,9 +244,10 @@ const startTerminalInstallation = async (serverIP) => {
     })
     mainWindow.webContents.send('install-log', 'Creating terminal configuration...')
 
-    // Write config file (this would be done by the app on first run)
+    // Write config file with outlet info
     const fs = require('fs')
-    const configPath = path.join(require('os').homedir(), 'AppData', 'Local', 'Restaurant POS', 'pos-config.json')
+    const os = require('os')
+    const configPath = path.join(os.homedir(), 'AppData', 'Local', 'Restaurant POS', 'pos-config.json')
 
     try {
       const configDir = path.dirname(configPath)
@@ -254,7 +255,28 @@ const startTerminalInstallation = async (serverIP) => {
         fs.mkdirSync(configDir, { recursive: true })
       }
 
+      // Check if embedded config exists (created by setup-generator)
+      let outletId = null
+      let outletCode = null
+      let brandName = null
+
+      const embeddedConfigPath = path.join(__dirname, 'embedded-config.json')
+      if (fs.existsSync(embeddedConfigPath)) {
+        try {
+          const embedded = JSON.parse(fs.readFileSync(embeddedConfigPath, 'utf8'))
+          outletId = embedded.outletId
+          outletCode = embedded.outletCode
+          brandName = embedded.brandName
+          mainWindow.webContents.send('install-log', `Loaded outlet config: ${outletCode}`)
+        } catch (e) {
+          mainWindow.webContents.send('install-log', 'Note: No outlet config found')
+        }
+      }
+
       fs.writeFileSync(configPath, JSON.stringify({
+        outletId,
+        outletCode,
+        brandName,
         serverIP: serverIP,
         serverPort: 3001,
         machineId: `TERMINAL-${Date.now()}`,
