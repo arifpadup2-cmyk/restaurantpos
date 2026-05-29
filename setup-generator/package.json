@@ -1,0 +1,14 @@
+{
+  "name": "restaurant-pos-setup-generator",
+  "version": "1.0.0",
+  "description": "Generate branded setup files for Restaurant POS with embedded outlet configuration",
+  "main": "generate.js",
+  "type": "commonjs",
+  "scripts": {
+    "generate": "node generate.js"
+  },
+  "dependencies": {
+    "archiver": "^6.0.0",
+    "chalk": "^4.1.2"
+  }
+}

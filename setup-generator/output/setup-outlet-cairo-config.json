@@ -1,0 +1,9 @@
+{
+  "outletId": "outlet-cairo",
+  "outletCode": "CAI001",
+  "brandName": "Cairo Pizza",
+  "serverIP": "192.168.1.10",
+  "serverPort": "3001",
+  "createdAt": "2026-05-29T18:54:52.628Z",
+  "version": "2.0.0"
+}
