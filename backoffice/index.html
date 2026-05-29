@@ -939,14 +939,7 @@ input:checked+.toggle-slider:before{transform:translateX(17px)}
 #outlet-gate-overlay .ogate-icon{width:60px;height:60px;background:#fff7ed;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:28px;border:2px solid #fed7aa}
 #outlet-gate-overlay .ogate-title{font-size:17px;font-weight:800;color:#0f172a}
 #outlet-gate-overlay .ogate-sub{font-size:13px;color:#64748b;max-width:300px;line-height:1.6}
-/* ── Global context breadcrumb (always visible in top header) ── */
-.hdr-ctx{display:flex;align-items:center;gap:6px;padding:4px 10px;border:1.5px solid var(--border);border-radius:8px;background:#fafafa;font-size:12px;color:var(--text);cursor:pointer;transition:.12s;max-width:340px;overflow:hidden}
-.hdr-ctx:hover{border-color:var(--primary);background:#fff7ed}
-.hdr-ctx-icon{width:14px;height:14px;color:var(--primary);flex-shrink:0}
-.hdr-ctx-path{display:flex;align-items:center;gap:4px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.hdr-ctx-sep{color:var(--muted);font-weight:300}
-.hdr-ctx-empty{color:var(--muted);font-weight:500;font-style:italic}
-.hdr-ctx-edit{font-size:10px;color:var(--muted);margin-left:auto;flex-shrink:0;text-transform:uppercase;letter-spacing:.4px;font-weight:700}
+/* Breadcrumb removed - outlet selection now in header dropdown only */
 /* ── Hamburger button ── */
 .hdr-hamburger{display:none;width:36px;height:36px;border-radius:8px;border:1.5px solid var(--border);background:#fff;color:var(--text);align-items:center;justify-content:center;cursor:pointer}
 .hdr-hamburger:hover{background:var(--bg)}
@@ -1417,12 +1410,6 @@ input:checked+.toggle-slider:before{transform:translateX(17px)}
         <h3 id="hdr-greeting-text">Back Office</h3>
         <p id="hdr-date-text"></p>
       </div>
-      <!-- Always-visible Brand › Market › Outlet breadcrumb -->
-      <button class="hdr-ctx" id="hdr-ctx" onclick="openCtxSwitcher()" title="Switch brand / market / outlet">
-        <svg class="hdr-ctx-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg>
-        <span class="hdr-ctx-path" id="hdr-ctx-path"><span class="hdr-ctx-empty">No outlet selected</span></span>
-        <span class="hdr-ctx-edit">change</span>
-      </button>
       <div class="hdr-search gsearch-wrap">
         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="color:#94a3b8;flex-shrink:0"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
         <input type="text" placeholder="Search sections, settings…" id="global-search" autocomplete="off" oninput="gsearchInput(this.value)" onkeydown="gsearchKey(event)" onfocus="gsearchInput(this.value)" onblur="setTimeout(()=>gsearchClose(),150)">
@@ -4789,8 +4776,13 @@ function ctxOutletChange () {
     const el = document.getElementById(id);
     if (el) el.value = _ctxOutlet || '';
   });
-  updateCtxBreadcrumb()
   refreshForceOutletGate()
+  // Refresh current view data when outlet changes
+  const activeView = document.querySelector('.nav-item.active, .nav-group-item.active')?.id
+  if (activeView === 'navg-dashboard') loadDashboard()
+  if (activeView === 'navg-reports') loadReport()
+  if (activeView === 'navg-orders') loadOrders()
+  if (activeView === 'navg-kds') loadKdsView()
 }
 
 // ── Global breadcrumb (header) — always visible ─────────────────
