@@ -17,6 +17,7 @@ contextBridge.exposeInMainWorld('posAPI', {
   onUpdateAvailable:    (cb) => ipcRenderer.on('update-available', (_e, info) => cb(info)),
   onDownloadProgress:   (cb) => ipcRenderer.on('download-progress', (_e, prog) => cb(prog)),
   onUpdateReady:        (cb) => ipcRenderer.on('update-ready', cb),
+  checkForUpdates:      () => ipcRenderer.invoke('check-for-updates'),
   startUpdateDownload:  () => ipcRenderer.invoke('start-update-download'),
   installUpdate:        () => ipcRenderer.invoke('install-update'),
   reloadApp:        () => ipcRenderer.invoke('reload-app'),

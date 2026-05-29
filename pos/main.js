@@ -337,6 +337,10 @@ ipcMain.handle('install-update', () => {
   try { if (autoUpdater) autoUpdater.quitAndInstall(); } catch (_) {}
 });
 
+ipcMain.handle('check-for-updates', () => {
+  try { if (autoUpdater) autoUpdater.checkForUpdates().catch(() => {}); } catch (_) {}
+});
+
 // ── Auto-updater ──────────────────────────────────────────────────────────────
 
 let autoUpdater = null;

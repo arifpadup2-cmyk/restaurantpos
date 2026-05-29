@@ -2954,6 +2954,10 @@ async function init() {
     document.getElementById('update-progress-modal').style.display = 'none';
     document.getElementById('update-ready-modal').style.display = 'flex';
   });
+
+  // Check for updates on every POS startup
+  posAPI.checkForUpdates().catch(() => {});
+
   await loadSettings();
   await loadTheme();
   await checkActiveDaySession();
