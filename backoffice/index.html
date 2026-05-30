@@ -7363,14 +7363,13 @@ async function loadTerminalLogs (resetPage = true) {
     if (pageEl) {
       const totalPages = Math.ceil(data.total / TLOG_PAGE)
       const curPage    = Math.floor(_tlogOffset / TLOG_PAGE) + 1
+      const nextOffset = _tlogOffset + TLOG_PAGE
       pageEl.innerHTML = `
         <span>Page ${curPage} of ${totalPages} (${data.total} entries)</span>
         <div style="margin-left:auto;display:flex;gap:6px">
-          ${_tlogOffset > 0 ? `<button class="btn btn-outline" style="padding:4px 12px;font-size:12px" onclick="_tlogOffset=Math.max(0,_tlogOffset-${TLOG_PAGE});loadTerminalLogs(false)">← Prev</button>` : ''}
-          ${_tlogOffset + TLOG_PAGE < data.total ? `<button class="btn btn-outline" style="padding:4px 12px;font-size:12px" onclick="_tlogOffset+=;loadTerminalLogs(false)">Next →</button>` : ''}
+          ${_tlogOffset > 0 ? `<button class="btn btn-outline" style="padding:4px 12px;font-size:12px" onclick="_tlogOffset=${_tlogOffset - TLOG_PAGE};loadTerminalLogs(false)">← Prev</button>` : ''}
+          ${nextOffset < data.total ? `<button class="btn btn-outline" style="padding:4px 12px;font-size:12px" onclick="_tlogOffset=${nextOffset};loadTerminalLogs(false)">Next →</button>` : ''}
         </div>`
-      // Fix the Next button onclick
-      pageEl.innerHTML = pageEl.innerHTML.replace('_tlogOffset+=;', `_tlogOffset+=${TLOG_PAGE};`)
     }
 
   } catch (e) {
