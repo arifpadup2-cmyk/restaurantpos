@@ -1436,6 +1436,12 @@ textarea:focus-visible {
   <button class="pos-qs-btn" id="btn-sync-data" onclick="syncOutletData()" title="Sync latest data from cloud"
     style="top:16px;right:16px;bottom:auto;padding:6px 10px;font-size:15px">🔄</button>
 
+  <!-- Window controls (top-left): fullscreen toggle + close -->
+  <button class="pos-qs-btn" id="btn-fullscreen" onclick="toggleFullscreenUI()" title="Toggle full screen"
+    style="top:16px;left:16px;right:auto;bottom:auto;padding:6px 11px;font-size:15px">⛶</button>
+  <button class="pos-qs-btn" id="btn-close-app" onclick="closeApp()" title="Close POS"
+    style="top:16px;left:58px;right:auto;bottom:auto;padding:6px 11px;font-size:15px;color:#fca5a5;border-color:rgba(248,113,113,.4)">✕</button>
+
   <!-- Ads panel (left side — full-panel image slider, visible when announcements available) -->
   <div id="login-ads-panel">
     <div id="ads-slides"></div>
@@ -1480,10 +1486,11 @@ textarea:focus-visible {
     <!-- Opening cash (only shown for new shift) -->
     <div class="cash-box" id="cash-box">
       <h3 id="cash-cashier-name">Good day!</h3>
+      <div id="cash-day-hint" style="display:none;font-size:12px;color:#ea580c;background:#fff7ed;border:1px solid #fed7aa;border-radius:8px;padding:8px 10px;text-align:center;margin-bottom:12px;font-weight:600">📅 Today's business day isn't open yet — this will <b>open the day</b> and start your shift.</div>
       <label id="cash-currency-label">Opening Cash</label>
       <input id="login-cash" type="number" placeholder="0.00" min="0" step="0.01"
         onkeydown="if(event.key==='Enter')startShift()">
-      <button class="btn-login" onclick="startShift()">▶ Start Shift</button>
+      <button class="btn-login" id="cash-start-btn" onclick="startShift()">▶ Start Shift</button>
       <p class="login-note" onclick="pinBuffer='';updatePinDots();document.getElementById('pin-box').classList.add('show');document.getElementById('cash-box').classList.remove('show');"
         style="cursor:pointer;margin-top:10px">← Back</p>
     </div>
@@ -3037,6 +3044,14 @@ let _selectedCustomer = null;
 // ═══════════════════════════════════════════════════════════════
 //  INIT
 // ═══════════════════════════════════════════════════════════════
+// Window controls.
+async function toggleFullscreenUI() {
+  try { const isFs = await posAPI.toggleFullscreen(); const b = document.getElementById('btn-fullscreen'); if (b) b.title = isFs ? 'Exit full screen' : 'Enter full screen'; } catch (_) {}
+}
+async function closeApp() {
+  if (window.confirm('Close the POS application?')) { try { await posAPI.quitApp(); } catch (_) {} }
+}
+
 // Manual "Sync" — re-download this outlet's latest data from the cloud (icon button).
 async function syncOutletData() {
   const cfg = window._posConfig || {};
@@ -4862,13 +4877,16 @@ async function verifyPin() {
       await ensureDayOpen();
       enterPOS();
     } else {
-      // New shift — ask opening cash
+      // New shift — ask opening cash. If the day isn't open, this also opens it.
       const cur = settings.currency || 'RM';
       document.getElementById('cash-cashier-name').textContent = `Welcome, ${selectedCashier.name}! 👋`;
       document.getElementById('cash-currency-label').textContent = `Opening Cash (${cur})`;
       document.getElementById('login-cash').value = '';
       document.getElementById('pin-box').classList.remove('show');
       document.getElementById('cash-box').classList.add('show');
+      const dayOpen = _activeDay || (await checkActiveDaySession());
+      document.getElementById('cash-day-hint').style.display = dayOpen ? 'none' : 'block';
+      document.getElementById('cash-start-btn').textContent = dayOpen ? '▶ Start Shift' : '▶ Open Day & Start Shift';
       setTimeout(() => document.getElementById('login-cash').focus(), 100);
     }
   } finally {
@@ -4881,13 +4899,32 @@ async function startShift() {
   if (!selectedCashier) { pinError('No cashier selected.'); return; }
   const cash = parseFloat(document.getElementById('login-cash').value) || 0;
   cashier = selectedCashier;
+  // Open the business day together with the shift (no separate dialog).
+  if (!_activeDay && !(await checkActiveDaySession())) {
+    await openDayDirect();
+  }
   const shiftId = uid();
   const now = Date.now();
   await db.run(`INSERT INTO shifts (id,cashier_id,cashier_name,opening_cash,status,terminal_id,opened_at)
     VALUES (?,?,?,?,?,?,?)`, [shiftId, cashier.id||cashier.name, cashier.name, cash, 'open', MACHINE_ID, now]);
   shift = { id: shiftId, cashier_name: cashier.name, opening_cash: cash, opened_at: now };
-  await ensureDayOpen();
   enterPOS();
+}
+
+// Open today's business day silently (used by the combined open-day + shift flow).
+async function openDayDirect() {
+  const today = todayStr();
+  const outletId = window._posConfig?.outletId || null;
+  const existing = await db.get("SELECT * FROM day_openings WHERE date=? AND outlet_id=? AND status='open'", [today, outletId]);
+  if (existing.ok && existing.data) { _activeDay = existing.data; updateDayStatusUI(); return; }
+  const id = uid(), now = Date.now();
+  await db.run(
+    'INSERT INTO day_openings(id,date,outlet_id,terminal_id,opened_by,opened_at,status,notes,synced) VALUES(?,?,?,?,?,?,?,?,?)',
+    [id, today, outletId, MACHINE_ID, cashier.name, now, 'open', null, 0]
+  );
+  _activeDay = { id, date: today, outlet_id: outletId, opened_by: cashier.name, opened_at: now, status: 'open' };
+  updateDayStatusUI();
+  showToast(`Business day ${today} opened.`, 'success');
 }
 
 function applyRoleRestrictions(role) {

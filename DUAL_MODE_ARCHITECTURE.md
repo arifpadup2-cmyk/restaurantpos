@@ -44,6 +44,68 @@ The Restaurant POS system operates in **dual-mode**: LOCAL and CLOUD, with autom
 └─────────────────────────────────────────────────────────────────────────┘
 ```
 
+## 🔑 Architecture Rules (MUST FOLLOW)
+
+> These rules are **non-negotiable**. Every feature, endpoint, and screen must respect them.
+> They define how data and connections are allowed to flow across the system.
+
+### Rule 1 — One Central Cloud Database (single source of truth)
+There is exactly **ONE** cloud database (Neon, behind the Render server). It holds the data
+for **ALL outlets of ALL brands — potentially thousands of outlets.** The Back Office writes
+to it. It is the master copy that every local site ultimately derives from.
+
+### Rule 2 — Outlet Data Isolation (a local site holds ONLY its own outlet) 🔒
+A local server fetches and stores the data for the **single outlet it was set up for, and
+nothing else.** It must **never** pull or hold any other outlet's data. **Every cloud fetch is
+scoped strictly by `outlet_id`** (brand-shared config like the menu is allowed; other outlets'
+records, orders, tables, and settings are not). Even though the cloud has thousands of outlets,
+a restaurant's local machine only ever contains its own.
+
+### Rule 3 — The Local Server is the ONLY Gateway to the Cloud
+The POS / Waiter / KDS / Delivery apps **never talk to the cloud directly.** They talk only to
+the **LOCAL server**. The local server alone holds the cloud credentials
+(`CLOUD_SYNC_URL` / `CLOUD_SYNC_KEY`) and brokers **all** cloud communication — validation,
+data fetch, and sync. This keeps cloud secrets off the terminals.
+
+### Rule 4 — Outlet Identity Requires THREE Fields (anti-guessing security)
+To identify or validate an outlet during setup, **all three** must be supplied and must match
+**together**:
+- 🏢 **Brand ID**
+- 🏪 **Outlet ID**
+- 📍 **Outlet Code**
+
+A 6-character outlet code alone is **guessable**, so it is never sufficient by itself. Any
+mismatch is rejected with "Outlet details do not match."
+
+### Rule 5 — Setup is LOCAL-only (for now)
+First-run setup currently supports **LOCAL mode only**. The **Cloud-direct** option is
+**temporarily disabled** and will be enabled in a later stage. During setup the user chooses
+where the server is:
+- **This Computer** → uses `localhost` (127.0.0.1) automatically
+- **Another Computer** → user enters the server PC's **LAN IP address**
+
+### Rule 6 — Cloud-Validated Provisioning Flow (exact sequence)
+When a terminal is set up, this exact order runs:
+1. POS sends the **three fields** to the **LOCAL** server (`POST /setup/provision-local`).
+2. LOCAL server asks the **CLOUD** to validate the outlet (`POST /setup/provision`) — all three must match.
+3. CLOUD returns **ONLY that one outlet's data**.
+4. LOCAL server **seeds** that data into the local database (creates if missing, updates if present).
+5. LOCAL server **registers** the terminal and returns its **per-terminal API key** + DB config.
+6. POS **connects** and is ready.
+
+### Rule 7 — Unlimited Retries, No Lockout
+A user may enter outlet details **as many times as needed**. Wrong entries are **never** locked
+out. The only safeguard is a global anti-brute-force ceiling (600 requests/min/IP) that a human
+never reaches — it exists solely to stop automated guessing.
+
+### Rule 8 — One Codebase, Two Roles
+The **same server code** runs both locally and in the cloud; the `IS_CLOUD_SERVER=true` env flag
+selects cloud behavior. **Deploying the cloud = push to GitHub** (`arifpadup2-cmyk/restaurantpos`,
+`master`) → **Render auto-deploys** (~3–5 min). The local server and cloud server are never
+separate codebases.
+
+---
+
 ## Connection Modes
 
 ### LOCAL Mode (Primary)
@@ -142,7 +204,7 @@ DB_HOST=127.0.0.1
 DB_PORT=5432
 DB_NAME=restaurant_pos_central
 DB_USER=pos_central_user
-DB_PASS=pos_secure_2024!
+DB_PASS=123456                  # dev value — rotate per PRODUCTION-HARDENING.md before deployment
 
 # Cloud sync settings
 CLOUD_SYNC_URL=https://restaurantpos-8xew.onrender.com
@@ -233,10 +295,18 @@ Response: 200 OK
 
 ### Config/Setup (both servers)
 ```
-GET /config/brands
-GET /config/outlets
-GET /setup/by-code
-POST /setup/connect-code
+GET  /config/brands
+GET  /config/outlets
+POST /setup/by-code            # validate outlet (brand_id + code; outlet_id matched if given)
+POST /setup/connect-code       # register terminal (requires brand_id + outlet_id + code)
+```
+
+### Outlet Provisioning (Rule 2 + Rule 6)
+```
+POST /setup/provision          # CLOUD side — apiKey-protected. Validates the 3-field triple,
+                               # returns ONLY that outlet's data (brand, menu, staff, tables, settings)
+POST /setup/provision-local    # LOCAL side — called by POS. Validates against cloud, seeds the
+                               # outlet's data into the local DB, registers the terminal
 ```
 
 ### Menu Sync
@@ -296,6 +366,7 @@ PATCH /orders/:id
 
 ---
 
-**Last Updated**: 2026-05-30
-**Architecture**: Dual-Mode LOCAL + CLOUD with auto-failover
-**Status**: Ready for implementation
+**Last Updated**: 2026-05-30 (added Architecture Rules section + outlet provisioning)
+**Architecture**: Dual-Mode LOCAL + CLOUD with auto-failover; per-outlet data isolation
+**Status**: Provisioning live (cloud deployed); Cloud-direct setup mode disabled pending later stage
+**Core Rules**: See "🔑 Architecture Rules (MUST FOLLOW)" near the top — 8 non-negotiable rules

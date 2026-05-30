@@ -320,6 +320,8 @@ ipcMain.handle('toggle-fullscreen', () => {
   return next;
 });
 
+ipcMain.handle('quit-app', () => { app.quit(); });
+
 ipcMain.handle('get-printers', async () => {
   try {
     const list = await mainWindow.webContents.getPrintersAsync();
@@ -408,6 +410,7 @@ function setupAutoUpdater(serverIp) {
 function createWindow() {
   mainWindow = new BrowserWindow({
     width: 1440, height: 900, minWidth: 1200, minHeight: 700,
+    fullscreen: true,          // always open in full screen
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
       contextIsolation: true,
@@ -416,6 +419,8 @@ function createWindow() {
     autoHideMenuBar: true,
     title: 'Restaurant POS',
   });
+  // Re-assert full screen once the window is ready (covers platforms that ignore the flag).
+  mainWindow.once('ready-to-show', () => mainWindow.setFullScreen(true));
   mainWindow.loadFile(path.join(__dirname, 'renderer', 'index.html'));
 }
 
