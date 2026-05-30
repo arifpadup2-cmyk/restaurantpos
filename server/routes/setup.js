@@ -694,7 +694,7 @@ module.exports = function setupRouter (sql) {
         SELECT o.id, o.name, o.outlet_code, o.brand_id, b.name AS brand_name
         FROM outlets o
         JOIN brands b ON b.id = o.brand_id
-        WHERE o.outlet_code = ${raw} AND o.brand_id = ${brandId}`
+        WHERE LOWER(o.outlet_code) = LOWER(${raw}) AND o.brand_id = ${brandId}`
       if (!outlet) return res.status(404).json({ error: 'Brand ID or outlet code not found. Check both and try again.', code: 'NOT_FOUND' })
       res.json({ outlet_id: outlet.id, outlet_name: outlet.name, outlet_code: outlet.outlet_code, brand_id: outlet.brand_id, brand_name: outlet.brand_name })
     } catch (e) { serverError(res, e) }
@@ -711,7 +711,7 @@ module.exports = function setupRouter (sql) {
       const [outlet] = await sql`
         SELECT o.*, b.name AS brand_name, b.active AS brand_active, b.expires_at, b.max_terminals
         FROM outlets o JOIN brands b ON b.id = o.brand_id
-        WHERE o.outlet_code = ${raw} AND o.brand_id = ${brandId}`
+        WHERE LOWER(o.outlet_code) = LOWER(${raw}) AND o.brand_id = ${brandId}`
       if (!outlet) return res.status(404).json({ error: 'Brand ID or outlet code not found.', code: 'NOT_FOUND' })
       if (!outlet.brand_active) return res.status(403).json({ error: 'Brand license is deactivated.', code: 'DEACTIVATED' })
       if (isExpired(outlet.expires_at)) return res.status(403).json({ error: 'License has expired. Contact your provider.', code: 'EXPIRED' })

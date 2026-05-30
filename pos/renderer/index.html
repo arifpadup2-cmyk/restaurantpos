@@ -1341,7 +1341,7 @@ textarea:focus-visible {
       oninput="qsOutletCodeChanged()" style="font-family:monospace;letter-spacing:1px">
     <label class="pos-qs-label">Outlet Code</label>
     <input id="qs-outlet-code" type="text" class="pos-qs-input" maxlength="6" placeholder="XK9T2P" autocomplete="off"
-      oninput="this.value=this.value.toUpperCase().replace(/[^A-Z0-9]/g,'');qsOutletCodeChanged()"
+      oninput="qsOutletCodeChanged()"
       style="font-family:monospace;font-size:20px;letter-spacing:5px;text-align:center;padding:10px">
     <div id="qs-outlet-confirm" style="display:none;margin-top:-4px;margin-bottom:8px;padding:8px 10px;background:#f0fdf4;border:1px solid #86efac;border-radius:7px;font-size:12px;color:#166534;font-weight:600">
       ✓ <span id="qs-outlet-name-confirmed"></span>
@@ -3478,7 +3478,7 @@ async function savePosQS() {
     : document.getElementById('qs-cloud-fallback').value.trim().replace(/\/+$/, '');
   const machineId   = document.getElementById('qs-machine-id').value.trim() || 'POS-01';
   const brandIdVal  = document.getElementById('qs-brand-id').value.trim();
-  const outletCode  = document.getElementById('qs-outlet-code').value.trim().toUpperCase();
+  const outletCode  = document.getElementById('qs-outlet-code').value.trim();
 
   if (isCloud && !cloudUrl) { document.getElementById('qs-cloud-url').focus(); return; }
   if (!isCloud && !serverIp) { document.getElementById('qs-server-ip').focus(); return; }
@@ -4205,7 +4205,7 @@ async function setupVerifyCode() {
   const brandIdEl = document.getElementById('setup-brand-id');
   const errEl     = document.getElementById('setup-outlet-error');
   const confirmDiv = document.getElementById('setup-code-confirm');
-  const code    = codeEl.value.trim().toUpperCase();
+  const code    = codeEl.value.trim();
   const brandId = (brandIdEl?.value || '').trim();
   errEl.textContent = '';
   confirmDiv.style.display = 'none';
