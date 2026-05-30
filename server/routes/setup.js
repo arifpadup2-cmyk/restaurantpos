@@ -50,6 +50,8 @@ async function seedOutletData (sql, data) {
       return n
     }
     if (data.brand)  summary.brands  = await up('brands',  [data.brand],  'id')
+    // Markets must be seeded before outlets (outlets.market_id → markets FK, NOT NULL).
+    summary.markets = await up('markets', data.markets, 'id')
     if (data.outlet) summary.outlets = await up('outlets', [data.outlet], 'id')
     summary.categories = await up('categories', data.categories, 'id')
     summary.menu_items = await up('menu_items', data.menu_items, 'id')
@@ -1116,6 +1118,7 @@ module.exports = function setupRouter (sql) {
 
       // Brand-shared config (menu, staff) + outlet-specific data (tables, settings).
       const [brand] = await sql`SELECT id, name, business_type, country, active FROM brands WHERE id = ${brandId}`
+      const markets = await sql`SELECT id, name, brand_id, country, currency_code, currency_symbol, created_at FROM markets WHERE brand_id = ${brandId}`
       const categories = await sql`
         SELECT id, name, sort_order, color, active, synced_at, kitchen_id, outlet_id, brand_id
         FROM categories WHERE brand_id = ${brandId}`
@@ -1137,6 +1140,7 @@ module.exports = function setupRouter (sql) {
       res.json({
         ok: true,
         brand: brand || { id: brandId, name: brand_name },
+        markets,
         outlet: outletRow,
         categories, menu_items, cashiers, tables_layout, settings,
       })
@@ -1196,6 +1200,36 @@ module.exports = function setupRouter (sql) {
         },
       })
     } catch (e) { serverError(res, e) }
+  })
+
+  // ── LOCAL side: lightweight "Verify" — proxies validation to the CLOUD (a new
+  //    outlet may exist only in the cloud, not yet locally). Returns outlet name
+  //    so the setup screen can confirm before the heavier provision step. ──
+  router.post('/cloud-verify', async (req, res) => {
+    const brandId  = (req.body?.brand_id    || '').trim()
+    const outletId = (req.body?.outlet_id   || '').trim()
+    const code     = (req.body?.outlet_code || '').replace(/\s/g, '')
+    if (!brandId)          return res.status(400).json({ error: 'Brand ID is required', code: 'MISSING_BRAND' })
+    if (!outletId)         return res.status(400).json({ error: 'Outlet ID is required', code: 'MISSING_OUTLET' })
+    if (code.length !== 6) return res.status(400).json({ error: 'Outlet code must be exactly 6 characters', code: 'INVALID_CODE' })
+
+    const cloudUrl = (process.env.CLOUD_SYNC_URL || '').replace(/\/+$/, '')
+    const cloudKey = process.env.CLOUD_SYNC_KEY || process.env.API_KEY || ''
+    if (!cloudUrl) return res.status(503).json({ error: 'Cloud is not configured on this server.', code: 'NO_CLOUD' })
+
+    try {
+      const r = await fetch(cloudUrl + '/setup/by-code', {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json', 'x-api-key': cloudKey },
+        body:    JSON.stringify({ code, brand_id: brandId, outlet_id: outletId }),
+        signal:  AbortSignal.timeout(20_000),
+      })
+      const d = await r.json().catch(() => ({}))
+      if (!r.ok) return res.status(r.status).json({ error: d.error || 'Outlet not found in cloud', code: d.code || 'NOT_FOUND' })
+      res.json(d)
+    } catch (e) {
+      return res.status(502).json({ error: 'Cannot reach the cloud to verify this outlet: ' + e.message, code: 'CLOUD_UNREACHABLE' })
+    }
   })
 
   return router

@@ -4411,12 +4411,12 @@ async function setupVerifyCode() {
   if (code.length !== 6) { errEl.textContent = '❌ Enter the full 6-character outlet code.'; return; }
 
   const serverBase = `http://${_setupServerIp || 'localhost'}:3001`;
-  errEl.textContent = '⏳ Verifying…';
+  errEl.textContent = '⏳ Verifying with cloud…';
   try {
-    const resp = await fetch(serverBase + '/setup/by-code', {
+    const resp = await fetch(serverBase + '/setup/cloud-verify', {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ code, brand_id: brandId, outlet_id: outletId }),
-      signal: AbortSignal.timeout(6000),
+      signal: AbortSignal.timeout(25000),
     });
     const d = await resp.json();
     if (!resp.ok) { errEl.textContent = '❌ ' + (d.error || 'Code not found'); return; }
