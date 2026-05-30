@@ -3988,13 +3988,16 @@ async function syncUnsyncedData() {
 }
 
 async function fetchMenuFromApi() {
+  const _cfg = window._posConfig || {};
+  const bid  = _cfg.brandId  || '';
+  const oid  = _cfg.outletId || null;
   const data = await apiFetch('GET', '/sync/menu');
   for (const c of (data.categories || []))
-    await db.run('INSERT OR REPLACE INTO categories (id,name,sort_order,color,active,synced_at) VALUES (?,?,?,?,?,?)',
-      [c.id, c.name, c.sort_order||0, c.color||'#f97316', c.active?1:0, Date.now()]);
+    await db.run('INSERT OR REPLACE INTO categories (id,name,sort_order,color,active,brand_id,outlet_id,synced_at) VALUES (?,?,?,?,?,?,?,?)',
+      [c.id, c.name, c.sort_order||0, c.color||'#f97316', c.active?1:0, bid, oid, Date.now()]);
   for (const i of (data.items || []))
-    await db.run('INSERT OR REPLACE INTO menu_items (id,category_id,name,price,description,active,synced_at) VALUES (?,?,?,?,?,?,?)',
-      [i.id, i.category_id, i.name, i.price, i.description||'', i.active?1:0, Date.now()]);
+    await db.run('INSERT OR REPLACE INTO menu_items (id,category_id,name,price,description,active,brand_id,outlet_id,synced_at) VALUES (?,?,?,?,?,?,?,?,?)',
+      [i.id, i.category_id, i.name, i.price, i.description||'', i.active?1:0, bid, oid, Date.now()]);
   loadMenu();
 }
 

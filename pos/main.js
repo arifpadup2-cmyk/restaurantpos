@@ -159,6 +159,42 @@ async function runMigrations() {
   }
 }
 
+// ── Seed brand/market/outlet into LOCAL db ────────────────────────────────────
+// When the POS connects to an outlet (esp. a cloud outlet), the LOCAL postgres
+// won't have the brand/outlet rows. Menu categories have FK -> outlets and a
+// brand_id NOT NULL check, so syncing categories fails until these exist.
+async function seedOutletLocally(cfg = {}) {
+  if (!sql || !cfg.brandId || !cfg.outletId) return;
+  try {
+    // Brand (defaults cover license_prefix, plan, status, etc.)
+    await sql`
+      INSERT INTO brands (id, name)
+      VALUES (${cfg.brandId}, ${cfg.restaurantName || 'Restaurant'})
+      ON CONFLICT (id) DO UPDATE SET name = EXCLUDED.name`;
+
+    // Synthetic market for FK + NOT NULL satisfaction
+    const marketId = 'mkt-' + cfg.outletId;
+    await sql`
+      INSERT INTO markets (id, brand_id, name)
+      VALUES (${marketId}, ${cfg.brandId}, 'Default Market')
+      ON CONFLICT (id) DO NOTHING`;
+
+    // Outlet
+    await sql`
+      INSERT INTO outlets (id, brand_id, market_id, name, outlet_code)
+      VALUES (${cfg.outletId}, ${cfg.brandId}, ${marketId},
+              ${cfg.outletName || 'Outlet'}, ${cfg.outletCode || ''})
+      ON CONFLICT (id) DO UPDATE
+        SET brand_id = EXCLUDED.brand_id,
+            market_id = EXCLUDED.market_id,
+            name = EXCLUDED.name`;
+
+    logger.info('main', 'setup', 'outlet_seeded_locally', { outletCode: cfg.outletCode, brandId: cfg.brandId });
+  } catch (e) {
+    logger.error('main', 'setup', 'seed_outlet_failed', { error: e.message });
+  }
+}
+
 // ── Query helpers ─────────────────────────────────────────────────────────────
 
 async function dbAll(query, params = []) {
@@ -296,6 +332,8 @@ ipcMain.handle('save-config', async (_e, cfg) => {
       terminal_name: cfg.machineId    || '',
     });
     logger.info('main', 'setup', 'db_init_complete', { outletCode: cfg.outletCode });
+    // Seed brand/market/outlet into LOCAL db so menu sync (categories) satisfies FK + NOT NULL constraints
+    await seedOutletLocally(cfg);
     writeConfig(cfg);
     // Update uploader with new server URL and api key
     const uploadBase = cfg.connectionMode === 'cloud' && cfg.cloudApiUrl
