@@ -1367,6 +1367,10 @@ textarea:focus-visible {
       <h1 id="login-rest-name">Restaurant POS</h1>
       <p id="login-outlet-name" style="color:#f97316;font-weight:600;font-size:13px;margin-top:2px"></p>
       <div id="login-version" style="font-size:14px;color:#cbd5e1;margin-top:8px;font-weight:600;letter-spacing:0.5px">v...</div>
+      <div id="login-conn-badge" style="margin-top:6px;font-size:11px;font-weight:700;padding:3px 10px;border-radius:20px;display:inline-block;background:rgba(255,255,255,.08);color:#94a3b8">
+        <span id="login-conn-dot" style="display:inline-block;width:7px;height:7px;border-radius:50%;background:#94a3b8;margin-right:5px;vertical-align:middle"></span>
+        <span id="login-conn-label">Connecting…</span>
+      </div>
     </div>
 
     <!-- PIN pad (direct — no cashier selection step) -->
@@ -1424,6 +1428,10 @@ textarea:focus-visible {
       <span>Started: <b id="hdr-shift-time">—</b></span>
     </div>
     <div class="header-right">
+      <span id="conn-mode-badge" style="font-size:11px;font-weight:700;padding:3px 8px;border-radius:20px;background:rgba(255,255,255,.1);color:#94a3b8;letter-spacing:.3px" title="Connection mode">
+        <span id="conn-mode-dot" style="display:inline-block;width:7px;height:7px;border-radius:50%;background:#94a3b8;margin-right:4px;vertical-align:middle"></span>
+        <span id="conn-mode-label">Connecting…</span>
+      </span>
       <span style="font-size:12px;color:#94a3b8">
         <span class="sync-dot" id="sync-dot"></span>
         <span id="sync-label">Offline</span>
@@ -3118,7 +3126,9 @@ async function init() {
   if (document.getElementById('set-api-url')) document.getElementById('set-api-url').value = apiUrl;
   if (document.getElementById('set-api-key')) document.getElementById('set-api-key').value = apiKey;
 
+  updateConnModeBadge();        // show LOCAL/CLOUD immediately on load
   await checkApiConnectivity();
+  updateConnModeBadge();        // update after first health check
   await pullSyncOutletData();
   setInterval(checkApiConnectivity, 60000);   // re-check every 60s
   setInterval(syncUnsyncedData, 300000);      // background sync every 5 min
@@ -3344,6 +3354,7 @@ async function checkApiConnectivity() {
       if (localUrl && cfg.connectionMode !== 'cloud') {
         apiUrl = localUrl;
         updatePosQsBadge();
+        updateConnModeBadge();
         showToast('Local server restored — reconnected', 'success');
       }
     } else {
@@ -3361,12 +3372,44 @@ async function checkApiConnectivity() {
       _posFallbackActive = true;
       apiUrl = cloudUrl;
       updatePosQsBadge();
+      updateConnModeBadge();
       showToast('Local server unreachable — switched to cloud', 'warning');
     }
   }
 }
 
+// ── Connection mode badge (header + login screen) ────────────────────────────
+function updateConnModeBadge() {
+  const cfg       = window._posConfig || {};
+  const isCloud   = _posFallbackActive || cfg.connectionMode === 'cloud';
+  const isLocal   = !isCloud && cfg.connectionMode === 'local';
+  const isUnknown = !cfg.connectionMode;
+
+  const dot   = isLocal ? '#10b981' : isCloud ? '#f59e0b' : '#94a3b8';
+  const label = isLocal ? '🟢 LOCAL' : isCloud ? '☁️ CLOUD' : 'Connecting…';
+  const bg    = isLocal
+    ? 'rgba(16,185,129,.15)'
+    : isCloud ? 'rgba(245,158,11,.15)' : 'rgba(255,255,255,.08)';
+
+  // Header badge
+  const hDot   = document.getElementById('conn-mode-dot');
+  const hLabel = document.getElementById('conn-mode-label');
+  const hBadge = document.getElementById('conn-mode-badge');
+  if (hDot)   hDot.style.background   = dot;
+  if (hLabel) hLabel.textContent      = label;
+  if (hBadge) hBadge.style.background = bg;
+
+  // Login screen badge
+  const lDot   = document.getElementById('login-conn-dot');
+  const lLabel = document.getElementById('login-conn-label');
+  const lBadge = document.getElementById('login-conn-badge');
+  if (lDot)   lDot.style.background   = dot;
+  if (lLabel) lLabel.textContent      = label;
+  if (lBadge) lBadge.style.background = bg;
+}
+
 function updatePosQsBadge() {
+  updateConnModeBadge();   // keep both in sync
   const badge = document.getElementById('pos-qs-badge');
   if (!badge) return;
   const cfg = window._posConfig || {};
