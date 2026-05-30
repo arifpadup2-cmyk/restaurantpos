@@ -53,28 +53,63 @@ async function seedOutletData (sql, data) {
     // Keep only brand-global rows (outlet_id NULL) or rows for THIS outlet — never
     // another outlet's. Enforces data isolation AND avoids cross-outlet FK errors.
     const mine = (r) => !r.outlet_id || r.outlet_id === thisOutlet
+    const idset = (rows) => new Set((rows || []).map(r => r.id))
+    // Null a FK value if the referenced row wasn't seeded (keeps FKs valid).
+    const fk = (val, set) => (val != null && set.has(val)) ? val : null
 
+    // ── Parents first ──
     if (data.brand)  summary.brands  = await up('brands',  [data.brand],  'id')
-    // Markets seeded before outlets (outlets.market_id → markets FK, NOT NULL).
-    summary.markets = await up('markets', data.markets, 'id')
+    summary.markets = await up('markets', data.markets, 'id')   // outlets.market_id → markets (NOT NULL)
     if (data.outlet) summary.outlets = await up('outlets', [data.outlet], 'id')
 
-    // Null FK columns pointing to tables we don't provision (kitchens, tax_groups, sections).
-    const categories = (data.categories || []).filter(mine).map(r => ({ ...r, kitchen_id: null }))
-    summary.categories = await up('categories', categories, 'id')
+    const taxGroups = (data.tax_groups || []).filter(mine)
+    summary.tax_groups = await up('tax_groups', taxGroups, 'id')
+    const taxIds = idset(taxGroups)
 
-    const catIds = new Set(categories.map(c => c.id))
+    const kitchens = (data.kitchens || []).filter(mine)
+    summary.kitchens = await up('kitchens', kitchens, 'id')
+    const kitchenIds = idset(kitchens)
+
+    const sections = (data.table_sections || []).filter(mine)
+    summary.table_sections = await up('table_sections', sections, 'id')
+    const sectionIds = idset(sections)
+
+    // ── Menu ──
+    const categories = (data.categories || []).filter(mine).map(r => ({ ...r, kitchen_id: fk(r.kitchen_id, kitchenIds) }))
+    summary.categories = await up('categories', categories, 'id')
+    const catIds = idset(categories)
+
     const menu_items = (data.menu_items || [])
       .filter(mine)
-      .filter(r => !r.category_id || catIds.has(r.category_id))  // avoid category_id FK gaps
-      .map(r => ({ ...r, kitchen_id: null, tax_group_id: null }))
+      .filter(r => !r.category_id || catIds.has(r.category_id))
+      .map(r => ({ ...r, kitchen_id: fk(r.kitchen_id, kitchenIds), tax_group_id: fk(r.tax_group_id, taxIds) }))
     summary.menu_items = await up('menu_items', menu_items, 'id')
+    const itemIds = idset(menu_items)
 
+    summary.item_variants = await up('item_variants', (data.item_variants || []).filter(r => itemIds.has(r.item_id)), 'id')
+
+    const modGroups = (data.modifier_groups || [])
+    summary.modifier_groups = await up('modifier_groups', modGroups, 'id')
+    const groupIds = idset(modGroups)
+    summary.modifier_options = await up('modifier_options', (data.modifier_options || []).filter(r => groupIds.has(r.group_id)), 'id')
+    summary.item_modifier_groups = await up('item_modifier_groups',
+      (data.item_modifier_groups || []).filter(r => itemIds.has(r.item_id) && groupIds.has(r.group_id)), 'item_id, group_id')
+
+    // ── Staff ──
     summary.cashiers = await up('cashiers', (data.cashiers || []).filter(mine), 'id')
 
-    // Strip transient lock/order state + unprovisioned section_id when importing tables.
-    const tables = (data.tables_layout || []).map(r => ({ ...r, current_order_id: null, locked_by: null, status: 'available', section_id: null }))
+    // ── Tables (reset transient lock/order state) ──
+    const tables = (data.tables_layout || []).map(r => ({
+      ...r, current_order_id: null, locked_by: null, status: 'available', section_id: fk(r.section_id, sectionIds),
+    }))
     summary.tables_layout = await up('tables_layout', tables, 'id')
+
+    // ── Other outlet config (NO orders/KOT/shifts/expenses — transactional, excluded) ──
+    summary.printers          = await up('printers',          (data.printers || []).filter(mine), 'id')
+    summary.order_types       = await up('order_types',       (data.order_types || []).filter(mine), 'id')
+    summary.pos_button_config = await up('pos_button_config', (data.pos_button_config || []).filter(mine), 'id')
+    summary.payment_methods   = await up('payment_methods',   (data.payment_methods || []).filter(mine), 'id')
+    summary.delivery_partners = await up('delivery_partners', (data.delivery_partners || []).filter(mine), 'id')
 
     summary.settings = await up('settings', data.settings, 'brand_id, outlet_id, key')
   })
@@ -1133,22 +1168,43 @@ module.exports = function setupRouter (sql) {
       if (outlet.brand_active === false) return res.status(403).json({ error: 'Brand license is deactivated.', code: 'DEACTIVATED' })
       if (isExpired(outlet.expires_at)) return res.status(403).json({ error: 'License has expired. Contact your provider.', code: 'EXPIRED' })
 
-      // Brand-shared config (menu, staff) + outlet-specific data (tables, settings).
+      // ALL config/master data for this outlet (brand-shared + outlet-specific).
+      // Excludes transactional data: orders, order_items/KOT, shifts, day_*, expenses, audit.
+      const oScope = sql`brand_id = ${brandId} AND (outlet_id = ${outletId} OR outlet_id IS NULL)`
+
       const [brand] = await sql`SELECT id, name, business_type, country, active FROM brands WHERE id = ${brandId}`
       const markets = await sql`SELECT id, name, brand_id, country, currency_code, currency_symbol, created_at FROM markets WHERE brand_id = ${brandId}`
+      const tax_groups = await sql`SELECT id, name, rate, is_default, created_at, outlet_id, brand_id FROM tax_groups WHERE ${oScope}`
+      const kitchens = await sql`SELECT id, name, color, enabled, sort_order, outlet_id, brand_id FROM kitchens WHERE ${oScope}`
+      const table_sections = await sql`SELECT id, name, sort_order, created_at, brand_id, outlet_id FROM table_sections WHERE ${oScope}`
       const categories = await sql`
         SELECT id, name, sort_order, color, active, synced_at, kitchen_id, outlet_id, brand_id
         FROM categories WHERE brand_id = ${brandId}`
       const menu_items = await sql`
-        SELECT id, category_id, name, price, description, active, synced_at, brand_id, outlet_id, kitchen_id,
+        SELECT id, category_id, name, price, description, active, synced_at, brand_id, outlet_id, kitchen_id, tax_group_id,
                dine_in_price, takeaway_price, delivery_price, online_price
         FROM menu_items WHERE brand_id = ${brandId}`
+      const item_variants = await sql`
+        SELECT id, item_id, name, size, price, active, sort_order
+        FROM item_variants WHERE item_id IN (SELECT id FROM menu_items WHERE brand_id = ${brandId})`
+      const modifier_groups = await sql`SELECT id, brand_id, name, min_select, max_select, required, created_at, type FROM modifier_groups WHERE brand_id = ${brandId}`
+      const modifier_options = await sql`
+        SELECT id, group_id, name, price, active, sort_order
+        FROM modifier_options WHERE group_id IN (SELECT id FROM modifier_groups WHERE brand_id = ${brandId})`
+      const item_modifier_groups = await sql`
+        SELECT item_id, group_id
+        FROM item_modifier_groups WHERE item_id IN (SELECT id FROM menu_items WHERE brand_id = ${brandId})`
       const cashiers = await sql`
         SELECT id, name, pin, pin_hash, role, active, synced, created_at, outlet_id, brand_id
-        FROM cashiers WHERE brand_id = ${brandId} AND (outlet_id = ${outletId} OR outlet_id IS NULL)`
+        FROM cashiers WHERE ${oScope}`
       const tables_layout = await sql`
         SELECT id, name, capacity, status, current_order_id, locked_by, outlet_id, seat_count, section_name, section_id, brand_id
         FROM tables_layout WHERE outlet_id = ${outletId}`
+      const printers = await sql`SELECT id, name, type, ip, port, area, active, role, connection_type, windows_name, paper_width, brand_id, outlet_id FROM printers WHERE ${oScope}`
+      const order_types = await sql`SELECT id, name, enabled, icon, sort_order, logo_url, outlet_id, brand_id, channel_category FROM order_types WHERE ${oScope}`
+      const pos_button_config = await sql`SELECT id, brand_id, button_key, visible, sort_order, outlet_id FROM pos_button_config WHERE ${oScope}`
+      const payment_methods = await sql`SELECT id, name, type, enabled, sort_order, outlet_id, brand_id FROM payment_methods WHERE ${oScope}`
+      const delivery_partners = await sql`SELECT id, name, enabled, commission_rate, logo_url, brand_id, outlet_id FROM delivery_partners WHERE ${oScope}`
       const settings = await sql`
         SELECT key, value, brand_id, outlet_id
         FROM settings WHERE brand_id = ${brandId} AND (outlet_id = ${outletId} OR outlet_id = '')`
@@ -1157,9 +1213,11 @@ module.exports = function setupRouter (sql) {
       res.json({
         ok: true,
         brand: brand || { id: brandId, name: brand_name },
-        markets,
+        markets, tax_groups, kitchens, table_sections,
         outlet: outletRow,
-        categories, menu_items, cashiers, tables_layout, settings,
+        categories, menu_items, item_variants, modifier_groups, modifier_options, item_modifier_groups,
+        cashiers, tables_layout, printers, order_types, pos_button_config, payment_methods, delivery_partners,
+        settings,
       })
     } catch (e) { serverError(res, e) }
   })
@@ -1196,6 +1254,10 @@ module.exports = function setupRouter (sql) {
       }
       if (!data.ok || !data.outlet) return res.status(404).json({ error: 'Outlet not found in cloud.', code: 'NOT_FOUND' })
 
+      // Was this outlet already set up locally? (drives "created" vs "already exists" message)
+      const [preExisting] = await sql`SELECT id FROM outlets WHERE id = ${outletId}`
+      const dbExisted = !!preExisting
+
       // 2) Seed ONLY this outlet's data into the local database
       const seeded = await seedOutletData(sql, data)
 
@@ -1208,6 +1270,7 @@ module.exports = function setupRouter (sql) {
         ok: true, terminal_id: terminalId, api_key: tkRaw,
         brand_id: brandId, brand_name: data.brand?.name || '',
         outlet_id: outletId, outlet_name: data.outlet?.name, outlet_code: data.outlet?.outlet_code,
+        created: !dbExisted,   // true = new local database for this outlet; false = already existed
         seeded,
         db: {
           port:     process.env.DB_PORT || '5432',
@@ -1225,7 +1288,8 @@ module.exports = function setupRouter (sql) {
   router.post('/cloud-verify', async (req, res) => {
     const brandId  = (req.body?.brand_id    || '').trim()
     const outletId = (req.body?.outlet_id   || '').trim()
-    const code     = (req.body?.outlet_code || '').replace(/\s/g, '')
+    // POS sends the code as `code`; accept `outlet_code` too for safety.
+    const code     = (req.body?.code || req.body?.outlet_code || '').replace(/\s/g, '')
     if (!brandId)          return res.status(400).json({ error: 'Brand ID is required', code: 'MISSING_BRAND' })
     if (!outletId)         return res.status(400).json({ error: 'Outlet ID is required', code: 'MISSING_OUTLET' })
     if (code.length !== 6) return res.status(400).json({ error: 'Outlet code must be exactly 6 characters', code: 'INVALID_CODE' })
@@ -1247,6 +1311,40 @@ module.exports = function setupRouter (sql) {
     } catch (e) {
       return res.status(502).json({ error: 'Cannot reach the cloud to verify this outlet: ' + e.message, code: 'CLOUD_UNREACHABLE' })
     }
+  })
+
+  // ── LOCAL: manual "Sync" — re-download THIS outlet's latest data from the cloud.
+  //    Validates + re-seeds; does NOT re-register the terminal (keeps the API key). ──
+  router.post('/sync-outlet', async (req, res) => {
+    const brandId  = (req.body?.brand_id    || '').trim()
+    const outletId = (req.body?.outlet_id   || '').trim()
+    const code     = (req.body?.code || req.body?.outlet_code || '').replace(/\s/g, '')
+    if (!brandId || !outletId || code.length !== 6)
+      return res.status(400).json({ error: 'brand_id, outlet_id and a 6-character outlet_code are required', code: 'BAD_INPUT' })
+
+    const cloudUrl = (process.env.CLOUD_SYNC_URL || '').replace(/\/+$/, '')
+    const cloudKey = process.env.CLOUD_SYNC_KEY || process.env.API_KEY || ''
+    if (!cloudUrl) return res.status(503).json({ error: 'Cloud is not configured on this server.', code: 'NO_CLOUD' })
+
+    try {
+      let data
+      try {
+        const r = await fetch(cloudUrl + '/setup/provision', {
+          method:  'POST',
+          headers: { 'Content-Type': 'application/json', 'x-api-key': cloudKey },
+          body:    JSON.stringify({ brand_id: brandId, outlet_id: outletId, outlet_code: code }),
+          signal:  AbortSignal.timeout(25_000),
+        })
+        data = await r.json().catch(() => ({}))
+        if (!r.ok) return res.status(r.status).json({ error: data.error || 'Cloud rejected the outlet', code: data.code || 'CLOUD_REJECTED' })
+      } catch (e) {
+        return res.status(502).json({ error: 'Cannot reach the cloud: ' + e.message, code: 'CLOUD_UNREACHABLE' })
+      }
+      if (!data.ok || !data.outlet) return res.status(404).json({ error: 'Outlet not found in cloud.', code: 'NOT_FOUND' })
+
+      const seeded = await seedOutletData(sql, data)
+      res.json({ ok: true, outlet_name: data.outlet?.name, seeded })
+    } catch (e) { serverError(res, e) }
   })
 
   return router

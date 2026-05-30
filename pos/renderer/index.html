@@ -1321,6 +1321,9 @@ textarea:focus-visible {
       <!-- Error Message -->
       <div class="setup-error" id="setup-outlet-error"></div>
 
+      <!-- Step-by-step status checklist -->
+      <div id="setup-steps" style="display:none;margin:10px 0;padding:12px 14px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;font-size:13px;line-height:2"></div>
+
       <!-- Confirm & Start Button -->
       <button class="btn-login" id="btn-setup-confirm" onclick="setupFinalize()" disabled style="margin-top:8px">✔ Confirm & Start POS</button>
     </div>
@@ -1428,6 +1431,10 @@ textarea:focus-visible {
     Settings
     <span class="pos-qs-badge local" id="pos-qs-badge">Local</span>
   </button>
+
+  <!-- Sync icon (top-right of screen) -->
+  <button class="pos-qs-btn" id="btn-sync-data" onclick="syncOutletData()" title="Sync latest data from cloud"
+    style="top:16px;right:16px;bottom:auto;padding:6px 10px;font-size:15px">🔄</button>
 
   <!-- Ads panel (left side — full-panel image slider, visible when announcements available) -->
   <div id="login-ads-panel">
@@ -2915,7 +2922,7 @@ textarea:focus-visible {
 </div>
 
 <!-- Day Open Modal -->
-<div id="day-open-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:3000;align-items:center;justify-content:center">
+<div id="day-open-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:9999;align-items:center;justify-content:center">
   <div style="background:var(--card);border-radius:16px;padding:32px 28px;width:90%;max-width:380px;text-align:center;box-shadow:0 8px 32px rgba(0,0,0,.18)">
     <div style="font-size:48px;margin-bottom:12px">📅</div>
     <h2 style="margin:0 0 6px;font-size:20px;font-weight:700">Open Business Day</h2>
@@ -3030,6 +3037,50 @@ let _selectedCustomer = null;
 // ═══════════════════════════════════════════════════════════════
 //  INIT
 // ═══════════════════════════════════════════════════════════════
+// Manual "Sync" — re-download this outlet's latest data from the cloud (icon button).
+async function syncOutletData() {
+  const cfg = window._posConfig || {};
+  const btn = document.getElementById('btn-sync-data');
+  if (!cfg.outletId || !cfg.brandId || !cfg.outletCode) { showToast('Outlet not configured — run setup first.', 'error'); return; }
+  if (btn) { btn.disabled = true; btn.style.opacity = '0.5'; }
+  showToast('⏳ Syncing latest data from cloud…', 'success');
+  try {
+    const base = `http://${cfg.serverIp || 'localhost'}:3001`;
+    const resp = await fetch(base + '/setup/sync-outlet', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ brand_id: cfg.brandId, outlet_id: cfg.outletId, outlet_code: cfg.outletCode }),
+      signal: AbortSignal.timeout(40000),
+    });
+    const d = await resp.json();
+    if (!resp.ok || !d.ok) { showToast('❌ Sync failed: ' + (d.error || 'unknown'), 'error'); return; }
+    const s = d.seeded || {};
+    showToast(`✅ Synced: ${s.categories || 0} categories, ${s.menu_items || 0} items, ${s.cashiers || 0} staff`, 'success');
+    await loadSettings();
+  } catch (e) {
+    showToast('❌ Sync error: ' + (e.name === 'TimeoutError' ? 'timed out' : e.message), 'error');
+  } finally {
+    if (btn) { btn.disabled = false; btn.style.opacity = '1'; }
+  }
+}
+
+// Auto-sync on POS startup — silently pull this outlet's latest data from the cloud
+// (picks up Back Office changes like new staff). No effect / harmless if nothing changed
+// or the cloud is unreachable (POS keeps working on local data).
+async function autoSyncOnStartup() {
+  const cfg = window._posConfig || {};
+  if (!cfg.outletId || !cfg.brandId || !cfg.outletCode) return;
+  try {
+    const base = `http://${cfg.serverIp || 'localhost'}:3001`;
+    const resp = await fetch(base + '/setup/sync-outlet', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ brand_id: cfg.brandId, outlet_id: cfg.outletId, outlet_code: cfg.outletCode }),
+      signal: AbortSignal.timeout(40000),
+    });
+    const d = await resp.json().catch(() => ({}));
+    if (resp.ok && d.ok) await loadSettings();
+  } catch (_) { /* offline / cloud down — ignore */ }
+}
+
 async function init() {
   MACHINE_ID = await posAPI.getMachineId();
 
@@ -3091,6 +3142,7 @@ async function init() {
   if (document.getElementById('set-api-key')) document.getElementById('set-api-key').value = apiKey;
 
   await checkApiConnectivity();
+  autoSyncOnStartup();            // background: pull this outlet's latest data from the cloud on open
   await pullSyncOutletData();
   setInterval(checkApiConnectivity, 60000);   // re-check every 60s
   setInterval(syncUnsyncedData, 300000);      // background sync every 5 min
@@ -4421,7 +4473,8 @@ async function setupVerifyCode() {
     const d = await resp.json();
     if (!resp.ok) { errEl.textContent = '❌ ' + (d.error || 'Code not found'); return; }
     errEl.textContent = '';
-    document.getElementById('setup-code-outlet-name').textContent = '🏪 ' + d.outlet_name;
+    if (typeof setupStepsReset === 'function') setupStepsReset();
+    document.getElementById('setup-code-outlet-name').textContent = '✅ Outlet verified: ' + d.outlet_name;
     document.getElementById('setup-code-brand-name').textContent  = d.brand_name;
     document.getElementById('setup-brand-id').value  = d.brand_id;
     document.getElementById('setup-outlet-id').value = d.outlet_id;
@@ -4433,6 +4486,30 @@ async function setupVerifyCode() {
   }
 }
 
+// Setup status checklist helpers — give the user clear per-step feedback.
+let _setupStepLines = [];
+function setupStepsReset() { _setupStepLines = []; const el = document.getElementById('setup-steps'); if (el) { el.style.display = 'none'; el.innerHTML = ''; } }
+function setupStep(html, replaceLast) {
+  const el = document.getElementById('setup-steps'); if (!el) return;
+  el.style.display = 'block';
+  if (replaceLast && _setupStepLines.length) _setupStepLines[_setupStepLines.length - 1] = html;
+  else _setupStepLines.push(html);
+  el.innerHTML = _setupStepLines.map(s => '<div>' + s + '</div>').join('');
+}
+// Friendly stage label for a server error code (so the user knows WHERE it failed).
+function setupStageLabel(code) {
+  return ({
+    NO_CLOUD:          'Cloud not configured on the local server',
+    CLOUD_UNREACHABLE: 'Could not reach the cloud',
+    CLOUD_REJECTED:    'Cloud rejected the outlet',
+    NOT_FOUND:         'Outlet not found in cloud',
+    SEED_FAILED:       'Saving the outlet data locally failed',
+    MISSING_BRAND:     'Brand ID is missing',
+    MISSING_OUTLET:    'Outlet ID is missing',
+    INVALID_CODE:      'Outlet code must be exactly 6 characters',
+  })[code] || 'Setup failed';
+}
+
 async function setupFinalize() {
   const errEl  = document.getElementById('setup-outlet-error');
   const verRaw = document.getElementById('setup-outlet-code-verified').value;
@@ -4441,14 +4518,15 @@ async function setupFinalize() {
   const mid = document.getElementById('setup-mid').value.trim() || 'POS-01';
   const btn = document.getElementById('btn-setup-confirm');
   btn.disabled = true;
-  errEl.textContent = '⏳ Connecting…';
+  errEl.textContent = '';
+
+  setupStepsReset();
+  setupStep('✅ Outlet verified: <b>' + (verified.outlet_name || verified.outlet_code) + '</b>');
+  setupStep('⏳ Setting up the local database…');
 
   const ip = _setupServerIp || 'localhost';
   const serverBase = `http://${ip}:3001`;
   try {
-    // Validate against the cloud, pull ONLY this outlet's data into the local
-    // database, then register this terminal. Returns api_key + DB settings.
-    errEl.textContent = '⏳ Fetching this outlet’s data from the cloud…';
     const resp = await fetch(serverBase + '/setup/provision-local', {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -4460,7 +4538,13 @@ async function setupFinalize() {
       signal: AbortSignal.timeout(40000),
     });
     const data = await resp.json();
-    if (!resp.ok || !data.ok) { errEl.textContent = '❌ ' + (data.error || 'Setup failed'); btn.disabled = false; return; }
+    if (!resp.ok || !data.ok) {
+      setupStep('❌ ' + setupStageLabel(data.code) + (data.error ? ' — ' + data.error : ''), true);
+      btn.disabled = false; return;
+    }
+    setupStep(data.created ? '✅ New database created for this outlet' : '✅ Database already in system — connected', true);
+    const sm = data.seeded || {};
+    setupStep(`✅ Latest data loaded — ${sm.categories || 0} categories, ${sm.menu_items || 0} items, ${sm.tables_layout || 0} tables`);
 
     const dbInfo = data.db || {};
     // DB runs on the server machine: localhost when same PC, else the server IP entered.
@@ -4486,13 +4570,16 @@ async function setupFinalize() {
       dbSsl:          'false',
     };
     const res = await posAPI.saveConfig(cfg);
-    if (!res.ok) { errEl.textContent = `❌ Database connection failed: ${res.error}`; btn.disabled = false; return; }
+    if (!res.ok) { setupStep('❌ Local database connection failed — ' + res.error, true); btn.disabled = false; return; }
+    setupStep('✅ Connected — starting POS…');
     window._posConfig = cfg;
-    errEl.textContent = '';
-    document.getElementById('screen-setup').style.display = 'none';
-    await init();
+    setTimeout(async () => {
+      document.getElementById('screen-setup').style.display = 'none';
+      document.getElementById('screen-login').style.display = 'flex';  // restore login screen (was hidden by showSetupScreen)
+      await init();
+    }, 800);
   } catch (e) {
-    errEl.textContent = '❌ ' + e.message;
+    setupStep('❌ Could not reach the server (' + (_setupServerIp || 'localhost') + ':3001) — ' + e.message, true);
     btn.disabled = false;
   }
 }
@@ -4744,10 +4831,24 @@ async function verifyPin() {
   buttons.forEach(b => { b.disabled = true; b.style.opacity = '0.5'; });
 
   try {
-    // Look up cashier by PIN in local DB
-    const r = await db.all('SELECT * FROM cashiers WHERE pin=? AND active=1 LIMIT 1', [pinBuffer]);
+    // Look up cashier by PIN — SCOPED to the configured outlet only. The local DB
+    // may hold other outlets' data; never authenticate against another outlet.
+    const _cfg = window._posConfig || {};
+    const r = await db.all(
+      'SELECT * FROM cashiers WHERE pin=? AND active=1 AND brand_id=? AND (outlet_id=? OR outlet_id IS NULL) LIMIT 1',
+      [pinBuffer, _cfg.brandId || '', _cfg.outletId || '']
+    );
     if (!r.ok || !r.data.length) {
-      pinError('Invalid PIN. Try again.');
+      // Distinguish "wrong PIN" from "this outlet has no staff at all".
+      const cnt = await db.get(
+        'SELECT COUNT(*)::int AS c FROM cashiers WHERE active=1 AND brand_id=? AND (outlet_id=? OR outlet_id IS NULL)',
+        [_cfg.brandId || '', _cfg.outletId || '']
+      );
+      if (cnt.ok && cnt.data && cnt.data.c === 0) {
+        pinError('No staff set up for this outlet. Add staff in Back Office, then press 🔄 Sync.');
+      } else {
+        pinError('Invalid PIN. Try again.');
+      }
       return;
     }
     selectedCashier = r.data[0];
