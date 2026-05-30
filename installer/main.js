@@ -1,5 +1,7 @@
 const { app, BrowserWindow, ipcMain } = require('electron')
 const path = require('path')
+const fs = require('fs')
+const os = require('os')
 
 let mainWindow
 
@@ -174,6 +176,37 @@ const startServerInstallation = async (brandId, outletId, outletCode) => {
       status: 'done'
     })
 
+    // Create desktop shortcut using PowerShell
+    const desktopPath = path.join(os.homedir(), 'Desktop')
+    const shortcutPath = path.join(desktopPath, 'Restaurant POS.lnk')
+    const posDir = 'D:\\sofwtares\\RESTAURANT POS\\pos'
+
+    try {
+      const psScript = `$desktopPath = [Environment]::GetFolderPath("Desktop")\n$shortcutPath = Join-Path $desktopPath "Restaurant POS.lnk"\n$posDir = "${posDir}"\n\n$shell = New-Object -ComObject WScript.Shell\n$shortcut = $shell.CreateShortcut($shortcutPath)\n$shortcut.TargetPath = "cmd.exe"\n$shortcut.Arguments = "/c cd /d \\"$posDir\\" && npx electron ."\n$shortcut.Description = "Restaurant POS System"\n$shortcut.WorkingDirectory = $posDir\n$shortcut.Save()\n\nWrite-Output "Shortcut created"`
+      const scriptPath = path.join(require('os').tmpdir(), `create-shortcut-${Date.now()}.ps1`)
+      fs.writeFileSync(scriptPath, psScript, 'utf8')
+      execSync(`powershell.exe -NoProfile -ExecutionPolicy Bypass -File "${scriptPath}"`, { encoding: 'utf8', stdio: 'pipe', timeout: 10000 })
+      fs.unlinkSync(scriptPath)
+      mainWindow.webContents.send('install-log', '✓ Desktop shortcut created')
+    } catch (e) {
+      mainWindow.webContents.send('install-log', 'Shortcut: ' + (e.message || 'unknown'))
+    }
+
+    // Launch POS application after brief delay
+    setTimeout(() => {
+      try {
+        const posExePath = path.join(posDir, 'pos.exe')
+        if (fs.existsSync(posExePath)) {
+          execSync(`"${posExePath}"`, { detached: true, stdio: 'ignore', windowsHide: true })
+        } else {
+          execSync(`powershell -NoProfile -Command "cd '${posDir}'; npx electron ."`, { detached: true, stdio: 'ignore', windowsHide: true })
+        }
+        mainWindow.webContents.send('install-log', '✓ POS launching...')
+      } catch (e) {
+        mainWindow.webContents.send('install-log', 'POS launch: ' + e.message)
+      }
+    }, 2000)
+
     mainWindow.webContents.send('install-complete', {
       ip: serverIP,
       adminUrl: `http://${serverIP}:3001`,
@@ -182,6 +215,11 @@ const startServerInstallation = async (brandId, outletId, outletCode) => {
         password: 'Admin@1234'
       }
     })
+
+    // Close installer after 2 seconds
+    setTimeout(() => {
+      app.quit()
+    }, 2000)
   } catch (error) {
     mainWindow.webContents.send('install-error', {
       step: 'unknown',

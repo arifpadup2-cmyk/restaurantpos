@@ -50,6 +50,11 @@
         "from": "scripts/",
         "to": "scripts/",
         "filter": ["**/*.js"]
+      },
+      {
+        "from": "server/",
+        "to": "server/",
+        "filter": ["**/*"]
       }
     ],
     "files": [

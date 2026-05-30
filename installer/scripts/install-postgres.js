@@ -64,7 +64,7 @@ const installPostgreSQL = async (onLog) => {
 
 const createDatabase = async (psqlPath, outletId, onLog) => {
   try {
-    const postgresPassword = 'POS_Admin_2026!'
+    const postgresPassword = '123456'
 
     // Outlet-specific database and user
     const dbName = `pos_outlet_${outletId.toLowerCase().replace(/[^a-z0-9]/g, '_')}`

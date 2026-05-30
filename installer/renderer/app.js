@@ -17,6 +17,11 @@ const selectServerSetup = () => {
   checkSystem()
 }
 
+// Skip Server Info screen - go directly to installation
+const proceedToInstall = () => {
+  startServerInstallation()
+}
+
 const selectTerminalSetup = () => {
   installMode = 'terminal'
   showScreen('terminal-check-screen')
@@ -32,23 +37,15 @@ const goToServerInfo = () => {
 }
 
 const startServerInstallation = async () => {
-  const brandId = document.getElementById('brand-id').value
-  const outletId = document.getElementById('outlet-id').value
-  const outletCode = document.getElementById('outlet-code').value
-
-  if (!brandId.trim() || !outletId.trim() || !outletCode.trim()) {
-    alert('Please enter brand ID, outlet ID, and outlet code')
-    return
-  }
-
+  // Don't ask for outlet details - they'll be configured in POS later
   showScreen('server-installing-screen')
   clearLog('server')
 
   window.installAPI.startInstall({
     mode: 'server',
-    brandId,
-    outletId,
-    outletCode
+    brandId: 'DEFAULT',
+    outletId: 'DEFAULT',
+    outletCode: 'DEFAULT'
   })
 }
 

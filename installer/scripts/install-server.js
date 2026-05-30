@@ -17,16 +17,26 @@ const getLocalIP = () => {
 
 const installServer = async (brandId, outletId, outletCode, dbName, dbUser, dbPassword, onLog) => {
   try {
-    const serverInstallDir = 'C:\\Program Files\\Restaurant POS Server'
+    const serverInstallDir = 'C:\\RestaurantPOS\\Server'
     const sourceDir = path.join(__dirname, '..', '..', 'server')
+    const posDir = path.join(__dirname, '..', '..', 'pos')
 
     onLog('Creating server directory...')
-    if (!fs.existsSync(serverInstallDir)) {
-      fs.mkdirSync(serverInstallDir, { recursive: true })
+    if (fs.existsSync(serverInstallDir)) {
+      // Remove old installation
+      fs.rmSync(serverInstallDir, { recursive: true, force: true })
     }
+    fs.mkdirSync(serverInstallDir, { recursive: true })
 
     onLog('Copying server files...')
     copyRecursive(sourceDir, serverInstallDir, ['node_modules', '.git', '.env', '.env.local'])
+
+    onLog('Copying POS migrations...')
+    const posmigrationsDir = path.join(posDir, 'migrations')
+    const serverMigrationsDir = path.join(serverInstallDir, 'migrations')
+    if (fs.existsSync(posmigrationsDir)) {
+      copyRecursive(posmigrationsDir, serverMigrationsDir)
+    }
 
     onLog('Writing outlet-specific configuration...')
     const envContent = `
@@ -76,38 +86,16 @@ OUTLET_CODE=${outletCode}
 
 const configureAutoStart = async (onLog) => {
   try {
-    onLog('Installing PM2...')
-    execSync('npm install -g pm2', { stdio: 'pipe' })
+    const serverInstallDir = 'C:\\RestaurantPOS\\Server'
 
-    onLog('Configuring PM2 auto-startup...')
-    execSync('pm2 startup', { stdio: 'pipe' })
+    // Create a simple batch file for starting the server
+    const startBatch = `@echo off\ncd /d "${serverInstallDir}"\nnode index.js\n`
+    fs.writeFileSync(path.join(serverInstallDir, 'START-SERVER.bat'), startBatch)
 
-    const serverInstallDir = 'C:\\Program Files\\Restaurant POS Server'
-    const ecosystemConfig = `
-module.exports = {
-  apps: [{
-    name: 'restaurant-pos-server',
-    script: 'index.js',
-    cwd: '${serverInstallDir}',
-    instances: 1,
-    autorestart: true,
-    watch: false,
-    max_memory_restart: '512M',
-    env: {
-      NODE_ENV: 'production'
-    }
-  }]
-}
-`.trim()
-
-    fs.writeFileSync(path.join(serverInstallDir, 'ecosystem.config.js'), ecosystemConfig)
-
-    execSync(`pm2 start "${serverInstallDir}\\ecosystem.config.js"`, { stdio: 'pipe' })
-    execSync('pm2 save', { stdio: 'pipe' })
-
-    onLog('✓ Auto-startup configured')
+    onLog('✓ Server startup script created')
+    onLog('Server can be started manually using: C:\\RestaurantPOS\\Server\\START-SERVER.bat')
   } catch (error) {
-    throw new Error(`Auto-startup configuration failed: ${error.message}`)
+    onLog(`⚠ Auto-startup configuration warning: ${error.message}`)
   }
 }
 
