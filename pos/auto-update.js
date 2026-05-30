@@ -13,7 +13,7 @@ const UPDATE_INTERVAL = 86400000; // 24 hours
 
 class AutoUpdate {
   constructor() {
-    this.currentVersion = require('../package.json').version;
+    this.currentVersion = require('./package.json').version;
     this.updateCheckTime = 0;
     this.updateAvailable = false;
     this.latestRelease = null;

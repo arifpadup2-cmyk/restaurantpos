@@ -8514,5 +8514,17 @@ function _svgDelivery(c) {
 <!-- Auto-update scripts -->
 <script src="auto-update-ui.js"></script>
 
+<script>
+// Set version badge from main process (reliable — reads app.getVersion() not require)
+(async function setVersionBadge() {
+  try {
+    const ver = await window.posAPI.getAppVersion();
+    const el = document.getElementById('version-current');
+    if (el) el.textContent = ver;
+    PosLog?.info('app', 'version_loaded', { version: ver });
+  } catch (_) {}
+})();
+</script>
+
 </body>
 </html>

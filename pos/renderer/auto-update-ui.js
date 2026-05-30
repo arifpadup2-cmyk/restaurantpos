@@ -19,16 +19,16 @@ const CHECK_INTERVAL = 4 * 60 * 60 * 1000; // 4 hours
  */
 function initializeAutoUpdate() {
   console.log('[UI] Initializing auto-update system...');
-  autoUpdater = new AutoUpdate();
 
-  // Load last check time from localStorage
-  loadLastCheckTime();
-
-  // Display current version
-  displayCurrentVersion();
-
-  // Check for updates on startup
-  checkForUpdatesOnStartup();
+  // Use IPC-based check (nodeIntegration=false means require() won't work)
+  if (window.posAPI?.checkForUpdates) {
+    loadLastCheckTime();
+    checkForUpdatesOnStartup();
+    startCountdownTimer();
+    setupEventListeners();
+    checkInterval = setInterval(checkForUpdatesOnStartup, CHECK_INTERVAL);
+  }
+}
 
   // Setup event listeners
   setupEventListeners();

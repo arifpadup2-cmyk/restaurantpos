@@ -266,6 +266,8 @@ ipcMain.handle('get-machine-id', () => {
 ipcMain.handle('get-config', () => readConfig());
 
 // ── Logging IPC ───────────────────────────────────────────────────────────────
+ipcMain.handle('get-app-version', () => app.getVersion());
+
 ipcMain.handle('log-upload-now', async () => {
   try { await uploader.upload(); return { ok: true }; }
   catch (e) { return { ok: false, error: e.message }; }

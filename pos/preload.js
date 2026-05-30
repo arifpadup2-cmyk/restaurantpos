@@ -10,6 +10,7 @@ contextBridge.exposeInMainWorld('posAPI', {
   getPrinters:      () => ipcRenderer.invoke('get-printers'),
   toggleFullscreen: () => ipcRenderer.invoke('toggle-fullscreen'),
   getMachineId:     () => ipcRenderer.invoke('get-machine-id'),
+  getAppVersion:    () => ipcRenderer.invoke('get-app-version'),
   getConfig:        () => ipcRenderer.invoke('get-config'),
   saveConfig:       (cfg) => ipcRenderer.invoke('save-config', cfg),
   testConnection:   (cfg) => ipcRenderer.invoke('test-connection', cfg),
