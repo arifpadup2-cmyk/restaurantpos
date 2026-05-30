@@ -321,6 +321,7 @@ ipcMain.handle('toggle-fullscreen', () => {
 });
 
 ipcMain.handle('quit-app', () => { app.quit(); });
+ipcMain.handle('minimize-app', () => { if (mainWindow) mainWindow.minimize(); });
 
 ipcMain.handle('get-printers', async () => {
   try {

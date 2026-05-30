@@ -10,6 +10,7 @@ contextBridge.exposeInMainWorld('posAPI', {
   getPrinters:      () => ipcRenderer.invoke('get-printers'),
   toggleFullscreen: () => ipcRenderer.invoke('toggle-fullscreen'),
   quitApp:          () => ipcRenderer.invoke('quit-app'),
+  minimizeApp:      () => ipcRenderer.invoke('minimize-app'),
   getMachineId:     () => ipcRenderer.invoke('get-machine-id'),
   getCloudApiUrl:   () => ipcRenderer.invoke('get-cloud-api-url'),
   getAppVersion:    () => ipcRenderer.invoke('get-app-version'),
