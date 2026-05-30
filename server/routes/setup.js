@@ -107,7 +107,7 @@ async function seedOutletData (sql, data) {
     // ── Other outlet config (NO orders/KOT/shifts/expenses — transactional, excluded) ──
     summary.printers          = await up('printers',          (data.printers || []).filter(mine), 'id')
     summary.order_types       = await up('order_types',       (data.order_types || []).filter(mine), 'id')
-    summary.pos_button_config = await up('pos_button_config', (data.pos_button_config || []).filter(mine), 'id')
+    // pos_button_config has no PK and is served separately via /sync/pos-config — skip.
     summary.payment_methods   = await up('payment_methods',   (data.payment_methods || []).filter(mine), 'id')
     summary.delivery_partners = await up('delivery_partners', (data.delivery_partners || []).filter(mine), 'id')
 
