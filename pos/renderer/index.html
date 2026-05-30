@@ -1154,66 +1154,67 @@ textarea:focus-visible {
         </div>
       </button>
 
-      <!-- CLOUD MODE OPTION -->
-      <button style="width:100%;padding:16px;border:2px solid #e5e7eb;border-radius:12px;background:#fff;cursor:pointer;text-align:left;transition:all .2s"
-        id="mode-cloud-btn" onclick="setupSelectMode('cloud')"
-        onmouseover="this.style.borderColor='#10b981';this.style.background='#f0fdf4'"
-        onmouseout="this.style.borderColor='#e5e7eb';this.style.background='#fff'">
+      <!-- CLOUD MODE OPTION (temporarily disabled — coming in a later stage) -->
+      <button style="width:100%;padding:16px;border:2px solid #e5e7eb;border-radius:12px;background:#f9fafb;cursor:not-allowed;text-align:left;opacity:.55"
+        id="mode-cloud-btn" disabled aria-disabled="true">
         <div style="display:flex;align-items:center;gap:12px">
           <div style="font-size:24px">☁️</div>
           <div>
-            <div style="font-size:14px;font-weight:700;color:#1f2937">Cloud Direct</div>
-            <div style="font-size:12px;color:#6b7280">Always connected • Requires internet</div>
+            <div style="font-size:14px;font-weight:700;color:#6b7280">Cloud Direct</div>
+            <div style="font-size:12px;color:#9ca3af">Coming soon</div>
           </div>
         </div>
       </button>
 
     </div>
 
-    <!-- Step 2: Local Mode Setup -->
+    <!-- Step 2: Where is the server? -->
     <div class="setup-step" id="setup-step-local">
-      <div style="font-size:15px;font-weight:700;color:#1f2937;margin-bottom:4px">Local Database Setup</div>
+      <div style="font-size:15px;font-weight:700;color:#1f2937;margin-bottom:4px">Where is your server?</div>
       <div style="font-size:13px;color:#6b7280;margin-bottom:20px;line-height:1.6">
-        Enter your outlet details. A local database will be created automatically.
+        Choose where the POS server (database) is running.
       </div>
 
-      <!-- Brand ID -->
-      <div class="setup-field">
-        <label>🏢 Brand ID</label>
-        <input id="setup-brand-id-local" type="text" placeholder="e.g. REST-GPPE8G" autocomplete="off" autocapitalize="none"
-          onkeydown="event.stopPropagation()">
-        <span class="setup-hint">Your restaurant chain identifier</span>
-      </div>
+      <!-- THIS COMPUTER -->
+      <button style="width:100%;padding:16px;border:2px solid #e5e7eb;border-radius:12px;background:#fff;margin-bottom:12px;cursor:pointer;text-align:left;transition:all .2s"
+        id="srv-here-btn" onclick="setupServerLocation('here')"
+        onmouseover="this.style.borderColor='#3b82f6';this.style.background='#eff6ff'"
+        onmouseout="if(!this.classList.contains('srv-sel')){this.style.borderColor='#e5e7eb';this.style.background='#fff'}">
+        <div style="display:flex;align-items:center;gap:12px">
+          <div style="font-size:24px">🖥️</div>
+          <div>
+            <div style="font-size:14px;font-weight:700;color:#1f2937">This Computer</div>
+            <div style="font-size:12px;color:#6b7280">The server runs on this same PC</div>
+          </div>
+        </div>
+      </button>
 
-      <!-- Outlet ID (this will be the database name) -->
-      <div class="setup-field">
-        <label>🏪 Outlet ID (Database Name)</label>
-        <input id="setup-outlet-id-local" type="text" placeholder="e.g. outlet_001" autocomplete="off" autocapitalize="none"
+      <!-- ANOTHER COMPUTER -->
+      <button style="width:100%;padding:16px;border:2px solid #e5e7eb;border-radius:12px;background:#fff;margin-bottom:12px;cursor:pointer;text-align:left;transition:all .2s"
+        id="srv-other-btn" onclick="setupServerLocation('other')"
+        onmouseover="this.style.borderColor='#3b82f6';this.style.background='#eff6ff'"
+        onmouseout="if(!this.classList.contains('srv-sel')){this.style.borderColor='#e5e7eb';this.style.background='#fff'}">
+        <div style="display:flex;align-items:center;gap:12px">
+          <div style="font-size:24px">🌐</div>
+          <div>
+            <div style="font-size:14px;font-weight:700;color:#1f2937">Another Computer</div>
+            <div style="font-size:12px;color:#6b7280">The server runs on a different PC on the network</div>
+          </div>
+        </div>
+      </button>
+
+      <!-- IP field (only shown when "Another Computer" is chosen) -->
+      <div class="setup-field" id="srv-ip-field" style="display:none;margin-top:4px">
+        <label>🔌 Server IP Address</label>
+        <input id="setup-server-ip" type="text" placeholder="e.g. 192.168.1.10" autocomplete="off"
           style="font-family:monospace;letter-spacing:0.5px"
-          onkeydown="event.stopPropagation()">
-        <span class="setup-hint">Unique ID for this outlet (becomes database name like: <strong>outlet_001</strong>)</span>
-      </div>
-
-      <!-- Outlet Code -->
-      <div class="setup-field">
-        <label>📍 Outlet Code</label>
-        <input id="setup-outlet-code-local" type="text" placeholder="e.g. OUTLET001" autocomplete="off" autocapitalize="none"
-          style="font-family:monospace;letter-spacing:0.5px"
-          onkeydown="event.stopPropagation()">
-        <span class="setup-hint">Short alphanumeric code for this outlet</span>
-      </div>
-
-      <!-- Terminal Name -->
-      <div class="setup-field">
-        <label>💻 Terminal Name</label>
-        <input id="setup-terminal-name-local" type="text" placeholder="e.g. POS-01" autocomplete="off"
-          onkeydown="event.stopPropagation()">
-        <span class="setup-hint">Name for this POS terminal (for logs and reports)</span>
+          onkeydown="if(event.key==='Enter'){event.preventDefault();setupServerContinue()}else{event.stopPropagation()}">
+        <span class="setup-hint">The IP address of the computer running the server</span>
       </div>
 
       <div class="setup-error" id="setup-local-error"></div>
 
-      <button class="btn-login" onclick="setupCreateLocalDatabase()" style="width:100%;margin-bottom:8px">📦 Create Database & Download Data</button>
+      <button class="btn-login" id="btn-srv-continue" onclick="setupServerContinue()" style="width:100%;margin-bottom:8px;display:none">Continue →</button>
       <button style="width:100%;padding:12px;border:2px solid #e5e7eb;border-radius:8px;background:#f9fafb;cursor:pointer;font-size:14px;color:#6b7280" onclick="setupSelectMode(null)">← Back</button>
     </div>
 
@@ -1263,41 +1264,41 @@ textarea:focus-visible {
       <button style="width:100%;padding:12px;border:2px solid #e5e7eb;border-radius:8px;background:#f9fafb;cursor:pointer;font-size:14px;color:#6b7280" onclick="setupSelectMode(null)">← Back</button>
     </div>
 
-    <!-- Step 2: Outlet code -->
+    <!-- Step 3: Outlet details -->
     <div class="setup-step" id="setup-step-outlet">
-      <div style="font-size:16px;font-weight:700;color:#10b981;margin-bottom:4px">✅ Server Connected!</div>
+      <div style="font-size:16px;font-weight:700;color:#10b981;margin-bottom:4px" id="setup-outlet-heading">✅ Server Connected!</div>
       <div style="font-size:13px;color:#6b7280;margin-bottom:24px;line-height:1.6">
-        Now enter your restaurant's identifiers. You can get these from your IT administrator or from the setup guide.
+        Enter your outlet details to connect this terminal. All three are required for security.
       </div>
 
-      <!-- Brand ID Field -->
+      <!-- Brand ID -->
       <div class="setup-field">
         <label>🏢 Brand ID</label>
-        <input id="setup-brand-id" type="text" placeholder="e.g. REST-AB3X9K" autocomplete="off" autocapitalize="none" autocorrect="off"
+        <input id="setup-brand-id" type="text" placeholder="e.g. REST-GPPE8G" autocomplete="off" autocapitalize="characters" autocorrect="off"
           oninput="setupCodeChanged()"
           onkeydown="event.stopPropagation()"
           style="font-family:monospace;letter-spacing:0.5px">
-        <span class="setup-hint">Your restaurant chain's unique identifier</span>
+        <span class="setup-hint">Your restaurant chain identifier (from Back Office)</span>
       </div>
 
-      <!-- Outlet ID Field -->
+      <!-- Outlet ID -->
       <div class="setup-field">
         <label>🏪 Outlet ID</label>
-        <input id="setup-outlet-id" type="text" placeholder="e.g. OUTLET-001" autocomplete="off" autocapitalize="none" autocorrect="off"
+        <input id="setup-outlet-id" type="text" placeholder="e.g. 565B10A0AD" autocomplete="off" autocapitalize="characters" autocorrect="off"
           oninput="setupCodeChanged()"
           onkeydown="event.stopPropagation()"
           style="font-family:monospace;letter-spacing:0.5px">
-        <span class="setup-hint">The unique identifier for this outlet/branch</span>
+        <span class="setup-hint">The unique ID for this outlet (from Back Office)</span>
       </div>
 
-      <!-- Outlet Code Field -->
+      <!-- Outlet Code -->
       <div class="setup-field">
-        <label>🏪 Outlet Code</label>
-        <input id="setup-outlet-code" type="text" placeholder="e.g. OUTLET001" autocomplete="off" autocapitalize="none" autocorrect="off"
+        <label>📍 Outlet Code</label>
+        <input id="setup-outlet-code" type="text" maxlength="6" placeholder="e.g. YK767P" autocomplete="off" autocapitalize="characters" autocorrect="off"
           oninput="setupCodeChanged()"
           onkeydown="if(event.key==='Enter'){event.preventDefault();setupVerifyCode()}else{event.stopPropagation()}"
-          style="font-family:monospace;font-size:16px;letter-spacing:1px;text-align:left">
-        <span class="setup-hint">The outlet code (alphanumeric identifier)</span>
+          style="font-family:monospace;font-size:18px;letter-spacing:2px;text-align:center;text-transform:uppercase">
+        <span class="setup-hint">The 6-character outlet code (from Back Office)</span>
       </div>
 
       <!-- Verification Button -->
@@ -4034,27 +4035,85 @@ function renderCashierGrid() {
 let _setupMode = 'new';
 let _setupConnMode = 'local'; // 'local' | 'cloud'
 
+let _setupServerIp = '';
+
 function setupSelectMode(mode) {
   if (!mode) {
-    // Back button - go to mode selection
+    // Back button - return to mode selection
     document.getElementById('setup-step-mode').classList.add('active');
     document.getElementById('setup-step-local').classList.remove('active');
     document.getElementById('setup-step-cloud').classList.remove('active');
+    document.getElementById('setup-step-outlet').classList.remove('active');
     return;
   }
+  if (mode === 'cloud') return; // Cloud is temporarily disabled — coming in a later stage
 
-  _setupConnMode = mode;
+  _setupConnMode = 'local';
+  _setupServerIp = '';
+  // Reset the server-location chooser
+  const hereBtn = document.getElementById('srv-here-btn');
+  const otherBtn = document.getElementById('srv-other-btn');
+  [hereBtn, otherBtn].forEach(b => { if (b) { b.classList.remove('srv-sel'); b.style.borderColor = '#e5e7eb'; b.style.background = '#fff'; } });
+  document.getElementById('srv-ip-field').style.display = 'none';
+  document.getElementById('btn-srv-continue').style.display = 'none';
+  document.getElementById('setup-local-error').textContent = '';
+
   document.getElementById('setup-step-mode').classList.remove('active');
+  document.getElementById('setup-step-outlet').classList.remove('active');
+  document.getElementById('setup-step-local').classList.add('active');
+}
 
-  if (mode === 'local') {
-    document.getElementById('setup-step-local').classList.add('active');
-    // Focus first field
-    setTimeout(() => document.getElementById('setup-brand-id-local')?.focus(), 100);
+// User picks where the server is: 'here' (this PC = localhost) or 'other' (enter IP)
+function setupServerLocation(loc) {
+  const hereBtn  = document.getElementById('srv-here-btn');
+  const otherBtn = document.getElementById('srv-other-btn');
+  const ipField  = document.getElementById('srv-ip-field');
+  const contBtn  = document.getElementById('btn-srv-continue');
+  document.getElementById('setup-local-error').textContent = '';
+
+  if (loc === 'here') {
+    hereBtn.classList.add('srv-sel');  hereBtn.style.borderColor = '#3b82f6';  hereBtn.style.background = '#eff6ff';
+    otherBtn.classList.remove('srv-sel'); otherBtn.style.borderColor = '#e5e7eb'; otherBtn.style.background = '#fff';
+    ipField.style.display = 'none';
+    contBtn.style.display = 'none';
+    _setupServerIp = 'localhost';
+    setupGoToOutlet();
   } else {
-    document.getElementById('setup-step-cloud').classList.add('active');
-    // Focus first field
-    setTimeout(() => document.getElementById('setup-brand-id-cloud')?.focus(), 100);
+    otherBtn.classList.add('srv-sel'); otherBtn.style.borderColor = '#3b82f6'; otherBtn.style.background = '#eff6ff';
+    hereBtn.classList.remove('srv-sel'); hereBtn.style.borderColor = '#e5e7eb'; hereBtn.style.background = '#fff';
+    ipField.style.display = '';
+    contBtn.style.display = '';
+    setTimeout(() => document.getElementById('setup-server-ip')?.focus(), 100);
   }
+}
+
+function setupServerContinue() {
+  const ip = (document.getElementById('setup-server-ip').value || '').trim();
+  const errEl = document.getElementById('setup-local-error');
+  if (!ip) { errEl.textContent = '❌ Enter the server IP address.'; return; }
+  _setupServerIp = ip;
+  setupGoToOutlet();
+}
+
+// Confirm the server is reachable, then show the outlet-code step
+async function setupGoToOutlet() {
+  const errEl = document.getElementById('setup-local-error');
+  errEl.textContent = '⏳ Connecting to server…';
+  const base = `http://${_setupServerIp}:3001`;
+  try {
+    const resp = await fetch(base + '/health', { signal: AbortSignal.timeout(6000) });
+    if (!resp.ok) throw new Error('not ok');
+  } catch (e) {
+    errEl.textContent = `❌ Cannot reach the server at ${_setupServerIp}:3001. Make sure the server is running.`;
+    return;
+  }
+  errEl.textContent = '';
+  document.getElementById('setup-step-local').classList.remove('active');
+  document.getElementById('setup-step-outlet').classList.add('active');
+  setupCodeChanged();
+  const mid = document.getElementById('setup-mid');
+  if (mid && !mid.value) mid.value = (await posAPI.getMachineId()) || 'POS-01';
+  setTimeout(() => document.getElementById('setup-outlet-code')?.focus(), 100);
 }
 
 async function setupCreateLocalDatabase() {
@@ -4232,11 +4291,16 @@ function setSetupMode(mode) {
 function showSetupScreen(subtitle) {
   if (subtitle) document.getElementById('setup-subtitle').textContent = subtitle;
   const cfg = window._posConfig || {};
-  if (cfg.machineId) document.getElementById('setup-mid').value = cfg.machineId;
-  if (cfg.brandId)   { const el = document.getElementById('setup-brand-id'); if (el) el.value = cfg.brandId; }
+  const midEl = document.getElementById('setup-mid');
+  if (cfg.machineId && midEl) midEl.value = cfg.machineId;
   document.getElementById('screen-setup').style.display = 'flex';
   document.getElementById('screen-login').style.display  = 'none';
-  setupAutoDetect();
+  // Always start at "How do you want to run this outlet?" (mode selection)
+  _setupConnMode = 'local';
+  _setupServerIp = '';
+  document.getElementById('setup-step-mode').classList.add('active');
+  ['setup-step-local','setup-step-cloud','setup-step-outlet'].forEach(id =>
+    document.getElementById(id)?.classList.remove('active'));
 }
 
 function setupSetProgress(pct, msg) {
@@ -4333,28 +4397,25 @@ function setupCodeChanged() {
 }
 
 async function setupVerifyCode() {
-  const codeEl    = document.getElementById('setup-outlet-code');
-  const brandIdEl = document.getElementById('setup-brand-id');
-  const errEl     = document.getElementById('setup-outlet-error');
+  const codeEl     = document.getElementById('setup-outlet-code');
+  const errEl      = document.getElementById('setup-outlet-error');
   const confirmDiv = document.getElementById('setup-code-confirm');
-  const code    = codeEl.value.trim().toUpperCase();
-  const brandId = (brandIdEl?.value || '').trim();
+  const brandId  = document.getElementById('setup-brand-id').value.trim();
+  const outletId = document.getElementById('setup-outlet-id').value.trim();
+  const code     = codeEl.value.trim().toUpperCase();
   errEl.textContent = '';
   confirmDiv.style.display = 'none';
   document.getElementById('btn-setup-confirm').disabled = true;
-  if (!brandId) { errEl.textContent = '❌ Enter your Brand ID.'; return; }
+  if (!brandId)  { errEl.textContent = '❌ Enter your Brand ID.';  return; }
+  if (!outletId) { errEl.textContent = '❌ Enter your Outlet ID.'; return; }
   if (code.length !== 6) { errEl.textContent = '❌ Enter the full 6-character outlet code.'; return; }
 
-  const data = _setupAutoData || {};
-  const ip   = data._ip || 'localhost';
-  const isCloud = _setupConnMode === 'cloud';
-  const serverBase = isCloud ? (data._cloudUrl || '') : (ip.startsWith('http') ? ip : `http://${ip}:3001`);
-
+  const serverBase = `http://${_setupServerIp || 'localhost'}:3001`;
   errEl.textContent = '⏳ Verifying…';
   try {
     const resp = await fetch(serverBase + '/setup/by-code', {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ code, brand_id: brandId }),
+      body: JSON.stringify({ code, brand_id: brandId, outlet_id: outletId }),
       signal: AbortSignal.timeout(6000),
     });
     const d = await resp.json();
@@ -4362,6 +4423,8 @@ async function setupVerifyCode() {
     errEl.textContent = '';
     document.getElementById('setup-code-outlet-name').textContent = '🏪 ' + d.outlet_name;
     document.getElementById('setup-code-brand-name').textContent  = d.brand_name;
+    document.getElementById('setup-brand-id').value  = d.brand_id;
+    document.getElementById('setup-outlet-id').value = d.outlet_id;
     confirmDiv.style.display = '';
     document.getElementById('setup-outlet-code-verified').value = JSON.stringify(d);
     document.getElementById('btn-setup-confirm').disabled = false;
@@ -4375,43 +4438,63 @@ async function setupFinalize() {
   const verRaw = document.getElementById('setup-outlet-code-verified').value;
   if (!verRaw) { errEl.textContent = '❌ Verify the outlet code first.'; return; }
   const verified = JSON.parse(verRaw);
-  const mid  = document.getElementById('setup-mid').value.trim() || 'POS-01';
-  const data = _setupAutoData || {};
-  const ip   = data._ip || 'localhost';
-  const btn  = document.getElementById('btn-setup-confirm');
+  const mid = document.getElementById('setup-mid').value.trim() || 'POS-01';
+  const btn = document.getElementById('btn-setup-confirm');
   btn.disabled = true;
-  errEl.textContent = '';
-  const dbInfo  = data.db || {};
-  const isCloud = _setupConnMode === 'cloud';
-  const cfg = {
-    serverIp:       isCloud ? '' : ip,
-    cloudApiUrl:    isCloud ? (data._cloudUrl || '') : '',
-    connectionMode: _setupConnMode,
-    machineId:      mid,
-    outletCode:     verified.outlet_code || '',
-    outletId:       verified.outlet_id,
-    outletName:     verified.outlet_name,
-    brandId:        verified.brand_id,
-    restaurantName: verified.brand_name || '',
-    apiKey:         data.api_key || '',
-    dbHost:         dbInfo.host || (isCloud ? '' : '127.0.0.1'),
-    dbPort:         String(dbInfo.port || '5432'),
-    dbName:         dbInfo.database || 'restaurant_pos_central',
-    dbUser:         dbInfo.user || 'pos_central_user',
-    dbPass:         dbInfo.password || '',
-    dbSsl:          String(dbInfo.ssl || 'false'),
-    restaurantId:   '',
-    licenseKey:     '',
-  };
-  const res = await posAPI.saveConfig(cfg);
-  if (!res.ok) {
-    errEl.textContent = `❌ DB connection failed: ${res.error}`;
+  errEl.textContent = '⏳ Connecting…';
+
+  const ip = _setupServerIp || 'localhost';
+  const serverBase = `http://${ip}:3001`;
+  try {
+    // Validate against the cloud, pull ONLY this outlet's data into the local
+    // database, then register this terminal. Returns api_key + DB settings.
+    errEl.textContent = '⏳ Fetching this outlet’s data from the cloud…';
+    const resp = await fetch(serverBase + '/setup/provision-local', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        outlet_code: verified.outlet_code,
+        brand_id:    verified.brand_id,
+        outlet_id:   verified.outlet_id,
+        machine_id:  mid,
+      }),
+      signal: AbortSignal.timeout(40000),
+    });
+    const data = await resp.json();
+    if (!resp.ok || !data.ok) { errEl.textContent = '❌ ' + (data.error || 'Setup failed'); btn.disabled = false; return; }
+
+    const dbInfo = data.db || {};
+    // DB runs on the server machine: localhost when same PC, else the server IP entered.
+    const dbHost = (ip === 'localhost' || ip === '127.0.0.1') ? '127.0.0.1' : ip;
+    const cfg = {
+      connectionMode: 'local',
+      serverIp:       ip,
+      cloudApiUrl:    '',
+      machineId:      mid,
+      terminalId:     data.terminal_id || '',
+      outletCode:     verified.outlet_code || '',
+      outletId:       verified.outlet_id,
+      outletName:     verified.outlet_name,
+      brandId:        verified.brand_id,
+      brandName:      verified.brand_name || '',
+      restaurantName: verified.brand_name || '',
+      apiKey:         data.api_key || '',
+      dbHost,
+      dbPort:         String(dbInfo.port || '5432'),
+      dbName:         dbInfo.database || 'restaurant_pos_central',
+      dbUser:         dbInfo.user || 'pos_central_user',
+      dbPass:         dbInfo.password || '',
+      dbSsl:          'false',
+    };
+    const res = await posAPI.saveConfig(cfg);
+    if (!res.ok) { errEl.textContent = `❌ Database connection failed: ${res.error}`; btn.disabled = false; return; }
+    window._posConfig = cfg;
+    errEl.textContent = '';
+    document.getElementById('screen-setup').style.display = 'none';
+    await init();
+  } catch (e) {
+    errEl.textContent = '❌ ' + e.message;
     btn.disabled = false;
-    return;
   }
-  window._posConfig = cfg;
-  document.getElementById('screen-setup').style.display = 'none';
-  await init();
 }
 
 async function setupTestLicense() {

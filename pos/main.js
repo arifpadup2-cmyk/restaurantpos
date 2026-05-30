@@ -5,6 +5,7 @@ const path = require('path');
 const fs   = require('fs');
 const https = require('https');
 const http  = require('http');
+const { validateRendererSql } = require('./sql-guard');
 
 let mainWindow;
 let sql; // postgres connection pool
@@ -199,10 +200,23 @@ function convertPlaceholders(query) {
   return q;
 }
 
+// ── Renderer SQL guard (Phase 0 hardening) — see sql-guard.js ──────────────────
+// Guards a query; logs and throws on rejection so the IPC handler's catch returns
+// { ok:false } to the renderer.
+function guardSql(query) {
+  const reason = validateRendererSql(query);
+  if (reason) {
+    const snippet = String(query).slice(0, 200).replace(/\s+/g, ' ');
+    console.error(`[SQL-GUARD] blocked (${reason}): ${snippet}`);
+    throw new Error(`Query rejected by SQL guard: ${reason}`);
+  }
+}
+
 // ── IPC handlers ──────────────────────────────────────────────────────────────
 
 ipcMain.handle('db-all', async (_e, query, params = []) => {
   try {
+    guardSql(query);
     const data = await dbAll(query, params);
     return { ok: true, data: Array.from(data) };
   } catch (e) {
@@ -212,6 +226,7 @@ ipcMain.handle('db-all', async (_e, query, params = []) => {
 
 ipcMain.handle('db-get', async (_e, query, params = []) => {
   try {
+    guardSql(query);
     const data = await dbGet(query, params);
     return { ok: true, data };
   } catch (e) {
@@ -221,6 +236,7 @@ ipcMain.handle('db-get', async (_e, query, params = []) => {
 
 ipcMain.handle('db-run', async (_e, query, params = []) => {
   try {
+    guardSql(query);
     const result = await dbRun(query, params);
     return { ok: true, changes: parseInt(result?.count ?? 1) };
   } catch (e) {
@@ -230,6 +246,8 @@ ipcMain.handle('db-run', async (_e, query, params = []) => {
 
 ipcMain.handle('db-tx', async (_e, ops) => {
   try {
+    if (!Array.isArray(ops)) throw new Error('db-tx expects an array of ops');
+    for (const op of ops) guardSql(op?.sql);
     await dbTx(ops);
     return { ok: true };
   } catch (e) {

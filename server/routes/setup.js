@@ -8,7 +8,59 @@ const {
 } = require('../lib/license')
 const { jwtAuth } = require('../middleware/jwtAuth')
 const { serverError } = require('../middleware/serverError')
+const { apiKey } = require('../middleware/apiKey')
 const bcrypt = require('bcryptjs')
+
+// ── Outlet provisioning helpers (cloud → local) ───────────────────────────────
+
+// Issue a fresh per-terminal API key and register/refresh the terminal row.
+async function registerTerminal (sql, outlet, machine_id) {
+  const brand_id = outlet.brand_id
+  const mid = (machine_id || '').trim() || generateMachineId()
+  const [existing] = await sql`SELECT id FROM terminal_registrations WHERE brand_id = ${brand_id} AND machine_id = ${mid}`
+  const { randomBytes } = require('crypto')
+  const tkPrefix = randomBytes(6).toString('hex')
+  const tkSecret = randomBytes(24).toString('base64url')
+  const tkRaw    = `${tkPrefix}.${tkSecret}`
+  const tkHash   = await bcrypt.hash(tkSecret, 10)
+  let terminalId
+  if (existing) {
+    terminalId = existing.id
+    await sql`UPDATE terminal_registrations SET last_seen=now(), active=true, outlet_id=${outlet.id}, api_key_prefix=${tkPrefix}, api_key_hash=${tkHash}, revoked_at=NULL WHERE id=${existing.id}`
+  } else {
+    terminalId = `${brand_id}-${mid}-${Date.now().toString(36)}`
+    await sql`INSERT INTO terminal_registrations (id, brand_id, machine_id, outlet_id, last_seen, active, api_key_prefix, api_key_hash) VALUES (${terminalId}, ${brand_id}, ${mid}, ${outlet.id}, now(), true, ${tkPrefix}, ${tkHash})`
+  }
+  return { terminalId, apiKey: tkRaw }
+}
+
+// Upsert ONE outlet's data (returned by /setup/provision) into the local DB.
+async function seedOutletData (sql, data) {
+  const summary = {}
+  await sql.begin(async t => {
+    const up = async (table, rows, conflict) => {
+      let n = 0
+      for (const row of (rows || [])) {
+        if (!row || !Object.keys(row).length) continue
+        const cols = Object.keys(row)
+        await t`INSERT INTO ${t(table)} ${t(row, ...cols)}
+                ON CONFLICT (${t.unsafe(conflict)}) DO UPDATE SET ${t(row, ...cols)}`
+        n++
+      }
+      return n
+    }
+    if (data.brand)  summary.brands  = await up('brands',  [data.brand],  'id')
+    if (data.outlet) summary.outlets = await up('outlets', [data.outlet], 'id')
+    summary.categories = await up('categories', data.categories, 'id')
+    summary.menu_items = await up('menu_items', data.menu_items, 'id')
+    summary.cashiers   = await up('cashiers',   data.cashiers,   'id')
+    // Strip transient lock/order state when importing another machine's tables.
+    const tables = (data.tables_layout || []).map(r => ({ ...r, current_order_id: null, locked_by: null, status: 'available' }))
+    summary.tables_layout = await up('tables_layout', tables, 'id')
+    summary.settings = await up('settings', data.settings, 'brand_id, outlet_id, key')
+  })
+  return summary
+}
 
 // Reversible BO password / license storage was removed for security.
 // Credentials are shown once at creation/regeneration and must be reset if lost.
@@ -683,36 +735,46 @@ module.exports = function setupRouter (sql) {
     } catch (e) { serverError(res, e) }
   })
 
-  // ── Public: look up outlet by brand_id + 6-char code (used by KDS / waiter / delivery) ──
+  // ── Public: look up outlet by code. brand_id required; outlet_id optional but
+  //    matched when provided (POS sends all three for anti-guessing security;
+  //    KDS/waiter/delivery send only brand_id + code). ──
   router.post('/by-code', async (req, res) => {
-    const raw     = (req.body?.code     || '').replace(/\s/g, '')
-    const brandId = (req.body?.brand_id || '').trim()
-    if (!brandId)      return res.status(400).json({ error: 'Brand ID is required', code: 'MISSING_BRAND' })
+    const raw      = (req.body?.code      || '').replace(/\s/g, '')
+    const brandId  = (req.body?.brand_id  || '').trim()
+    const outletId = (req.body?.outlet_id || '').trim()
+    if (!brandId)         return res.status(400).json({ error: 'Brand ID is required', code: 'MISSING_BRAND' })
     if (raw.length !== 6) return res.status(400).json({ error: 'Outlet code must be exactly 6 characters', code: 'INVALID_CODE' })
     try {
-      const [outlet] = await sql`
-        SELECT o.id, o.name, o.outlet_code, o.brand_id, b.name AS brand_name
-        FROM outlets o
-        JOIN brands b ON b.id = o.brand_id
-        WHERE LOWER(o.outlet_code) = LOWER(${raw}) AND o.brand_id = ${brandId}`
-      if (!outlet) return res.status(404).json({ error: 'Brand ID or outlet code not found. Check both and try again.', code: 'NOT_FOUND' })
+      const [outlet] = outletId
+        ? await sql`
+            SELECT o.id, o.name, o.outlet_code, o.brand_id, b.name AS brand_name
+            FROM outlets o JOIN brands b ON b.id = o.brand_id
+            WHERE LOWER(o.outlet_code) = LOWER(${raw}) AND o.brand_id = ${brandId} AND o.id = ${outletId}`
+        : await sql`
+            SELECT o.id, o.name, o.outlet_code, o.brand_id, b.name AS brand_name
+            FROM outlets o JOIN brands b ON b.id = o.brand_id
+            WHERE LOWER(o.outlet_code) = LOWER(${raw}) AND o.brand_id = ${brandId}`
+      if (!outlet) return res.status(404).json({ error: 'Outlet details do not match. Check Brand ID, Outlet ID and Outlet Code.', code: 'NOT_FOUND' })
       res.json({ outlet_id: outlet.id, outlet_name: outlet.name, outlet_code: outlet.outlet_code, brand_id: outlet.brand_id, brand_name: outlet.brand_name })
     } catch (e) { serverError(res, e) }
   })
 
   // ── Public: POS terminal registers using brand_id + outlet code (replaces /connect for new installs) ──
   router.post('/connect-code', async (req, res) => {
-    const raw     = (req.body?.outlet_code || '').replace(/\s/g, '')
-    const brandId = (req.body?.brand_id    || '').trim()
+    const raw      = (req.body?.outlet_code || '').replace(/\s/g, '')
+    const brandId  = (req.body?.brand_id    || '').trim()
+    const outletId = (req.body?.outlet_id   || '').trim()
     const { machine_id } = req.body || {}
+    // Terminal registration requires all three for anti-guessing security.
     if (!brandId)         return res.status(400).json({ error: 'Brand ID is required', code: 'MISSING_BRAND' })
+    if (!outletId)        return res.status(400).json({ error: 'Outlet ID is required', code: 'MISSING_OUTLET' })
     if (raw.length !== 6) return res.status(400).json({ error: 'Outlet code must be exactly 6 characters', code: 'INVALID_CODE' })
     try {
       const [outlet] = await sql`
         SELECT o.*, b.name AS brand_name, b.active AS brand_active, b.expires_at, b.max_terminals
         FROM outlets o JOIN brands b ON b.id = o.brand_id
-        WHERE LOWER(o.outlet_code) = LOWER(${raw}) AND o.brand_id = ${brandId}`
-      if (!outlet) return res.status(404).json({ error: 'Brand ID or outlet code not found.', code: 'NOT_FOUND' })
+        WHERE LOWER(o.outlet_code) = LOWER(${raw}) AND o.brand_id = ${brandId} AND o.id = ${outletId}`
+      if (!outlet) return res.status(404).json({ error: 'Outlet details do not match. Check Brand ID, Outlet ID and Outlet Code.', code: 'NOT_FOUND' })
       if (!outlet.brand_active) return res.status(403).json({ error: 'Brand license is deactivated.', code: 'DEACTIVATED' })
       if (isExpired(outlet.expires_at)) return res.status(403).json({ error: 'License has expired. Contact your provider.', code: 'EXPIRED' })
 
@@ -743,6 +805,14 @@ module.exports = function setupRouter (sql) {
         brand_id, brand_name: outlet.brand_name,
         outlet_id: outlet.id, outlet_name: outlet.name, outlet_code: outlet.outlet_code,
         restaurant: { id: brand_id, name: outlet.brand_name },
+        // DB connection details so the POS auto-configures local mode (no manual entry).
+        // host is omitted on purpose — the POS uses the server IP it connected to.
+        db: {
+          port:     process.env.DB_PORT || '5432',
+          database: process.env.DB_NAME || 'restaurant_pos_central',
+          user:     process.env.DB_USER || 'pos_central_user',
+          password: process.env.DB_PASS || '',
+        },
       })
     } catch (e) { serverError(res, e) }
   })
@@ -1020,6 +1090,111 @@ module.exports = function setupRouter (sql) {
       await sql`DELETE FROM outlet_hidden_partners WHERE partner_id = ${req.params.id}`
       await sql`DELETE FROM global_delivery_partners WHERE id = ${req.params.id}`
       res.json({ ok: true })
+    } catch (e) { serverError(res, e) }
+  })
+
+  // ── CLOUD side: validate the (brand_id, outlet_id, outlet_code) triple and
+  //    return ONLY that outlet's data. Protected by api key (the local server
+  //    authenticates with CLOUD_SYNC_KEY). The central DB may hold thousands of
+  //    outlets — this returns just this one. ──
+  router.post('/provision', apiKey, async (req, res) => {
+    const brandId  = (req.body?.brand_id    || '').trim()
+    const outletId = (req.body?.outlet_id   || '').trim()
+    const raw      = (req.body?.outlet_code || '').replace(/\s/g, '')
+    if (!brandId || !outletId || raw.length !== 6)
+      return res.status(400).json({ error: 'brand_id, outlet_id and a 6-character outlet_code are all required', code: 'BAD_INPUT' })
+    try {
+      const [outlet] = await sql`
+        SELECT o.id, o.brand_id, o.name, o.phone, o.email, o.address, o.opening_time, o.closing_time,
+               o.currency, o.currency_code, o.currency_symbol, o.market_id, o.outlet_code, o.country,
+               b.name AS brand_name, b.active AS brand_active, b.expires_at
+        FROM outlets o JOIN brands b ON b.id = o.brand_id
+        WHERE LOWER(o.outlet_code) = LOWER(${raw}) AND o.brand_id = ${brandId} AND o.id = ${outletId}`
+      if (!outlet) return res.status(404).json({ error: 'Outlet details do not match. Check Brand ID, Outlet ID and Outlet Code.', code: 'NOT_FOUND' })
+      if (outlet.brand_active === false) return res.status(403).json({ error: 'Brand license is deactivated.', code: 'DEACTIVATED' })
+      if (isExpired(outlet.expires_at)) return res.status(403).json({ error: 'License has expired. Contact your provider.', code: 'EXPIRED' })
+
+      // Brand-shared config (menu, staff) + outlet-specific data (tables, settings).
+      const [brand] = await sql`SELECT id, name, business_type, country, active FROM brands WHERE id = ${brandId}`
+      const categories = await sql`
+        SELECT id, name, sort_order, color, active, synced_at, kitchen_id, outlet_id, brand_id
+        FROM categories WHERE brand_id = ${brandId}`
+      const menu_items = await sql`
+        SELECT id, category_id, name, price, description, active, synced_at, brand_id, outlet_id, kitchen_id,
+               dine_in_price, takeaway_price, delivery_price, online_price
+        FROM menu_items WHERE brand_id = ${brandId}`
+      const cashiers = await sql`
+        SELECT id, name, pin, pin_hash, role, active, synced, created_at, outlet_id, brand_id
+        FROM cashiers WHERE brand_id = ${brandId} AND (outlet_id = ${outletId} OR outlet_id IS NULL)`
+      const tables_layout = await sql`
+        SELECT id, name, capacity, status, current_order_id, locked_by, outlet_id, seat_count, section_name, section_id, brand_id
+        FROM tables_layout WHERE outlet_id = ${outletId}`
+      const settings = await sql`
+        SELECT key, value, brand_id, outlet_id
+        FROM settings WHERE brand_id = ${brandId} AND (outlet_id = ${outletId} OR outlet_id = '')`
+
+      const { brand_active, expires_at, brand_name, ...outletRow } = outlet
+      res.json({
+        ok: true,
+        brand: brand || { id: brandId, name: brand_name },
+        outlet: outletRow,
+        categories, menu_items, cashiers, tables_layout, settings,
+      })
+    } catch (e) { serverError(res, e) }
+  })
+
+  // ── LOCAL side: orchestrates cloud-validate → fetch this outlet's data →
+  //    seed it into the local DB → register this terminal. Called by the POS. ──
+  router.post('/provision-local', async (req, res) => {
+    const brandId  = (req.body?.brand_id    || '').trim()
+    const outletId = (req.body?.outlet_id   || '').trim()
+    const code     = (req.body?.outlet_code || '').replace(/\s/g, '')
+    const machineId = req.body?.machine_id
+    if (!brandId)          return res.status(400).json({ error: 'Brand ID is required', code: 'MISSING_BRAND' })
+    if (!outletId)         return res.status(400).json({ error: 'Outlet ID is required', code: 'MISSING_OUTLET' })
+    if (code.length !== 6) return res.status(400).json({ error: 'Outlet code must be exactly 6 characters', code: 'INVALID_CODE' })
+
+    const cloudUrl = (process.env.CLOUD_SYNC_URL || '').replace(/\/+$/, '')
+    const cloudKey = process.env.CLOUD_SYNC_KEY || process.env.API_KEY || ''
+    if (!cloudUrl) return res.status(503).json({ error: 'Cloud is not configured on this server.', code: 'NO_CLOUD' })
+
+    try {
+      // 1) Validate + fetch this outlet's data from the central cloud
+      let data
+      try {
+        const r = await fetch(cloudUrl + '/setup/provision', {
+          method:  'POST',
+          headers: { 'Content-Type': 'application/json', 'x-api-key': cloudKey },
+          body:    JSON.stringify({ brand_id: brandId, outlet_id: outletId, outlet_code: code }),
+          signal:  AbortSignal.timeout(25_000),
+        })
+        data = await r.json().catch(() => ({}))
+        if (!r.ok) return res.status(r.status).json({ error: data.error || 'Cloud rejected the outlet', code: data.code || 'CLOUD_REJECTED' })
+      } catch (e) {
+        return res.status(502).json({ error: 'Cannot reach the cloud to validate this outlet: ' + e.message, code: 'CLOUD_UNREACHABLE' })
+      }
+      if (!data.ok || !data.outlet) return res.status(404).json({ error: 'Outlet not found in cloud.', code: 'NOT_FOUND' })
+
+      // 2) Seed ONLY this outlet's data into the local database
+      const seeded = await seedOutletData(sql, data)
+
+      // 3) Register this terminal locally
+      const [localOutlet] = await sql`SELECT id, brand_id, name, outlet_code FROM outlets WHERE id = ${outletId}`
+      if (!localOutlet) return res.status(500).json({ error: 'Seeding failed — outlet not present locally after provisioning.', code: 'SEED_FAILED' })
+      const { terminalId, apiKey: tkRaw } = await registerTerminal(sql, localOutlet, machineId)
+
+      res.json({
+        ok: true, terminal_id: terminalId, api_key: tkRaw,
+        brand_id: brandId, brand_name: data.brand?.name || '',
+        outlet_id: outletId, outlet_name: data.outlet?.name, outlet_code: data.outlet?.outlet_code,
+        seeded,
+        db: {
+          port:     process.env.DB_PORT || '5432',
+          database: process.env.DB_NAME || 'restaurant_pos_central',
+          user:     process.env.DB_USER || 'pos_central_user',
+          password: process.env.DB_PASS || '',
+        },
+      })
     } catch (e) { serverError(res, e) }
   })
 
