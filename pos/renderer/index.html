@@ -4202,14 +4202,38 @@ async function setupVerifyCode() {
     : (ip.startsWith('http') ? ip : `http://${ip}:3001`);
 
   errEl.textContent = '⏳ Verifying…';
+
+  // Helper: try one server URL, return parsed response or null
+  async function tryVerify(url) {
+    try {
+      const resp = await fetch(url + '/setup/by-code', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ code, brand_id: brandId }),
+        signal: AbortSignal.timeout(7000),
+      });
+      const d = await resp.json();
+      return resp.ok ? d : null;
+    } catch (_) { return null; }
+  }
+
   try {
-    const resp = await fetch(serverBase + '/setup/by-code', {
-      method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ code, brand_id: brandId }),
-      signal: AbortSignal.timeout(6000),
-    });
-    const d = await resp.json();
-    if (!resp.ok) { errEl.textContent = '❌ ' + (d.error || 'Code not found'); return; }
+    // Try primary server (LOCAL or CLOUD depending on what auto-detect found)
+    let d = await tryVerify(serverBase);
+
+    // If LOCAL returned nothing, automatically try CLOUD as fallback
+    if (!d && !isCloud) {
+      errEl.textContent = '⏳ Not found locally, trying cloud…';
+      d = await tryVerify(CLOUD_SERVER_URL);
+      if (d) {
+        // Switch to cloud mode for this outlet
+        _setupConnMode = 'cloud';
+        _setupCloudUrl = CLOUD_SERVER_URL;
+        _setupAutoData = { ...(_setupAutoData || {}), _ip: CLOUD_SERVER_URL, _cloudUrl: CLOUD_SERVER_URL, db: {} };
+      }
+    }
+
+    if (!d) { errEl.textContent = '❌ Brand ID or Outlet Code not found.'; return; }
+
     errEl.textContent = '';
     document.getElementById('setup-code-outlet-name').textContent = '🏪 ' + d.outlet_name;
     document.getElementById('setup-code-brand-name').textContent  = d.brand_name;
