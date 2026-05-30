@@ -4225,10 +4225,16 @@ async function setupVerifyCode() {
       errEl.textContent = '⏳ Not found locally, trying cloud…';
       d = await tryVerify(CLOUD_SERVER_URL);
       if (d) {
-        // Switch to cloud mode for this outlet
+        // Switch API to cloud but KEEP LOCAL db credentials for local storage
         _setupConnMode = 'cloud';
         _setupCloudUrl = CLOUD_SERVER_URL;
-        _setupAutoData = { ...(_setupAutoData || {}), _ip: CLOUD_SERVER_URL, _cloudUrl: CLOUD_SERVER_URL, db: {} };
+        const existingDb = (_setupAutoData || {}).db || {};
+        _setupAutoData = {
+          ...(_setupAutoData || {}),
+          _ip: CLOUD_SERVER_URL,
+          _cloudUrl: CLOUD_SERVER_URL,
+          db: existingDb, // preserve LOCAL PostgreSQL credentials
+        };
       }
     }
 
