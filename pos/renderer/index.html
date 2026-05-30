@@ -1272,11 +1272,23 @@ textarea:focus-visible {
       <button class="pos-qs-tab" id="qs-tab-cloud" onclick="setPosQsMode('cloud')">☁️ Cloud</button>
     </div>
 
-    <!-- LOCAL: needs IP -->
+    <!-- LOCAL: same system or other system -->
     <div id="qs-local-sect">
-      <label class="pos-qs-label">Server IP Address</label>
-      <input id="qs-server-ip" type="text" class="pos-qs-input" placeholder="192.168.1.100" autocomplete="off"
-        onkeydown="event.stopPropagation()">
+      <div style="display:flex;gap:6px;margin-bottom:12px">
+        <button id="qs-loc-same" onclick="setLocalTarget('same')"
+          style="flex:1;padding:8px;border-radius:8px;border:2px solid var(--primary);background:var(--primary);color:#fff;font-size:12px;font-weight:700;cursor:pointer">
+          💻 Same System
+        </button>
+        <button id="qs-loc-other" onclick="setLocalTarget('other')"
+          style="flex:1;padding:8px;border-radius:8px;border:2px solid var(--border);background:none;color:var(--muted);font-size:12px;font-weight:700;cursor:pointer">
+          🖥️ Other System
+        </button>
+      </div>
+      <div id="qs-ip-row" style="display:none">
+        <label class="pos-qs-label">Server IP Address</label>
+        <input id="qs-server-ip" type="text" class="pos-qs-input" placeholder="192.168.1.100" autocomplete="off"
+          onkeydown="event.stopPropagation()">
+      </div>
     </div>
 
     <!-- CLOUD: no IP needed — URL is hardcoded -->
@@ -3439,26 +3451,46 @@ let _qsMode = 'local';
 function openPosQS() {
   const cfg = window._posConfig || {};
   _qsMode = cfg.connectionMode || 'local';
+  // Determine same vs other based on saved serverIp
+  const savedIp = cfg.serverIp || '';
+  _qsLocalTarget = (!savedIp || savedIp === '127.0.0.1' || savedIp === 'localhost') ? 'same' : 'other';
   setPosQsMode(_qsMode);
-  document.getElementById('qs-server-ip').value   = cfg.serverIp   || '';
+  document.getElementById('qs-server-ip').value   = (_qsLocalTarget === 'other') ? savedIp : '';
   document.getElementById('qs-machine-id').value  = cfg.machineId  || 'POS-01';
   document.getElementById('qs-brand-id').value    = cfg.brandId    || '';
   document.getElementById('qs-outlet-code').value = cfg.outletCode || '';
   const st = document.getElementById('qs-status');
   if (st) { st.style.display = 'none'; st.textContent = ''; }
   document.getElementById('pos-qs-overlay').style.display = 'flex';
-  setTimeout(() => {
-    const first = _qsMode === 'local'
-      ? document.getElementById('qs-server-ip')
-      : document.getElementById('qs-brand-id');
-    first?.focus();
-  }, 100);
+  setTimeout(() => document.getElementById('qs-brand-id')?.focus(), 100);
 }
 
 function qsOutletCodeChanged() {}   // no-op — kept for legacy HTML references
 
 function closePosQS() {
   document.getElementById('pos-qs-overlay').style.display = 'none';
+}
+
+let _qsLocalTarget = 'same'; // 'same' | 'other'
+
+function setLocalTarget(target) {
+  _qsLocalTarget = target;
+  const isSame  = target === 'same';
+  const btnSame  = document.getElementById('qs-loc-same');
+  const btnOther = document.getElementById('qs-loc-other');
+  const ipRow    = document.getElementById('qs-ip-row');
+  if (btnSame) {
+    btnSame.style.background  = isSame  ? 'var(--primary)' : 'none';
+    btnSame.style.color       = isSame  ? '#fff'           : 'var(--muted)';
+    btnSame.style.borderColor = isSame  ? 'var(--primary)' : 'var(--border)';
+  }
+  if (btnOther) {
+    btnOther.style.background  = !isSame ? 'var(--primary)' : 'none';
+    btnOther.style.color       = !isSame ? '#fff'           : 'var(--muted)';
+    btnOther.style.borderColor = !isSame ? 'var(--primary)' : 'var(--border)';
+  }
+  if (ipRow) ipRow.style.display = isSame ? 'none' : '';
+  if (!isSame) setTimeout(() => document.getElementById('qs-server-ip')?.focus(), 50);
 }
 
 function setPosQsMode(mode) {
@@ -3470,6 +3502,7 @@ function setPosQsMode(mode) {
   document.getElementById('qs-cloud-sect').style.display = isCloud ? ''     : 'none';
   const st = document.getElementById('qs-status');
   if (st) { st.style.display = 'none'; }
+  if (!isCloud) setLocalTarget(_qsLocalTarget);
 }
 
 async function savePosQS() {
@@ -3490,7 +3523,11 @@ async function savePosQS() {
     st.style.border     = `1px solid ${ok ? '#86efac' : ok === false ? '#fca5a5' : '#fde68a'}`;
   };
 
-  if (!isCloud && !serverIp) { document.getElementById('qs-server-ip').focus(); return; }
+  // Resolve IP: same system = 127.0.0.1, other system = typed IP
+  const resolvedLocalIp = (_qsLocalTarget === 'same') ? '127.0.0.1' : serverIp;
+  if (!isCloud && _qsLocalTarget === 'other' && !serverIp) {
+    document.getElementById('qs-server-ip').focus(); return;
+  }
   if (!brandIdVal)            { setStatus('❌ Enter Brand ID', false); return; }
   if (outletCode.length !== 6){ setStatus('❌ Outlet code must be 6 characters', false); return; }
 
@@ -3498,8 +3535,8 @@ async function savePosQS() {
   setStatus('⏳ Verifying outlet…', null);
 
   // Try primary server, then cloud fallback
-  const primary = isCloud ? CLOUD_SERVER_URL : `http://${serverIp}:3001`;
-  let outletId = '', outletName = '', brandId = '', resolvedMode = _qsMode, resolvedIp = serverIp;
+  const primary = isCloud ? CLOUD_SERVER_URL : `http://${resolvedLocalIp}:3001`;
+  let outletId = '', outletName = '', brandId = '', resolvedMode = _qsMode, resolvedIp = resolvedLocalIp, resolvedLocalIpFinal = resolvedLocalIp;
 
   async function tryVerifyQS(base) {
     try {
@@ -3517,7 +3554,7 @@ async function savePosQS() {
   if (!d && !isCloud) {
     setStatus('⏳ Not on local, trying cloud…', null);
     d = await tryVerifyQS(CLOUD_SERVER_URL);
-    if (d) { resolvedMode = 'cloud'; resolvedIp = ''; }
+    if (d) { resolvedMode = 'cloud'; resolvedIp = ''; resolvedLocalIpFinal = ''; }
   }
 
   if (!d) {
@@ -3534,7 +3571,7 @@ async function savePosQS() {
   const newCfg = {
     ...existingCfg,
     connectionMode: resolvedMode,
-    serverIp:       resolvedMode === 'cloud' ? '' : resolvedIp,
+    serverIp:       resolvedMode === 'cloud' ? '' : resolvedLocalIpFinal,
     cloudApiUrl:    resolvedMode === 'cloud' ? CLOUD_SERVER_URL : (existingCfg.cloudApiUrl || ''),
     machineId,
     outletCode,
@@ -3551,7 +3588,7 @@ async function savePosQS() {
   window._posConfig = newCfg;
   apiUrl = resolvedMode === 'cloud'
     ? CLOUD_SERVER_URL
-    : (resolvedIp ? `http://${resolvedIp}:3001` : '');
+    : (resolvedLocalIpFinal ? `http://${resolvedLocalIpFinal}:3001` : '');
   _posFallbackActive = false;
   _posHealthFails    = 0;
   updateConnModeBadge();
