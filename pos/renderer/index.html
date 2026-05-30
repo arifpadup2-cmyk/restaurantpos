@@ -1177,73 +1177,23 @@ textarea:focus-visible {
 
   <div class="setup-box">
 
-    <!-- Step 1: Auto-detect / cloud connecting -->
+    <!-- Step 1: Auto-detect (LOCAL first, then CLOUD fallback — no URL input needed) -->
     <div class="setup-step active" id="setup-step-detect">
-
-      <!-- Connection mode selector -->
-      <div class="conn-mode-tabs">
-        <button class="conn-mode-tab active" id="setup-cmode-local" onclick="setSetupConnMode('local')">🌐 Local Network</button>
-        <button class="conn-mode-tab" id="setup-cmode-cloud" onclick="setSetupConnMode('cloud')">☁️ Cloud Server</button>
-      </div>
-
-      <!-- LOCAL section -->
-      <div id="detect-local-section">
+      <div style="text-align:center;padding:10px 0 8px">
         <div class="detect-spinner" id="detect-spinner"></div>
-        <div class="detect-status" id="detect-status-text">🔍 Searching for Local Server…</div>
-        <div class="detect-sub" id="detect-sub-text">Looking for POS server on your network (localhost)</div>
-        <!-- Manual fallback (shown if auto-detect fails) -->
-        <div id="detect-manual" style="display:none">
-          <div style="border-top:2px solid #e5e7eb;margin:20px 0;padding-top:20px"></div>
-          <div style="padding:12px;background:#fef3c7;border-left:4px solid #f59e0b;border-radius:6px;margin-bottom:18px">
-            <div style="font-size:12px;font-weight:600;color:#92400e">⚠️ Couldn't find server automatically</div>
-            <div style="font-size:11px;color:#b45309;margin-top:4px">Enter the server IP address manually</div>
-          </div>
-          <div class="setup-field">
-            <label>🖥️ Server IP Address</label>
-            <input id="setup-ip" type="text" placeholder="e.g. 192.168.1.100" autocomplete="off"
-              style="font-size:15px;letter-spacing:0.5px"
-              onkeydown="if(event.key==='Enter'){event.preventDefault();setupManualConnect()}else{event.stopPropagation()}">
-            <span class="setup-hint">The IP address of the computer running the POS server (ask your admin if unsure)</span>
-          </div>
-          <!-- Advanced DB options -->
-          <details class="setup-advanced" id="setup-adv">
-            <summary>▸ Advanced (DB credentials)</summary>
-            <div class="setup-field" style="margin-top:10px">
-              <label>Restaurant ID</label>
-              <input id="setup-rid" type="text" placeholder="REST-AB3X9K" autocomplete="off"
-                oninput="this.value=this.value.toUpperCase()" style="font-family:monospace;letter-spacing:1px">
-            </div>
-            <div class="setup-field">
-              <label>License Key</label>
-              <input id="setup-lkey" type="text" placeholder="ABCDE-12345-FGHIJ-67890" autocomplete="off"
-                oninput="this.value=this.value.toUpperCase()" style="font-family:monospace;letter-spacing:1px">
-            </div>
-            <div class="setup-field">
-              <label>DB Host</label>
-              <input id="setup-dbhost" type="text" placeholder="e.g. ep-xxx.us-east-2.aws.neon.tech">
-            </div>
-            <div class="setup-field"><label>DB Port</label><input id="setup-port" type="number" placeholder="5432"></div>
-            <div class="setup-field"><label>DB Name</label><input id="setup-dbname" type="text" placeholder="restaurant_pos_central"></div>
-            <div class="setup-field"><label>DB User</label><input id="setup-dbuser" type="text" placeholder="pos_central_user"></div>
-            <div class="setup-field"><label>DB Password</label><input id="setup-dbpass" type="password"></div>
-          </details>
-          <div class="setup-error" id="setup-error"></div>
-          <button class="btn-login" onclick="setupManualConnect()">🔌 Connect</button>
-        </div>
+        <div class="detect-status" id="detect-status-text">🔍 Connecting to server…</div>
+        <div class="detect-sub" id="detect-sub-text" style="font-size:12px;color:#6b7280;margin-top:6px">Trying local server, then cloud…</div>
       </div>
-
-      <!-- CLOUD section -->
-      <div id="detect-cloud-section" style="display:none">
-        <div class="setup-field">
-          <label>Cloud Server URL</label>
-          <input id="setup-cloud-url" type="url" placeholder="https://mypos.railway.app" autocomplete="off"
-            style="font-size:15px" onkeydown="if(event.key==='Enter'){event.preventDefault();setupCloudConnect()}else{event.stopPropagation()}">
-          <span class="setup-hint">Full URL of your cloud-hosted POS server (requires internet)</span>
-        </div>
-        <div class="setup-error" id="setup-cloud-error"></div>
-        <button class="btn-login" onclick="setupCloudConnect()">☁️ Connect to Cloud</button>
-      </div>
-
+      <!-- Hidden inputs kept for legacy JS compatibility -->
+      <input type="hidden" id="setup-ip" value="127.0.0.1">
+      <input type="hidden" id="setup-cloud-url" value="">
+      <input type="hidden" id="setup-cmode-local">
+      <input type="hidden" id="setup-cmode-cloud">
+      <div id="detect-local-section" style="display:none"></div>
+      <div id="detect-cloud-section" style="display:none"></div>
+      <div id="detect-manual" style="display:none"></div>
+      <div class="setup-error" id="setup-error"></div>
+      <div class="setup-error" id="setup-cloud-error"></div>
     </div>
 
     <!-- Step 2: Outlet code -->
@@ -4041,19 +3991,8 @@ let _setupMode = 'new';
 let _setupConnMode = 'local'; // 'local' | 'cloud'
 
 function setSetupConnMode(mode) {
-  _setupConnMode = mode;
-  const isCloud = mode === 'cloud';
-  document.getElementById('setup-cmode-local').classList.toggle('active', !isCloud);
-  document.getElementById('setup-cmode-cloud').classList.toggle('active', isCloud);
-  document.getElementById('detect-local-section').style.display = isCloud ? 'none' : '';
-  document.getElementById('detect-cloud-section').style.display = isCloud ? '' : 'none';
-  if (!isCloud) {
-    setupAutoDetect();
-  } else {
-    // Stop spinner, focus cloud URL
-    document.getElementById('detect-spinner').style.display = 'none';
-    setTimeout(() => document.getElementById('setup-cloud-url')?.focus(), 100);
-  }
+  // No-op — connection mode is now auto-detected (LOCAL first, CLOUD fallback)
+  // Kept for legacy compatibility
 }
 
 async function setupCloudConnect() {
@@ -4118,43 +4057,85 @@ function setupSetProgress(pct, msg) {
   document.getElementById('setup-progress-msg').textContent = msg;
 }
 
+// Cloud URL is hardcoded — never shown to or typed by users
+const CLOUD_SERVER_URL = 'https://restaurantpos-8xew.onrender.com';
+
 async function setupAutoDetect() {
   const spinner   = document.getElementById('detect-spinner');
   const statusTxt = document.getElementById('detect-status-text');
   const subTxt    = document.getElementById('detect-sub-text');
-  const manual    = document.getElementById('detect-manual');
-  spinner.style.display = 'block';
-  statusTxt.textContent = 'Connecting to local server…';
-  subTxt.textContent    = 'Looking for server at localhost';
-  manual.style.display  = 'none';
+  if (spinner) spinner.style.display = 'block';
   document.getElementById('setup-step-detect').classList.add('active');
   document.getElementById('setup-step-outlet').classList.remove('active');
+
+  // Step 1: Try LOCAL server (fast, 3s timeout)
+  if (statusTxt) statusTxt.textContent = '🔍 Looking for local server…';
+  if (subTxt)    subTxt.textContent    = 'Checking 127.0.0.1:3001…';
   try {
     const ctrl = new AbortController();
-    const tid  = setTimeout(() => ctrl.abort(), 5000);
-    const resp = await fetch('http://localhost:3001/setup/auto-detect', { signal: ctrl.signal });
+    const tid  = setTimeout(() => ctrl.abort(), 3000);
+    const resp = await fetch('http://127.0.0.1:3001/setup/auto-detect', { signal: ctrl.signal });
     clearTimeout(tid);
     const data = await resp.json();
     if (data.ok) {
-      _setupAutoData = { ...data, _ip: '127.0.0.1' };
-      spinner.style.display = 'none';
-      document.getElementById('setup-step-detect').classList.remove('active');
-      document.getElementById('setup-step-outlet').classList.add('active');
-      setupCodeChanged();
-      const mid = document.getElementById('setup-mid');
-      if (!mid.value) mid.value = (await posAPI.getMachineId()) || 'POS-01';
-      setTimeout(() => document.getElementById('setup-outlet-code')?.focus(), 100);
-      return;
+      _setupAutoData   = { ...data, _ip: '127.0.0.1' };
+      _setupConnMode   = 'local';
+      _setupCloudUrl   = '';
+      if (subTxt) subTxt.textContent = '✅ Local server connected';
+      return _setupAdvanceToOutlet(spinner);
     }
-    throw new Error(data.error || 'Auto-detect failed');
-  } catch (_) {
-    spinner.style.display = 'none';
-    statusTxt.textContent = '⚠️ Local server not found';
-    subTxt.textContent    = 'Enter the server IP address manually';
-    manual.style.display  = 'block';
-    document.getElementById('setup-error').textContent = '';
-    setTimeout(() => document.getElementById('setup-ip')?.focus(), 100);
+  } catch (_) {}
+
+  // Step 2: Try CLOUD server (hardcoded, 8s timeout)
+  if (statusTxt) statusTxt.textContent = '☁️ Connecting to cloud server…';
+  if (subTxt)    subTxt.textContent    = 'Local not found, trying cloud…';
+  try {
+    const ctrl = new AbortController();
+    const tid  = setTimeout(() => ctrl.abort(), 8000);
+    const resp = await fetch(CLOUD_SERVER_URL + '/setup/auto-detect', { signal: ctrl.signal });
+    clearTimeout(tid);
+    if (resp.status === 403) {
+      // Cloud auto-detect is localhost-only — that's OK, cloud is still reachable
+      // We'll use it in non-auto-detect mode
+      _setupAutoData   = { _ip: CLOUD_SERVER_URL, _cloudUrl: CLOUD_SERVER_URL, outlets: [], api_key: '', db: {} };
+      _setupConnMode   = 'cloud';
+      _setupCloudUrl   = CLOUD_SERVER_URL;
+      if (subTxt) subTxt.textContent = '✅ Cloud server connected';
+      return _setupAdvanceToOutlet(spinner);
+    }
+    const data = await resp.json();
+    if (data.ok) {
+      _setupAutoData   = { ...data, _ip: CLOUD_SERVER_URL, _cloudUrl: CLOUD_SERVER_URL };
+      _setupConnMode   = 'cloud';
+      _setupCloudUrl   = CLOUD_SERVER_URL;
+      if (subTxt) subTxt.textContent = '✅ Cloud server connected';
+      return _setupAdvanceToOutlet(spinner);
+    }
+  } catch (_) {}
+
+  // Both failed
+  if (spinner)   spinner.style.display  = 'none';
+  if (statusTxt) statusTxt.textContent  = '❌ Cannot reach server';
+  if (subTxt)    subTxt.textContent     = 'Check your internet connection and try again.';
+  const errEl = document.getElementById('setup-error');
+  if (errEl) {
+    errEl.textContent = 'No server found. Make sure local server is running or check your internet.';
+    errEl.style.display = 'block';
   }
+}
+
+let _setupCloudUrl = '';
+
+function _setupAdvanceToOutlet(spinner) {
+  if (spinner) spinner.style.display = 'none';
+  document.getElementById('setup-step-detect').classList.remove('active');
+  document.getElementById('setup-step-outlet').classList.add('active');
+  setupCodeChanged();
+  posAPI.getMachineId().then(mid => {
+    const el = document.getElementById('setup-mid');
+    if (el && !el.value) el.value = mid || 'POS-01';
+  }).catch(() => {});
+  setTimeout(() => document.getElementById('setup-brand-id')?.focus(), 100);
 }
 
 async function setupManualConnect() {
@@ -4215,8 +4196,10 @@ async function setupVerifyCode() {
 
   const data = _setupAutoData || {};
   const ip   = data._ip || 'localhost';
-  const isCloud = _setupConnMode === 'cloud';
-  const serverBase = isCloud ? (data._cloudUrl || '') : (ip.startsWith('http') ? ip : `http://${ip}:3001`);
+  const isCloud    = _setupConnMode === 'cloud';
+  const serverBase = isCloud
+    ? (_setupCloudUrl || CLOUD_SERVER_URL)
+    : (ip.startsWith('http') ? ip : `http://${ip}:3001`);
 
   errEl.textContent = '⏳ Verifying…';
   try {
@@ -4253,7 +4236,7 @@ async function setupFinalize() {
   const isCloud = _setupConnMode === 'cloud';
   const cfg = {
     serverIp:       isCloud ? '' : ip,
-    cloudApiUrl:    isCloud ? (data._cloudUrl || '') : '',
+    cloudApiUrl:    isCloud ? (_setupCloudUrl || CLOUD_SERVER_URL) : '',
     connectionMode: _setupConnMode,
     machineId:      mid,
     outletCode:     verified.outlet_code || '',
