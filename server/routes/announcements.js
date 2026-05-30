@@ -28,15 +28,18 @@ module.exports = function announcementsRouter (sql) {
     } catch (e) { serverError(res, e) }
   })
 
-  // POST /announcements/admin — create
+  // POST /announcements/admin — create. title is OPTIONAL (photo-only ads allowed),
+  // but an ad must have at least an image or some text.
   router.post('/admin', jwtAuth, async (req, res) => {
-    const { title, description = '', badge_text = 'New', accent_color = '#f97316', image_url = null, sort_order = 0 } = req.body || {}
-    if (!title?.trim()) return res.status(400).json({ error: 'title required' })
+    const { title = '', description = '', badge_text = 'New', accent_color = '#f97316', image_url = null, sort_order = 0 } = req.body || {}
+    if (!title?.trim() && !description?.trim() && !image_url) {
+      return res.status(400).json({ error: 'Add an image or some text' })
+    }
     try {
       const id = randomUUID().replace(/-/g, '').slice(0, 20)
       const [row] = await sql`
         INSERT INTO announcements (id, title, description, badge_text, accent_color, image_url, sort_order)
-        VALUES (${id}, ${title.trim()}, ${description}, ${badge_text}, ${accent_color}, ${image_url}, ${sort_order})
+        VALUES (${id}, ${(title || '').trim()}, ${description}, ${badge_text}, ${accent_color}, ${image_url}, ${sort_order})
         RETURNING *`
       res.status(201).json({ announcement: row })
     } catch (e) { serverError(res, e) }

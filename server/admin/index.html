@@ -1597,7 +1597,7 @@ function showAnnouncementModal (r) {
     <h3>${r ? 'Edit Announcement' : 'New Announcement'}</h3>
     <div class="sub">Shown on the POS login screen to market new modules</div>
     <div class="mf">
-      <label>Title *</label><input id="ann-title" type="text" value="${esc(r?.title||'')}" placeholder="e.g. Delivery Module Now Available">
+      <label>Title <span style="color:var(--t3);font-weight:400;text-transform:none">(optional)</span></label><input id="ann-title" type="text" value="${esc(r?.title||'')}" placeholder="Leave blank for an image-only ad">
       <label>Description</label><textarea id="ann-desc" rows="3" style="width:100%;padding:10px 12px;background:var(--bg);border:1.5px solid var(--bd);border-radius:8px;font-size:13px;color:var(--t1);outline:none;margin-bottom:12px;font-family:inherit;resize:vertical">${esc(r?.description||'')}</textarea>
       <div class="mg">
         <div><label>Badge Text</label><input id="ann-badge" type="text" value="${esc(r?.badge_text||'New')}" placeholder="New Module"></div>
@@ -1608,8 +1608,10 @@ function showAnnouncementModal (r) {
         <input type="color" id="ann-color-pick" value="${r?.accent_color||'#f97316'}" style="width:44px;height:36px;border:1.5px solid var(--bd);border-radius:8px;background:var(--bg);cursor:pointer;padding:2px" oninput="document.getElementById('ann-color').value=this.value">
         <input id="ann-color" type="text" value="${esc(r?.accent_color||'#f97316')}" placeholder="#f97316" style="flex:1;padding:10px 12px;background:var(--bg);border:1.5px solid var(--bd);border-radius:8px;font-size:13px;color:var(--t1);outline:none;font-family:monospace" oninput="document.getElementById('ann-color-pick').value=this.value">
       </div>
-      <label>Image URL <span style="color:var(--t3);font-weight:400;text-transform:none">(optional — overrides gradient background)</span></label>
-      <input id="ann-img" type="url" value="${esc(r?.image_url||'')}" placeholder="https://… or leave blank for auto gradient">
+      <label>Image <span style="color:var(--t3);font-weight:400;text-transform:none">(optional — upload a file or paste a URL)</span></label>
+      <input id="ann-img-file" type="file" accept="image/*" onchange="annPickImage(this)" style="width:100%;margin-bottom:8px;font-size:13px;color:var(--t1)">
+      <input id="ann-img" type="text" value="${esc(r?.image_url||'')}" placeholder="…or paste an image URL / leave blank for auto gradient" oninput="annRenderImgPreview(this.value)">
+      <div id="ann-img-preview" style="margin-top:8px"></div>
     </div>
     <div class="ma">
       <button class="btn btn-o" onclick="this.closest('.mo').remove()">Cancel</button>
@@ -1619,19 +1621,36 @@ function showAnnouncementModal (r) {
   document.body.appendChild(mo)
   mo.addEventListener('click', e => { if (e.target === mo) mo.remove() })
   document.getElementById('ann-title').focus()
+  annRenderImgPreview(r?.image_url || '')
+}
+
+// Read a chosen image file into a base64 data URL (no separate upload endpoint needed).
+function annPickImage (input) {
+  const f = input.files && input.files[0]
+  if (!f) return
+  if (f.size > 2 * 1024 * 1024) { alert('Image too large (max 2 MB). Please pick a smaller image.'); input.value = ''; return }
+  const reader = new FileReader()
+  reader.onload = () => { document.getElementById('ann-img').value = reader.result; annRenderImgPreview(reader.result) }
+  reader.readAsDataURL(f)
+}
+function annRenderImgPreview (src) {
+  const p = document.getElementById('ann-img-preview'); if (!p) return
+  p.innerHTML = src ? `<img src="${src}" style="max-width:100%;max-height:150px;border-radius:8px;border:1px solid var(--bd)">` : ''
 }
 
 async function saveAnnouncement (id, btn) {
   const title = document.getElementById('ann-title').value.trim()
-  if (!title) { alert('Title is required'); return }
+  const description = document.getElementById('ann-desc').value.trim()
+  const image_url = document.getElementById('ann-img').value.trim() || null
+  if (!title && !description && !image_url) { alert('Add an image or some text first.'); return }
   btn.disabled = true; btn.textContent = 'Saving…'
   try {
     const body = {
       title,
-      description:  document.getElementById('ann-desc').value.trim(),
+      description,
       badge_text:   document.getElementById('ann-badge').value.trim() || 'New',
       accent_color: document.getElementById('ann-color').value.trim() || '#f97316',
-      image_url:    document.getElementById('ann-img').value.trim() || null,
+      image_url,
       sort_order:   parseInt(document.getElementById('ann-order').value) || 0,
     }
     if (id) await api('PUT',  `/announcements/admin/${id}`, body)
