@@ -3,10 +3,21 @@
 const express = require('express')
 const { jwtAuth } = require('../middleware/jwtAuth')
 const { serverError } = require('../middleware/serverError')
+const logger  = require('../lib/logger')
 
 module.exports = function menuRouter (sql) {
   const router = express.Router()
   router.use(jwtAuth)
+
+  router.use((req, _res, next) => {
+    if (req.method !== 'GET') {
+      logger.info('menu', `menu_${req.method.toLowerCase()}`, logger.ctxFromReq(req), {
+        item_id: req.params?.id || req.body?.id || '',
+        name:    req.body?.name || '',
+      })
+    }
+    next()
+  })
 
   const { randomUUID } = require('crypto')
   function uid () { return randomUUID().replace(/-/g, '').slice(0, 20) }

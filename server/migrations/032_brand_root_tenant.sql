@@ -83,77 +83,66 @@ ALTER TABLE outlets
   FOREIGN KEY (brand_id) REFERENCES brands(id) ON DELETE CASCADE;
 
 -- ── 5. RENAME restaurant_id → brand_id in all scoped tables ─────────────────
+-- If brand_id already exists, drop restaurant_id instead of renaming
 
--- bo_users
-DO $$ BEGIN ALTER TABLE bo_users RENAME COLUMN restaurant_id TO brand_id; EXCEPTION WHEN undefined_column THEN NULL; END $$;
+ALTER TABLE bo_users DROP COLUMN IF EXISTS restaurant_id;
 ALTER TABLE bo_users ADD COLUMN IF NOT EXISTS brand_id TEXT;
 
--- settings (composite PK: restaurant_id, key)
 ALTER TABLE settings DROP CONSTRAINT IF EXISTS settings_pkey;
-DO $$ BEGIN ALTER TABLE settings RENAME COLUMN restaurant_id TO brand_id; EXCEPTION WHEN undefined_column THEN NULL; END $$;
+ALTER TABLE settings DROP COLUMN IF EXISTS restaurant_id;
 ALTER TABLE settings ADD COLUMN IF NOT EXISTS brand_id TEXT NOT NULL DEFAULT '';
-ALTER TABLE settings ADD PRIMARY KEY (brand_id, key);
+ALTER TABLE settings ADD COLUMN IF NOT EXISTS outlet_id TEXT NOT NULL DEFAULT '';
+ALTER TABLE settings ADD PRIMARY KEY (brand_id, outlet_id, key);
 
--- orders
-DO $$ BEGIN ALTER TABLE orders RENAME COLUMN restaurant_id TO brand_id; EXCEPTION WHEN undefined_column THEN NULL; END $$;
+ALTER TABLE orders DROP COLUMN IF EXISTS restaurant_id;
 ALTER TABLE orders ADD COLUMN IF NOT EXISTS brand_id TEXT;
 
--- categories
-DO $$ BEGIN ALTER TABLE categories RENAME COLUMN restaurant_id TO brand_id; EXCEPTION WHEN undefined_column THEN NULL; END $$;
+ALTER TABLE categories DROP COLUMN IF EXISTS restaurant_id;
 ALTER TABLE categories ADD COLUMN IF NOT EXISTS brand_id TEXT;
 
--- menu_items
-DO $$ BEGIN ALTER TABLE menu_items RENAME COLUMN restaurant_id TO brand_id; EXCEPTION WHEN undefined_column THEN NULL; END $$;
+ALTER TABLE menu_items DROP COLUMN IF EXISTS restaurant_id;
 ALTER TABLE menu_items ADD COLUMN IF NOT EXISTS brand_id TEXT;
 
--- tables_layout
-DO $$ BEGIN ALTER TABLE tables_layout RENAME COLUMN restaurant_id TO brand_id; EXCEPTION WHEN undefined_column THEN NULL; END $$;
+ALTER TABLE tables_layout DROP COLUMN IF EXISTS restaurant_id;
 ALTER TABLE tables_layout ADD COLUMN IF NOT EXISTS brand_id TEXT;
 
--- table_sections
-DO $$ BEGIN ALTER TABLE table_sections RENAME COLUMN restaurant_id TO brand_id; EXCEPTION WHEN undefined_column THEN NULL; END $$;
+ALTER TABLE table_sections DROP COLUMN IF EXISTS restaurant_id;
 ALTER TABLE table_sections ADD COLUMN IF NOT EXISTS brand_id TEXT;
 
--- cashiers
-DO $$ BEGIN ALTER TABLE cashiers RENAME COLUMN restaurant_id TO brand_id; EXCEPTION WHEN undefined_column THEN NULL; END $$;
+ALTER TABLE cashiers DROP COLUMN IF EXISTS restaurant_id;
 ALTER TABLE cashiers ADD COLUMN IF NOT EXISTS brand_id TEXT;
 
--- expenses
-DO $$ BEGIN ALTER TABLE expenses RENAME COLUMN restaurant_id TO brand_id; EXCEPTION WHEN undefined_column THEN NULL; END $$;
+ALTER TABLE expenses DROP COLUMN IF EXISTS restaurant_id;
 ALTER TABLE expenses ADD COLUMN IF NOT EXISTS brand_id TEXT;
 
--- shifts
-DO $$ BEGIN ALTER TABLE shifts RENAME COLUMN restaurant_id TO brand_id; EXCEPTION WHEN undefined_column THEN NULL; END $$;
+ALTER TABLE shifts DROP COLUMN IF EXISTS restaurant_id;
 ALTER TABLE shifts ADD COLUMN IF NOT EXISTS brand_id TEXT;
 
--- day_closings
-DO $$ BEGIN ALTER TABLE day_closings RENAME COLUMN restaurant_id TO brand_id; EXCEPTION WHEN undefined_column THEN NULL; END $$;
+ALTER TABLE day_closings DROP COLUMN IF EXISTS restaurant_id;
 ALTER TABLE day_closings ADD COLUMN IF NOT EXISTS brand_id TEXT;
 
--- config tables
-DO $$ BEGIN ALTER TABLE tax_groups RENAME COLUMN restaurant_id TO brand_id; EXCEPTION WHEN undefined_column THEN NULL; END $$;
+ALTER TABLE tax_groups DROP COLUMN IF EXISTS restaurant_id;
 ALTER TABLE tax_groups ADD COLUMN IF NOT EXISTS brand_id TEXT;
 
-DO $$ BEGIN ALTER TABLE payment_methods RENAME COLUMN restaurant_id TO brand_id; EXCEPTION WHEN undefined_column THEN NULL; END $$;
+ALTER TABLE payment_methods DROP COLUMN IF EXISTS restaurant_id;
 ALTER TABLE payment_methods ADD COLUMN IF NOT EXISTS brand_id TEXT;
 
-DO $$ BEGIN ALTER TABLE delivery_partners RENAME COLUMN restaurant_id TO brand_id; EXCEPTION WHEN undefined_column THEN NULL; END $$;
+ALTER TABLE delivery_partners DROP COLUMN IF EXISTS restaurant_id;
 ALTER TABLE delivery_partners ADD COLUMN IF NOT EXISTS brand_id TEXT;
 
-DO $$ BEGIN ALTER TABLE order_types RENAME COLUMN restaurant_id TO brand_id; EXCEPTION WHEN undefined_column THEN NULL; END $$;
+ALTER TABLE order_types DROP COLUMN IF EXISTS restaurant_id;
 ALTER TABLE order_types ADD COLUMN IF NOT EXISTS brand_id TEXT;
 
-DO $$ BEGIN ALTER TABLE kitchens RENAME COLUMN restaurant_id TO brand_id; EXCEPTION WHEN undefined_column THEN NULL; END $$;
+ALTER TABLE kitchens DROP COLUMN IF EXISTS restaurant_id;
 ALTER TABLE kitchens ADD COLUMN IF NOT EXISTS brand_id TEXT;
 
-DO $$ BEGIN ALTER TABLE designations RENAME COLUMN restaurant_id TO brand_id; EXCEPTION WHEN undefined_column THEN NULL; END $$;
+ALTER TABLE designations DROP COLUMN IF EXISTS restaurant_id;
 ALTER TABLE designations ADD COLUMN IF NOT EXISTS brand_id TEXT;
 
-DO $$ BEGIN ALTER TABLE modifier_groups RENAME COLUMN restaurant_id TO brand_id; EXCEPTION WHEN undefined_column THEN NULL; END $$;
+ALTER TABLE modifier_groups DROP COLUMN IF EXISTS restaurant_id;
 ALTER TABLE modifier_groups ADD COLUMN IF NOT EXISTS brand_id TEXT;
 
--- terminal_registrations
-DO $$ BEGIN ALTER TABLE terminal_registrations RENAME COLUMN restaurant_id TO brand_id; EXCEPTION WHEN undefined_column THEN NULL; END $$;
+ALTER TABLE terminal_registrations DROP COLUMN IF EXISTS restaurant_id;
 ALTER TABLE terminal_registrations ADD COLUMN IF NOT EXISTS brand_id TEXT;
 ALTER TABLE terminal_registrations DROP CONSTRAINT IF EXISTS terminal_registrations_restaurant_id_fkey;
 ALTER TABLE terminal_registrations DROP CONSTRAINT IF EXISTS terminal_registrations_brand_id_fkey;
@@ -161,7 +150,6 @@ ALTER TABLE terminal_registrations
   ADD CONSTRAINT terminal_registrations_brand_id_fkey
   FOREIGN KEY (brand_id) REFERENCES brands(id) ON DELETE CASCADE;
 
--- audit_log: add brand_id if not present
 ALTER TABLE audit_log ADD COLUMN IF NOT EXISTS brand_id TEXT;
 ALTER TABLE no_sale_log ADD COLUMN IF NOT EXISTS brand_id TEXT;
 ALTER TABLE customers ADD COLUMN IF NOT EXISTS brand_id TEXT;

@@ -1,0 +1,679 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Restaurant POS - Dual-Mode Architecture</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            color: #333;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            color: white;
+            margin-bottom: 40px;
+        }
+
+        header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        header p {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+
+        .architecture {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 40px;
+        }
+
+        .server-section {
+            background: white;
+            border-radius: 12px;
+            padding: 25px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            border-top: 5px solid;
+        }
+
+        .server-section.local {
+            border-top-color: #4CAF50;
+        }
+
+        .server-section.cloud {
+            border-top-color: #2196F3;
+        }
+
+        .server-section h2 {
+            display: flex;
+            align-items: center;
+            margin-bottom: 20px;
+            font-size: 1.5em;
+        }
+
+        .server-section h2 .badge {
+            display: inline-block;
+            margin-left: 10px;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 0.7em;
+            font-weight: bold;
+            color: white;
+        }
+
+        .local h2 .badge {
+            background-color: #4CAF50;
+        }
+
+        .cloud h2 .badge {
+            background-color: #2196F3;
+        }
+
+        .section-content {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .item {
+            padding: 15px;
+            background: #f5f5f5;
+            border-left: 4px solid #667eea;
+            border-radius: 4px;
+        }
+
+        .item.local {
+            border-left-color: #4CAF50;
+        }
+
+        .item.cloud {
+            border-left-color: #2196F3;
+        }
+
+        .item h4 {
+            color: #333;
+            margin-bottom: 5px;
+            font-size: 0.95em;
+        }
+
+        .item p {
+            color: #666;
+            font-size: 0.9em;
+            line-height: 1.4;
+            margin: 0;
+        }
+
+        .item code {
+            background: #e0e0e0;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.85em;
+        }
+
+        .apps-section {
+            background: white;
+            border-radius: 12px;
+            padding: 25px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            margin-bottom: 40px;
+        }
+
+        .apps-section h2 {
+            color: #333;
+            margin-bottom: 20px;
+            font-size: 1.5em;
+        }
+
+        .apps-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+        }
+
+        .app-card {
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 8px;
+            text-align: center;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            transition: transform 0.3s ease;
+        }
+
+        .app-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .app-card h3 {
+            margin-bottom: 10px;
+            font-size: 1.2em;
+        }
+
+        .app-card p {
+            font-size: 0.9em;
+            opacity: 0.9;
+        }
+
+        .flow-section {
+            background: white;
+            border-radius: 12px;
+            padding: 25px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            margin-bottom: 40px;
+        }
+
+        .flow-section h2 {
+            color: #333;
+            margin-bottom: 20px;
+            font-size: 1.5em;
+        }
+
+        .flow-diagram {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 20px;
+            background: #f5f5f5;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .flow-box {
+            background: white;
+            padding: 15px 20px;
+            border-radius: 6px;
+            border-left: 4px solid #667eea;
+            font-weight: bold;
+            color: #333;
+            min-width: 120px;
+            text-align: center;
+        }
+
+        .flow-arrow {
+            font-size: 1.5em;
+            color: #667eea;
+            font-weight: bold;
+        }
+
+        .sync-cycle {
+            background: #e3f2fd;
+            border-left: 4px solid #2196F3;
+            padding: 15px;
+            border-radius: 6px;
+            margin-bottom: 15px;
+        }
+
+        .sync-cycle h4 {
+            color: #2196F3;
+            margin-bottom: 10px;
+        }
+
+        .sync-cycle ul {
+            margin-left: 20px;
+            color: #555;
+        }
+
+        .sync-cycle li {
+            margin-bottom: 5px;
+        }
+
+        .failover-section {
+            background: #fff3cd;
+            border-left: 4px solid #ffc107;
+            padding: 15px;
+            border-radius: 6px;
+            margin-bottom: 15px;
+        }
+
+        .failover-section h4 {
+            color: #ff9800;
+            margin-bottom: 10px;
+        }
+
+        .config-section {
+            background: white;
+            border-radius: 12px;
+            padding: 25px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            margin-bottom: 40px;
+        }
+
+        .config-section h2 {
+            color: #333;
+            margin-bottom: 20px;
+            font-size: 1.5em;
+        }
+
+        .config-tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #e0e0e0;
+            flex-wrap: wrap;
+        }
+
+        .config-tab {
+            padding: 12px 20px;
+            cursor: pointer;
+            background: none;
+            border: none;
+            font-size: 1em;
+            border-bottom: 3px solid transparent;
+            color: #666;
+            transition: all 0.3s ease;
+        }
+
+        .config-tab.active {
+            color: #667eea;
+            border-bottom-color: #667eea;
+        }
+
+        .config-content {
+            display: none;
+            background: #f5f5f5;
+            padding: 15px;
+            border-radius: 6px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.85em;
+            line-height: 1.6;
+            overflow-x: auto;
+        }
+
+        .config-content.active {
+            display: block;
+        }
+
+        .status-board {
+            background: white;
+            border-radius: 12px;
+            padding: 25px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            margin-bottom: 40px;
+        }
+
+        .status-board h2 {
+            color: #333;
+            margin-bottom: 20px;
+            font-size: 1.5em;
+        }
+
+        .status-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+        }
+
+        .status-item {
+            padding: 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 6px;
+            text-align: center;
+        }
+
+        .status-item.complete {
+            border-color: #4CAF50;
+            background: #f1f8f4;
+        }
+
+        .status-item.inprogress {
+            border-color: #ff9800;
+            background: #fff8f0;
+        }
+
+        .status-item h4 {
+            margin-bottom: 8px;
+            color: #333;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 0.8em;
+            font-weight: bold;
+            color: white;
+        }
+
+        .status-badge.complete {
+            background: #4CAF50;
+        }
+
+        .status-badge.inprogress {
+            background: #ff9800;
+        }
+
+        footer {
+            text-align: center;
+            color: white;
+            padding-top: 20px;
+            border-top: 2px solid rgba(255,255,255,0.2);
+            font-size: 0.9em;
+        }
+
+        @media (max-width: 768px) {
+            .architecture {
+                grid-template-columns: 1fr;
+            }
+
+            header h1 {
+                font-size: 1.8em;
+            }
+
+            .flow-diagram {
+                flex-direction: column;
+            }
+
+            .flow-arrow {
+                transform: rotate(90deg);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🍕 Restaurant POS System</h1>
+            <p>Dual-Mode Architecture: LOCAL + CLOUD with Auto-Failover</p>
+        </header>
+
+        <div class="architecture">
+            <div class="server-section local">
+                <h2>
+                    🏪 LOCAL Server
+                    <span class="badge">PRIMARY</span>
+                </h2>
+                <div class="section-content">
+                    <div class="item local">
+                        <h4>Express Server</h4>
+                        <p><code>127.0.0.1:3001</code> (Restaurant LAN)</p>
+                    </div>
+                    <div class="item local">
+                        <h4>Database</h4>
+                        <p>PostgreSQL <code>restaurant_pos_central</code> (Local Copy)</p>
+                    </div>
+                    <div class="item local">
+                        <h4>Sync Frequency</h4>
+                        <p>Every 60 seconds (pulls from CLOUD)</p>
+                    </div>
+                    <div class="item local">
+                        <h4>Offline Support</h4>
+                        <p>✅ Yes - apps work without internet</p>
+                    </div>
+                    <div class="item local">
+                        <h4>Real-time Updates</h4>
+                        <p>WebSocket via Socket.io</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="server-section cloud">
+                <h2>
+                    ☁️ CLOUD Server
+                    <span class="badge">FALLBACK</span>
+                </h2>
+                <div class="section-content">
+                    <div class="item cloud">
+                        <h4>Render Server</h4>
+                        <p><code>restaurantpos-8xew.onrender.com</code></p>
+                    </div>
+                    <div class="item cloud">
+                        <h4>Database</h4>
+                        <p>Neon PostgreSQL <code>neondb</code> (Source of Truth)</p>
+                    </div>
+                    <div class="item cloud">
+                        <h4>When Active</h4>
+                        <p>When LOCAL unavailable (3+ failures)</p>
+                    </div>
+                    <div class="item cloud">
+                        <h4>Requires Internet</h4>
+                        <p>✅ Yes - must have active connection</p>
+                    </div>
+                    <div class="item cloud">
+                        <h4>Back Office</h4>
+                        <p>Connected to Neon database</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="apps-section">
+            <h2>📱 Connected Apps (All use LOCAL → CLOUD)</h2>
+            <div class="apps-grid">
+                <div class="app-card">
+                    <h3>🖥️ POS</h3>
+                    <p>Desktop (Electron)</p>
+                    <p style="margin-top: 10px; font-size: 0.8em;">Cashier orders, payments, printing</p>
+                </div>
+                <div class="app-card">
+                    <h3>👥 Waiter</h3>
+                    <p>Mobile PWA</p>
+                    <p style="margin-top: 10px; font-size: 0.8em;">Table orders, item requests</p>
+                </div>
+                <div class="app-card">
+                    <h3>🍳 KDS</h3>
+                    <p>Kitchen Display (PWA)</p>
+                    <p style="margin-top: 10px; font-size: 0.8em;">Real-time order prep, item status</p>
+                </div>
+                <div class="app-card">
+                    <h3>🚗 Delivery</h3>
+                    <p>Delivery Boy (PWA)</p>
+                    <p style="margin-top: 10px; font-size: 0.8em;">Delivery orders, pickup tracking</p>
+                </div>
+                <div class="app-card">
+                    <h3>📊 Back Office</h3>
+                    <p>Admin (Cloud-only)</p>
+                    <p style="margin-top: 10px; font-size: 0.8em;">Reports, menu mgmt, staff, analytics</p>
+                </div>
+                <div class="app-card">
+                    <h3>👤 Customer</h3>
+                    <p>Order Placement (PWA)</p>
+                    <p style="margin-top: 10px; font-size: 0.8em;">Browse menu, place orders online</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="flow-section">
+            <h2>🔄 Connection Flow</h2>
+
+            <div class="flow-diagram">
+                <div class="flow-box">POS/Waiter/KDS/Delivery</div>
+                <div class="flow-arrow">→</div>
+                <div class="flow-box">Try LOCAL (127.0.0.1:3001)</div>
+                <div class="flow-arrow">→</div>
+                <div class="flow-box">✅ Success</div>
+            </div>
+
+            <div class="flow-diagram">
+                <div class="flow-box">✗ Failed (3x)</div>
+                <div class="flow-arrow">→</div>
+                <div class="flow-box">Switch to CLOUD</div>
+                <div class="flow-arrow">→</div>
+                <div class="flow-box">restaurantpos-8xew.onrender.com</div>
+            </div>
+
+            <div class="flow-diagram">
+                <div class="flow-box">LOCAL Available</div>
+                <div class="flow-arrow">→</div>
+                <div class="flow-box">Switch Back</div>
+                <div class="flow-arrow">→</div>
+                <div class="flow-box">Auto-Recovery</div>
+            </div>
+
+            <h3 style="margin-top: 25px; margin-bottom: 15px; color: #333;">60-Second Sync Cycle</h3>
+            <div class="sync-cycle">
+                <h4>Every 60 seconds, LOCAL server pulls from CLOUD:</h4>
+                <ul>
+                    <li>📋 Menu items</li>
+                    <li>🏷️ Categories</li>
+                    <li>👥 Staff & Cashiers</li>
+                    <li>⚙️ Settings</li>
+                    <li>🪑 Tables layout</li>
+                    <li>🖨️ Printers</li>
+                    <li>🎯 Modifiers</li>
+                </ul>
+            </div>
+
+            <div class="failover-section">
+                <h4>⚠️ Auto-Failover Logic</h4>
+                <p>Apps check LOCAL server every 5 seconds via health check. After 3 consecutive failures (15 seconds), automatically switch to CLOUD mode. On recovery, switch back to LOCAL.</p>
+            </div>
+        </div>
+
+        <div class="config-section">
+            <h2>⚙️ Configuration</h2>
+
+            <div class="config-tabs">
+                <button class="config-tab active" onclick="switchConfig('local')">LOCAL Server</button>
+                <button class="config-tab" onclick="switchConfig('cloud')">CLOUD Server</button>
+                <button class="config-tab" onclick="switchConfig('apps')">Apps Config</button>
+                <button class="config-tab" onclick="switchConfig('database')">Database Details</button>
+            </div>
+
+            <div id="local" class="config-content active">
+<pre># LOCAL Server (.env)
+DB_HOST=127.0.0.1
+DB_PORT=5432
+DB_NAME=restaurant_pos_central
+DB_USER=pos_central_user
+DB_PASS=pos_secure_2024!
+
+PORT=3001
+NODE_ENV=development
+JWT_SECRET=local-server-jwt-secret-2026
+API_KEY=pos-api-key-2026
+
+# Cloud Sync
+IS_CLOUD_SERVER=false
+CLOUD_SYNC_URL=https://restaurantpos-8xew.onrender.com
+CLOUD_SYNC_KEY=pos-api-key-2026
+CLOUD_BRAND_ID=REST-GPPE8G</pre>
+            </div>
+
+            <div id="cloud" class="config-content">
+<pre># CLOUD Server (.env on Render)
+DATABASE_URL=postgresql://neondb_owner:npg_...@ep-wispy-water-alc388ct-pooler.c-3.eu-central-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require
+
+PORT=3000
+NODE_ENV=production
+JWT_SECRET=cloud-server-jwt-secret-2026
+API_KEY=pos-api-key-2026
+
+# Cloud Flags
+IS_CLOUD_SERVER=true</pre>
+            </div>
+
+            <div id="apps" class="config-content">
+<pre>// App Configuration (pos-config.json)
+{
+  "serverMode": "LOCAL|CLOUD",
+  "localUrl": "http://127.0.0.1:3001",
+  "cloudUrl": "https://restaurantpos-8xew.onrender.com",
+  "machineId": "POS-LOCAL-01",
+  "outletCode": "YK767P",
+  "outletId": "565B10A0AD",
+  "outletName": "Fresh Test Outlet",
+  "brandId": "REST-GPPE8G",
+  "apiKey": "pos-api-key-2026",
+  "autoFailoverThreshold": 3,
+  "failoverAttempts": 0,
+  "syncInterval": 60000
+}</pre>
+            </div>
+
+            <div id="database" class="config-content">
+<pre># LOCAL Database
+PostgreSQL: restaurant_pos_central
+User: pos_central_user
+Password: pos_secure_2024!
+Host: 127.0.0.1
+Port: 5432
+
+# CLOUD Database (Neon)
+Provider: Neon (EU-Central, AWS)
+Connection: postgresql://neondb_owner:npg_58SHzriDLJgd@ep-wispy-water-alc388ct-pooler.c-3.eu-central-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require
+Database: neondb
+Username: neondb_owner
+Region: EU-Central
+SSL: Required + Channel Binding</pre>
+            </div>
+        </div>
+
+        <div class="status-board">
+            <h2>📈 Implementation Status</h2>
+            <div class="status-grid">
+                <div class="status-item complete">
+                    <h4>✅ Cloud Setup</h4>
+                    <span class="status-badge complete">COMPLETE</span>
+                </div>
+                <div class="status-item complete">
+                    <h4>✅ Neon Database</h4>
+                    <span class="status-badge complete">COMPLETE</span>
+                </div>
+                <div class="status-item complete">
+                    <h4>✅ Architecture Docs</h4>
+                    <span class="status-badge complete">COMPLETE</span>
+                </div>
+                <div class="status-item inprogress">
+                    <h4>🔄 LOCAL Server Setup</h4>
+                    <span class="status-badge inprogress">IN PROGRESS</span>
+                </div>
+                <div class="status-item inprogress">
+                    <h4>🔄 App Dual-Mode</h4>
+                    <span class="status-badge inprogress">IN PROGRESS</span>
+                </div>
+                <div class="status-item inprogress">
+                    <h4>🔄 Auto-Failover Test</h4>
+                    <span class="status-badge inprogress">IN PROGRESS</span>
+                </div>
+            </div>
+        </div>
+
+        <footer>
+            <p>Restaurant POS System - Dual-Mode Architecture</p>
+            <p>Last Updated: 2026-05-30 | Status: Ready for LOCAL Server Implementation</p>
+            <p>📧 Contact: arifpadup@gmail.com</p>
+        </footer>
+    </div>
+
+    <script>
+        function switchConfig(tabName) {
+            // Hide all config contents
+            const contents = document.querySelectorAll('.config-content');
+            contents.forEach(content => content.classList.remove('active'));
+
+            // Remove active from all tabs
+            const tabs = document.querySelectorAll('.config-tab');
+            tabs.forEach(tab => tab.classList.remove('active'));
+
+            // Show selected config
+            document.getElementById(tabName).classList.add('active');
+
+            // Add active to clicked tab
+            event.target.classList.add('active');
+        }
+    </script>
+</body>
+</html>

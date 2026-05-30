@@ -54,6 +54,8 @@ async function writeLoginAudit (sql, userType, userId, username, brandId, succes
   } catch (_) {}
 }
 
+const logger = require('../lib/logger')
+
 module.exports = function authRouter (sql) {
   const router = express.Router()
 
@@ -114,6 +116,7 @@ module.exports = function authRouter (sql) {
             WHERE id = ${user.id}`
         } catch (_) {}
         await writeLoginAudit(sql, 'bo_user', user.id, user.username, user.brand_id || null, false, ip, req.headers['user-agent'])
+        logger.warn('auth', 'login_failed', { user_id: user.id, user_name: user.username, brand_id: user.brand_id || '', ip }, { reason: 'invalid_password' })
         return res.status(401).json({ error: 'Invalid username or password' })
       }
 
@@ -134,6 +137,7 @@ module.exports = function authRouter (sql) {
       // Reset failed attempts, track login
       try { await sql`UPDATE bo_users SET failed_attempts = 0, locked_until = NULL, last_login_at = ${Date.now()}, login_count = login_count + 1 WHERE id = ${user.id}` } catch (_) {}
       await writeLoginAudit(sql, 'bo_user', user.id, user.username, user.brand_id || null, true, ip, req.headers['user-agent'])
+      logger.info('auth', 'login_success', { user_id: user.id, user_name: user.username, user_role: user.role, brand_id: user.brand_id || '', ip })
       let owner_name = null
       if (user.brand_id) {
         try {

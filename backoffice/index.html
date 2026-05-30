@@ -1392,6 +1392,12 @@ input:checked+.toggle-slider:before{transform:translateX(17px)}
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
         <span>My Account</span>
       </button>
+      <div class="sb-section" id="nav-section-logs" style="display:none">Support</div>
+      <div class="nav-item" id="nav-logs" onclick="showView('logs')" role="button" tabindex="0" style="display:none">
+        <svg class="ni-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+        <span>Logs & Support</span>
+      </div>
+
       <button class="sb-logout-btn" onclick="logout()">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
         <span>Sign Out</span>
@@ -2282,6 +2288,125 @@ input:checked+.toggle-slider:before{transform:translateX(17px)}
     </div>
     </div><!-- /rpt-pane-comp-items -->
 
+  </div>
+
+  <!-- ── LOGS & SUPPORT ── -->
+  <div class="view" id="v-logs">
+    <div class="page-header">
+      <h2>📋 Logs & Support</h2>
+      <button class="btn btn-outline" onclick="reloadCurrentLogsTab()">↻ Refresh</button>
+    </div>
+
+    <!-- Tabs -->
+    <div style="display:flex;gap:2px;border-bottom:2px solid var(--border);margin-bottom:16px">
+      <button id="logs-tab-server" onclick="showLogsTab('server')" style="padding:8px 18px;border:none;background:none;font-size:13px;font-weight:600;cursor:pointer;border-bottom:2px solid var(--primary);color:var(--primary);margin-bottom:-2px">🖥️ Server Logs</button>
+      <button id="logs-tab-terminal" onclick="showLogsTab('terminal')" style="padding:8px 18px;border:none;background:none;font-size:13px;font-weight:600;cursor:pointer;border-bottom:2px solid transparent;color:var(--muted)">📱 Terminal Logs (Cloud)</button>
+    </div>
+
+    <!-- Server Logs Tab -->
+    <div id="logs-pane-server" style="display:grid;gap:16px;max-width:960px">
+      <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;background:var(--card);border:1px solid var(--border);border-radius:10px;padding:14px 16px">
+        <div>
+          <label style="font-size:11px;font-weight:700;color:var(--muted);display:block;margin-bottom:4px">DATE</label>
+          <input type="date" id="logs-date" style="padding:7px 10px;border:1.5px solid var(--border);border-radius:6px;font-size:13px;background:var(--bg);color:var(--text)">
+        </div>
+        <div>
+          <label style="font-size:11px;font-weight:700;color:var(--muted);display:block;margin-bottom:4px">LEVEL</label>
+          <select id="logs-level" style="padding:7px 10px;border:1.5px solid var(--border);border-radius:6px;font-size:13px;background:var(--bg);color:var(--text)">
+            <option value="">All Levels</option>
+            <option value="INFO">INFO</option>
+            <option value="WARNING">WARNING</option>
+            <option value="ERROR">ERROR</option>
+            <option value="CRITICAL">CRITICAL</option>
+          </select>
+        </div>
+        <div style="margin-top:auto">
+          <button class="btn btn-primary" onclick="filterServerLogs()" style="padding:8px 18px">Filter</button>
+        </div>
+      </div>
+      <div style="background:var(--card);border:1px solid var(--border);border-radius:10px;padding:16px">
+        <div style="font-size:13px;font-weight:700;margin-bottom:12px;display:flex;justify-content:space-between">
+          <span>Log Files</span>
+          <span style="font-size:11px;font-weight:400;color:var(--muted)">Retained 30 days</span>
+        </div>
+        <div id="logs-file-list" style="font-size:13px;color:var(--muted)">Loading…</div>
+      </div>
+      <div style="background:var(--card);border:1px solid var(--border);border-radius:10px;padding:16px">
+        <div style="font-size:13px;font-weight:700;margin-bottom:12px;display:flex;justify-content:space-between">
+          <span id="logs-viewer-title">Log Viewer</span>
+          <button class="btn btn-outline" style="font-size:12px;padding:5px 12px" onclick="downloadCurrentLog()">📥 Download</button>
+        </div>
+        <div id="logs-viewer" style="background:#0f172a;color:#94a3b8;font-family:monospace;font-size:11px;padding:14px;border-radius:6px;max-height:500px;overflow-y:auto;white-space:pre-wrap;word-break:break-all">Select a log file above to view its contents.</div>
+      </div>
+    </div>
+
+    <!-- Terminal Logs Tab (Cloud) -->
+    <div id="logs-pane-terminal" style="display:none;max-width:960px">
+
+      <!-- Filter bar -->
+      <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end;background:var(--card);border:1px solid var(--border);border-radius:10px;padding:14px 16px;margin-bottom:16px">
+        <div>
+          <label style="font-size:11px;font-weight:700;color:var(--muted);display:block;margin-bottom:4px">DATE FROM</label>
+          <input type="date" id="tlog-from" style="padding:7px 10px;border:1.5px solid var(--border);border-radius:6px;font-size:13px;background:var(--bg);color:var(--text)">
+        </div>
+        <div>
+          <label style="font-size:11px;font-weight:700;color:var(--muted);display:block;margin-bottom:4px">DATE TO</label>
+          <input type="date" id="tlog-to" style="padding:7px 10px;border:1.5px solid var(--border);border-radius:6px;font-size:13px;background:var(--bg);color:var(--text)">
+        </div>
+        <div>
+          <label style="font-size:11px;font-weight:700;color:var(--muted);display:block;margin-bottom:4px">TERMINAL</label>
+          <select id="tlog-terminal" style="padding:7px 10px;border:1.5px solid var(--border);border-radius:6px;font-size:13px;background:var(--bg);color:var(--text);min-width:140px">
+            <option value="">All Terminals</option>
+          </select>
+        </div>
+        <div>
+          <label style="font-size:11px;font-weight:700;color:var(--muted);display:block;margin-bottom:4px">LEVEL</label>
+          <select id="tlog-level" style="padding:7px 10px;border:1.5px solid var(--border);border-radius:6px;font-size:13px;background:var(--bg);color:var(--text)">
+            <option value="">All Levels</option>
+            <option value="WARNING">WARNING</option>
+            <option value="ERROR">ERROR</option>
+            <option value="CRITICAL">CRITICAL</option>
+          </select>
+        </div>
+        <div>
+          <button class="btn btn-primary" onclick="loadTerminalLogs()" style="padding:8px 18px">Filter</button>
+        </div>
+        <div style="margin-left:auto">
+          <button class="btn btn-outline" style="font-size:12px;padding:6px 12px;color:var(--danger);border-color:var(--danger)" onclick="cleanupTerminalLogs()">🗑️ Cleanup Old</button>
+        </div>
+      </div>
+
+      <!-- Summary cards -->
+      <div id="tlog-summary" style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px"></div>
+
+      <!-- Results table -->
+      <div style="background:var(--card);border:1px solid var(--border);border-radius:10px;overflow:hidden">
+        <div style="padding:12px 16px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center">
+          <span style="font-size:13px;font-weight:700" id="tlog-count">Terminal Log Entries</span>
+          <button class="btn btn-outline" style="font-size:12px;padding:5px 12px" onclick="exportTerminalLogsCsv()">📥 Export CSV</button>
+        </div>
+        <div style="overflow-x:auto">
+          <table style="width:100%;border-collapse:collapse;font-size:12px">
+            <thead>
+              <tr style="background:var(--bg)">
+                <th style="padding:8px 12px;text-align:left;font-weight:700;color:var(--muted);border-bottom:1px solid var(--border)">Timestamp</th>
+                <th style="padding:8px 12px;text-align:left;font-weight:700;color:var(--muted);border-bottom:1px solid var(--border)">Level</th>
+                <th style="padding:8px 12px;text-align:left;font-weight:700;color:var(--muted);border-bottom:1px solid var(--border)">Terminal</th>
+                <th style="padding:8px 12px;text-align:left;font-weight:700;color:var(--muted);border-bottom:1px solid var(--border)">Outlet</th>
+                <th style="padding:8px 12px;text-align:left;font-weight:700;color:var(--muted);border-bottom:1px solid var(--border)">Module</th>
+                <th style="padding:8px 12px;text-align:left;font-weight:700;color:var(--muted);border-bottom:1px solid var(--border)">Action</th>
+                <th style="padding:8px 12px;text-align:left;font-weight:700;color:var(--muted);border-bottom:1px solid var(--border)">User</th>
+                <th style="padding:8px 12px;text-align:left;font-weight:700;color:var(--muted);border-bottom:1px solid var(--border)">Details</th>
+              </tr>
+            </thead>
+            <tbody id="tlog-tbody">
+              <tr><td colspan="8" style="padding:24px;text-align:center;color:var(--muted)">Click Filter to load terminal logs</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div id="tlog-pagination" style="padding:10px 16px;border-top:1px solid var(--border);display:flex;gap:8px;align-items:center;font-size:12px;color:var(--muted)"></div>
+      </div>
+    </div>
   </div>
 
   <!-- ── AUDIT LOG ── -->
@@ -4613,6 +4738,13 @@ function updateSidebarUser () {
   if (avatarEl)  avatarEl.textContent  = initial
   if (avatarSm)  avatarSm.textContent  = initial
   if (displayEl) displayEl.textContent = displayName
+
+  // Show Logs nav for superadmin only
+  const isAdmin = currentUser.role === 'superadmin' || currentUser.admin === true
+  const logsNav = document.getElementById('nav-logs')
+  const logsSection = document.getElementById('nav-section-logs')
+  if (logsNav)    logsNav.style.display    = isAdmin ? '' : 'none'
+  if (logsSection) logsSection.style.display = isAdmin ? '' : 'none'
 }
 
 // Check saved token on load
@@ -5214,6 +5346,7 @@ function showView (id) {
   if (id === 'dashboard')    { populateOutletSelectors(); loadDashboard() }
   if (id === 'reports')   { document.getElementById('navg-reports')?.classList.add('open'); if (!_rptFilterData.outlets?.length) loadRptFilterOptions(); else restoreCtxOutlet(); setQFPeriod('rpt-qfbar','rep-from','rep-to',null,'today'); loadReport(); showRptTab('sales') }
   if (id === 'audit')       loadAuditLog()
+  if (id === 'logs')        loadServerLogs()
   if (id === 'downloads')  loadDownloadsPage()
   if (id === 'bo-settings') loadBOSettings()
   if (id === 'config')  { document.getElementById('navg-config').classList.add('open'); showCfgTab('brand'); cfgLoadBrands() }
@@ -7011,6 +7144,268 @@ document.querySelectorAll('.modal-overlay').forEach(el =>
 document.addEventListener('keydown', e => {
   if (e.key === 'Escape') document.querySelectorAll('.modal-overlay.show').forEach(el => el.classList.remove('show'))
 })
+
+// ─── LOGS & SUPPORT ──────────────────────────────────────────────
+let _currentLogFile = null
+let _currentLogEntries = []
+
+async function loadServerLogs () {
+  const listEl = document.getElementById('logs-file-list')
+  if (!listEl) return
+  listEl.textContent = 'Loading…'
+  // Set today as default date
+  const todayInput = document.getElementById('logs-date')
+  if (todayInput && !todayInput.value) {
+    todayInput.value = new Date().toISOString().slice(0, 10)
+  }
+  try {
+    const data = await apiFetch('/logs')
+    if (!data.ok || !data.files?.length) {
+      listEl.innerHTML = '<span style="color:var(--muted)">No log files found on server.</span>'
+      return
+    }
+    listEl.innerHTML = data.files.map(f => `
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 4px;border-bottom:1px solid var(--border)">
+        <div>
+          <div style="font-weight:600;color:var(--text)">${f.name}</div>
+          <div style="font-size:11px;color:var(--muted)">${(f.size/1024).toFixed(1)} KB &nbsp;·&nbsp; ${new Date(f.mtime).toLocaleString()}</div>
+        </div>
+        <div style="display:flex;gap:6px">
+          <button class="btn btn-outline" style="font-size:11px;padding:4px 10px" onclick="viewLogFile('${f.name}')">View</button>
+          <button class="btn btn-outline" style="font-size:11px;padding:4px 10px" onclick="downloadLogFile('${f.name}')">📥</button>
+        </div>
+      </div>
+    `).join('')
+  } catch (e) {
+    listEl.innerHTML = `<span style="color:var(--danger)">Error: ${e.message}</span>`
+  }
+}
+
+async function viewLogFile (filename) {
+  const viewerEl = document.getElementById('logs-viewer')
+  const titleEl  = document.getElementById('logs-viewer-title')
+  if (!viewerEl) return
+  _currentLogFile = filename
+  viewerEl.textContent = 'Loading…'
+  if (titleEl) titleEl.textContent = filename
+  try {
+    const levelFilter = document.getElementById('logs-level')?.value || ''
+    const data = await apiFetch(`/logs/view/${encodeURIComponent(filename)}?lines=1000`)
+    if (!data.ok) { viewerEl.textContent = 'Error: ' + data.error; return }
+    _currentLogEntries = data.entries || []
+    renderLogEntries(levelFilter)
+  } catch (e) {
+    viewerEl.textContent = 'Failed to load: ' + e.message
+  }
+}
+
+function renderLogEntries (levelFilter) {
+  const viewerEl = document.getElementById('logs-viewer')
+  if (!viewerEl) return
+  const entries = levelFilter
+    ? _currentLogEntries.filter(line => { try { return JSON.parse(line).level === levelFilter } catch { return false } })
+    : _currentLogEntries
+
+  if (!entries.length) { viewerEl.textContent = 'No entries match the filter.'; return }
+
+  viewerEl.innerHTML = entries.map(line => {
+    try {
+      const e  = JSON.parse(line)
+      const color = e.level === 'ERROR' || e.level === 'CRITICAL' ? '#f87171'
+                  : e.level === 'WARNING' ? '#fbbf24'
+                  : '#94a3b8'
+      const ts = e.timestamp?.replace('T', ' ').slice(0, 19) || ''
+      return `<div style="border-bottom:1px solid #1e293b;padding:3px 0"><span style="color:#64748b">${ts}</span> <span style="color:${color};font-weight:700">[${e.level}]</span> <span style="color:#7dd3fc">${e.module||''}</span> <span style="color:#e2e8f0">${e.action||''}</span>${e.user_name ? ` <span style="color:#a78bfa">@${e.user_name}</span>` : ''}${e.brand_id ? ` <span style="color:#34d399">${e.brand_id}</span>` : ''}${e.error ? ` <span style="color:#f87171">${e.error}</span>` : ''}</div>`
+    } catch {
+      return `<div style="color:#64748b">${line}</div>`
+    }
+  }).join('')
+  viewerEl.scrollTop = viewerEl.scrollHeight
+}
+
+function filterServerLogs () {
+  const levelFilter = document.getElementById('logs-level')?.value || ''
+  const dateFilter  = document.getElementById('logs-date')?.value || ''
+  if (dateFilter && _currentLogFile) {
+    const filename = `server_${dateFilter}.log`
+    viewLogFile(filename)
+  } else if (_currentLogFile) {
+    renderLogEntries(levelFilter)
+  }
+}
+
+async function downloadLogFile (filename) {
+  try {
+    const a = document.createElement('a')
+    a.href = `${API_BASE}/logs/download/${encodeURIComponent(filename)}?token=${encodeURIComponent(token)}`
+    a.download = filename
+    a.click()
+  } catch (e) {
+    alert('Download failed: ' + e.message)
+  }
+}
+
+function downloadCurrentLog () {
+  if (_currentLogFile) downloadLogFile(_currentLogFile)
+  else alert('No log file selected.')
+}
+
+// ─── LOGS & SUPPORT ──────────────────────────────────────────────
+let _currentLogFile    = null
+let _currentLogEntries = []
+let _currentLogsTab    = 'server'
+let _tlogRows          = []
+let _tlogOffset        = 0
+const TLOG_PAGE        = 100
+
+function showLogsTab (tab) {
+  _currentLogsTab = tab
+  document.getElementById('logs-pane-server').style.display   = tab === 'server'   ? 'grid' : 'none'
+  document.getElementById('logs-pane-terminal').style.display = tab === 'terminal' ? 'block' : 'none'
+  const sBtn = document.getElementById('logs-tab-server')
+  const tBtn = document.getElementById('logs-tab-terminal')
+  if (sBtn) { sBtn.style.color = tab === 'server' ? 'var(--primary)' : 'var(--muted)'; sBtn.style.borderBottomColor = tab === 'server' ? 'var(--primary)' : 'transparent' }
+  if (tBtn) { tBtn.style.color = tab === 'terminal' ? 'var(--primary)' : 'var(--muted)'; tBtn.style.borderBottomColor = tab === 'terminal' ? 'var(--primary)' : 'transparent' }
+  if (tab === 'terminal') { loadTerminalLogsTerminals(); if (!_tlogRows.length) loadTerminalLogs() }
+}
+
+function reloadCurrentLogsTab () {
+  if (_currentLogsTab === 'server') loadServerLogs()
+  else loadTerminalLogs()
+}
+
+async function loadTerminalLogsTerminals () {
+  const sel = document.getElementById('tlog-terminal')
+  if (!sel) return
+  try {
+    const data = await apiFetch('GET', '/terminal-logs/terminals')
+    if (!data.ok) return
+    const current = sel.value
+    sel.innerHTML = '<option value="">All Terminals</option>'
+    for (const t of (data.terminals || [])) {
+      const opt = document.createElement('option')
+      opt.value = t.terminal_name
+      opt.textContent = `${t.terminal_name} (${t.outlet_code || t.outlet_name || ''})`
+      sel.appendChild(opt)
+    }
+    sel.value = current
+  } catch (_) {}
+}
+
+async function loadTerminalLogs (resetPage = true) {
+  if (resetPage) _tlogOffset = 0
+  const tbody   = document.getElementById('tlog-tbody')
+  const countEl = document.getElementById('tlog-count')
+  if (tbody) tbody.innerHTML = '<tr><td colspan="8" style="padding:24px;text-align:center;color:var(--muted)">Loading…</td></tr>'
+
+  const from     = document.getElementById('tlog-from')?.value   || ''
+  const to       = document.getElementById('tlog-to')?.value     || ''
+  const terminal = document.getElementById('tlog-terminal')?.value || ''
+  const level    = document.getElementById('tlog-level')?.value  || ''
+
+  // Default: last 7 days
+  if (!from && !to) {
+    const d = new Date(); d.setDate(d.getDate() - 7)
+    const fromDef = d.toISOString().slice(0,10)
+    const toDef   = new Date().toISOString().slice(0,10)
+    if (document.getElementById('tlog-from')) document.getElementById('tlog-from').value = fromDef
+    if (document.getElementById('tlog-to'))   document.getElementById('tlog-to').value   = toDef
+  }
+
+  const params = new URLSearchParams({ limit: TLOG_PAGE, offset: _tlogOffset })
+  if (from)     params.set('date_from', from)
+  if (to)       params.set('date_to',   to)
+  if (terminal) params.set('terminal_name', terminal)
+  if (level)    params.set('level',     level)
+
+  try {
+    const data = await apiFetch('GET', '/terminal-logs?' + params.toString())
+    if (!data.ok) { if (tbody) tbody.innerHTML = `<tr><td colspan="8" style="padding:24px;text-align:center;color:var(--danger)">${data.error||'Error'}</td></tr>`; return }
+
+    _tlogRows = data.rows || []
+    if (countEl) countEl.textContent = `Terminal Log Entries — ${data.total} total`
+
+    // Summary cards
+    const summaryEl = document.getElementById('tlog-summary')
+    if (summaryEl) {
+      const colors = { INFO:'#3b82f6', WARNING:'#f59e0b', ERROR:'#ef4444', CRITICAL:'#dc2626' }
+      summaryEl.innerHTML = Object.entries(data.summary || {}).map(([lvl, cnt]) =>
+        `<div style="background:var(--card);border:1px solid var(--border);border-radius:8px;padding:10px 16px;min-width:100px;text-align:center">
+          <div style="font-size:20px;font-weight:800;color:${colors[lvl]||'var(--text)'}">${cnt}</div>
+          <div style="font-size:11px;color:var(--muted);font-weight:700">${lvl}</div>
+        </div>`
+      ).join('')
+    }
+
+    if (!_tlogRows.length) {
+      if (tbody) tbody.innerHTML = '<tr><td colspan="8" style="padding:24px;text-align:center;color:var(--muted)">No terminal log entries found for selected filters.</td></tr>'
+    } else {
+      const lvlColor = { INFO:'#3b82f6', WARNING:'#f59e0b', ERROR:'#ef4444', CRITICAL:'#dc2626' }
+      tbody.innerHTML = _tlogRows.map(r => {
+        const ts    = r.log_timestamp ? new Date(r.log_timestamp).toLocaleString() : ''
+        const extra = r.extra ? (typeof r.extra === 'object' ? JSON.stringify(r.extra) : r.extra) : ''
+        const errTxt = extra ? `<span style="color:#f87171;font-family:monospace;font-size:10px">${extra.slice(0,120)}</span>` : ''
+        return `<tr style="border-bottom:1px solid var(--border)">
+          <td style="padding:8px 12px;white-space:nowrap;color:var(--muted)">${ts}</td>
+          <td style="padding:8px 12px"><span style="font-size:11px;font-weight:700;color:${lvlColor[r.level]||'var(--text)'};background:${lvlColor[r.level]||'#94a3b8'}22;padding:2px 6px;border-radius:4px">${r.level}</span></td>
+          <td style="padding:8px 12px;font-weight:600">${r.terminal_name||'—'}</td>
+          <td style="padding:8px 12px;color:var(--muted)">${r.outlet_code||''} ${r.outlet_name||''}</td>
+          <td style="padding:8px 12px;color:var(--muted)">${r.module||''}</td>
+          <td style="padding:8px 12px;font-weight:600">${r.action||''}</td>
+          <td style="padding:8px 12px;color:var(--muted)">${r.user_name||''}</td>
+          <td style="padding:8px 12px;max-width:200px;overflow:hidden;text-overflow:ellipsis">${errTxt}</td>
+        </tr>`
+      }).join('')
+    }
+
+    // Pagination
+    const pageEl = document.getElementById('tlog-pagination')
+    if (pageEl) {
+      const totalPages = Math.ceil(data.total / TLOG_PAGE)
+      const curPage    = Math.floor(_tlogOffset / TLOG_PAGE) + 1
+      pageEl.innerHTML = `
+        <span>Page ${curPage} of ${totalPages} (${data.total} entries)</span>
+        <div style="margin-left:auto;display:flex;gap:6px">
+          ${_tlogOffset > 0 ? `<button class="btn btn-outline" style="padding:4px 12px;font-size:12px" onclick="_tlogOffset=Math.max(0,_tlogOffset-${TLOG_PAGE});loadTerminalLogs(false)">← Prev</button>` : ''}
+          ${_tlogOffset + TLOG_PAGE < data.total ? `<button class="btn btn-outline" style="padding:4px 12px;font-size:12px" onclick="_tlogOffset+=;loadTerminalLogs(false)">Next →</button>` : ''}
+        </div>`
+      // Fix the Next button onclick
+      pageEl.innerHTML = pageEl.innerHTML.replace('_tlogOffset+=;', `_tlogOffset+=${TLOG_PAGE};`)
+    }
+
+  } catch (e) {
+    if (tbody) tbody.innerHTML = `<tr><td colspan="8" style="padding:24px;text-align:center;color:var(--danger)">Error: ${e.message}</td></tr>`
+  }
+}
+
+async function cleanupTerminalLogs () {
+  if (!confirm('Delete terminal log entries older than 30 days?')) return
+  try {
+    const data = await apiFetch('DELETE', '/terminal-logs/cleanup')
+    showToast(data.ok ? `Deleted ${data.deleted} old entries` : (data.error || 'Error'), data.ok ? 'success' : 'error')
+    if (data.ok) loadTerminalLogs()
+  } catch (e) {
+    showToast('Cleanup failed: ' + e.message, 'error')
+  }
+}
+
+function exportTerminalLogsCsv () {
+  if (!_tlogRows.length) { showToast('No data to export', 'warning'); return }
+  const headers = ['Timestamp','Level','Terminal','Outlet Code','Outlet Name','Module','Action','User','Version','Details']
+  const rows    = _tlogRows.map(r => [
+    r.log_timestamp ? new Date(r.log_timestamp).toISOString() : '',
+    r.level, r.terminal_name||'', r.outlet_code||'', r.outlet_name||'',
+    r.module||'', r.action||'', r.user_name||'', r.version||'',
+    r.extra ? JSON.stringify(r.extra) : '',
+  ])
+  const csv  = [headers, ...rows].map(row => row.map(v => `"${String(v).replace(/"/g,'""')}"`).join(',')).join('\n')
+  const blob = new Blob([csv], { type: 'text/csv' })
+  const url  = URL.createObjectURL(blob)
+  const a    = document.createElement('a'); a.href = url; a.download = `terminal_logs_${new Date().toISOString().slice(0,10)}.csv`; a.click()
+  URL.revokeObjectURL(url)
+}
+
+// ─── SERVER LOGS (Phase 2) ────────────────────────────────────────
 
 // ─── AUDIT LOG ───────────────────────────────────────────────────
 async function loadAuditLog () {

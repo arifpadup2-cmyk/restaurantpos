@@ -3,10 +3,22 @@
 const express = require('express')
 const { jwtAuth } = require('../middleware/jwtAuth')
 const { serverError } = require('../middleware/serverError')
+const logger  = require('../lib/logger')
 
 module.exports = function ordersRouter (sql) {
   const router = express.Router()
   router.use(jwtAuth)
+
+  // Log all order mutations via middleware
+  router.use((req, _res, next) => {
+    if (req.method !== 'GET') {
+      logger.info('orders', `order_${req.method.toLowerCase()}`, logger.ctxFromReq(req), {
+        order_id: req.params?.id || req.body?.id || '',
+        status:   req.body?.status || '',
+      })
+    }
+    next()
+  })
 
   // GET /orders?date=YYYY-MM-DD&from=YYYY-MM-DD&to=YYYY-MM-DD&outlet_id=
   router.get('/', async (req, res) => {

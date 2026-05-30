@@ -1118,6 +1118,51 @@ textarea:focus-visible {
   .op-totals-box{padding:7px 9px;margin-bottom:8px}
   .entry-bottom-bar{height:60px}
 }
+
+/* ── AUTO-UPDATE NOTIFICATION ──────────────────── */
+#update-notification{position:fixed;top:0;left:0;right:0;background:linear-gradient(90deg,#f59e0b 0%,#f97316 100%);color:#fff;padding:16px 20px;display:none;z-index:5000;box-shadow:0 4px 12px rgba(0,0,0,.15);animation:slideDown 0.3s ease-out}
+@keyframes slideDown{from{transform:translateY(-100%);opacity:0}to{transform:translateY(0);opacity:1}}
+#update-notification.show{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px}
+.update-info{flex:1;min-width:250px}
+.update-info-title{font-weight:700;font-size:14px;margin-bottom:4px}
+.update-info-detail{font-size:12px;opacity:.95;line-height:1.4}
+.update-actions{display:flex;gap:10px;flex-wrap:wrap}
+.update-btn{padding:8px 16px;border:none;border-radius:6px;font-size:13px;font-weight:600;cursor:pointer;transition:all 0.2s;font-family:inherit}
+.update-btn-install{background:#fff;color:#f97316}
+.update-btn-install:hover{background:#fef3c7}
+.update-btn-later{background:rgba(255,255,255,.2);color:#fff;border:1px solid rgba(255,255,255,.3)}
+.update-btn-later:hover{background:rgba(255,255,255,.3)}
+.update-progress-container{display:none;gap:10px;align-items:center;min-width:200px}
+.update-progress-container.show{display:flex}
+.update-progress-bar{flex:1;height:6px;background:rgba(255,255,255,.2);border-radius:3px;overflow:hidden}
+.update-progress-fill{height:100%;background:#fff;border-radius:3px;transition:width 0.3s ease;width:0%}
+.update-progress-text{font-size:12px;font-weight:600;min-width:40px;text-align:right}
+#update-modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:6000;align-items:center;justify-content:center}
+#update-modal.show{display:flex}
+.update-modal-content{background:#fff;border-radius:12px;padding:28px;width:90%;max-width:500px;max-height:80vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.3);animation:modalSlideUp 0.3s ease-out}
+@keyframes modalSlideUp{from{transform:translateY(20px);opacity:0}to{transform:translateY(0);opacity:1}}
+.update-modal-header{display:flex;align-items:center;gap:12px;margin-bottom:16px}
+.update-modal-icon{font-size:28px}
+.update-modal-title{font-size:18px;font-weight:700;color:#111}
+.update-modal-version{font-size:12px;color:#666;margin-top:4px}
+.update-modal-section{margin-bottom:20px}
+.update-modal-section h3{font-size:13px;font-weight:700;color:#333;margin-bottom:10px;text-transform:uppercase;letter-spacing:0.5px}
+.update-release-date{font-size:12px;color:#666;background:#f5f5f5;padding:10px 12px;border-radius:6px;border-left:3px solid #f97316}
+.update-release-notes{font-size:13px;color:#555;line-height:1.6;background:#f9f9f9;padding:12px;border-radius:6px;border:1px solid #e5e7eb;max-height:200px;overflow-y:auto}
+.update-modal-actions{display:flex;gap:10px;margin-top:20px;border-top:1px solid #e5e7eb;padding-top:20px}
+.update-modal-btn{flex:1;padding:11px 16px;border:none;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;transition:all 0.2s;font-family:inherit}
+.update-modal-btn-primary{background:linear-gradient(90deg,#f59e0b 0%,#f97316 100%);color:#fff}
+.update-modal-btn-primary:hover{transform:translateY(-2px);box-shadow:0 4px 12px rgba(249,115,22,.3)}
+.update-modal-btn-secondary{background:#f1f5f9;color:#333;border:1px solid #d1d5db}
+.update-modal-btn-secondary:hover{background:#e8edf3}
+.version-badge{position:absolute;bottom:12px;left:24px;font-size:10px;font-weight:600;color:#64748b;letter-spacing:0.5px;text-transform:uppercase}
+.version-badge-tag{background:#f1f5f9;padding:2px 6px;border-radius:3px;display:inline-block;margin-right:8px}
+.version-check-indicator{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:6px}
+.version-check-indicator.checking{background:#f59e0b;animation:pulse 1s infinite}
+.version-check-indicator.latest{background:#10b981}
+.version-check-indicator.outdated{background:#ef4444}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.5}}
+
 </style>
 </head>
 <body>
@@ -2070,6 +2115,7 @@ textarea:focus-visible {
               <button class="settings-menu-item" onclick="showSettingsMenu('printers')" style="width:100%;text-align:left;padding:12px 16px;border:none;background:none;cursor:pointer;font-size:14px;color:var(--text);border-left:3px solid transparent;transition:all .2s">🖨️ Printers</button>
               <button class="settings-menu-item" onclick="showSettingsMenu('connection')" style="width:100%;text-align:left;padding:12px 16px;border:none;background:none;cursor:pointer;font-size:14px;color:var(--text);border-left:3px solid transparent;transition:all .2s">🌐 Connection</button>
               <button class="settings-menu-item" onclick="showSettingsMenu('system')" style="width:100%;text-align:left;padding:12px 16px;border:none;background:none;cursor:pointer;font-size:14px;color:var(--text);border-left:3px solid transparent;transition:all .2s">⚙️ System</button>
+              <button class="settings-menu-item" onclick="showSettingsMenu('logs');loadLogFiles()" style="width:100%;text-align:left;padding:12px 16px;border:none;background:none;cursor:pointer;font-size:14px;color:var(--text);border-left:3px solid transparent;transition:all .2s">📋 Logs & Support</button>
             </div>
           </div>
 
@@ -2409,6 +2455,30 @@ textarea:focus-visible {
               <div class="settings-section" style="background:#f8fafc;border-radius:8px;padding:16px 20px;border:1.5px solid var(--border);margin-bottom:16px">
                 <h3 style="margin-top:0">⚙️ System & Technical</h3>
                 <p style="font-size:13px;color:var(--muted)">Advanced settings. Change only when reconfiguring terminal.</p>
+              </div>
+            </div>
+
+            <!-- LOGS & SUPPORT MENU -->
+            <div id="settings-menu-logs" class="settings-menu-content" style="display:none">
+              <div class="settings-section">
+                <h3>📋 Logs & Support</h3>
+                <p style="font-size:13px;color:var(--muted);margin-bottom:16px">Download activity and error logs. Share with your support team to diagnose issues.</p>
+
+                <div style="background:#f8fafc;border:1.5px solid var(--border);border-radius:8px;padding:16px;margin-bottom:16px">
+                  <div style="font-size:13px;font-weight:700;margin-bottom:8px">Log Files (Last 30 Days)</div>
+                  <div id="log-file-list" style="font-size:12px;color:var(--muted);margin-bottom:12px">Loading…</div>
+                  <div style="display:flex;gap:8px;flex-wrap:wrap">
+                    <button class="btn-outline" onclick="downloadLogsBeforeLogin()" style="font-size:13px">📥 Download Today's Log</button>
+                    <button class="btn-outline" onclick="downloadAllLogs()" style="font-size:13px">📦 Download All Logs</button>
+                    <button class="btn-outline" onclick="uploadLogsNow()" id="btn-upload-logs" style="font-size:13px">☁️ Upload to Cloud</button>
+                  </div>
+                  <div id="log-upload-status" style="font-size:12px;color:var(--muted);margin-top:8px"></div>
+                </div>
+
+                <div style="background:#fff8f0;border:1.5px solid #fed7aa;border-radius:8px;padding:14px;font-size:12px;color:#92400e">
+                  <strong>📌 Log Location:</strong><br>
+                  <span id="log-dir-path" style="font-family:monospace;word-break:break-all">Loading…</span>
+                </div>
               </div>
             </div>
           </div>
@@ -2921,6 +2991,84 @@ let _activeDay = null; // { id, date, outlet_id, opened_by, opened_at } — set 
 let loginCashiers  = [];
 let selectedCashier = null;
 let pinBuffer  = '';
+
+// ── POS Logger (renderer-side wrapper) ────────────────────────────────────────
+const PosLog = {
+  _currentScreen: 'login',
+  _ctx: {},
+  log(level, screen, action, extra = {}) {
+    try {
+      const safeExtra = JSON.parse(JSON.stringify(extra, (k, v) => {
+        const masked = ['pin','password','pass','token','secret','api_key','license_key'];
+        return masked.includes(String(k).toLowerCase()) ? '****' : v;
+      }));
+      if (window.posAPI?.logs?.log) {
+        window.posAPI.logs.log(level, 'renderer', screen || this._currentScreen, action, safeExtra);
+      }
+    } catch (_) {}
+  },
+  setScreen(name) { this._currentScreen = name; this.log('info', name, 'screen_opened'); },
+  setUser(id, name, role) {
+    this._ctx = { ...this._ctx, user_id: id, user_name: name, user_role: role };
+    if (window.posAPI?.logs?.setContext) window.posAPI.logs.setContext(this._ctx);
+  },
+  info(screen, action, extra)     { this.log('info',     screen, action, extra); },
+  warn(screen, action, extra)     { this.log('warning',  screen, action, extra); },
+  error(screen, action, extra)    { this.log('error',    screen, action, extra); },
+  critical(screen, action, extra) { this.log('critical', screen, action, extra); },
+};
+
+// Global JS error capture
+window.addEventListener('error', (e) => {
+  PosLog.error(PosLog._currentScreen, 'js_error', { message: e.message, file: e.filename, line: e.lineno });
+});
+window.addEventListener('unhandledrejection', (e) => {
+  PosLog.error(PosLog._currentScreen, 'unhandled_rejection', { reason: String(e.reason) });
+});
+
+// Download logs (available before login)
+async function downloadLogsBeforeLogin() {
+  try {
+    PosLog.info('login', 'download_logs_requested');
+    const files = await window.posAPI.logs.listFiles();
+    if (!files || files.length === 0) { alert('No log files found.'); return; }
+    // Download the most recent log
+    const latest = files[0];
+    const content = await window.posAPI.logs.readFile(latest.path, 5000);
+    const blob = new Blob([content], { type: 'text/plain' });
+    const url  = URL.createObjectURL(blob);
+    const a    = document.createElement('a');
+    a.href     = url;
+    a.download = latest.name;
+    a.click();
+    URL.revokeObjectURL(url);
+  } catch (e) {
+    alert('Could not download logs: ' + e.message);
+  }
+}
+
+// Download all logs as zip-like text bundle
+async function downloadAllLogs() {
+  try {
+    PosLog.info(PosLog._currentScreen, 'download_all_logs_requested');
+    const files = await window.posAPI.logs.listFiles();
+    if (!files || files.length === 0) { alert('No log files found.'); return; }
+    let bundle = '';
+    for (const f of files) {
+      const content = await window.posAPI.logs.readFile(f.path, 10000);
+      bundle += `\n${'='.repeat(60)}\n FILE: ${f.name}  (${(f.size/1024).toFixed(1)} KB)\n${'='.repeat(60)}\n${content}\n`;
+    }
+    const blob = new Blob([bundle], { type: 'text/plain' });
+    const url  = URL.createObjectURL(blob);
+    const a    = document.createElement('a');
+    a.href     = url;
+    a.download = `POS_Logs_${new Date().toISOString().slice(0,10)}.txt`;
+    a.click();
+    URL.revokeObjectURL(url);
+  } catch (e) {
+    alert('Could not download logs: ' + e.message);
+  }
+}
 let _setupAutoData     = null; // data returned by /setup/auto-detect
 let _setupSelectedOutlet = null;
 let settings  = {
@@ -3988,7 +4136,7 @@ async function setupAutoDetect() {
     clearTimeout(tid);
     const data = await resp.json();
     if (data.ok) {
-      _setupAutoData = data;
+      _setupAutoData = { ...data, _ip: '127.0.0.1' };
       spinner.style.display = 'none';
       document.getElementById('setup-step-detect').classList.remove('active');
       document.getElementById('setup-step-outlet').classList.add('active');
@@ -4131,6 +4279,7 @@ async function setupFinalize() {
   }
   window._posConfig = cfg;
   document.getElementById('screen-setup').style.display = 'none';
+  document.getElementById('screen-login').style.display = 'flex';
   await init();
 }
 
@@ -4381,13 +4530,16 @@ async function verifyPin() {
   buttons.forEach(b => { b.disabled = true; b.style.opacity = '0.5'; });
 
   try {
+    PosLog.info('login', 'pin_attempt');
     // Look up cashier by PIN in local DB
     const r = await db.all('SELECT * FROM cashiers WHERE pin=? AND active=1 LIMIT 1', [pinBuffer]);
     if (!r.ok || !r.data.length) {
+      PosLog.warn('login', 'login_failed', { reason: 'invalid_pin' });
       pinError('Invalid PIN. Try again.');
       return;
     }
     selectedCashier = r.data[0];
+    PosLog.info('login', 'pin_verified', { user_id: selectedCashier.id, user_name: selectedCashier.name, user_role: selectedCashier.role });
 
     // Check if cashier already has an open shift today
     const existingShift = await checkTodayShift(selectedCashier.id || selectedCashier.name);
@@ -4395,10 +4547,13 @@ async function verifyPin() {
       // Shift already open — go straight to POS
       cashier = selectedCashier;
       shift   = existingShift;
+      PosLog.setUser(cashier.id, cashier.name, cashier.role);
+      PosLog.info('login', 'login_success', { shift_id: shift.id, existing_shift: true });
       await ensureDayOpen();
       enterPOS();
     } else {
       // New shift — ask opening cash
+      PosLog.info('login', 'opening_cash_prompt');
       const cur = settings.currency || 'RM';
       document.getElementById('cash-cashier-name').textContent = `Welcome, ${selectedCashier.name}! 👋`;
       document.getElementById('cash-currency-label').textContent = `Opening Cash (${cur})`;
@@ -4422,6 +4577,8 @@ async function startShift() {
   await db.run(`INSERT INTO shifts (id,cashier_id,cashier_name,opening_cash,status,terminal_id,opened_at)
     VALUES (?,?,?,?,?,?,?)`, [shiftId, cashier.id||cashier.name, cashier.name, cash, 'open', MACHINE_ID, now]);
   shift = { id: shiftId, cashier_name: cashier.name, opening_cash: cash, opened_at: now };
+  PosLog.setUser(cashier.id, cashier.name, cashier.role);
+  PosLog.info('login', 'shift_opened', { shift_id: shiftId, cashier: cashier.name, opening_cash: cash });
   await ensureDayOpen();
   enterPOS();
 }
@@ -4497,6 +4654,8 @@ function updateDayStatusUI() {
 }
 
 function enterPOS() {
+  PosLog.setScreen('pos_main');
+  PosLog.info('pos_main', 'entered_pos', { cashier: cashier.name, shift_id: shift.id });
   document.getElementById('hdr-cashier').textContent    = cashier.name;
   document.getElementById('hdr-shift').textContent      = (shift.id || '').substring(0,6).toUpperCase();
   document.getElementById('hdr-shift-time').textContent = new Date(shift.opened_at).toLocaleTimeString();
@@ -6077,6 +6236,7 @@ async function confirmPayment() {
   document.getElementById('pay-other-method').value = '';
 
   if (paymentOrderId) {
+    PosLog.info('payment', 'payment_confirm', { order_id: paymentOrderId, method: effectiveMethod, total: paymentTotal, received, change });
     // Bill existing order
     await db.run(`UPDATE orders SET status='paid',payment_method=?,payment_received=?,
       change_amount=?,billed_at=?,updated_at=?,synced=0 WHERE id=?`,
@@ -7323,6 +7483,77 @@ function showSettingsMenu(menuId) {
   } else if (menuId === 'theme') {
     renderThemeSwatches();
   }
+  PosLog.info('settings', 'settings_menu_opened', { menu: menuId });
+}
+
+async function loadLogFiles() {
+  PosLog.info('settings', 'view_logs');
+  try {
+    const dirEl  = document.getElementById('log-dir-path');
+    const listEl = document.getElementById('log-file-list');
+    if (!listEl) return;
+
+    // Show log directory
+    const dir = await window.posAPI.logs.getDir();
+    if (dirEl) dirEl.textContent = dir || 'N/A';
+
+    // List files
+    const files = await window.posAPI.logs.listFiles();
+    if (!files || files.length === 0) {
+      listEl.textContent = 'No log files found yet.';
+      return;
+    }
+
+    listEl.innerHTML = files.map(f => `
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid #e5e7eb">
+        <div>
+          <div style="font-weight:600;color:var(--text)">${f.name}</div>
+          <div style="color:var(--muted)">${(f.size/1024).toFixed(1)} KB &nbsp;·&nbsp; ${new Date(f.mtime).toLocaleString()}</div>
+        </div>
+        <button class="btn-outline" style="font-size:11px;padding:4px 10px" onclick="downloadSingleLog('${f.path}','${f.name}')">📥</button>
+      </div>
+    `).join('');
+  } catch (e) {
+    const listEl = document.getElementById('log-file-list');
+    if (listEl) listEl.textContent = 'Error loading logs: ' + e.message;
+  }
+}
+
+async function uploadLogsNow() {
+  const btn    = document.getElementById('btn-upload-logs');
+  const status = document.getElementById('log-upload-status');
+  if (btn)    { btn.disabled = true; btn.textContent = '⏳ Uploading…'; }
+  if (status) status.textContent = 'Uploading WARNING/ERROR/CRITICAL entries to cloud…';
+  PosLog.info('settings', 'manual_log_upload_requested');
+  try {
+    const result = await window.posAPI.logs.uploadNow();
+    if (result?.ok) {
+      if (status) status.textContent = '✅ Upload complete! Check Back Office → Logs & Support.';
+      PosLog.info('settings', 'manual_log_upload_success');
+    } else {
+      if (status) status.textContent = '⚠️ Upload failed: ' + (result?.error || 'unknown error');
+    }
+  } catch (e) {
+    if (status) status.textContent = '❌ Upload error: ' + e.message;
+    PosLog.error('settings', 'manual_log_upload_failed', { error: e.message });
+  } finally {
+    if (btn)    { btn.disabled = false; btn.textContent = '☁️ Upload to Cloud'; }
+    setTimeout(() => { if (status) status.textContent = ''; }, 6000);
+  }
+}
+
+async function downloadSingleLog(filePath, fileName) {
+  try {
+    PosLog.info('settings', 'download_log', { file: fileName });
+    const content = await window.posAPI.logs.readFile(filePath, 10000);
+    const blob = new Blob([content], { type: 'text/plain' });
+    const url  = URL.createObjectURL(blob);
+    const a    = document.createElement('a');
+    a.href = url; a.download = fileName; a.click();
+    URL.revokeObjectURL(url);
+  } catch (e) {
+    showToast('Download failed: ' + e.message, 'error');
+  }
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -8221,6 +8452,67 @@ function _svgDelivery(c) {
 }
 </script>
 
+
+<!-- Auto-update notification UI -->
+<div id="update-notification">
+  <div class="update-info">
+    <div class="update-info-title">🎉 New Version Available</div>
+    <div class="update-info-detail">
+      Version <strong id="update-version-new">-</strong> is now available.
+      Released: <strong id="update-release-date-banner">-</strong>
+    </div>
+  </div>
+  <div class="update-progress-container" id="update-progress-container">
+    <div class="update-progress-bar">
+      <div class="update-progress-fill" id="update-progress-fill"></div>
+    </div>
+    <div class="update-progress-text" id="update-progress-text">0%</div>
+  </div>
+  <div class="update-actions">
+    <button class="update-btn update-btn-install" id="update-btn-install">Update Now</button>
+    <button class="update-btn update-btn-later" id="update-btn-later">Later</button>
+  </div>
+</div>
+
+<!-- Update modal -->
+<div id="update-modal">
+  <div class="update-modal-content">
+    <div class="update-modal-header">
+      <div class="update-modal-icon">📦</div>
+      <div>
+        <div class="update-modal-title">New Version Available</div>
+        <div class="update-modal-version">
+          Updating from <strong id="update-version-current">-</strong> to <strong id="update-version-target">-</strong>
+        </div>
+      </div>
+    </div>
+
+    <div class="update-modal-section">
+      <h3>📅 Release Date & Time</h3>
+      <div class="update-release-date" id="update-release-datetime">Loading...</div>
+    </div>
+
+    <div class="update-modal-section">
+      <h3>📝 What's New</h3>
+      <div class="update-release-notes" id="update-release-notes">Loading release notes...</div>
+    </div>
+
+    <div class="update-modal-actions">
+      <button class="update-modal-btn update-modal-btn-primary" id="update-modal-install">Install Update Now</button>
+      <button class="update-modal-btn update-modal-btn-secondary" id="update-modal-cancel">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- Version badge in login screen -->
+<div class="version-badge" id="version-badge">
+  <span class="version-check-indicator checking" id="version-check-indicator"></span>
+  v<span id="version-current">-.-.-</span>
+  <span class="version-badge-date" id="version-badge-date">(checking for updates...)</span>
+</div>
+
+<!-- Auto-update scripts -->
+<script src="auto-update-ui.js"></script>
 
 </body>
 </html>

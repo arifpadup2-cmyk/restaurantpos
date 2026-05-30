@@ -1,0 +1,392 @@
+<!-- POS Auto-Update Notification UI -->
+
+<style>
+  /* Update notification banner */
+  #update-notification {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    background: linear-gradient(90deg, #f59e0b 0%, #f97316 100%);
+    color: white;
+    padding: 16px 20px;
+    display: none;
+    z-index: 5000;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    animation: slideDown 0.3s ease-out;
+  }
+
+  @keyframes slideDown {
+    from { transform: translateY(-100%); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+  }
+
+  #update-notification.show {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+
+  .update-info {
+    flex: 1;
+    min-width: 250px;
+  }
+
+  .update-info-title {
+    font-weight: 700;
+    font-size: 14px;
+    margin-bottom: 4px;
+  }
+
+  .update-info-detail {
+    font-size: 12px;
+    opacity: 0.95;
+    line-height: 1.4;
+  }
+
+  .update-actions {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+
+  .update-btn {
+    padding: 8px 16px;
+    border: none;
+    border-radius: 6px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-family: inherit;
+  }
+
+  .update-btn-install {
+    background: white;
+    color: #f97316;
+  }
+
+  .update-btn-install:hover {
+    background: #fef3c7;
+  }
+
+  .update-btn-later {
+    background: rgba(255,255,255,0.2);
+    color: white;
+    border: 1px solid rgba(255,255,255,0.3);
+  }
+
+  .update-btn-later:hover {
+    background: rgba(255,255,255,0.3);
+  }
+
+  .update-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+
+  .update-progress-container {
+    display: none;
+    gap: 10px;
+    align-items: center;
+    min-width: 200px;
+  }
+
+  .update-progress-container.show {
+    display: flex;
+  }
+
+  .update-progress-bar {
+    flex: 1;
+    height: 6px;
+    background: rgba(255,255,255,0.2);
+    border-radius: 3px;
+    overflow: hidden;
+  }
+
+  .update-progress-fill {
+    height: 100%;
+    background: white;
+    border-radius: 3px;
+    transition: width 0.3s ease;
+    width: 0%;
+  }
+
+  .update-progress-text {
+    font-size: 12px;
+    font-weight: 600;
+    min-width: 40px;
+    text-align: right;
+  }
+
+  /* Update modal dialog */
+  #update-modal {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.5);
+    z-index: 6000;
+    align-items: center;
+    justify-content: center;
+  }
+
+  #update-modal.show {
+    display: flex;
+  }
+
+  .update-modal-content {
+    background: white;
+    border-radius: 12px;
+    padding: 28px;
+    width: 90%;
+    max-width: 500px;
+    max-height: 80vh;
+    overflow-y: auto;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+    animation: modalSlideUp 0.3s ease-out;
+  }
+
+  @keyframes modalSlideUp {
+    from { transform: translateY(20px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+  }
+
+  .update-modal-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 16px;
+  }
+
+  .update-modal-icon {
+    font-size: 28px;
+  }
+
+  .update-modal-title {
+    font-size: 18px;
+    font-weight: 700;
+    color: #111;
+  }
+
+  .update-modal-version {
+    font-size: 12px;
+    color: #666;
+    margin-top: 4px;
+  }
+
+  .update-modal-section {
+    margin-bottom: 20px;
+  }
+
+  .update-modal-section h3 {
+    font-size: 13px;
+    font-weight: 700;
+    color: #333;
+    margin-bottom: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .update-release-date {
+    font-size: 12px;
+    color: #666;
+    background: #f5f5f5;
+    padding: 10px 12px;
+    border-radius: 6px;
+    border-left: 3px solid #f97316;
+  }
+
+  .update-release-notes {
+    font-size: 13px;
+    color: #555;
+    line-height: 1.6;
+    background: #f9f9f9;
+    padding: 12px;
+    border-radius: 6px;
+    border: 1px solid #e5e7eb;
+    max-height: 200px;
+    overflow-y: auto;
+  }
+
+  .update-modal-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 20px;
+    border-top: 1px solid #e5e7eb;
+    padding-top: 20px;
+  }
+
+  .update-modal-btn {
+    flex: 1;
+    padding: 11px 16px;
+    border: none;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-family: inherit;
+  }
+
+  .update-modal-btn-primary {
+    background: linear-gradient(90deg, #f59e0b 0%, #f97316 100%);
+    color: white;
+  }
+
+  .update-modal-btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(249,115,22,0.3);
+  }
+
+  .update-modal-btn-secondary {
+    background: #f1f5f9;
+    color: #333;
+    border: 1px solid #d1d5db;
+  }
+
+  .update-modal-btn-secondary:hover {
+    background: #e8edf3;
+  }
+
+  .update-modal-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+
+  /* Version display in login */
+  .version-badge {
+    position: absolute;
+    bottom: 12px;
+    left: 24px;
+    font-size: 10px;
+    font-weight: 600;
+    color: #64748b;
+    letter-spacing: 0.5px;
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 6px;
+    padding: 8px 12px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+  }
+
+  .version-badge-tag {
+    background: #f1f5f9;
+    padding: 2px 6px;
+    border-radius: 3px;
+    display: inline-block;
+    margin-right: 8px;
+  }
+
+  .version-badge-date {
+    opacity: 0.9;
+    line-height: 1.5;
+  }
+
+  .version-check-indicator {
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    margin-right: 6px;
+  }
+
+  .version-check-indicator.checking {
+    background: #f59e0b;
+    animation: pulse 1s infinite;
+  }
+
+  .version-check-indicator.latest {
+    background: #10b981;
+  }
+
+  .version-check-indicator.outdated {
+    background: #ef4444;
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+  }
+</style>
+
+<!-- Update notification banner -->
+<div id="update-notification">
+  <div class="update-info">
+    <div class="update-info-title">🎉 New Version Available</div>
+    <div class="update-info-detail">
+      Version <strong id="update-version-new">-</strong> is now available.
+      Released: <strong id="update-release-date-banner">-</strong>
+    </div>
+  </div>
+
+  <div class="update-progress-container" id="update-progress-container">
+    <div class="update-progress-bar">
+      <div class="update-progress-fill" id="update-progress-fill"></div>
+    </div>
+    <div class="update-progress-text" id="update-progress-text">0%</div>
+  </div>
+
+  <div class="update-actions">
+    <button class="update-btn update-btn-install" id="update-btn-install">Update Now</button>
+    <button class="update-btn update-btn-later" id="update-btn-later">Later</button>
+  </div>
+</div>
+
+<!-- Update modal -->
+<div id="update-modal">
+  <div class="update-modal-content">
+    <div class="update-modal-header">
+      <div class="update-modal-icon">📦</div>
+      <div>
+        <div class="update-modal-title">New Version Available</div>
+        <div class="update-modal-version">
+          Updating from <strong id="update-version-current">-</strong> to <strong id="update-version-target">-</strong>
+        </div>
+      </div>
+    </div>
+
+    <div class="update-modal-section">
+      <h3>📅 Release Date & Time</h3>
+      <div class="update-release-date" id="update-release-datetime">
+        Loading...
+      </div>
+    </div>
+
+    <div class="update-modal-section">
+      <h3>📝 What's New</h3>
+      <div class="update-release-notes" id="update-release-notes">
+        Loading release notes...
+      </div>
+    </div>
+
+    <div class="update-modal-section">
+      <h3>ℹ️ Update Information</h3>
+      <div class="update-release-date" style="border-left-color: #3b82f6;">
+        <strong>File Size:</strong> <span id="update-file-size">Checking...</span> MB<br>
+        <strong>Status:</strong> <span id="update-status">Ready to install</span>
+      </div>
+    </div>
+
+    <div class="update-modal-actions">
+      <button class="update-modal-btn update-modal-btn-primary" id="update-modal-install">Install Update Now</button>
+      <button class="update-modal-btn update-modal-btn-secondary" id="update-modal-cancel">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- Version badge in login screen -->
+<div class="version-badge" id="version-badge">
+  <div style="display: flex; align-items: flex-start; gap: 8px;">
+    <span class="version-check-indicator checking" id="version-check-indicator" style="margin-top: 2px; flex-shrink: 0;"></span>
+    <div style="flex: 1;">
+      <div><strong id="version-current">v-.-.-</strong></div>
+      <div class="version-badge-date" id="version-badge-date" style="margin-top: 4px;">(checking for updates...)</div>
+      <button onclick="downloadLogsBeforeLogin()" style="margin-top:6px;background:none;border:1px solid #cbd5e1;border-radius:4px;padding:2px 8px;font-size:10px;color:#64748b;cursor:pointer;" title="Download log files for support">📥 Download Logs</button>
+    </div>
+  </div>
+</div>

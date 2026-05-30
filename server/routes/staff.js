@@ -4,6 +4,7 @@ const express = require('express')
 const bcrypt  = require('bcryptjs')
 const { jwtAuth } = require('../middleware/jwtAuth')
 const { serverError } = require('../middleware/serverError')
+const logger  = require('../lib/logger')
 
 module.exports = function staffRouter (sql) {
   const router = express.Router()

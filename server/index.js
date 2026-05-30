@@ -10,6 +10,12 @@ const fs         = require('fs')
 const http       = require('http')
 const { Server } = require('socket.io')
 
+// ── Logger (init early so all modules can use it) ─────────────────────────────
+const logger = require('./lib/logger')
+logger.init(__dirname)
+process.on('uncaughtException',  e => logger.critical('process', 'uncaughtException', {}, { error: e.message, stack: e.stack }))
+process.on('unhandledRejection', e => logger.error('process', 'unhandledRejection',   {}, { error: String(e) }))
+
 const authRouter      = require('./routes/auth')
 const menuRouter      = require('./routes/menu')
 const ordersRouter    = require('./routes/orders')
@@ -32,6 +38,7 @@ const configRouter     = require('./routes/config')
 const ownerRouter      = require('./routes/owner')
 const imagesRouter          = require('./routes/images')
 const announcementsRouter   = require('./routes/announcements')
+const terminalLogsRouter    = require('./routes/terminal-logs')
 
 const { apiKey, initApiKey } = require('./middleware/apiKey')
 const { serverError } = require('./middleware/serverError')
@@ -165,6 +172,9 @@ app.use(rateLimit({ scope: 'global', max: 600, windowMs: 60_000, keyFn: ipKey })
 app.set('rateLimit', rateLimit)
 app.set('brandKey', brandKey)
 app.set('ipKey', ipKey)
+
+// ── Request logger middleware (logs every HTTP request) ───────────────────────
+app.use(logger.requestLogger)
 
 // Expose io to route handlers via req.io
 app.use((req, _res, next) => { req.io = io; next() })
@@ -618,6 +628,42 @@ async function start () {
   app.use('/owner',          ownerRouter(sql))
   app.use('/images',         imagesRouter())
   app.use('/announcements',  announcementsRouter(sql))
+  app.use('/terminal-logs',  terminalLogsRouter(sql))
+
+  // ── Logs API (Super Admin only) ───────────────────────────────────────────
+  const { jwtAuth } = require('./middleware/jwtAuth')
+  app.get('/logs', jwtAuth, (req, res) => {
+    if (!req.user?.admin) return res.status(403).json({ error: 'Superadmin only' })
+    const files = logger.listLogFiles()
+    res.json({ ok: true, files })
+  })
+  app.get('/logs/download/:filename', (req, res) => {
+    // Support token in query string for direct browser downloads
+    const { jwtAuth: jwtMiddleware } = require('./middleware/jwtAuth')
+    const rawToken = req.query.token || req.headers.authorization?.replace('Bearer ', '')
+    if (rawToken) req.headers.authorization = `Bearer ${rawToken}`
+    jwtMiddleware(req, res, () => {
+      if (!req.user?.admin) return res.status(403).json({ error: 'Superadmin only' })
+      const logDir   = logger.getLogDir()
+      const safeName = path.basename(req.params.filename)
+      const filePath = path.join(logDir, safeName)
+      if (!filePath.startsWith(logDir) || !fs.existsSync(filePath))
+        return res.status(404).json({ error: 'Log file not found' })
+      logger.info('logs', 'log_downloaded', logger.ctxFromReq(req), { file: safeName })
+      res.download(filePath)
+    })
+  })
+  app.get('/logs/view/:filename', jwtAuth, (req, res) => {
+    if (!req.user?.admin) return res.status(403).json({ error: 'Superadmin only' })
+    const logDir   = logger.getLogDir()
+    const safeName = path.basename(req.params.filename)
+    const filePath = path.join(logDir, safeName)
+    if (!filePath.startsWith(logDir) || !fs.existsSync(filePath))
+      return res.status(404).json({ error: 'Log file not found' })
+    const lines = parseInt(req.query.lines || '500', 10)
+    const entries = logger.readLogFile(filePath, lines)
+    res.json({ ok: true, file: safeName, lines: entries.length, entries })
+  })
 
   // Onboarding SPA route — serve onboarding.html for /onboarding/:id
   app.get('/onboarding/:id', (_req, res) => {
@@ -637,7 +683,9 @@ async function start () {
     console.log(`  ✓ Socket.io enabled`)
     console.log(`  ✓ Per-terminal API keys: enabled (legacy global API_KEY ${process.env.API_KEY ? 'set as fallback' : 'unset'})`)
     console.log(`  ✓ CORS: ${CORS_ORIGIN === '*' ? '*' : CORS_ORIGIN.join(', ')}`)
-    console.log(`  ✓ Environment: ${process.env.NODE_ENV || 'development'}\n`)
+    console.log(`  ✓ Environment: ${process.env.NODE_ENV || 'development'}`)
+    console.log(`  ✓ Logs: ${logger.getLogDir()}\n`)
+    logger.info('server', 'server_start', {}, { port: PORT, env: process.env.NODE_ENV || 'development', is_cloud: IS_CLOUD_SERVER })
   })
 
   // Auto-backup every 6 hours

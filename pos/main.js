@@ -6,10 +6,21 @@ const fs   = require('fs');
 const https = require('https');
 const http  = require('http');
 
+// ── Auto-update system (GitHub releases) ──────────────────────────────────────
+const AutoUpdateMain = require('./auto-update-main');
+
+// ── Logger ────────────────────────────────────────────────────────────────────
+const logger   = require('./logger');
+const uploader = require('./log-uploader');
+
 let mainWindow;
 let sql; // postgres connection pool
 
 const API_KEY = process.env.API_KEY || '';
+
+// Hook process-level errors before app is ready
+process.on('uncaughtException',  (e) => logger.critical('main', '', 'uncaughtException', { error: e.message, stack: e.stack }));
+process.on('unhandledRejection', (e) => logger.error('main', '', 'unhandledRejection', { error: String(e) }));
 
 // ── Persistent config (userData/pos-config.json) ──────────────────────────────
 function getConfigPath() {
@@ -57,6 +68,7 @@ function notifyServer (event, payload) {
 // ── Database init ─────────────────────────────────────────────────────────────
 
 async function initDB(cfg = {}) {
+  logger.info('main', 'setup', 'db_init_start', { host: cfg.dbHost || cfg.serverIp, db: cfg.dbName });
   const postgres = require('postgres');
 
   if (sql) { try { await sql.end({ timeout: 3 }); } catch {} sql = null; }
@@ -76,8 +88,9 @@ async function initDB(cfg = {}) {
 
   await sql`SELECT 1`;
 
-  // Run pending migrations
+  logger.info('main', 'setup', 'migrations_start');
   await runMigrations();
+  logger.info('main', 'setup', 'migrations_complete');
 
   // Seed default tables layout (runs once — skips if rows exist)
   const [{ c }] = await sql`SELECT COUNT(*)::int AS c FROM tables_layout`;
@@ -85,6 +98,7 @@ async function initDB(cfg = {}) {
     const tableRows = Array.from({ length: 12 }, (_, i) => ({
       id: `table-${i + 1}`, name: `T${i + 1}`, capacity: 4,
       status: 'available', current_order_id: null,
+      brand_id: '', outlet_id: '',
     }));
     await sql`INSERT INTO tables_layout ${sql(tableRows)}`;
   }
@@ -141,7 +155,7 @@ async function runMigrations() {
       await t.unsafe(sqlText);
       await t`INSERT INTO schema_migrations (version) VALUES (${version})`;
     });
-    console.log(`  ✓ pos migration: ${file}`);
+    logger.info('main', 'setup', 'migration_applied', { file });
   }
 }
 
@@ -251,12 +265,46 @@ ipcMain.handle('get-machine-id', () => {
 
 ipcMain.handle('get-config', () => readConfig());
 
+// ── Logging IPC ───────────────────────────────────────────────────────────────
+ipcMain.handle('log-upload-now', async () => {
+  try { await uploader.upload(); return { ok: true }; }
+  catch (e) { return { ok: false, error: e.message }; }
+});
+ipcMain.handle('log-entry', (_e, level, module_name, screen, action, extra) => {
+  logger.log(level || 'info', module_name || 'renderer', screen, action, extra);
+});
+ipcMain.handle('log-set-context', (_e, ctx) => {
+  logger.setContext(ctx);
+});
+ipcMain.handle('log-list-files', () => logger.listLogFiles());
+ipcMain.handle('log-read-file', (_e, filePath, lines) => logger.readLogFile(filePath, lines || 500));
+ipcMain.handle('log-get-dir', () => logger.getLogDir());
+
 ipcMain.handle('save-config', async (_e, cfg) => {
+  logger.info('main', 'setup', 'save_config', { outletCode: cfg.outletCode, serverIp: cfg.serverIp, connectionMode: cfg.connectionMode });
   try {
     await initDB(cfg);
+    // Update logger context once config is saved
+    logger.setContext({
+      outlet_code:   cfg.outletCode   || '',
+      outlet_name:   cfg.outletName   || '',
+      outlet_id:     cfg.outletId     || '',
+      brand_id:      cfg.brandId      || '',
+      brand_name:    cfg.restaurantName || '',
+      terminal_name: cfg.machineId    || '',
+    });
+    logger.info('main', 'setup', 'db_init_complete', { outletCode: cfg.outletCode });
     writeConfig(cfg);
+    // Update uploader with new server URL and api key
+    const uploadBase = cfg.connectionMode === 'cloud' && cfg.cloudApiUrl
+      ? cfg.cloudApiUrl
+      : (cfg.serverIp ? `http://${cfg.serverIp}:3001` : '');
+    uploader.setApiUrl(uploadBase);
+    uploader.setApiKey(cfg.apiKey || process.env.API_KEY || '');
+    setTimeout(() => uploader.upload(), 5000);
     return { ok: true };
   } catch (e) {
+    logger.error('main', 'setup', 'db_init_failed', { error: e.message, stack: e.stack });
     return { ok: false, error: e.message };
   }
 });
@@ -391,6 +439,13 @@ function createWindow() {
     title: 'Restaurant POS',
   });
   mainWindow.loadFile(path.join(__dirname, 'renderer', 'index.html'));
+
+  // Initialize auto-update handler (GitHub releases)
+  try {
+    new AutoUpdateMain(mainWindow);
+  } catch (e) {
+    console.error('[AutoUpdate] Initialization error:', e.message);
+  }
 }
 
 // ── App lifecycle ─────────────────────────────────────────────────────────────
@@ -414,9 +469,34 @@ if (!gotTheLock) {
 app.whenReady().then(async () => {
   if (!gotTheLock) return;
   const cfg = readConfig();
+
+  // Init logger with outlet context from saved config
+  logger.init(app.getPath('userData'), {
+    outlet_code:   cfg.outletCode   || '',
+    outlet_name:   cfg.outletName   || '',
+    outlet_id:     cfg.outletId     || '',
+    brand_id:      cfg.brandId      || '',
+    brand_name:    cfg.restaurantName || '',
+    terminal_name: cfg.machineId    || '',
+  }, app.getVersion());
+
+  logger.info('main', 'app', 'app_start', { version: app.getVersion(), platform: process.platform });
+
   if (cfg.serverIp) {
-    try { await initDB(cfg); } catch (_) { /* renderer detects failure and shows setup */ }
+    try { await initDB(cfg); } catch (e) {
+      logger.error('main', 'app', 'db_init_failed_on_startup', { error: e.message });
+    }
   }
+
+  // Init log uploader — upload to LOCAL server first, fallback to cloud
+  const uploadBase = cfg.connectionMode === 'cloud' && cfg.cloudApiUrl
+    ? cfg.cloudApiUrl
+    : (cfg.serverIp ? `http://${cfg.serverIp}:3001` : '');
+  uploader.init(app.getPath('userData'), uploadBase, cfg.apiKey || process.env.API_KEY || '');
+
+  // Upload on startup (after short delay so app loads first)
+  setTimeout(() => uploader.upload(), 8000);
+
   createWindow();
   setupAutoUpdater(cfg.serverIp);
   app.on('activate', () => {

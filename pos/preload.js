@@ -22,6 +22,14 @@ contextBridge.exposeInMainWorld('posAPI', {
   installUpdate:        () => ipcRenderer.invoke('install-update'),
   reloadApp:        () => ipcRenderer.invoke('reload-app'),
   openExternal:     (url) => ipcRenderer.invoke('open-external', url),
+  logs: {
+    log:        (level, module, screen, action, extra) => ipcRenderer.invoke('log-entry', level, module, screen, action, extra),
+    setContext: (ctx)  => ipcRenderer.invoke('log-set-context', ctx),
+    listFiles:  ()     => ipcRenderer.invoke('log-list-files'),
+    readFile:   (p, n) => ipcRenderer.invoke('log-read-file', p, n),
+    getDir:     ()     => ipcRenderer.invoke('log-get-dir'),
+    uploadNow:  ()     => ipcRenderer.invoke('log-upload-now'),
+  },
   print: {
     receipt: (data) => ipcRenderer.invoke('print-receipt', data),
     kot:     (data) => ipcRenderer.invoke('print-kot',     data),
