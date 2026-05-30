@@ -49,16 +49,33 @@ async function seedOutletData (sql, data) {
       }
       return n
     }
+    const thisOutlet = data.outlet?.id || null
+    // Keep only brand-global rows (outlet_id NULL) or rows for THIS outlet — never
+    // another outlet's. Enforces data isolation AND avoids cross-outlet FK errors.
+    const mine = (r) => !r.outlet_id || r.outlet_id === thisOutlet
+
     if (data.brand)  summary.brands  = await up('brands',  [data.brand],  'id')
-    // Markets must be seeded before outlets (outlets.market_id → markets FK, NOT NULL).
+    // Markets seeded before outlets (outlets.market_id → markets FK, NOT NULL).
     summary.markets = await up('markets', data.markets, 'id')
     if (data.outlet) summary.outlets = await up('outlets', [data.outlet], 'id')
-    summary.categories = await up('categories', data.categories, 'id')
-    summary.menu_items = await up('menu_items', data.menu_items, 'id')
-    summary.cashiers   = await up('cashiers',   data.cashiers,   'id')
-    // Strip transient lock/order state when importing another machine's tables.
-    const tables = (data.tables_layout || []).map(r => ({ ...r, current_order_id: null, locked_by: null, status: 'available' }))
+
+    // Null FK columns pointing to tables we don't provision (kitchens, tax_groups, sections).
+    const categories = (data.categories || []).filter(mine).map(r => ({ ...r, kitchen_id: null }))
+    summary.categories = await up('categories', categories, 'id')
+
+    const catIds = new Set(categories.map(c => c.id))
+    const menu_items = (data.menu_items || [])
+      .filter(mine)
+      .filter(r => !r.category_id || catIds.has(r.category_id))  // avoid category_id FK gaps
+      .map(r => ({ ...r, kitchen_id: null, tax_group_id: null }))
+    summary.menu_items = await up('menu_items', menu_items, 'id')
+
+    summary.cashiers = await up('cashiers', (data.cashiers || []).filter(mine), 'id')
+
+    // Strip transient lock/order state + unprovisioned section_id when importing tables.
+    const tables = (data.tables_layout || []).map(r => ({ ...r, current_order_id: null, locked_by: null, status: 'available', section_id: null }))
     summary.tables_layout = await up('tables_layout', tables, 'id')
+
     summary.settings = await up('settings', data.settings, 'brand_id, outlet_id, key')
   })
   return summary
