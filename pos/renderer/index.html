@@ -5117,12 +5117,17 @@ function showView(id) {
 //  MENU
 // ═══════════════════════════════════════════════════════════════
 async function loadMenu() {
+  // Scope to the CONFIGURED outlet only — the shared local DB may hold other
+  // outlets'/brands' data; the POS must show only its own outlet (+ brand-global).
+  const _cfg = window._posConfig || {};
+  const bid = _cfg.brandId || '';
+  const oid = _cfg.outletId || '';
   const [cats, items, variants, imgRows, allModGroups, allModOpts] = await Promise.all([
-    db.all('SELECT * FROM categories WHERE active=1 ORDER BY sort_order,name'),
-    db.all('SELECT * FROM menu_items WHERE active=1 ORDER BY name'),
+    db.all('SELECT * FROM categories WHERE active=1 AND brand_id=? AND (outlet_id=? OR outlet_id IS NULL) ORDER BY sort_order,name', [bid, oid]),
+    db.all('SELECT * FROM menu_items WHERE active=1 AND brand_id=? AND (outlet_id=? OR outlet_id IS NULL) ORDER BY name', [bid, oid]),
     db.all('SELECT * FROM item_variants WHERE active=true ORDER BY item_id, sort_order, name'),
     db.all('SELECT item_id, group_id FROM item_modifier_groups'),
-    db.all('SELECT * FROM modifier_groups ORDER BY name'),
+    db.all('SELECT * FROM modifier_groups WHERE brand_id=? ORDER BY name', [bid]),
     db.all('SELECT * FROM modifier_options WHERE active=true ORDER BY group_id, sort_order, name'),
   ]);
   menu.categories = cats.ok  ? cats.data  : [];
@@ -7375,20 +7380,23 @@ async function _doPlaceOrder() {
     // Update existing order — save new items then print KOT
     await saveCartToOrder();
 
-    let kotGroups = await resolveKotPrinters(cart.items);
+    const kotGroups = await resolveKotPrinters(cart.items);
     if (!kotGroups) {
-      const sel = await showPrinterPrompt('No KOT printer configured. Select printer:');
-      if (sel) kotGroups = [{ printer: { windows_name: sel }, items: cart.items }];
-    }
-    if (kotGroups) {
-      for (const { printer, items } of kotGroups) {
-        await print.kot({
-          orderNumber: cart.orderNumber, kotNumber: getNextKotNumber(),
-          orderType: cart.type, tableName: cart.tableName,
-          customerName: cart.customerName, cashierName: cashier.name,
-          createdAt: now, items,
-          printerName: printer.windows_name || ''
-        });
+      showToast('No KOT printer configured — order saved without printing.', 'warning');
+    } else {
+      try {
+        for (const { printer, items } of kotGroups) {
+          await print.kot({
+            orderNumber: cart.orderNumber, kotNumber: getNextKotNumber(),
+            orderType: cart.type, tableName: cart.tableName,
+            customerName: cart.customerName, cashierName: cashier.name,
+            createdAt: now, items,
+            printerName: printer.windows_name || ''
+          });
+        }
+      } catch (printErr) {
+        console.error('KOT print error:', printErr);
+        showToast('Order saved, but KOT printing failed.', 'warning');
       }
     }
   } else {
@@ -7427,20 +7435,24 @@ async function _doPlaceOrder() {
     if (cart.tableId)
       await db.run(`UPDATE tables_layout SET status='occupied',current_order_id=?,locked_by=NULL WHERE id=?`, [activeOrderId, cart.tableId]);
 
-    let kotGroups = await resolveKotPrinters(cart.items);
+    // KOT printing is best-effort: never block or fail the order over a printer.
+    const kotGroups = await resolveKotPrinters(cart.items);
     if (!kotGroups) {
-      const sel = await showPrinterPrompt('No KOT printer configured. Select printer:');
-      if (sel) kotGroups = [{ printer: { windows_name: sel }, items: cart.items }];
-    }
-    if (kotGroups) {
-      for (const { printer, items } of kotGroups) {
-        await print.kot({
-          orderNumber: activeOrderNum, kotNumber: getNextKotNumber(),
-          orderType: cart.type, tableName: cart.tableName,
-          customerName: cart.customerName, cashierName: cashier.name,
-          createdAt: now, items,
-          printerName: printer.windows_name || ''
-        });
+      showToast('No KOT printer configured — order saved without printing.', 'warning');
+    } else {
+      try {
+        for (const { printer, items } of kotGroups) {
+          await print.kot({
+            orderNumber: activeOrderNum, kotNumber: getNextKotNumber(),
+            orderType: cart.type, tableName: cart.tableName,
+            customerName: cart.customerName, cashierName: cashier.name,
+            createdAt: now, items,
+            printerName: printer.windows_name || ''
+          });
+        }
+      } catch (printErr) {
+        console.error('KOT print error:', printErr);
+        showToast('Order saved, but KOT printing failed.', 'warning');
       }
     }
 
@@ -8182,11 +8194,13 @@ function printerPromptResolve(val) {
 //  HELPERS
 // ═══════════════════════════════════════════════════════════════
 async function getNextOrderNumber() {
-  const dayStart = localDayStart(todayStr());
-  const dayEnd   = dayStart + 86400000;
+  // Per-outlet, per-business-day sequence (001, 002, …) — scoped so other outlets'
+  // orders in the shared DB don't affect this outlet's numbering.
+  const outletId = window._posConfig?.outletId || null;
+  const bizDate  = _activeDay?.date || todayStr();
   const r = await db.get(
-    `SELECT COUNT(*) AS cnt FROM orders WHERE created_at >= ? AND created_at < ?`,
-    [dayStart, dayEnd]
+    `SELECT COUNT(*) AS cnt FROM orders WHERE outlet_id=? AND business_date=?`,
+    [outletId, bizDate]
   );
   const cnt = (r.ok && r.data ? parseInt(r.data.cnt) : 0) + 1;
   return String(cnt).padStart(3,'0');
