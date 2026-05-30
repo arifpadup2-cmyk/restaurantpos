@@ -7159,7 +7159,7 @@ async function loadServerLogs () {
     todayInput.value = new Date().toISOString().slice(0, 10)
   }
   try {
-    const data = await apiFetch('/logs')
+    const data = await apiFetch('GET', '/logs')
     if (!data.ok || !data.files?.length) {
       listEl.innerHTML = '<span style="color:var(--muted)">No log files found on server.</span>'
       return
@@ -7190,7 +7190,7 @@ async function viewLogFile (filename) {
   if (titleEl) titleEl.textContent = filename
   try {
     const levelFilter = document.getElementById('logs-level')?.value || ''
-    const data = await apiFetch(`/logs/view/${encodeURIComponent(filename)}?lines=1000`)
+    const data = await apiFetch('GET', `/logs/view/${encodeURIComponent(filename)}?lines=1000`)
     if (!data.ok) { viewerEl.textContent = 'Error: ' + data.error; return }
     _currentLogEntries = data.entries || []
     renderLogEntries(levelFilter)
