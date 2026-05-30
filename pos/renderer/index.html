@@ -3550,15 +3550,22 @@ async function savePosQS() {
     } catch (_) { return null; }
   }
 
+  // Explicit mode is respected — no silent fallback.
+  // LOCAL stays LOCAL; CLOUD stays CLOUD. (Runtime auto-failover is separate.)
   let d = await tryVerifyQS(primary);
-  if (!d && !isCloud) {
-    setStatus('⏳ Not on local, trying cloud…', null);
-    d = await tryVerifyQS(CLOUD_SERVER_URL);
-    if (d) { resolvedMode = 'cloud'; resolvedIp = ''; resolvedLocalIpFinal = ''; }
-  }
 
   if (!d) {
-    setStatus('❌ Brand ID or Outlet Code not found', false);
+    if (isCloud) {
+      setStatus('❌ Outlet not found on cloud. Check Brand ID & Outlet Code.', false);
+    } else {
+      // Helpful hint: tell them if it exists on cloud so they know to switch
+      const onCloud = await tryVerifyQS(CLOUD_SERVER_URL);
+      if (onCloud) {
+        setStatus('❌ Not on local server. This outlet exists on Cloud — switch to ☁️ Cloud tab.', false);
+      } else {
+        setStatus('❌ Outlet not found. Check Brand ID, Outlet Code & that the local server is running.', false);
+      }
+    }
     btn.disabled = false; btn.textContent = 'Connect';
     return;
   }
