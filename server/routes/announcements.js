@@ -32,8 +32,8 @@ module.exports = function announcementsRouter (sql) {
   // but an ad must have at least an image or some text.
   router.post('/admin', jwtAuth, async (req, res) => {
     const { title = '', description = '', badge_text = 'New', accent_color = '#f97316', image_url = null, sort_order = 0 } = req.body || {}
-    if (!title?.trim() && !description?.trim() && !image_url) {
-      return res.status(400).json({ error: 'Add an image or some text' })
+    if (!image_url) {
+      return res.status(400).json({ error: 'An advertisement image is required' })
     }
     try {
       const id = randomUUID().replace(/-/g, '').slice(0, 20)

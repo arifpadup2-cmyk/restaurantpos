@@ -235,6 +235,25 @@ async function pullFromCloud () {
   } catch (e) {
     await markError('cashiers_pull', e.message)
   }
+
+  // Announcements / ads (global) — mirror the cloud's active set so the POS always
+  // shows the latest ads created in the Back Office.
+  try {
+    const data = await cloudGet('/announcements')
+    const ads = data.announcements || []
+    await _sql.begin(async t => {
+      await t`DELETE FROM announcements`
+      for (const a of ads) {
+        await t`
+          INSERT INTO announcements (id, title, description, badge_text, accent_color, image_url, sort_order, is_active)
+          VALUES (${a.id}, ${a.title || ''}, ${a.description || ''}, ${a.badge_text || 'New'},
+                  ${a.accent_color || '#f97316'}, ${a.image_url || null}, ${a.sort_order || 0}, true)`
+      }
+    })
+    _status.pull.announcements = { at: now, count: ads.length }
+  } catch (e) {
+    await markError('announcements_pull', e.message)
+  }
 }
 
 // ── Status ────────────────────────────────────────────────────────────────────

@@ -8523,10 +8523,9 @@ let _adsTimer = null;
 
 async function loadAnnouncements() {
   if (!apiUrl) return;
-  const data = await apiFetch('GET', '/announcements');
-  if (Array.isArray(data.announcements) && data.announcements.length) {
-    renderAnnouncements(data.announcements);
-  }
+  // Cache-buster so the POS always loads the LATEST ads on every open.
+  const data = await apiFetch('GET', '/announcements?t=' + Date.now());
+  renderAnnouncements(Array.isArray(data.announcements) ? data.announcements : []);
 }
 
 function renderAnnouncements(items) {
@@ -8538,24 +8537,18 @@ function renderAnnouncements(items) {
   _adsTotal = items.length;
   _adsIdx   = 0;
 
-  slidesEl.innerHTML = items.map((item, i) => {
-    const color = item.accent_color || '#f97316';
-    const bg    = item.image_url
-      ? 'background-image:url(' + escHtml(item.image_url) + ');background-size:cover;background-position:center'
-      : 'background:linear-gradient(145deg,' + color + ' 0%,rgba(7,16,30,.97) 68%)';
-    return '<div class="ads-slide' + (i === 0 ? ' active' : '') + '" style="' + bg + '">'
-      + '<div class="ads-slide-visual">' + _slideVisual(i, color) + '</div>'
-      + '<div class="ads-slide-overlay">'
-      + '<div class="ads-slide-badge">' + escHtml(item.badge_text || 'Feature') + '</div>'
-      + '<div class="ads-slide-title">' + escHtml(item.title) + '</div>'
-      + '<div class="ads-slide-desc">' + escHtml(item.description) + '</div>'
-      + '</div></div>';
+  // Ads are image-only — render just the image (cover), no text/badge overlay.
+  slidesEl.innerHTML = items.filter(it => it.image_url).map((item, i) => {
+    const bg = 'background-image:url(' + escHtml(item.image_url) + ');background-size:cover;background-position:center';
+    return '<div class="ads-slide' + (i === 0 ? ' active' : '') + '" style="' + bg + '"></div>';
   }).join('');
+  _adsTotal = slidesEl.children.length;
 
-  dotsEl.innerHTML = items.map((_, i) =>
+  dotsEl.innerHTML = Array.from({ length: _adsTotal }, (_, i) =>
     '<div class="ads-dot' + (i === 0 ? ' active' : '') + '" onclick="adsGoTo(' + i + ')"></div>'
   ).join('');
 
+  if (_adsTotal === 0) { panel.classList.remove('visible'); return; }
   panel.classList.add('visible');
   if (_adsTimer) clearInterval(_adsTimer);
   if (_adsTotal > 1) {
