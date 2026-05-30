@@ -1,6 +1,6 @@
 {
   "name": "restaurant-pos",
-  "version": "5.0.12",
+  "version": "5.0.13",
   "description": "Restaurant POS System - Offline Windows App",
   "main": "main.js",
   "scripts": {

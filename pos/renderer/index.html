@@ -54,7 +54,7 @@ textarea:focus-visible {
 .cashier-chip.selected{background:var(--primary);border-color:var(--primary)}
 .cashier-none{color:#64748b;font-size:13px;text-align:center;padding:12px}
 /* PIN pad */
-.pin-box{background:#fff;border-radius:16px;padding:28px;width:90vw;max-width:300px;box-shadow:0 20px 60px rgba(0,0,0,.5);display:none}
+.pin-box{background:#fff;border-radius:18px;padding:32px;width:92vw;max-width:400px;box-shadow:0 20px 60px rgba(0,0,0,.5);display:none}
 .pin-box.show{display:block}
 @media (max-width:375px){.pin-box{padding:24px;width:95vw}.pp-btn{padding:14px;font-size:18px}}
 .pin-cashier{font-size:15px;font-weight:700;text-align:center;margin-bottom:14px;color:var(--secondary)}
@@ -64,9 +64,9 @@ textarea:focus-visible {
 .pin-dot.error{background:var(--danger);border-color:var(--danger);animation:pin-shake 300ms}
 @keyframes pin-shake{0%,100%{transform:translateX(0);box-shadow:0 0 0 rgba(220,38,38,.5)}25%{transform:translateX(-3px);box-shadow:0 0 8px rgba(220,38,38,.6)}75%{transform:translateX(3px);box-shadow:0 0 8px rgba(220,38,38,.6)}}
 @media (prefers-reduced-motion:reduce){.pin-dot.error{animation:none}}
-.pinpad{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
-.pp-btn{padding:16px;border-radius:10px;border:1.5px solid var(--border);background:var(--bg);
-  font-size:20px;font-weight:700;transition:transform 0.08s cubic-bezier(0.4,0,0.2,1),background 0.15s;color:var(--text);cursor:pointer;touch-action:manipulation}
+.pinpad{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+.pp-btn{padding:22px;border-radius:12px;border:1.5px solid var(--border);background:var(--bg);
+  font-size:26px;font-weight:700;transition:transform 0.08s cubic-bezier(0.4,0,0.2,1),background 0.15s;color:var(--text);cursor:pointer;touch-action:manipulation}
 .pp-btn:hover{background:var(--primary);color:#fff;border-color:var(--primary)}
 .pp-btn:active{transform:scale(.95)}
 .pp-btn:focus-visible{outline:3px solid var(--primary);outline-offset:2px}
@@ -1432,15 +1432,16 @@ textarea:focus-visible {
     <span class="pos-qs-badge local" id="pos-qs-badge">Local</span>
   </button>
 
-  <!-- Sync icon (top-right of screen) -->
+  <!-- POS / restaurant name (top-left corner) -->
+  <div id="login-rest-name" style="position:absolute;top:15px;left:18px;z-index:10;color:#fff;font-size:19px;font-weight:800;letter-spacing:.3px;text-shadow:0 1px 4px rgba(0,0,0,.4)">Restaurant POS</div>
+
+  <!-- Top-right controls: sync, fullscreen, close -->
   <button class="pos-qs-btn" id="btn-sync-data" onclick="syncOutletData()" title="Sync latest data from cloud"
     style="top:16px;right:16px;bottom:auto;padding:6px 10px;font-size:15px">🔄</button>
-
-  <!-- Window controls (top-left): fullscreen toggle + close -->
   <button class="pos-qs-btn" id="btn-fullscreen" onclick="toggleFullscreenUI()" title="Toggle full screen"
-    style="top:16px;left:16px;right:auto;bottom:auto;padding:6px 11px;font-size:15px">⛶</button>
+    style="top:16px;right:56px;bottom:auto;padding:6px 11px;font-size:15px">⛶</button>
   <button class="pos-qs-btn" id="btn-close-app" onclick="closeApp()" title="Close POS"
-    style="top:16px;left:58px;right:auto;bottom:auto;padding:6px 11px;font-size:15px;color:#fca5a5;border-color:rgba(248,113,113,.4)">✕</button>
+    style="top:16px;right:96px;bottom:auto;padding:6px 11px;font-size:15px;color:#fca5a5;border-color:rgba(248,113,113,.4)">✕</button>
 
   <!-- Ads panel (left side — full-panel image slider, visible when announcements available) -->
   <div id="login-ads-panel">
@@ -1451,9 +1452,7 @@ textarea:focus-visible {
   <!-- Main login panel (right side, or full width when no ads) -->
   <div id="login-main">
     <div class="login-header">
-      <div style="width:60px;height:60px;color:var(--primary)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="60" height="60"><path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 002-2V2"/><path d="M7 2v20"/><path d="M21 15V2a5 5 0 00-5 5v6c0 1.1.9 2 2 2h3zm0 0v7"/></svg></div>
-      <h1 id="login-rest-name">Restaurant POS</h1>
-      <p id="login-outlet-name" style="color:#f97316;font-weight:600;font-size:13px;margin-top:2px"></p>
+      <div style="width:64px;height:64px;color:var(--primary)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="64" height="64"><path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 002-2V2"/><path d="M7 2v20"/><path d="M21 15V2a5 5 0 00-5 5v6c0 1.1.9 2 2 2h3zm0 0v7"/></svg></div>
       <div id="login-version" style="font-size:14px;color:#cbd5e1;margin-top:8px;font-weight:600;letter-spacing:0.5px">v…</div>
     </div>
 
@@ -1482,6 +1481,9 @@ textarea:focus-visible {
       </div>
       <div class="pin-error" id="pin-error" role="status" aria-live="polite" aria-atomic="true"></div>
     </div>
+
+    <!-- Outlet name (below the keypad) -->
+    <p id="login-outlet-name" style="color:#f97316;font-weight:700;font-size:17px;text-align:center;margin:0;text-shadow:0 1px 3px rgba(0,0,0,.3)"></p>
 
     <!-- Opening cash (only shown for new shift) -->
     <div class="cash-box" id="cash-box">
@@ -4912,16 +4914,29 @@ async function startShift() {
 }
 
 // Open today's business day silently (used by the combined open-day + shift flow).
+// day_openings has a UNIQUE index on (date, outlet) — so reuse today's row if it
+// already exists (reopen it if it was closed) instead of inserting a duplicate.
 async function openDayDirect() {
   const today = todayStr();
   const outletId = window._posConfig?.outletId || null;
-  const existing = await db.get("SELECT * FROM day_openings WHERE date=? AND outlet_id=? AND status='open'", [today, outletId]);
-  if (existing.ok && existing.data) { _activeDay = existing.data; updateDayStatusUI(); return; }
+  const existing = await db.get(
+    "SELECT * FROM day_openings WHERE date=? AND outlet_id=? ORDER BY opened_at DESC LIMIT 1",
+    [today, outletId]
+  );
+  if (existing.ok && existing.data) {
+    if (existing.data.status !== 'open') {
+      await db.run("UPDATE day_openings SET status='open', closed_at=NULL, closed_by=NULL WHERE id=?", [existing.data.id]);
+    }
+    _activeDay = { ...existing.data, status: 'open' };
+    updateDayStatusUI();
+    return;
+  }
   const id = uid(), now = Date.now();
-  await db.run(
+  const r = await db.run(
     'INSERT INTO day_openings(id,date,outlet_id,terminal_id,opened_by,opened_at,status,notes,synced) VALUES(?,?,?,?,?,?,?,?,?)',
     [id, today, outletId, MACHINE_ID, cashier.name, now, 'open', null, 0]
   );
+  if (!r.ok) { showToast('⚠ Could not open the business day: ' + (r.error || 'error'), 'error'); return; }
   _activeDay = { id, date: today, outlet_id: outletId, opened_by: cashier.name, opened_at: now, status: 'open' };
   updateDayStatusUI();
   showToast(`Business day ${today} opened.`, 'success');
