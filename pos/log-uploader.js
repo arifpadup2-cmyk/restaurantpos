@@ -64,7 +64,8 @@ function _collectEntries () {
     .map(({ f }) => f)
 
   for (const file of files) {
-    const lines = logger.readLogFile(path.join(logDir, file), 5000)
+    const raw   = logger.readLogFile(path.join(logDir, file), 5000)
+    const lines = Array.isArray(raw) ? raw : String(raw).split('\n').filter(Boolean)
     lines.forEach((line, idx) => {
       const key = `${file}:${idx}`
       if (_uploadedSet.has(key)) return
