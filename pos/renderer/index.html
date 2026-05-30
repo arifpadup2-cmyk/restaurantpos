@@ -1264,47 +1264,58 @@ textarea:focus-visible {
 <!-- ═══════ QUICK SETTINGS MODAL ═══════ -->
 <div id="pos-qs-overlay" class="pos-qs-overlay" style="display:none" onclick="if(event.target===this)closePosQS()">
   <div class="pos-qs-box">
-    <h3>⚙ Terminal Settings</h3>
+    <h3>⚙ Connection Settings</h3>
+
+    <!-- Mode tabs -->
     <div class="pos-qs-tabs">
-      <button class="pos-qs-tab active" id="qs-tab-local" onclick="setPosQsMode('local')">🌐 Local Server</button>
-      <button class="pos-qs-tab" id="qs-tab-cloud" onclick="setPosQsMode('cloud')">☁️ Cloud Direct</button>
+      <button class="pos-qs-tab active" id="qs-tab-local" onclick="setPosQsMode('local')">🌐 Local</button>
+      <button class="pos-qs-tab" id="qs-tab-cloud" onclick="setPosQsMode('cloud')">☁️ Cloud</button>
     </div>
 
+    <!-- LOCAL: needs IP -->
     <div id="qs-local-sect">
       <label class="pos-qs-label">Server IP Address</label>
-      <input id="qs-server-ip" type="text" class="pos-qs-input" placeholder="192.168.1.100" autocomplete="off">
-      <label class="pos-qs-label">Cloud URL (fallback when local is down)</label>
-      <input id="qs-cloud-fallback" type="url" class="pos-qs-input" placeholder="https://mypos.onrender.com" autocomplete="off">
-      <p class="pos-qs-hint">When the local server is unreachable, the POS will automatically switch to the cloud URL.</p>
+      <input id="qs-server-ip" type="text" class="pos-qs-input" placeholder="192.168.1.100" autocomplete="off"
+        onkeydown="event.stopPropagation()">
     </div>
 
+    <!-- CLOUD: no IP needed — URL is hardcoded -->
     <div id="qs-cloud-sect" style="display:none">
-      <label class="pos-qs-label">Cloud Server URL</label>
-      <input id="qs-cloud-url" type="url" class="pos-qs-input" placeholder="https://mypos.onrender.com" autocomplete="off">
+      <div style="padding:10px 12px;background:#f0f9ff;border:1px solid #bae6fd;border-radius:8px;font-size:12px;color:#0369a1;margin-bottom:12px">
+        ☁️ Will connect to cloud server automatically
+      </div>
     </div>
 
-    <label class="pos-qs-label">Machine / Terminal ID</label>
-    <input id="qs-machine-id" type="text" class="pos-qs-input" placeholder="POS-01" autocomplete="off">
-
+    <!-- Shared fields -->
     <label class="pos-qs-label">Brand ID</label>
     <input id="qs-brand-id" type="text" class="pos-qs-input" placeholder="REST-AB3X9K" autocomplete="off"
-      oninput="qsOutletCodeChanged()" style="font-family:monospace;letter-spacing:1px">
-    <label class="pos-qs-label">Outlet Code</label>
-    <input id="qs-outlet-code" type="text" class="pos-qs-input" maxlength="6" placeholder="XK9T2P" autocomplete="off"
-      oninput="qsOutletCodeChanged()"
-      style="font-family:monospace;font-size:20px;letter-spacing:5px;text-align:center;padding:10px">
-    <div id="qs-outlet-confirm" style="display:none;margin-top:-4px;margin-bottom:8px;padding:8px 10px;background:#f0fdf4;border:1px solid #86efac;border-radius:7px;font-size:12px;color:#166534;font-weight:600">
-      ✓ <span id="qs-outlet-name-confirmed"></span>
-    </div>
-    <p class="pos-qs-hint" style="margin-top:-6px">6-character code from your IT team. Enter code then save — no lookup needed.</p>
+      onkeydown="event.stopPropagation()" style="font-family:monospace;letter-spacing:1px">
 
-    <div class="pos-qs-actions">
+    <label class="pos-qs-label" style="margin-top:10px">Outlet Code</label>
+    <input id="qs-outlet-code" type="text" class="pos-qs-input" maxlength="6" placeholder="ABC123" autocomplete="off"
+      onkeydown="event.stopPropagation()"
+      style="font-family:monospace;font-size:20px;letter-spacing:5px;text-align:center;padding:10px">
+
+    <label class="pos-qs-label" style="margin-top:10px">Terminal Name</label>
+    <input id="qs-machine-id" type="text" class="pos-qs-input" placeholder="POS-01" autocomplete="off"
+      onkeydown="event.stopPropagation()">
+
+    <!-- Status -->
+    <div id="qs-status" style="display:none;margin-top:10px;padding:8px 12px;border-radius:8px;font-size:12px;font-weight:600"></div>
+
+    <!-- Actions -->
+    <div class="pos-qs-actions" style="margin-top:14px">
       <button class="pos-qs-cancel" onclick="closePosQS()">Cancel</button>
-      <button class="pos-qs-save" id="qs-save-btn" onclick="savePosQS()">Save &amp; Apply</button>
+      <button class="pos-qs-save" id="qs-save-btn" onclick="savePosQS()">Connect</button>
     </div>
-    <button class="pos-qs-link" onclick="closePosQS();showSetupScreen()">Full terminal reconfigure (first-run wizard)</button>
   </div>
 </div>
+
+<!-- Hidden inputs kept for legacy code compatibility -->
+<input type="hidden" id="qs-cloud-url">
+<input type="hidden" id="qs-cloud-fallback">
+<input type="hidden" id="qs-outlet-confirm">
+<input type="hidden" id="qs-outlet-name-confirmed">
 
 <!-- ═══════ UPDATE MODALS ═══════ -->
 <div id="update-available-modal" style="position:fixed;inset:0;background:rgba(0,0,0,.6);display:none;z-index:9999;align-items:center;justify-content:center">
@@ -3429,26 +3440,22 @@ function openPosQS() {
   const cfg = window._posConfig || {};
   _qsMode = cfg.connectionMode || 'local';
   setPosQsMode(_qsMode);
-  document.getElementById('qs-server-ip').value      = cfg.serverIp    || '';
-  document.getElementById('qs-cloud-fallback').value = cfg.cloudApiUrl || '';
-  document.getElementById('qs-cloud-url').value      = cfg.cloudApiUrl || '';
-  document.getElementById('qs-machine-id').value     = cfg.machineId   || '';
-  document.getElementById('qs-brand-id').value       = cfg.brandId     || '';
-  document.getElementById('qs-outlet-code').value    = cfg.outletCode  || '';
-  const confirmEl = document.getElementById('qs-outlet-confirm');
-  const nameEl    = document.getElementById('qs-outlet-name-confirmed');
-  if (cfg.outletName && cfg.outletCode) {
-    nameEl.textContent    = cfg.outletName;
-    confirmEl.style.display = '';
-  } else {
-    confirmEl.style.display = 'none';
-  }
+  document.getElementById('qs-server-ip').value   = cfg.serverIp   || '';
+  document.getElementById('qs-machine-id').value  = cfg.machineId  || 'POS-01';
+  document.getElementById('qs-brand-id').value    = cfg.brandId    || '';
+  document.getElementById('qs-outlet-code').value = cfg.outletCode || '';
+  const st = document.getElementById('qs-status');
+  if (st) { st.style.display = 'none'; st.textContent = ''; }
   document.getElementById('pos-qs-overlay').style.display = 'flex';
+  setTimeout(() => {
+    const first = _qsMode === 'local'
+      ? document.getElementById('qs-server-ip')
+      : document.getElementById('qs-brand-id');
+    first?.focus();
+  }, 100);
 }
 
-function qsOutletCodeChanged() {
-  document.getElementById('qs-outlet-confirm').style.display = 'none';
-}
+function qsOutletCodeChanged() {}   // no-op — kept for legacy HTML references
 
 function closePosQS() {
   document.getElementById('pos-qs-overlay').style.display = 'none';
@@ -3461,76 +3468,101 @@ function setPosQsMode(mode) {
   document.getElementById('qs-tab-cloud').classList.toggle('active',  isCloud);
   document.getElementById('qs-local-sect').style.display = isCloud ? 'none' : '';
   document.getElementById('qs-cloud-sect').style.display = isCloud ? ''     : 'none';
+  const st = document.getElementById('qs-status');
+  if (st) { st.style.display = 'none'; }
 }
 
 async function savePosQS() {
-  const isCloud  = _qsMode === 'cloud';
-  const serverIp = document.getElementById('qs-server-ip').value.trim();
-  const cloudUrl = isCloud
-    ? document.getElementById('qs-cloud-url').value.trim().replace(/\/+$/, '')
-    : document.getElementById('qs-cloud-fallback').value.trim().replace(/\/+$/, '');
-  const machineId   = document.getElementById('qs-machine-id').value.trim() || 'POS-01';
-  const brandIdVal  = document.getElementById('qs-brand-id').value.trim();
-  const outletCode  = document.getElementById('qs-outlet-code').value.trim();
+  const isCloud    = _qsMode === 'cloud';
+  const serverIp   = document.getElementById('qs-server-ip').value.trim();
+  const machineId  = document.getElementById('qs-machine-id').value.trim() || 'POS-01';
+  const brandIdVal = document.getElementById('qs-brand-id').value.trim();
+  const outletCode = document.getElementById('qs-outlet-code').value.trim();
+  const btn        = document.getElementById('qs-save-btn');
+  const st         = document.getElementById('qs-status');
 
-  if (isCloud && !cloudUrl) { document.getElementById('qs-cloud-url').focus(); return; }
+  const setStatus = (msg, ok) => {
+    if (!st) return;
+    st.style.display    = '';
+    st.textContent      = msg;
+    st.style.background = ok ? '#f0fdf4' : ok === false ? '#fef2f2' : '#fefce8';
+    st.style.color      = ok ? '#166534' : ok === false ? '#991b1b' : '#854d0e';
+    st.style.border     = `1px solid ${ok ? '#86efac' : ok === false ? '#fca5a5' : '#fde68a'}`;
+  };
+
   if (!isCloud && !serverIp) { document.getElementById('qs-server-ip').focus(); return; }
-  if (!brandIdVal) { showToast('Enter your Brand ID', 'warning'); return; }
-  if (outletCode.length !== 6) { showToast('Enter a valid 6-character outlet code', 'warning'); return; }
+  if (!brandIdVal)            { setStatus('❌ Enter Brand ID', false); return; }
+  if (outletCode.length !== 6){ setStatus('❌ Outlet code must be 6 characters', false); return; }
 
-  const btn = document.getElementById('qs-save-btn');
-  btn.disabled = true; btn.textContent = 'Verifying…';
+  btn.disabled = true; btn.textContent = 'Connecting…';
+  setStatus('⏳ Verifying outlet…', null);
 
-  const serverBase = isCloud ? cloudUrl : (serverIp ? `http://${serverIp}:3001` : 'http://localhost:3001');
-  let outletId = '', outletName = '', brandId = '';
-  try {
-    const resp = await fetch(serverBase + '/setup/by-code', {
-      method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ code: outletCode, brand_id: brandIdVal }),
-      signal: AbortSignal.timeout(6000),
-    });
-    const data = await resp.json();
-    if (!resp.ok) { showToast(data.error || 'Outlet code not found', 'error'); btn.disabled = false; btn.textContent = 'Save & Apply'; return; }
-    outletId   = data.outlet_id;
-    outletName = data.outlet_name;
-    brandId    = data.brand_id;
-    document.getElementById('qs-outlet-name-confirmed').textContent = outletName;
-    document.getElementById('qs-outlet-confirm').style.display = '';
-  } catch (e) {
-    showToast('Cannot reach server to verify code', 'error');
-    btn.disabled = false; btn.textContent = 'Save & Apply';
+  // Try primary server, then cloud fallback
+  const primary = isCloud ? CLOUD_SERVER_URL : `http://${serverIp}:3001`;
+  let outletId = '', outletName = '', brandId = '', resolvedMode = _qsMode, resolvedIp = serverIp;
+
+  async function tryVerifyQS(base) {
+    try {
+      const r = await fetch(base + '/setup/by-code', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ code: outletCode, brand_id: brandIdVal }),
+        signal: AbortSignal.timeout(7000),
+      });
+      const d = await r.json();
+      return r.ok ? d : null;
+    } catch (_) { return null; }
+  }
+
+  let d = await tryVerifyQS(primary);
+  if (!d && !isCloud) {
+    setStatus('⏳ Not on local, trying cloud…', null);
+    d = await tryVerifyQS(CLOUD_SERVER_URL);
+    if (d) { resolvedMode = 'cloud'; resolvedIp = ''; }
+  }
+
+  if (!d) {
+    setStatus('❌ Brand ID or Outlet Code not found', false);
+    btn.disabled = false; btn.textContent = 'Connect';
     return;
   }
 
+  outletId = d.outlet_id; outletName = d.outlet_name; brandId = d.brand_id;
+  setStatus(`✅ ${outletName}`, true);
   btn.textContent = 'Saving…';
-  const cfg = {
-    ...(window._posConfig || {}),
-    connectionMode: _qsMode,
-    serverIp:       isCloud ? '' : serverIp,
-    cloudApiUrl:    cloudUrl,
+
+  const existingCfg = window._posConfig || {};
+  const newCfg = {
+    ...existingCfg,
+    connectionMode: resolvedMode,
+    serverIp:       resolvedMode === 'cloud' ? '' : resolvedIp,
+    cloudApiUrl:    resolvedMode === 'cloud' ? CLOUD_SERVER_URL : (existingCfg.cloudApiUrl || ''),
     machineId,
     outletCode,
     outletId,
     outletName,
     brandId,
+    restaurantName: existingCfg.restaurantName || '',
   };
 
-  const res = await window.posAPI.saveConfig(cfg);
-  btn.disabled = false; btn.textContent = 'Save & Apply';
-  if (!res.ok) { showToast('Save failed: ' + res.error, 'error'); return; }
+  const res = await window.posAPI.saveConfig(newCfg);
+  btn.disabled = false; btn.textContent = 'Connect';
+  if (!res.ok) { setStatus('❌ ' + res.error, false); return; }
 
-  window._posConfig = cfg;
-  apiUrl = isCloud ? cloudUrl : (serverIp ? `http://${serverIp}:3001` : '');
+  window._posConfig = newCfg;
+  apiUrl = resolvedMode === 'cloud'
+    ? CLOUD_SERVER_URL
+    : (resolvedIp ? `http://${resolvedIp}:3001` : '');
   _posFallbackActive = false;
   _posHealthFails    = 0;
-  updatePosQsBadge();
+  updateConnModeBadge();
 
   const outletEl = document.getElementById('login-outlet-name');
   if (outletEl) outletEl.textContent = outletName;
 
-  closePosQS();
-  showToast('Settings saved — reconnecting…', 'success');
+  showToast(`✅ Connected — ${outletName}`, 'success');
+  setTimeout(closePosQS, 800);
   checkApiConnectivity();
+  pullSyncOutletData().catch(() => {});
 }
 
 let _posOrderTypes = []
