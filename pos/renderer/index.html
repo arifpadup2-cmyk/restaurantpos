@@ -4608,6 +4608,10 @@ function ensureDayOpen() {
   return new Promise(async resolve => {
     if (_activeDay) { resolve(true); return; }
     if (await checkActiveDaySession()) { resolve(true); return; }
+    // Switch to POS screen FIRST, then show the day-open overlay
+    // (previously the overlay was shown while login screen was still visible)
+    document.getElementById('screen-login').style.display = 'none';
+    document.getElementById('app').style.display = 'flex';
     document.getElementById('day-open-date-lbl').textContent = `Business Date: ${todayStr()}`;
     document.getElementById('day-open-notes').value = '';
     document.getElementById('day-open-overlay').style.display = 'flex';
