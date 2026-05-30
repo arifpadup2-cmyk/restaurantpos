@@ -1362,7 +1362,7 @@ textarea:focus-visible {
     <div style="font-size:20px;margin-bottom:4px">⬆ Update Available</div>
     <div style="font-size:13px;color:#cbd5e1;margin-bottom:20px">
       <div style="margin-top:12px">Version <span id="new-version">2.2.0</span> is ready</div>
-      <div style="margin-top:8px;color:#94a3b8">Current: v2.1.0</div>
+      <div style="margin-top:8px;color:#94a3b8">Current: <span id="current-version-modal">v...</span></div>
     </div>
     <div style="display:flex;gap:12px">
       <button onclick="posAPI.startUpdateDownload()" style="flex:1;padding:10px;background:#f97316;color:#fff;border:none;border-radius:8px;font-weight:600;cursor:pointer">Update Now</button>
@@ -1416,7 +1416,7 @@ textarea:focus-visible {
       <div style="width:60px;height:60px;color:var(--primary)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="60" height="60"><path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 002-2V2"/><path d="M7 2v20"/><path d="M21 15V2a5 5 0 00-5 5v6c0 1.1.9 2 2 2h3zm0 0v7"/></svg></div>
       <h1 id="login-rest-name">Restaurant POS</h1>
       <p id="login-outlet-name" style="color:#f97316;font-weight:600;font-size:13px;margin-top:2px"></p>
-      <div id="login-version" style="font-size:14px;color:#cbd5e1;margin-top:8px;font-weight:600;letter-spacing:0.5px">v2.1.0</div>
+      <div id="login-version" style="font-size:14px;color:#cbd5e1;margin-top:8px;font-weight:600;letter-spacing:0.5px">v...</div>
     </div>
 
     <!-- PIN pad (direct — no cashier selection step) -->
@@ -8515,12 +8515,19 @@ function _svgDelivery(c) {
 <script src="auto-update-ui.js"></script>
 
 <script>
-// Set version badge from main process (reliable — reads app.getVersion() not require)
-(async function setVersionBadge() {
+// Set ALL version displays from main process (reads app.getVersion() — always correct)
+(async function setAllVersionDisplays() {
   try {
     const ver = await window.posAPI.getAppVersion();
-    const el = document.getElementById('version-current');
-    if (el) el.textContent = ver;
+    // Bottom-left badge
+    const badge = document.getElementById('version-current');
+    if (badge) badge.textContent = ver;
+    // Center login screen text
+    const loginVer = document.getElementById('login-version');
+    if (loginVer) loginVer.textContent = 'v' + ver;
+    // Update modal "Current:" text
+    const modalVer = document.getElementById('current-version-modal');
+    if (modalVer) modalVer.textContent = 'v' + ver;
     PosLog?.info('app', 'version_loaded', { version: ver });
   } catch (_) {}
 })();
