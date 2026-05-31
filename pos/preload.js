@@ -29,5 +29,7 @@ contextBridge.exposeInMainWorld('posAPI', {
   print: {
     receipt: (data) => ipcRenderer.invoke('print-receipt', data),
     kot:     (data) => ipcRenderer.invoke('print-kot',     data),
+    previewReceipt: (data) => ipcRenderer.invoke('preview-receipt', data),
+    previewKot:     (data) => ipcRenderer.invoke('preview-kot',     data),
   },
 });

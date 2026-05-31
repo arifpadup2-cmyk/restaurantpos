@@ -457,6 +457,8 @@ textarea:focus-visible {
 .settings-card h3{font-size:15px;font-weight:700;margin-bottom:16px;padding-bottom:10px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px}
 .settings-section{margin-bottom:28px}
 .settings-section:last-child{margin-bottom:0}
+.design-preview-box{width:300px;max-width:100%;height:360px;overflow:hidden;border:1px solid var(--border);border-radius:8px;background:#f5f5f5;margin:0 0 12px;box-shadow:inset 0 0 0 8px #f5f5f5;display:flex;justify-content:center;align-items:flex-start;padding:10px}
+.design-preview-frame{width:300px;height:100%;border:none;background:#fff;box-shadow:0 1px 6px rgba(0,0,0,.18);overflow:auto}
 .settings-group-label{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.8px;color:var(--muted);padding:6px 0 10px;margin-top:4px;border-top:1px solid var(--border)}
 .settings-system-group{background:#f8fafc;border-radius:8px;padding:16px 20px;border:1.5px solid var(--border);margin-bottom:16px}
 .settings-system-group .settings-section{margin-bottom:20px}
@@ -2375,6 +2377,8 @@ textarea:focus-visible {
                   <option value="2">Design 2 — Modern (boxed total)</option>
                   <option value="3">Design 3 — Detailed (full invoice + Arabic)</option>
                 </select>
+                <div style="font-size:12px;color:var(--muted);margin-bottom:4px">Preview (80mm)</div>
+                <div class="design-preview-box"><iframe id="bill-design-preview" class="design-preview-frame" title="Bill preview"></iframe></div>
                 <p id="bill-printer-status" style="font-size:12px;color:var(--muted);margin:0"></p>
               </div>
             </div>
@@ -2392,6 +2396,8 @@ textarea:focus-visible {
                   <option value="2">Design 2 — Bold / Large</option>
                   <option value="3">Design 3 — Compact</option>
                 </select>
+                <div style="font-size:12px;color:var(--muted);margin-bottom:4px">Preview (80mm)</div>
+                <div class="design-preview-box"><iframe id="kot-design-preview" class="design-preview-frame" title="KOT preview"></iframe></div>
                 <p id="master-kot-status" style="font-size:12px;color:var(--muted);margin:8px 0 0"></p>
               </div>
             </div>
@@ -8161,6 +8167,8 @@ async function loadPrinterAssignments() {
   // Bill / KOT design selectors
   const bdSel = document.getElementById('bill-design-sel'); if (bdSel) bdSel.value = String(settings.bill_design || 1);
   const kdSel = document.getElementById('kot-design-sel');  if (kdSel) kdSel.value = String(settings.kot_design || 1);
+  renderDesignPreview('bill');
+  renderDesignPreview('kot');
 
   // Load kitchens + categories for kitchen-wise section
   try {
@@ -8243,6 +8251,55 @@ async function saveDesignSetting(key, value) {
   await setSetting(key, String(value));
   settings[key] = parseInt(value) || 1;
   showToast((key === 'bill_design' ? 'Bill' : 'KOT') + ' design set to Design ' + value, 'success');
+  renderDesignPreview(key === 'bill_design' ? 'bill' : 'kot');
+}
+
+// ── Design previews (rendered by the real print builders in main.js) ──
+function _sampleBillData(design) {
+  const now = Date.now();
+  return {
+    design,
+    restaurantName: settings.restaurant_name || 'My Restaurant',
+    orderNumber: '0042', orderType: 'dine-in', tableName: '5',
+    customerName: 'John Doe', customerPhone: '0501234567', waiterName: 'Ahmad',
+    cashierName: 'Cashier',
+    createdAt: now - 3600000, completedAt: now - 600000, billedAt: now,
+    items: [
+      { item_name: 'Chicken Burger', name_ar: 'برجر دجاج', variant_name: 'Large', quantity: 2, unit_price: 18.0, total_price: 36.0 },
+      { item_name: 'French Fries', quantity: 1, unit_price: 8.0, total_price: 8.0 },
+      { item_name: 'Soft Drink',   quantity: 2, unit_price: 5.0, total_price: 10.0 },
+    ],
+    subtotal: 54.0, taxRate: settings.tax_rate || 5, taxAmount: 2.70, discountAmount: 4.0,
+    compAmount: 5.0, cancelledAmount: 0, serviceChargeAmount: 2.70, total: 55.40,
+    paymentMethod: 'cash', paymentReceived: 60, changeAmount: 4.60,
+    paymentLines: [{ method: 'cash', amount: 30 }, { method: 'card', amount: 25.40 }],
+    currency: settings.currency || 'QR ', receiptFooter: settings.receipt_footer || 'Thank you! Visit again.'
+  };
+}
+function _sampleKotData(design) {
+  return {
+    design, kotNumber: 7, orderNumber: '0042', orderType: 'dine-in', tableName: '5',
+    customerName: 'John Doe', cashierName: 'Cashier', createdAt: Date.now(),
+    items: [
+      { name: 'Chicken Burger', name_ar: 'برجر دجاج', variantName: 'Large', qty: 2, modifiers: [{ name: 'No onion' }, { name: 'Extra cheese' }], notes: 'Well done' },
+      { name: 'French Fries', qty: 1 },
+      { name: 'Soft Drink', qty: 2, variantName: 'Can' },
+    ]
+  };
+}
+async function renderDesignPreview(type) {
+  try {
+    const isBill = type === 'bill';
+    const sel   = document.getElementById(isBill ? 'bill-design-sel' : 'kot-design-sel');
+    const frame = document.getElementById(isBill ? 'bill-design-preview' : 'kot-design-preview');
+    if (!sel || !frame) return;
+    const design = parseInt(sel.value) || 1;
+    const data = isBill ? _sampleBillData(design) : _sampleKotData(design);
+    const r = isBill ? await print.previewReceipt(data) : await print.previewKot(data);
+    frame.srcdoc = (r && r.ok)
+      ? r.html
+      : '<p style="font-family:sans-serif;color:#999;padding:10px">Preview unavailable</p>';
+  } catch (e) { /* preview is best-effort */ }
 }
 
 async function saveKitchenPrinterConfig() {

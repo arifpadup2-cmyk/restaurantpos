@@ -358,6 +358,16 @@ ipcMain.handle('print-kot', (_e, data) => {
   return { ok: true };
 });
 
+// Return the rendered HTML for a design (no printing) — used by the settings preview.
+ipcMain.handle('preview-receipt', (_e, data) => {
+  try { return { ok: true, html: buildReceiptHTML(data || {}) }; }
+  catch (e) { return { ok: false, error: e.message }; }
+});
+ipcMain.handle('preview-kot', (_e, data) => {
+  try { return { ok: true, html: buildKOTHTML(data || {}) }; }
+  catch (e) { return { ok: false, error: e.message }; }
+});
+
 ipcMain.handle('start-update-download', () => {
   try { if (autoUpdater) autoUpdater.downloadUpdate(); } catch (_) {}
 });
