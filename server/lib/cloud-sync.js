@@ -114,13 +114,14 @@ async function pushToCloud () {
   // Orders (with items)
   try {
     const { last_push_at } = await getState('orders')
+    // Subqueries (not JOINs) so items × payments don't multiply into a cartesian product.
     const rows = await _sql`
-      SELECT o.*, COALESCE(json_agg(i.*) FILTER (WHERE i.id IS NOT NULL), '[]') AS items
+      SELECT o.*,
+        COALESCE((SELECT json_agg(i.*) FROM order_items    i WHERE i.order_id = o.id), '[]') AS items,
+        COALESCE((SELECT json_agg(p.*) FROM order_payments p WHERE p.order_id = o.id), '[]') AS payments
       FROM   orders o
-      LEFT   JOIN order_items i ON i.order_id = o.id
       WHERE  o.brand_id = ${bid}
         AND  o.updated_at > ${last_push_at}
-      GROUP  BY o.id
       ORDER  BY o.updated_at
       LIMIT  500`
 

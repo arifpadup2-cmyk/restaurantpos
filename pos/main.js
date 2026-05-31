@@ -526,8 +526,17 @@ function buildReceiptHTML(d) {
   return fn(d);
 }
 function _payLines(d) {
-  if (d.isDraft || !d.paymentMethod) return '';
-  let s = `<tr><td>Paid (${_esc(d.paymentMethod)})</td><td align="right">${d.currency}${parseFloat(d.paymentReceived||0).toFixed(2)}</td></tr>`;
+  if (d.isDraft) return '';
+  let s = '';
+  if (Array.isArray(d.paymentLines) && d.paymentLines.length) {
+    // Split payment: show each tender separately.
+    for (const p of d.paymentLines)
+      s += `<tr><td>Paid (${_esc(p.method)})</td><td align="right">${d.currency}${parseFloat(p.amount||0).toFixed(2)}</td></tr>`;
+  } else if (d.paymentMethod) {
+    s += `<tr><td>Paid (${_esc(d.paymentMethod)})</td><td align="right">${d.currency}${parseFloat(d.paymentReceived||0).toFixed(2)}</td></tr>`;
+  } else {
+    return '';
+  }
   if (d.changeAmount > 0) s += `<tr><td>Change</td><td align="right">${d.currency}${parseFloat(d.changeAmount).toFixed(2)}</td></tr>`;
   return s;
 }
@@ -569,6 +578,7 @@ function billDesign3(d) {   // Detailed (full invoice fields + Arabic)
   const meta = [
     ['Invoice #', d.orderNumber],
     ['Order time', d.createdAt ? new Date(d.createdAt).toLocaleString() : ''],
+    ['Completed', d.completedAt ? new Date(d.completedAt).toLocaleString() : ''],
     ['Payment time', d.billedAt ? new Date(d.billedAt).toLocaleString() : ''],
     ['Order type', (d.orderType||'').toUpperCase()],
     ['Cashier', d.cashierName],
@@ -588,6 +598,7 @@ ${d.isDraft?`<div class="c bold">** DRAFT **</div>`:''}
 <tr><td>Gross</td><td align="right">${d.currency}${parseFloat(d.subtotal).toFixed(2)}</td></tr>
 ${d.discountAmount>0?`<tr><td>Discount</td><td align="right">-${d.currency}${parseFloat(d.discountAmount).toFixed(2)}</td></tr>`:''}
 ${d.compAmount>0?`<tr><td>Complimentary</td><td align="right">-${d.currency}${parseFloat(d.compAmount).toFixed(2)}</td></tr>`:''}
+${d.cancelledAmount>0?`<tr><td style="color:#999">Cancelled (not charged)</td><td align="right" style="color:#999">${d.currency}${parseFloat(d.cancelledAmount).toFixed(2)}</td></tr>`:''}
 ${d.taxAmount>0?`<tr><td>Tax (${d.taxRate}%)</td><td align="right">${d.currency}${parseFloat(d.taxAmount).toFixed(2)}</td></tr>`:''}
 ${d.serviceChargeAmount>0?`<tr><td>Service charge</td><td align="right">${d.currency}${parseFloat(d.serviceChargeAmount).toFixed(2)}</td></tr>`:''}
 <tr class="bold" style="font-size:14px;border-top:1px solid #000"><td>TOTAL</td><td align="right">${d.currency}${parseFloat(d.total).toFixed(2)}</td></tr>${_payLines(d)}</table>

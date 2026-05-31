@@ -1664,6 +1664,10 @@ textarea:focus-visible {
               <span class="eheader-chip-label">Customer</span>
               <span class="eheader-chip-val" id="eheader-cust-val">—</span>
             </div>
+            <div class="eheader-chip" id="eheader-waiter-chip" onclick="showWaiterDialog()" title="Assign waiter" style="cursor:pointer">
+              <span class="eheader-chip-label">Waiter</span>
+              <span class="eheader-chip-val" id="eheader-waiter-val">—</span>
+            </div>
             <div class="eheader-spacer"></div>
             <button class="eheader-icon-btn danger" id="entry-cancel-btn" onclick="cancelCurrentOrder()" style="display:none" title="Cancel Order">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="16" height="16"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a1 1 0 011-1h4a1 1 0 011 1v2"/></svg>
@@ -3033,6 +3037,7 @@ let tables    = [];
 let cart      = {
   type:'dine-in', tableId:null, tableName:'',
   customerName:'', customerPhone:'', customerAddress:'',
+  waiterId:null, waiterName:'',
   items:[], discountType:'none', discountValue:0, notes:'',
   orderId: null, orderNumber: null
 };
@@ -5075,7 +5080,7 @@ async function _doLogout() {
   applyRoleRestrictions('cashier');
   cashier = null; shift = null; selectedCashier = null;
   cart = { type:'dine-in', tableId:null, tableName:'', customerName:'', customerPhone:'',
-    customerAddress:'', items:[], discountType:'none', discountValue:0, notes:'' };
+    customerAddress:'', waiterId:null, waiterName:'', items:[], discountType:'none', discountValue:0, notes:'' };
   pinBuffer = '';
   updatePinDots();
   document.getElementById('app').style.display = 'none';
@@ -5499,6 +5504,8 @@ async function openOrderInEntry(orderId) {
   cart.customerName    = order.customer_name    || '';
   cart.customerPhone   = order.customer_phone   || '';
   cart.customerAddress = order.customer_address || '';
+  cart.waiterId        = order.waiter_id        || null;
+  cart.waiterName      = order.waiter_name      || '';
   cart.discountType    = order.discount_type    || 'none';
   cart.discountValue   = order.discount_value   || 0;
   cart.notes           = order.notes            || '';
@@ -5632,11 +5639,14 @@ function updateOrderPanelHeader() {
 
   const custChipVal = document.getElementById('eheader-cust-val');
   if (custChipVal) custChipVal.textContent = cart.customerName || '—';
+
+  updateWaiterChip();
 }
 
 function updateEheaderCust() {
   const el = document.getElementById('eheader-cust-val');
   if (el) el.textContent = cart.customerName || '—';
+  updateWaiterChip();
   updateOrderPanelHeader();
 }
 
@@ -5880,8 +5890,73 @@ function showMoreOptions() {
   showModal('modal-more-options');
 }
 
-function showWaiterDialog() {
-  showToast('Waiter/Captain assignment coming soon', 'info');
+async function showWaiterDialog() {
+  const bid = window._posConfig?.brandId || '';
+  const oid = window._posConfig?.outletId || '';
+  let waiters = [];
+  try {
+    const r = await db.all(
+      "SELECT id,name FROM cashiers WHERE role='waiter' AND active=1 AND brand_id=? AND (outlet_id=? OR outlet_id IS NULL) ORDER BY name",
+      [bid, oid]);
+    waiters = r.ok ? r.data : [];
+  } catch (e) { waiters = []; }
+
+  // Self-contained overlay (no body markup needed)
+  document.getElementById('waiter-pick-overlay')?.remove();
+  const ov = document.createElement('div');
+  ov.id = 'waiter-pick-overlay';
+  ov.className = 'modal-overlay';
+  ov.style.cssText = 'display:flex;position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.45);align-items:center;justify-content:center';
+  const rows = waiters.length
+    ? waiters.map(wt => `<button class="wp-row" data-id="${esc(wt.id)}" data-name="${esc(wt.name)}"
+        style="display:block;width:100%;text-align:left;padding:14px 16px;border:1px solid var(--border);border-radius:10px;background:${cart.waiterId===wt.id?'var(--primary)':'#fff'};color:${cart.waiterId===wt.id?'#fff':'var(--text)'};font-size:15px;font-weight:600;margin-bottom:8px;cursor:pointer">${esc(wt.name)}</button>`).join('')
+    : `<div style="padding:18px;text-align:center;color:var(--muted)">No staff with the “waiter” role yet.<br>Add them in Back Office → Staff.</div>`;
+  ov.innerHTML = `<div style="background:var(--card,#fff);border-radius:16px;width:min(420px,92vw);max-height:80vh;overflow:auto;padding:18px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+        <h3 style="margin:0;font-size:18px">Assign Waiter</h3>
+        <button id="wp-close" style="border:none;background:none;font-size:22px;cursor:pointer;color:var(--muted)">✕</button>
+      </div>
+      ${rows}
+      <button class="wp-row" data-id="" data-name=""
+        style="display:block;width:100%;text-align:left;padding:14px 16px;border:1px dashed var(--border);border-radius:10px;background:#fff;color:var(--muted);font-size:14px;margin-top:6px;cursor:pointer">✕ No waiter / clear</button>
+    </div>`;
+  document.body.appendChild(ov);
+  const close = () => ov.remove();
+  ov.addEventListener('click', e => { if (e.target === ov) close(); });
+  ov.querySelector('#wp-close').addEventListener('click', close);
+  ov.querySelectorAll('.wp-row').forEach(b => b.addEventListener('click', () => {
+    setWaiter(b.dataset.id || null, b.dataset.name || '');
+    close();
+  }));
+}
+
+function setWaiter(id, name) {
+  cart.waiterId   = id || null;
+  cart.waiterName = name || '';
+  updateWaiterChip();
+  showToast(name ? `Waiter: ${name}` : 'Waiter cleared', 'success');
+}
+
+function updateWaiterChip() {
+  const el = document.getElementById('eheader-waiter-val');
+  if (el) el.textContent = cart.waiterName || '—';
+}
+
+// Complimentary value given away = full price of comped lines (their charged price is 0).
+function calcCompAmount(items) {
+  return (items || []).filter(i => i.comp)
+    .reduce((s, i) => s + (parseFloat(i.originalPrice ?? i.price ?? 0) * (i.qty || i.quantity || 1)), 0);
+}
+
+// Persist one row per tender so the invoice can show each payment amount.
+async function recordOrderPayments(orderId, lines, now) {
+  for (const ln of (lines || [])) {
+    if (!ln || !(parseFloat(ln.amount) > 0)) continue;
+    await db.run(`INSERT INTO order_payments (id,order_id,method,amount,reference,created_at,outlet_id,brand_id,synced)
+      VALUES (?,?,?,?,?,?,?,?,0)`,
+      [uid(), orderId, ln.method || 'cash', parseFloat(ln.amount) || 0, ln.reference || null, now,
+       window._posConfig?.outletId || null, window._posConfig?.brandId || null]);
+  }
 }
 
 function moreAction(action) {
@@ -6321,6 +6396,7 @@ function toggleComp(cartItemId) {
 function clearCart() {
   cart.items = []; cart.discountType = 'none'; cart.discountValue = 0;
   cart.notes = ''; cart.orderId = null; cart.orderNumber = null;
+  cart.waiterId = null; cart.waiterName = '';
   cart.mode  = 'kot';
   selectedCartItemId = null;
   const notesEl = document.getElementById('cart-notes');
@@ -6598,10 +6674,14 @@ function calcChange() {
 
 async function confirmPayment() {
   let effectiveMethod, received, change;
+  let paymentLines = [];   // one entry per tender → order_payments
 
   if (splitMode) {
     const a1 = parseFloat(document.getElementById('split-a1').value) || 0;
     const a2 = parseFloat(document.getElementById('split-a2').value) || 0;
+    if (a1 <= 0 || a2 <= 0) {
+      showToast('Enter a positive amount for each split method.', 'warning'); return;
+    }
     if (Math.abs(a1 + a2 - paymentTotal) > 0.01) {
       showToast('Split amounts must equal the total.', 'warning'); return;
     }
@@ -6610,6 +6690,7 @@ async function confirmPayment() {
     effectiveMethod = `${m1}+${m2}`;
     received = paymentTotal;
     change = 0;
+    paymentLines = [{ method: m1, amount: a1 }, { method: m2, amount: a2 }];
   } else {
     effectiveMethod = paymentMethod === 'other'
       ? (document.getElementById('pay-other-method').value.trim() || 'Other')
@@ -6621,15 +6702,25 @@ async function confirmPayment() {
       showToast('Cash received is less than the total!', 'error'); return;
     }
     change = Math.max(0, received - paymentTotal);
+    paymentLines = [{ method: effectiveMethod, amount: paymentTotal }];
   }
 
   document.getElementById('pay-other-method').value = '';
 
   if (paymentOrderId) {
     // Bill existing order
+    const _payNow = Date.now();
+    // Cancelled/voided value on this order (comp_amount was captured at creation).
+    let cancelledAmt = 0;
+    try {
+      const cr = await db.get(`SELECT COALESCE(SUM(total_price),0) AS amt FROM order_items
+        WHERE order_id=? AND (cancelled=1 OR voided_by IS NOT NULL)`, [paymentOrderId]);
+      cancelledAmt = parseFloat(cr?.data?.amt || 0);
+    } catch (e) { cancelledAmt = 0; }
     await db.run(`UPDATE orders SET status='paid',payment_method=?,payment_received=?,
-      change_amount=?,billed_at=?,updated_at=?,synced=0 WHERE id=?`,
-      [effectiveMethod, received, change, Date.now(), Date.now(), paymentOrderId]);
+      change_amount=?,billed_at=?,completed_at=?,cancelled_amount=?,updated_at=?,synced=0 WHERE id=?`,
+      [effectiveMethod, received, change, _payNow, _payNow, cancelledAmt, _payNow, paymentOrderId]);
+    await recordOrderPayments(paymentOrderId, paymentLines, _payNow);
     const order = activeOrders.find(o => o.id === paymentOrderId);
     if (order && order.table_id) {
       await db.run(`UPDATE tables_layout SET status='available',current_order_id=NULL,locked_by=NULL WHERE id=?`, [order.table_id]);
@@ -6654,24 +6745,28 @@ async function confirmPayment() {
     const orderNum  = await getNextOrderNumber();
     const now       = Date.now();
 
+    const compAmt = calcCompAmount(cart.items);
     await db.run(`INSERT INTO orders
       (id,order_number,order_type,table_id,table_name,customer_name,customer_phone,customer_address,
+       waiter_id,waiter_name,
        status,subtotal,tax_rate,tax_amount,discount_type,discount_value,discount_amount,
-       service_charge_rate,service_charge_amount,total,
+       comp_amount,cancelled_amount,service_charge_rate,service_charge_amount,total,
        payment_method,payment_received,change_amount,notes,cashier_id,cashier_name,shift_id,
-       customer_id,approved_by,outlet_id,brand_id,created_at,updated_at,billed_at,synced)
-      VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`,
+       customer_id,approved_by,outlet_id,brand_id,created_at,updated_at,billed_at,completed_at,synced)
+      VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`,
       [orderId, orderNum, cart.type,
        cart.tableId||null, cart.tableName||null, cart.customerName||null,
        cart.customerPhone||null, cart.customerAddress||null,
+       cart.waiterId||null, cart.waiterName||null,
        'paid', subtotal, settings.tax_rate, taxAmt,
        cart.discountType||null, cart.discountValue||0, discAmt,
-       settings.service_charge_rate, scAmt, total,
+       compAmt, 0, settings.service_charge_rate, scAmt, total,
        effectiveMethod, received, change, cart.notes||null,
        cashier.id||cashier.name, cashier.name, shift.id,
        _selectedCustomer?.id||null, cart._discApprovedBy||null,
        window._posConfig?.outletId||null, window._posConfig?.brandId||null,
-       now, now, now, 0]);
+       now, now, now, now, 0]);
+    await recordOrderPayments(orderId, paymentLines, now);
 
     for (const item of cart.items) {
       const dispName = item.comp ? `[COMP] ${item.name}` : item.name;
@@ -6740,6 +6835,13 @@ async function printReceipt(order) {
     billPrinter = await showPrinterPrompt('No bill printer configured. Select printer:');
     if (!billPrinter) return;
   }
+  // Per-tender breakdown for the invoice (split payments).
+  let paymentLines = [];
+  try {
+    const pr = await db.all('SELECT method, amount FROM order_payments WHERE order_id=? ORDER BY created_at', [order.id]);
+    if (pr.ok) paymentLines = pr.data.map(p => ({ method: p.method, amount: parseFloat(p.amount) || 0 }));
+  } catch (e) { paymentLines = []; }
+
   await print.receipt({
     restaurantName: settings.restaurant_name,
     design:         settings.bill_design,
@@ -6747,17 +6849,25 @@ async function printReceipt(order) {
     orderType:      order.order_type,
     tableName:      order.table_name || '',
     customerName:   order.customer_name || '',
+    customerPhone:  order.customer_phone || '',
+    waiterName:     order.waiter_name || '',
     cashierName:    order.cashier_name,
+    createdAt:      order.created_at,
+    completedAt:    order.completed_at,
     billedAt:       order.billed_at,
     items:          order.items,
     subtotal:       order.subtotal,
     taxRate:        order.tax_rate,
     taxAmount:      order.tax_amount,
     discountAmount: order.discount_amount,
+    compAmount:        order.comp_amount,
+    cancelledAmount:   order.cancelled_amount,
+    serviceChargeAmount: order.service_charge_amount,
     total:          order.total,
     paymentMethod:  order.payment_method,
     paymentReceived:order.payment_received,
     changeAmount:   order.change_amount,
+    paymentLines:   paymentLines,
     currency:       settings.currency,
     receiptFooter:  settings.receipt_footer,
     printerName:    billPrinter
@@ -6946,6 +7056,11 @@ async function reprintReceipt(orderId) {
   }
   if (!order) return;
   const items = (await db.all('SELECT * FROM order_items WHERE order_id=?', [orderId])).data || [];
+  let paymentLines = [];
+  try {
+    const pr = await db.all('SELECT method, amount FROM order_payments WHERE order_id=? ORDER BY created_at', [orderId]);
+    if (pr.ok) paymentLines = pr.data.map(p => ({ method: p.method, amount: parseFloat(p.amount) || 0 }));
+  } catch (e) { paymentLines = []; }
   const rp = await resolveBillPrinter();
   let billPrinter = rp?.windows_name || (window._posConfig && window._posConfig.billPrinter) || '';
   if (!billPrinter) {
@@ -6959,16 +7074,24 @@ async function reprintReceipt(orderId) {
     orderType:       order.order_type,
     tableName:       order.table_name,
     customerName:    order.customer_name,
+    customerPhone:   order.customer_phone || '',
+    waiterName:      order.waiter_name || '',
     cashierName:     order.cashier_name,
     items,
     subtotal:        order.subtotal,
     taxRate:         order.tax_rate,
     taxAmount:       order.tax_amount,
     discountAmount:  order.discount_amount,
+    compAmount:          order.comp_amount,
+    cancelledAmount:     order.cancelled_amount,
+    serviceChargeAmount: order.service_charge_amount,
     total:           order.total,
     paymentMethod:   order.payment_method,
     paymentReceived: order.payment_received,
     changeAmount:    order.change_amount,
+    paymentLines:    paymentLines,
+    createdAt:       order.created_at,
+    completedAt:     order.completed_at,
     billedAt:        order.billed_at || order.created_at,
     currency:        settings.currency,
     receiptFooter:   settings.receipt_footer,
@@ -7423,14 +7546,17 @@ async function _doPlaceOrder() {
       ? (tables.find(t => t.id === cart.tableId)?.section_name || null)
       : null;
     const _aggOrderId = cart.aggregatorOrderId || null;
+    const _compAmt = calcCompAmount(cart.items);
     const _dbr = await db.run(`INSERT INTO orders
       (id,order_number,order_type,table_id,table_name,customer_name,customer_phone,customer_address,
+       waiter_id,waiter_name,comp_amount,
        status,subtotal,tax_rate,tax_amount,discount_type,discount_value,discount_amount,total,
        notes,cashier_id,cashier_name,shift_id,terminal_id,outlet_id,brand_id,section_name,aggregator_order_id,created_at,updated_at,synced,business_date)
-      VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`,
+      VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`,
       [activeOrderId, activeOrderNum, cart.type,
        cart.tableId||null, cart.tableName||null, cart.customerName||null,
        cart.customerPhone||null, cart.customerAddress||null,
+       cart.waiterId||null, cart.waiterName||null, _compAmt,
        'active', subtotal, settings.tax_rate, taxAmt,
        cart.discountType||null, cart.discountValue||0, discAmt, total,
        cart.notes||null, cashier.id||cashier.name, cashier.name, shift.id, MACHINE_ID,

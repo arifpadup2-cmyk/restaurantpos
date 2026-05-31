@@ -308,8 +308,10 @@ app.post('/sync/orders', apiKey, async (req, res) => {
   try {
     let synced = 0
     for (const o of records) {
-      const items = o.items || []
+      const items    = o.items    || []
+      const payments = o.payments || []
       delete o.items
+      delete o.payments
       await sql.begin(async t => {
         await t`
           INSERT INTO orders ${sql(sanitizeOrder(o))}
@@ -319,10 +321,20 @@ app.post('/sync/orders', apiKey, async (req, res) => {
             payment_method   = EXCLUDED.payment_method,
             payment_received = EXCLUDED.payment_received,
             billed_at        = EXCLUDED.billed_at,
+            completed_at     = EXCLUDED.completed_at,
+            waiter_id        = EXCLUDED.waiter_id,
+            waiter_name      = EXCLUDED.waiter_name,
+            comp_amount      = EXCLUDED.comp_amount,
+            cancelled_amount = EXCLUDED.cancelled_amount,
             synced           = 1`
         for (const item of items) {
           await t`
             INSERT INTO order_items ${sql(sanitizeOrderItem(item))}
+            ON CONFLICT (id) DO NOTHING`
+        }
+        for (const pay of payments) {
+          await t`
+            INSERT INTO order_payments ${sql(sanitizeOrderPayment(pay))}
             ON CONFLICT (id) DO NOTHING`
         }
       })
@@ -386,8 +398,10 @@ app.post('/sync/server-push', apiKey, async (req, res) => {
 
     if (entity === 'orders') {
       for (const o of records) {
-        const items = o.items || []
+        const items    = o.items    || []
+        const payments = o.payments || []
         delete o.items
+        delete o.payments
         // Coerce NOT NULL columns that can arrive as null from older POS versions
         if (!o.discount_type) o.discount_type = 'none'
         try {
@@ -400,11 +414,21 @@ app.post('/sync/server-push', apiKey, async (req, res) => {
                 payment_method   = EXCLUDED.payment_method,
                 payment_received = EXCLUDED.payment_received,
                 billed_at        = EXCLUDED.billed_at,
+                completed_at     = EXCLUDED.completed_at,
+                waiter_id        = EXCLUDED.waiter_id,
+                waiter_name      = EXCLUDED.waiter_name,
+                comp_amount      = EXCLUDED.comp_amount,
+                cancelled_amount = EXCLUDED.cancelled_amount,
                 updated_at       = EXCLUDED.updated_at,
                 synced           = 1`
             for (const item of items) {
               await t`
                 INSERT INTO order_items ${sql(sanitizeOrderItem(item))}
+                ON CONFLICT (id) DO NOTHING`
+            }
+            for (const pay of payments) {
+              await t`
+                INSERT INTO order_payments ${sql(sanitizeOrderPayment({ ...pay, brand_id }))}
                 ON CONFLICT (id) DO NOTHING`
             }
           })
@@ -530,8 +554,10 @@ const ORDER_COLS = [
   'shift_id','terminal_id','outlet_id','brand_id','created_at','updated_at','billed_at','synced',
   'void_reason','voided_by','approved_by','service_charge_rate','service_charge_amount','customer_id',
   'business_date','section_name','aggregator_order_id',
+  'waiter_id','waiter_name','completed_at','comp_amount','cancelled_amount',
 ]
 const ITEM_COLS    = ['id','order_id','item_id','item_name','item_name_ar','category_name','quantity','unit_price','total_price','notes','void_reason','voided_by','voided_at','cancelled']
+const PAYMENT_COLS = ['id','order_id','method','amount','reference','created_at','outlet_id','brand_id','synced']
 const EXPENSE_COLS = ['id','category','description','amount','cashier_id','cashier_name','shift_id','terminal_id','created_at','synced']
 const SHIFT_COLS   = ['id','cashier_id','cashier_name','opening_cash','closing_cash','notes','status','terminal_id','opened_at','closed_at','synced']
 const DAY_COLS     = ['id','date','total_orders','total_sales','cash_sales','card_sales','online_payment_sales','total_expenses','net_sales','dine_in_count','takeaway_count','delivery_count','online_count','closed_by','closed_at','notes','synced']
@@ -544,6 +570,7 @@ function pick (obj, cols) {
 
 function sanitizeOrder      (o) { return pick(o, ORDER_COLS) }
 function sanitizeOrderItem  (o) { return pick(o, ITEM_COLS) }
+function sanitizeOrderPayment(o) { return pick(o, PAYMENT_COLS) }
 function sanitizeExpense    (o) { return pick(o, EXPENSE_COLS) }
 function sanitizeShift      (o) { return pick(o, SHIFT_COLS) }
 function sanitizeDayClosing (o) { return pick(o, DAY_COLS) }
