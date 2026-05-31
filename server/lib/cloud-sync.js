@@ -237,6 +237,22 @@ async function pullFromCloud () {
     await markError('cashiers_pull', e.message)
   }
 
+  // Back-Office-managed settings (receipt/KOT designs). Upsert each row by
+  // (brand_id, outlet_id, key) so terminals print with the chosen design.
+  try {
+    const data = await cloudGet(`/sync/server-pull?brand_id=${bid}&entity=settings&after=0`)
+    const rows = data.settings || []
+    for (const r of rows) {
+      await _sql`
+        INSERT INTO settings (brand_id, outlet_id, key, value)
+        VALUES (${r.brand_id ?? bid}, ${r.outlet_id ?? ''}, ${r.key}, ${r.value ?? ''})
+        ON CONFLICT (brand_id, outlet_id, key) DO UPDATE SET value = EXCLUDED.value`
+    }
+    _status.pull.settings = { at: now, count: rows.length }
+  } catch (e) {
+    await markError('settings_pull', e.message)
+  }
+
   // Announcements / ads (global) — mirror the cloud's active set so the POS always
   // shows the latest ads created in the Back Office.
   try {

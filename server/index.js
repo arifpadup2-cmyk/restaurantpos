@@ -506,6 +506,15 @@ app.get('/sync/server-pull', apiKey, async (req, res) => {
         ORDER  BY role, name`
       res.json({ cashiers })
 
+    } else if (entity === 'settings') {
+      // Back Office controls these; sync them down so terminals print/behave
+      // with the brand/outlet config chosen in the Back Office.
+      const SYNCABLE = ['bill_design', 'kot_design', 'bill_design_config', 'kot_design_config']
+      const settings = await sql`
+        SELECT brand_id, outlet_id, key, value FROM settings
+        WHERE brand_id = ${brand_id} AND key = ANY(${SYNCABLE})`
+      res.json({ settings })
+
     } else {
       res.status(400).json({ error: `Unknown entity: ${entity}` })
     }

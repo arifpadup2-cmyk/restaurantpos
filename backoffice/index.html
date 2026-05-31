@@ -841,6 +841,14 @@ input:checked+.toggle-slider:before{transform:translateX(17px)}
 .lo-expand:hover{background:rgba(255,255,255,.07);color:#cbd5e1}
 .lo-expand-caret{display:inline-block;transition:transform .15s;font-size:11px}
 .lo-expand-caret.open{transform:rotate(90deg)}
+.design-preview-box{width:344px;max-width:100%;height:420px;overflow:hidden;border:1px solid var(--border);border-radius:8px;background:#e9e9ee;display:flex;justify-content:center;align-items:flex-start;padding:12px 0}
+.design-preview-frame{width:320px;height:100%;border:none;background:#fff;box-shadow:0 1px 8px rgba(0,0,0,.2);overflow-x:hidden;overflow-y:auto}
+.de-field{display:flex;align-items:center;gap:10px;padding:7px 12px;border-bottom:1px solid var(--border);font-size:13px}
+.de-field:last-child{border-bottom:none}
+.de-field-label{flex:1;color:var(--text)}
+.de-field input[type=number]{width:58px;padding:4px 6px;border:1px solid var(--border);border-radius:5px;font-size:12px;background:var(--card);color:var(--text)}
+.de-field-px{font-size:11px;color:var(--muted)}
+.de-field.de-off .de-field-label{color:var(--muted);text-decoration:line-through;opacity:.6}
 .lo-item-qty{font-weight:700;color:#e2e8f0;min-width:16px}
 .lo-item-name{flex:1;color:#94a3b8}
 .lo-item-done .lo-item-name{text-decoration:line-through;opacity:.45}
@@ -2895,6 +2903,45 @@ input:checked+.toggle-slider:before{transform:translateX(17px)}
         </div>
         <div style="margin-top:20px">
           <button class="btn btn-primary" onclick="saveBOSettings()"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg> Save Settings</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="card" style="max-width:880px;margin-top:20px" id="design-editor-card">
+      <div class="card-header"><h3>Receipt &amp; KOT Designs</h3></div>
+      <div class="card-body">
+        <p style="font-size:13px;color:var(--muted);margin-bottom:14px">Choose a ready-made design or fully customise one — show/hide each field and set its font size. This applies to what the POS prints.</p>
+        <div style="display:flex;gap:8px;margin-bottom:16px">
+          <button class="btn btn-sm btn-primary" id="de-tab-bill" onclick="switchDesignTab('bill')">🧾 Bill</button>
+          <button class="btn btn-sm btn-outline" id="de-tab-kot" onclick="switchDesignTab('kot')">🍳 KOT</button>
+        </div>
+        <div style="display:flex;gap:20px;flex-wrap:wrap;align-items:flex-start">
+          <div style="flex:1;min-width:300px">
+            <div class="form-group">
+              <label>Design</label>
+              <select id="de-mode" onchange="onDesignModeChange()">
+                <option value="custom">✨ Custom (edit fields)</option>
+                <option value="1">Classic</option>
+                <option value="2">Modern</option>
+                <option value="3">Detailed</option>
+              </select>
+            </div>
+            <div id="de-fields-wrap">
+              <div style="font-size:12px;color:var(--muted);margin:10px 0 6px;display:flex;justify-content:space-between;align-items:center">
+                <span>Fields — toggle visibility &amp; font size (px)</span>
+                <button class="btn btn-sm btn-outline" onclick="resetDesignFields()" style="padding:2px 8px;font-size:11px">Reset</button>
+              </div>
+              <div id="de-fields" style="border:1px solid var(--border);border-radius:8px;max-height:340px;overflow:auto"></div>
+            </div>
+            <div style="margin-top:14px">
+              <button class="btn btn-primary" onclick="saveDesign()"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/></svg> Save design</button>
+              <span id="de-status" style="font-size:12px;color:var(--muted);margin-left:10px"></span>
+            </div>
+          </div>
+          <div style="width:344px">
+            <div style="font-size:12px;color:var(--muted);margin-bottom:4px">Live preview (80mm)</div>
+            <div class="design-preview-box"><iframe id="de-preview" class="design-preview-frame" title="Design preview"></iframe></div>
+          </div>
         </div>
       </div>
     </div>
@@ -5030,6 +5077,10 @@ async function loadBOSettings () {
     boSettings.mgr_discount_threshold= parseFloat(s.mgr_discount_threshold) || 10
     boSettings.require_void_reason   = parseInt(s.require_void_reason) ?? 1
     boSettings.setup_done            = s.setup_done === true || s.setup_done === 'true'
+    boSettings.bill_design           = parseInt(s.bill_design) || 1
+    boSettings.kot_design            = parseInt(s.kot_design)  || 1
+    boSettings.bill_design_config    = s.bill_design_config    || ''
+    boSettings.kot_design_config     = s.kot_design_config     || ''
   } catch (e) { /* use defaults */ }
   document.getElementById('hdr-name').textContent    = boSettings.restaurant_name
   // Show/hide outlet context banner in settings page
@@ -5056,6 +5107,141 @@ async function loadBOSettings () {
   const ukEl  = document.getElementById('bos-unsplash-key'); if (ukEl) { const k = localStorage.getItem('unsplash_key') || ''; ukEl.value = k; const st = document.getElementById('unsplash-key-status'); if (st) st.textContent = k ? '✓ Key saved to browser.' : '' }
   const txSys = document.getElementById('bos-tax-system'); if (txSys) txSys.value = boSettings.tax_system || 'GST'
   const txLbl = document.getElementById('bos-tax-label');  if (txLbl) txLbl.value = boSettings.tax_label  || ''
+  initDesignEditor()
+}
+
+// ─── RECEIPT / KOT DESIGN EDITOR ─────────────────────────────────
+let _de = {
+  type: 'bill',
+  fields: { bill: [], kot: [] },               // metadata from server
+  config: { bill: { fields: {} }, kot: { fields: {} } }, // working per-field config
+  mode:   { bill: 'custom', kot: 'custom' },   // 'custom' | '1' | '2' | '3'
+  debounce: null,
+  loaded: false,
+}
+
+async function initDesignEditor () {
+  const card = document.getElementById('design-editor-card')
+  if (!card) return
+  try {
+    if (!_de.fields.bill.length) {
+      const f = await apiFetch('GET', '/config/design-fields')
+      _de.fields.bill = f.bill || []
+      _de.fields.kot  = f.kot || []
+    }
+    // Seed working config from saved settings (or defaults).
+    for (const t of ['bill', 'kot']) {
+      const raw = boSettings[t + '_design_config']
+      let cfg = null
+      if (raw) { try { cfg = JSON.parse(raw) } catch (_) { cfg = null } }
+      if (cfg && cfg.fields) { _de.config[t] = cfg; _de.mode[t] = 'custom' }
+      else { _de.config[t] = _defaultDesignConfig(t); _de.mode[t] = String(boSettings[t + '_design'] || 1) }
+    }
+    _de.loaded = true
+    switchDesignTab(_de.type)
+  } catch (e) {
+    card.style.display = 'none'   // server too old / templates unavailable
+  }
+}
+
+function _defaultDesignConfig (type) {
+  const fields = {}
+  for (const f of _de.fields[type]) fields[f.key] = { show: f.show, size: f.size }
+  return { fields }
+}
+
+function switchDesignTab (type) {
+  _de.type = type
+  document.getElementById('de-tab-bill').className = 'btn btn-sm ' + (type==='bill' ? 'btn-primary' : 'btn-outline')
+  document.getElementById('de-tab-kot').className  = 'btn btn-sm ' + (type==='kot'  ? 'btn-primary' : 'btn-outline')
+  document.getElementById('de-mode').value = _de.mode[type]
+  onDesignModeChange()
+}
+
+function onDesignModeChange () {
+  const mode = document.getElementById('de-mode').value
+  _de.mode[_de.type] = mode
+  const custom = mode === 'custom'
+  document.getElementById('de-fields-wrap').style.display = custom ? '' : 'none'
+  if (custom) renderDesignFields()
+  refreshDesignPreview()
+}
+
+function renderDesignFields () {
+  const t = _de.type
+  const cfg = _de.config[t].fields || {}
+  document.getElementById('de-fields').innerHTML = _de.fields[t].map(f => {
+    const c = cfg[f.key] || { show: f.show, size: f.size }
+    const off = c.show === false ? ' de-off' : ''
+    return `<div class="de-field${off}" id="def-row-${f.key}">
+      <label class="toggle-switch" style="margin:0" title="Show/hide">
+        <input type="checkbox" ${c.show !== false ? 'checked' : ''} onchange="deFieldChanged('${f.key}')">
+        <span class="toggle-slider"></span>
+      </label>
+      <span class="de-field-label">${esc(f.label)}</span>
+      <input type="number" min="6" max="60" value="${parseInt(c.size)||f.size}" onchange="deFieldChanged('${f.key}')" oninput="deFieldChanged('${f.key}')">
+      <span class="de-field-px">px</span>
+    </div>`
+  }).join('')
+}
+
+function deFieldChanged (key) {
+  const row = document.getElementById('def-row-' + key)
+  if (!row) return
+  const show = row.querySelector('input[type=checkbox]').checked
+  const size = parseInt(row.querySelector('input[type=number]').value) || 12
+  if (!_de.config[_de.type].fields) _de.config[_de.type].fields = {}
+  _de.config[_de.type].fields[key] = { show, size }
+  row.classList.toggle('de-off', !show)
+  clearTimeout(_de.debounce)
+  _de.debounce = setTimeout(refreshDesignPreview, 250)
+}
+
+function resetDesignFields () {
+  _de.config[_de.type] = _defaultDesignConfig(_de.type)
+  renderDesignFields()
+  refreshDesignPreview()
+}
+
+async function refreshDesignPreview () {
+  const frame = document.getElementById('de-preview')
+  if (!frame) return
+  const t = _de.type
+  const mode = _de.mode[t]
+  const body = { type: t }
+  if (mode === 'custom') body.config = _de.config[t]
+  else body.design = parseInt(mode)
+  try {
+    const r = await apiFetch('POST', '/config/design-preview', body)
+    frame.srcdoc = r.html || '<p style="font-family:sans-serif;color:#999;padding:10px">Preview unavailable</p>'
+  } catch (e) {
+    frame.srcdoc = '<p style="font-family:sans-serif;color:#999;padding:10px">Preview unavailable</p>'
+  }
+}
+
+async function saveDesign () {
+  const t = _de.type
+  const mode = _de.mode[t]
+  const status = document.getElementById('de-status')
+  const body = {}
+  if (mode === 'custom') {
+    body[t + '_design_config'] = JSON.stringify(_de.config[t])
+  } else {
+    body[t + '_design'] = parseInt(mode)
+    body[t + '_design_config'] = ''   // clear custom → fall back to the preset
+  }
+  if (status) status.textContent = 'Saving…'
+  try {
+    const qs = _ctxOutlet ? `?outlet_id=${_ctxOutlet}` : ''
+    await apiFetch('PUT', `/settings${qs}`, body)
+    boSettings[t + '_design_config'] = body[t + '_design_config']
+    if (body[t + '_design'] !== undefined) boSettings[t + '_design'] = body[t + '_design']
+    if (status) status.textContent = '✓ Saved'
+    showToast((t === 'bill' ? 'Bill' : 'KOT') + ' design saved', 'success')
+    setTimeout(() => { if (status) status.textContent = '' }, 2500)
+  } catch (e) {
+    if (status) status.textContent = 'Save failed: ' + e.message
+  }
 }
 
 async function saveBOSettings () {

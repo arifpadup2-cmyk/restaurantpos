@@ -932,5 +932,46 @@ module.exports = function configRouter (sql) {
     } catch (e) { serverError(res, e) }
   })
 
+  // POST /config/design-preview — render a bill/KOT design (with optional
+  // per-field config) to HTML using the SAME templates the POS prints with,
+  // so the Back Office editor preview matches the printed output exactly.
+  let _tpl = null
+  try { _tpl = require('../../pos/shared/receipt-templates') } catch (_) { _tpl = null }
+  function _sampleData (type) {
+    const now = Date.now()
+    const common = {
+      restaurantName: 'My Restaurant', currency: 'QR ', orderNumber: '0042',
+      orderType: 'dine-in', tableName: '5', customerName: 'John Doe', customerPhone: '0501234567',
+      waiterName: 'Ahmad', cashierName: 'Cashier', createdAt: now - 3600000, completedAt: now - 600000, billedAt: now,
+      items: [
+        { item_name: 'Chicken Burger', name: 'Chicken Burger', name_ar: 'برجر دجاج', variantName: 'Large', quantity: 2, qty: 2, unit_price: 18, total_price: 36, modifiers: [{ name: 'No onion' }], notes: 'Well done' },
+        { item_name: 'French Fries', name: 'French Fries', quantity: 1, qty: 1, unit_price: 8, total_price: 8 },
+        { item_name: 'Soft Drink', name: 'Soft Drink', quantity: 2, qty: 2, unit_price: 5, total_price: 10 },
+      ],
+    }
+    if (type === 'kot') return { ...common, kotNumber: 7 }
+    return { ...common, subtotal: 54, taxRate: 5, taxAmount: 2.7, discountAmount: 4, compAmount: 5,
+      cancelledAmount: 0, serviceChargeAmount: 2.7, total: 55.4,
+      paymentLines: [{ method: 'cash', amount: 30 }, { method: 'card', amount: 25.4 }], receiptFooter: 'Thank you! Visit again.' }
+  }
+  // GET /config/design-fields — field metadata + defaults for the editor UI.
+  router.get('/design-fields', (_req, res) => {
+    if (!_tpl) return res.status(500).json({ error: 'Templates unavailable on server' })
+    const map = list => list.map(([key, label, size, show]) => ({ key, label, size, show }))
+    res.json({ bill: map(_tpl.BILL_FIELDS), kot: map(_tpl.KOT_FIELDS) })
+  })
+
+  router.post('/design-preview', (req, res) => {
+    if (!_tpl) return res.status(500).json({ error: 'Templates unavailable on server' })
+    const { type = 'bill', design, config } = req.body || {}
+    try {
+      const d = _sampleData(type === 'kot' ? 'kot' : 'bill')
+      if (config) d.fieldConfig = config
+      else if (design) d.design = design
+      const html = type === 'kot' ? _tpl.buildKOTHTML(d) : _tpl.buildReceiptHTML(d)
+      res.json({ html })
+    } catch (e) { serverError(res, e) }
+  })
+
   return router
 }

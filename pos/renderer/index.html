@@ -2372,11 +2372,7 @@ textarea:focus-visible {
                   <button class="btn-primary" onclick="savePrinterAssignments()" style="white-space:nowrap">Save</button>
                 </div>
                 <label style="font-size:13px;font-weight:600">Bill Design (80mm)</label>
-                <select id="bill-design-sel" onchange="saveDesignSetting('bill_design',this.value)" style="width:100%;max-width:300px;display:block;padding:8px 10px;border:1.5px solid var(--border);border-radius:7px;background:var(--card);color:var(--text);font-size:13px;margin:6px 0 10px">
-                  <option value="1">Design 1 — Classic</option>
-                  <option value="2">Design 2 — Modern (boxed total)</option>
-                  <option value="3">Design 3 — Detailed (full invoice + Arabic)</option>
-                </select>
+                <div style="font-size:12px;color:var(--muted);margin:6px 0 10px;padding:8px 10px;border:1px dashed var(--border);border-radius:7px;max-width:300px">🔒 Configured in <b>Back Office → Settings → Receipt &amp; KOT Designs</b>. The preview below shows the current design.</div>
                 <div style="font-size:12px;color:var(--muted);margin-bottom:4px">Preview (80mm)</div>
                 <div class="design-preview-box"><iframe id="bill-design-preview" class="design-preview-frame" title="Bill preview"></iframe></div>
                 <p id="bill-printer-status" style="font-size:12px;color:var(--muted);margin:0"></p>
@@ -2391,11 +2387,7 @@ textarea:focus-visible {
                 <div id="master-kot-list" style="display:flex;flex-direction:column;gap:8px;margin-bottom:14px;border:1px solid var(--border);border-radius:8px;padding:12px;max-height:220px;overflow:auto">Loading printers…</div>
                 <button class="btn-primary" onclick="savePrinterAssignments()" style="white-space:nowrap">Save</button>
                 <label style="font-size:13px;font-weight:600;display:block;margin-top:14px">KOT Design (80mm)</label>
-                <select id="kot-design-sel" onchange="saveDesignSetting('kot_design',this.value)" style="width:100%;max-width:300px;display:block;padding:8px 10px;border:1.5px solid var(--border);border-radius:7px;background:var(--card);color:var(--text);font-size:13px;margin:6px 0 8px">
-                  <option value="1">Design 1 — Standard</option>
-                  <option value="2">Design 2 — Bold / Large</option>
-                  <option value="3">Design 3 — Compact</option>
-                </select>
+                <div style="font-size:12px;color:var(--muted);margin:6px 0 8px;padding:8px 10px;border:1px dashed var(--border);border-radius:7px;max-width:300px">🔒 Configured in <b>Back Office → Settings → Receipt &amp; KOT Designs</b>. The preview below shows the current design.</div>
                 <div style="font-size:12px;color:var(--muted);margin-bottom:4px">Preview (80mm)</div>
                 <div class="design-preview-box"><iframe id="kot-design-preview" class="design-preview-frame" title="KOT preview"></iframe></div>
                 <p id="master-kot-status" style="font-size:12px;color:var(--muted);margin:8px 0 0"></p>
@@ -3232,6 +3224,10 @@ async function loadSettings() {
     if (r.key === 'cash_variance_alert_pct') settings.cash_variance_alert_pct = parseFloat(r.value) || 5;
     if (r.key === 'bill_design') settings.bill_design = parseInt(r.value) || 1;
     if (r.key === 'kot_design')  settings.kot_design  = parseInt(r.value) || 1;
+    // Per-field design config (set in Back Office). When present, the print
+    // builders use the configurable renderer instead of the fixed design.
+    if (r.key === 'bill_design_config') { try { settings.bill_design_config = r.value ? JSON.parse(r.value) : null; } catch (_) { settings.bill_design_config = null; } }
+    if (r.key === 'kot_design_config')  { try { settings.kot_design_config  = r.value ? JSON.parse(r.value) : null; } catch (_) { settings.kot_design_config  = null; } }
   });
 
   // Populate settings form
@@ -6815,6 +6811,7 @@ async function printDraftBill() {
   await print.receipt({
     restaurantName:  settings.restaurant_name,
     design:          settings.bill_design,
+    fieldConfig:     settings.bill_design_config || undefined,
     orderNumber:     cart.orderNumber || '---',
     orderType:       cart.type,
     tableName:       cart.tableName    || '',
@@ -6851,6 +6848,7 @@ async function printReceipt(order) {
   await print.receipt({
     restaurantName: settings.restaurant_name,
     design:         settings.bill_design,
+    fieldConfig:    settings.bill_design_config || undefined,
     orderNumber:    order.order_number,
     orderType:      order.order_type,
     tableName:      order.table_name || '',
@@ -7076,6 +7074,7 @@ async function reprintReceipt(orderId) {
   await posAPI.print.receipt({
     restaurantName:  settings.restaurant_name,
     design:          settings.bill_design,
+    fieldConfig:     settings.bill_design_config || undefined,
     orderNumber:     order.order_number,
     orderType:       order.order_type,
     tableName:       order.table_name,
@@ -7533,7 +7532,7 @@ async function _doPlaceOrder() {
             orderNumber: cart.orderNumber, kotNumber: getNextKotNumber(),
             orderType: cart.type, tableName: cart.tableName,
             customerName: cart.customerName, cashierName: cashier.name,
-            createdAt: now, items, design: settings.kot_design,
+            createdAt: now, items, design: settings.kot_design, fieldConfig: settings.kot_design_config || undefined,
             printerName: printer.windows_name || ''
           });
         }
@@ -7590,7 +7589,7 @@ async function _doPlaceOrder() {
             orderNumber: activeOrderNum, kotNumber: getNextKotNumber(),
             orderType: cart.type, tableName: cart.tableName,
             customerName: cart.customerName, cashierName: cashier.name,
-            createdAt: now, items, design: settings.kot_design,
+            createdAt: now, items, design: settings.kot_design, fieldConfig: settings.kot_design_config || undefined,
             printerName: printer.windows_name || ''
           });
         }
@@ -8290,11 +8289,14 @@ function _sampleKotData(design) {
 async function renderDesignPreview(type) {
   try {
     const isBill = type === 'bill';
-    const sel   = document.getElementById(isBill ? 'bill-design-sel' : 'kot-design-sel');
     const frame = document.getElementById(isBill ? 'bill-design-preview' : 'kot-design-preview');
-    if (!sel || !frame) return;
-    const design = parseInt(sel.value) || 1;
+    if (!frame) return;
+    // Designs are configured in the Back Office — preview reflects the synced
+    // settings (custom field config takes precedence over the base design).
+    const design = isBill ? (settings.bill_design || 1) : (settings.kot_design || 1);
+    const cfg    = isBill ? settings.bill_design_config : settings.kot_design_config;
     const data = isBill ? _sampleBillData(design) : _sampleKotData(design);
+    if (cfg) data.fieldConfig = cfg;
     const r = isBill ? await print.previewReceipt(data) : await print.previewKot(data);
     frame.srcdoc = (r && r.ok)
       ? r.html

@@ -28,6 +28,7 @@ module.exports = function settingsRouter (sql) {
     'address', 'opening_time', 'closing_time',
     'table_count', 'outlet_phone', 'outlet_email',
     'market_name', 'tax_system',
+    'bill_design', 'kot_design', 'bill_design_config', 'kot_design_config',
   ]
 
   // GET /settings?outlet_id= — returns settings, outlet-specific overrides brand-wide
