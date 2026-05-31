@@ -529,6 +529,7 @@ const ORDER_COLS = [
   'payment_received','change_amount','notes','cashier_id','cashier_name',
   'shift_id','terminal_id','outlet_id','brand_id','created_at','updated_at','billed_at','synced',
   'void_reason','voided_by','approved_by','service_charge_rate','service_charge_amount','customer_id',
+  'business_date','section_name','aggregator_order_id',
 ]
 const ITEM_COLS    = ['id','order_id','item_id','item_name','category_name','quantity','unit_price','total_price','notes','void_reason','voided_by','voided_at','cancelled']
 const EXPENSE_COLS = ['id','category','description','amount','cashier_id','cashier_name','shift_id','terminal_id','created_at','synced']
