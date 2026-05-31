@@ -465,7 +465,7 @@ app.get('/sync/server-pull', apiKey, async (req, res) => {
             WHERE  (brand_id = ${brand_id} OR brand_id IS NULL)
               AND  active = 1
             ORDER  BY sort_order, name`,
-        sql`SELECT id, category_id, name, price, description, active, synced_at
+        sql`SELECT id, category_id, name, name_ar, price, description, active, print_kot, synced_at
             FROM   menu_items
             WHERE  (brand_id = ${brand_id} OR brand_id IS NULL)
               AND  active = 1
