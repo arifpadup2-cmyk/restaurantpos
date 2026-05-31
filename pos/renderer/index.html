@@ -6270,6 +6270,7 @@ function pushToCart(item, variantId, variantName, variantPrice, modifiers) {
       categoryId:   item.category_id || null,
       categoryName: (menu.categories.find(c => c.id === item.category_id) || {}).name || '',
       kitchenId:   item.kitchen_id || null,
+      printKot:    item.print_kot !== 0 && item.print_kot !== false,  // per-item: does this item need a KOT?
       variantId:   variantId   || null,
       variantName: variantName || null,
       modifiers:   modifiers   || [],
@@ -7381,9 +7382,7 @@ async function _doPlaceOrder() {
     await saveCartToOrder();
 
     const kotGroups = await resolveKotPrinters(cart.items);
-    if (!kotGroups) {
-      showToast('No KOT printer configured — order saved without printing.', 'warning');
-    } else {
+    if (kotGroups.length) {
       try {
         for (const { printer, items } of kotGroups) {
           await print.kot({
@@ -7437,9 +7436,7 @@ async function _doPlaceOrder() {
 
     // KOT printing is best-effort: never block or fail the order over a printer.
     const kotGroups = await resolveKotPrinters(cart.items);
-    if (!kotGroups) {
-      showToast('No KOT printer configured — order saved without printing.', 'warning');
-    } else {
+    if (kotGroups.length) {
       try {
         for (const { printer, items } of kotGroups) {
           await print.kot({
@@ -8103,44 +8100,49 @@ async function saveKitchenPrinterConfig() {
   else showToast('Save failed: ' + r.error, 'error');
 }
 
+// Flexible KOT routing. Two independent methods, both optional:
+//   1. Master KOT  — zero or more printers, each gets ALL KOT items.
+//   2. Per-kitchen — items routed to their kitchen's printer (0..many kitchens).
+// Per-item: items with print_kot = false are skipped entirely.
+// Always returns an array (possibly empty); never throws / never an error if
+// nothing is configured.
 async function resolveKotPrinters(cartItems) {
   const cfg = window._posConfig || {};
 
-  // 1. Master KOT printer
-  if (cfg.masterKotPrinterId) {
-    const r = await db.get('SELECT * FROM printers WHERE id=?', [cfg.masterKotPrinterId]);
-    if (r.ok && r.data) return [{ printer: r.data, items: cartItems }];
+  // Per-item KOT flag — default true (prints) unless explicitly disabled.
+  const kotItems = (cartItems || []).filter(it => it.printKot !== false && it.print_kot !== 0);
+  if (!kotItems.length) return [];
+
+  const result = [];
+
+  // 1. Master KOT — accept either a list (masterKotPrinterIds) or the legacy
+  //    single id (masterKotPrinterId). Each master printer prints ALL items.
+  const masterIds = Array.isArray(cfg.masterKotPrinterIds) && cfg.masterKotPrinterIds.length
+    ? cfg.masterKotPrinterIds
+    : (cfg.masterKotPrinterId ? [cfg.masterKotPrinterId] : []);
+  for (const pid of masterIds) {
+    const r = await db.get('SELECT * FROM printers WHERE id=?', [pid]);
+    if (r.ok && r.data) result.push({ printer: r.data, items: kotItems });
   }
 
-  // 2. Kitchen-wise routing
+  // 2. Per-kitchen routing — group items by their kitchen, print to that
+  //    kitchen's printer. Items with no/unmapped kitchen are simply not routed
+  //    here (the master KOT, if any, already covers them). No error if none.
   const kitchenPrinters = cfg.kitchenPrinters || {};
   if (Object.keys(kitchenPrinters).length > 0) {
     const groups = {};
-    const unrouted = [];
-    for (const item of cartItems) {
+    for (const item of kotItems) {
       const catRow = await db.get('SELECT kitchen_id FROM categories WHERE id=?', [item.categoryId]);
       const kid = item.kitchenId || catRow.data?.kitchen_id;
-      if (kid && kitchenPrinters[kid]) {
-        if (!groups[kid]) groups[kid] = [];
-        groups[kid].push(item);
-      } else {
-        unrouted.push(item);
-      }
+      if (kid && kitchenPrinters[kid]) (groups[kid] = groups[kid] || []).push(item);
     }
-    const result = [];
     for (const [kid, items] of Object.entries(groups)) {
       const prow = await db.get('SELECT * FROM printers WHERE id=?', [kitchenPrinters[kid]]);
       if (prow.ok && prow.data) result.push({ printer: prow.data, items });
     }
-    if (unrouted.length > 0 && result.length > 0) {
-      result[0].items = [...result[0].items, ...unrouted];
-    } else if (unrouted.length > 0 && result.length === 0) {
-      return null;
-    }
-    if (result.length > 0) return result;
   }
 
-  return null;
+  return result;   // empty array = nothing to print (not an error)
 }
 
 async function resolveBillPrinter() {
