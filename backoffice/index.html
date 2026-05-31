@@ -6767,7 +6767,7 @@ function renderOrdersView () {
   // Render table rows
   document.getElementById('orders-tbody').innerHTML = pageItems.length
     ? pageItems.map(o => `
-      <tr>
+      <tr class="invoice-row" onclick="openInvoiceDetail('${o.id}')" style="cursor:pointer" title="View full invoice">
         <td><b>#${o.order_number}</b></td>
         <td><span class="badge badge-${typeBadge(o.order_type)}">${o.order_type}</span></td>
         <td>${o.table_name || o.customer_name || '—'}</td>
@@ -6805,6 +6805,96 @@ function goOrdersPage (direction) {
   }
   renderOrdersView()
   document.getElementById('orders-tbody')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+}
+
+// ─── INVOICE DETAIL ─────────────────────────────────────────────
+function openInvoiceDetail (orderId) {
+  const o = (allOrders || []).find(x => x.id === orderId)
+  if (!o) return
+  const cur = boSettings.currency
+  const m   = v => `${cur} ${parseFloat(v || 0).toFixed(2)}`
+  const dt  = v => v ? new Date(parseInt(v)).toLocaleString() : '—'
+
+  const items    = (o.items    || []).filter(Boolean)
+  const payments = (o.payments || []).filter(Boolean)
+
+  const metaRow = (k, v) => v ? `<tr><td style="color:var(--muted);padding:3px 10px 3px 0;white-space:nowrap">${k}</td><td style="padding:3px 0;font-weight:600">${esc(String(v))}</td></tr>` : ''
+  const meta = `
+    ${metaRow('Order type', (o.order_type || '').toUpperCase())}
+    ${metaRow('Order time', dt(o.created_at))}
+    ${metaRow('Completed', o.completed_at ? dt(o.completed_at) : '')}
+    ${metaRow('Payment time', o.billed_at ? dt(o.billed_at) : '')}
+    ${metaRow('Cashier', o.cashier_name)}
+    ${metaRow('Waiter', o.waiter_name)}
+    ${metaRow('Customer', o.customer_name)}
+    ${metaRow('Phone', o.customer_phone)}
+    ${metaRow('Table', o.table_name)}`
+
+  const itemRows = items.length ? items.map(i => `
+    <tr style="border-bottom:1px solid var(--border)">
+      <td style="padding:6px 4px">${esc(i.item_name || '')}${i.variant_name ? ` <span style="color:var(--muted);font-size:12px">[${esc(i.variant_name)}]</span>` : ''}${(i.comp===1||i.comp===true) ? ' <span class="badge badge-orange" style="font-size:10px">COMP</span>' : ''}${(i.cancelled===1||i.voided_by) ? ' <span class="badge badge-red" style="font-size:10px">CANCELLED</span>' : ''}</td>
+      <td align="center" style="padding:6px 4px">${i.quantity}</td>
+      <td align="right" style="padding:6px 4px">${m(i.unit_price)}</td>
+      <td align="right" style="padding:6px 4px">${m(i.total_price)}</td>
+    </tr>`).join('') : `<tr><td colspan="4" style="padding:10px;text-align:center;color:var(--muted)">No items</td></tr>`
+
+  const totalRow = (k, v, opt = {}) => `<tr><td style="padding:2px 0;${opt.color?`color:${opt.color}`:''}">${k}</td><td align="right" style="padding:2px 0;${opt.bold?'font-weight:800;':''}${opt.color?`color:${opt.color}`:''}">${opt.neg?'-':''}${m(v)}</td></tr>`
+  const totals = `
+    ${totalRow('Gross', o.subtotal)}
+    ${parseFloat(o.discount_amount||0)>0 ? totalRow('Discount', o.discount_amount, {neg:true, color:'var(--success,#16a34a)'}) : ''}
+    ${parseFloat(o.comp_amount||0)>0 ? totalRow('Complimentary', o.comp_amount, {neg:true, color:'var(--success,#16a34a)'}) : ''}
+    ${parseFloat(o.cancelled_amount||0)>0 ? totalRow('Cancelled (not charged)', o.cancelled_amount, {color:'var(--muted)'}) : ''}
+    ${parseFloat(o.tax_amount||0)>0 ? totalRow(`Tax (${o.tax_rate||0}%)`, o.tax_amount) : ''}
+    ${parseFloat(o.service_charge_amount||0)>0 ? totalRow('Service charge', o.service_charge_amount) : ''}
+    <tr style="border-top:1px solid var(--border)"><td style="padding:4px 0;font-weight:800">TOTAL</td><td align="right" style="padding:4px 0;font-weight:800">${m(o.total)}</td></tr>`
+
+  const payRows = payments.length
+    ? payments.map(p => `<tr><td style="padding:2px 0">Paid (${esc(p.method)})</td><td align="right" style="padding:2px 0">${m(p.amount)}</td></tr>`).join('')
+    : (o.payment_method ? `<tr><td style="padding:2px 0">Paid (${esc(o.payment_method)})</td><td align="right" style="padding:2px 0">${m(o.payment_received || o.total)}</td></tr>` : '')
+  const changeRow = parseFloat(o.change_amount||0)>0 ? `<tr><td style="padding:2px 0;color:var(--muted)">Change</td><td align="right" style="padding:2px 0;color:var(--muted)">${m(o.change_amount)}</td></tr>` : ''
+
+  const statusBadge = o.status==='paid'?'badge-green':o.status==='cancelled'?'badge-red':'badge-orange'
+
+  document.getElementById('invoice-detail-overlay')?.remove()
+  const ov = document.createElement('div')
+  ov.id = 'invoice-detail-overlay'
+  ov.style.cssText = 'position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.5);display:flex;align-items:center;justify-content:center;padding:20px'
+  ov.innerHTML = `
+    <div style="background:var(--card,#fff);border-radius:14px;width:min(560px,96vw);max-height:90vh;overflow:auto;box-shadow:0 20px 60px rgba(0,0,0,.3)">
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:16px 20px;border-bottom:1px solid var(--border);position:sticky;top:0;background:var(--card,#fff)">
+        <div style="display:flex;align-items:center;gap:10px">
+          <h3 style="margin:0;font-size:18px">Invoice #${esc(o.order_number)}</h3>
+          <span class="badge ${statusBadge}">${esc(o.status)}</span>
+        </div>
+        <button id="invoice-detail-close" style="border:none;background:none;font-size:24px;cursor:pointer;color:var(--muted);line-height:1">&times;</button>
+      </div>
+      <div style="padding:18px 20px">
+        <table style="border-collapse:collapse;font-size:13px;margin-bottom:14px">${meta}</table>
+        <table style="width:100%;border-collapse:collapse;font-size:13px;margin-bottom:12px">
+          <thead><tr style="border-bottom:2px solid var(--border)">
+            <th align="left" style="padding:6px 4px;color:var(--muted)">Item</th>
+            <th align="center" style="padding:6px 4px;color:var(--muted)">Qty</th>
+            <th align="right" style="padding:6px 4px;color:var(--muted)">Rate</th>
+            <th align="right" style="padding:6px 4px;color:var(--muted)">Amount</th>
+          </tr></thead>
+          <tbody>${itemRows}</tbody>
+        </table>
+        <div style="display:flex;justify-content:flex-end">
+          <table style="font-size:13px;min-width:240px">${totals}</table>
+        </div>
+        <div style="margin-top:12px;border-top:1px dashed var(--border);padding-top:10px;display:flex;justify-content:flex-end">
+          <table style="font-size:13px;min-width:240px">
+            <tr><td colspan="2" style="color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.5px;padding-bottom:2px">Payments</td></tr>
+            ${payRows || `<tr><td colspan="2" style="color:var(--muted)">—</td></tr>`}
+            ${changeRow}
+          </table>
+        </div>
+      </div>
+    </div>`
+  document.body.appendChild(ov)
+  const close = () => ov.remove()
+  ov.addEventListener('click', e => { if (e.target === ov) close() })
+  ov.querySelector('#invoice-detail-close').addEventListener('click', close)
 }
 
 // ─── REPORT DATE PRESETS & FILTERS ──────────────────────────────

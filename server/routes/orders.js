@@ -35,14 +35,18 @@ module.exports = function ordersRouter (sql) {
 
       const orders = outlet_id
         ? await sql`
-            SELECT o.*, json_agg(oi ORDER BY oi.id) AS items
+            SELECT o.*, json_agg(oi ORDER BY oi.id) AS items,
+              COALESCE((SELECT json_agg(op ORDER BY op.created_at)
+                        FROM order_payments op WHERE op.order_id = o.id), '[]') AS payments
             FROM orders o LEFT JOIN order_items oi ON oi.order_id = o.id
             WHERE o.created_at >= ${start} AND o.created_at < ${end}
               AND o.outlet_id = ${outlet_id}
               AND o.brand_id  = ${rid}
             GROUP BY o.id ORDER BY o.created_at DESC`
         : await sql`
-            SELECT o.*, json_agg(oi ORDER BY oi.id) AS items
+            SELECT o.*, json_agg(oi ORDER BY oi.id) AS items,
+              COALESCE((SELECT json_agg(op ORDER BY op.created_at)
+                        FROM order_payments op WHERE op.order_id = o.id), '[]') AS payments
             FROM orders o LEFT JOIN order_items oi ON oi.order_id = o.id
             WHERE o.created_at >= ${start} AND o.created_at < ${end}
               AND o.brand_id = ${rid}
