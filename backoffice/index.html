@@ -3582,6 +3582,15 @@ input:checked+.toggle-slider:before{transform:translateX(17px)}
             </div>
             <div class="form-row">
               <div class="form-group">
+                <label style="display:flex;align-items:center;gap:8px;cursor:pointer">
+                  <input id="ie-print-kot" type="checkbox" checked style="width:16px;height:16px;cursor:pointer">
+                  Print KOT for this item
+                </label>
+                <span style="font-size:11px;color:var(--muted)">Uncheck for items that don't need a kitchen ticket (e.g. retail / pre-packed drinks).</span>
+              </div>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
                 <label>Printer Group / Kitchen Station</label>
                 <select id="ie-printer-grp">
                   <option value="">— Default (all KOT printers) —</option>
@@ -6194,6 +6203,8 @@ async function showItemEditor (item) {
   }
   if (catSel) catSel.value = s(item?.category_id)
   if (taxSel) taxSel.value = s(item?.tax_group_id)
+  const pkChk = document.getElementById('ie-print-kot')
+  if (pkChk) pkChk.checked = item?.print_kot !== 0   // default = print KOT (checked)
 
   // Item type
   const typeVal = item?.item_type || 'single'
@@ -6283,6 +6294,7 @@ async function saveItemEditor (addAnother) {
     internal_note:     document.getElementById('ie-note').value.trim() || null,
     printer_group:     document.getElementById('ie-printer-grp').value.trim() || null,
     kitchen_id:        document.getElementById('ie-kitchen-id').value || null,
+    print_kot:         document.getElementById('ie-print-kot')?.checked ? 1 : 0,
     tags:              document.getElementById('ie-tags').value.trim() || null,
     active:           document.getElementById('ie-active').checked ? 1 : 0,
     dine_in_price:    parseFloat(document.getElementById('ie-ch-dine_in-price').value) || null,

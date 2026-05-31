@@ -2373,14 +2373,10 @@ textarea:focus-visible {
             <div id="assignment-tab-master" class="assignment-tab-content" style="display:none">
               <div class="settings-section" id="master-kot-section">
                 <h3 style="display:flex;align-items:center;gap:8px;margin-top:0"><span style="font-size:18px">🖨️</span>Master KOT Printer Configuration</h3>
-                <p style="font-size:13px;color:var(--muted);margin-bottom:14px">Single printer receives one KOT with all items. Takes priority over kitchen-wise routing.</p>
-                <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-bottom:14px">
-                  <select id="master-kot-sel" style="flex:1;min-width:200px;padding:8px 10px;border:1.5px solid var(--border);border-radius:7px;background:var(--card);color:var(--text);font-size:13px">
-                    <option value="">— Not configured —</option>
-                  </select>
-                  <button class="btn-primary" onclick="savePrinterAssignments()" style="white-space:nowrap">Save</button>
-                </div>
-                <p id="master-kot-status" style="font-size:12px;color:var(--muted);margin:0"></p>
+                <p style="font-size:13px;color:var(--muted);margin-bottom:14px">Select <b>one or more</b> printers — each receives a KOT with <b>all</b> items. Leave all unchecked to skip the master KOT (kitchen-wise routing still applies).</p>
+                <div id="master-kot-list" style="display:flex;flex-direction:column;gap:8px;margin-bottom:14px;border:1px solid var(--border);border-radius:8px;padding:12px;max-height:220px;overflow:auto">Loading printers…</div>
+                <button class="btn-primary" onclick="savePrinterAssignments()" style="white-space:nowrap">Save</button>
+                <p id="master-kot-status" style="font-size:12px;color:var(--muted);margin:8px 0 0"></p>
               </div>
             </div>
 
@@ -7999,13 +7995,23 @@ async function loadPrinterAssignments() {
   const cfg = window._posConfig || {};
   const printers = (await db.all('SELECT id,name FROM printers ORDER BY name')).data || [];
 
-  // Populate bill + master KOT selects
-  ['bill-printer-sel','master-kot-sel'].forEach(id => {
-    const sel = document.getElementById(id);
-    const current = id === 'bill-printer-sel' ? cfg.billPrinterId : cfg.masterKotPrinterId;
-    sel.innerHTML = '<option value="">— Not configured —</option>' +
-      printers.map(p => `<option value="${p.id}" ${p.id===current?'selected':''}>${esc(p.name)}</option>`).join('');
-  });
+  // Bill printer — single select
+  const billSel = document.getElementById('bill-printer-sel');
+  if (billSel) billSel.innerHTML = '<option value="">— Not configured —</option>' +
+    printers.map(p => `<option value="${p.id}" ${p.id===cfg.billPrinterId?'selected':''}>${esc(p.name)}</option>`).join('');
+
+  // Master KOT — one or more printers (checkboxes)
+  const masterList = document.getElementById('master-kot-list');
+  if (masterList) {
+    const masterIds = Array.isArray(cfg.masterKotPrinterIds) && cfg.masterKotPrinterIds.length
+      ? cfg.masterKotPrinterIds
+      : (cfg.masterKotPrinterId ? [cfg.masterKotPrinterId] : []);
+    masterList.innerHTML = printers.length
+      ? printers.map(p => `<label style="display:flex;align-items:center;gap:9px;font-size:13px;cursor:pointer">
+          <input type="checkbox" class="master-kot-chk" value="${p.id}" ${masterIds.includes(p.id)?'checked':''} style="cursor:pointer;width:16px;height:16px">
+          ${esc(p.name)}</label>`).join('')
+      : '<div style="color:var(--muted);font-size:13px">No printers added yet. Add printers first.</div>';
+  }
 
   // Load kitchens + categories for kitchen-wise section
   try {
@@ -8059,14 +8065,20 @@ async function loadPrinterAssignments() {
 
 async function savePrinterAssignments() {
   const existing = (await window.posAPI.getConfig()) || {};
+  const masterIds = Array.from(document.querySelectorAll('.master-kot-chk:checked')).map(c => c.value);
   const merged = {
     ...existing,
     billPrinterId: document.getElementById('bill-printer-sel').value || null,
-    masterKotPrinterId: document.getElementById('master-kot-sel').value || null,
+    masterKotPrinterIds: masterIds,      // one or more (empty = no master KOT)
+    masterKotPrinterId: null,            // legacy single — cleared in favour of the list
   };
   const r = await window.posAPI.saveConfig(merged);
-  if (r.ok) { window._posConfig = merged; showToast('Printer assignments saved', 'success'); }
-  else showToast('Save failed: ' + r.error, 'error');
+  if (r.ok) {
+    window._posConfig = merged;
+    const st = document.getElementById('master-kot-status');
+    if (st) st.textContent = masterIds.length ? `${masterIds.length} master KOT printer(s) configured.` : 'No master KOT printer — kitchen-wise routing only.';
+    showToast('Printer assignments saved', 'success');
+  } else showToast('Save failed: ' + r.error, 'error');
 }
 
 async function saveKitchenPrinterConfig() {
