@@ -6866,7 +6866,10 @@ function openInvoiceDetail (orderId) {
           <h3 style="margin:0;font-size:18px">Invoice #${esc(o.order_number)}</h3>
           <span class="badge ${statusBadge}">${esc(o.status)}</span>
         </div>
-        <button id="invoice-detail-close" style="border:none;background:none;font-size:24px;cursor:pointer;color:var(--muted);line-height:1">&times;</button>
+        <div style="display:flex;align-items:center;gap:6px">
+          ${_canEditInvoice() ? `<button id="invoice-detail-edit" class="btn btn-outline btn-sm" style="display:inline-flex;align-items:center;gap:5px"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>Edit</button>` : ''}
+          <button id="invoice-detail-close" style="border:none;background:none;font-size:24px;cursor:pointer;color:var(--muted);line-height:1">&times;</button>
+        </div>
       </div>
       <div style="padding:18px 20px">
         <table style="border-collapse:collapse;font-size:13px;margin-bottom:14px">${meta}</table>
@@ -6895,6 +6898,101 @@ function openInvoiceDetail (orderId) {
   const close = () => ov.remove()
   ov.addEventListener('click', e => { if (e.target === ov) close() })
   ov.querySelector('#invoice-detail-close').addEventListener('click', close)
+  const editBtn = ov.querySelector('#invoice-detail-edit')
+  if (editBtn) editBtn.addEventListener('click', () => { close(); editInvoice(o.id) })
+}
+
+function _canEditInvoice () {
+  return !!(currentUser && (currentUser.role === 'owner' || currentUser.role === 'admin' || currentUser.admin === true))
+}
+
+// ── INVOICE EDIT (Tier A: attribution / contact only) ───────────
+async function editInvoice (orderId) {
+  const o = (allOrders || []).find(x => x.id === orderId)
+  if (!o) return
+
+  // Load this outlet's waiters for the dropdown (best-effort).
+  let waiters = []
+  try {
+    const qs = o.outlet_id ? `?outlet_id=${encodeURIComponent(o.outlet_id)}` : ''
+    const { cashiers } = await apiFetch('GET', `/staff/cashiers${qs}`)
+    waiters = (cashiers || []).filter(c => (c.role || '') === 'waiter')
+  } catch (_) { waiters = [] }
+
+  const typeOpts = ['dine-in', 'takeaway', 'delivery', 'online', 'drive-thru']
+    .map(t => `<option value="${t}" ${o.order_type === t ? 'selected' : ''}>${t}</option>`).join('')
+  const waiterOpts = ['<option value="">— none —</option>']
+    .concat(waiters.map(wt => `<option value="${esc(wt.id)}" data-name="${esc(wt.name)}" ${o.waiter_id === wt.id ? 'selected' : ''}>${esc(wt.name)}</option>`))
+    .concat(o.waiter_name && !waiters.some(wt => wt.id === o.waiter_id)
+      ? [`<option value="${esc(o.waiter_id || '')}" data-name="${esc(o.waiter_name)}" selected>${esc(o.waiter_name)} (current)</option>`] : [])
+    .join('')
+  const field = (label, inner) => `<label style="display:block;margin-bottom:12px"><span style="display:block;font-size:12px;color:var(--muted);margin-bottom:3px">${label}</span>${inner}</label>`
+  const inp = (id, val) => `<input id="${id}" value="${esc(val || '')}" style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:7px;font-size:13px;background:var(--card);color:var(--text);box-sizing:border-box">`
+  const sel = (id, opts) => `<select id="${id}" style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:7px;font-size:13px;background:var(--card);color:var(--text)">${opts}</select>`
+
+  document.getElementById('invoice-edit-overlay')?.remove()
+  const ov = document.createElement('div')
+  ov.id = 'invoice-edit-overlay'
+  ov.style.cssText = 'position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.5);display:flex;align-items:center;justify-content:center;padding:20px'
+  ov.innerHTML = `
+    <div style="background:var(--card,#fff);border-radius:14px;width:min(440px,96vw);max-height:90vh;overflow:auto;box-shadow:0 20px 60px rgba(0,0,0,.3)">
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:16px 20px;border-bottom:1px solid var(--border)">
+        <h3 style="margin:0;font-size:17px">Edit Invoice #${esc(o.order_number)}</h3>
+        <button id="invoice-edit-close" style="border:none;background:none;font-size:24px;cursor:pointer;color:var(--muted);line-height:1">&times;</button>
+      </div>
+      <div style="padding:18px 20px">
+        ${field('Order type', sel('inv-edit-type', typeOpts))}
+        ${field('Waiter', sel('inv-edit-waiter', waiterOpts))}
+        ${field('Customer name', inp('inv-edit-cust', o.customer_name))}
+        ${field('Phone', inp('inv-edit-phone', o.customer_phone))}
+        ${field('Address', inp('inv-edit-addr', o.customer_address))}
+        ${field('Notes', `<textarea id="inv-edit-notes" rows="2" style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:7px;font-size:13px;background:var(--card);color:var(--text);box-sizing:border-box;resize:vertical">${esc(o.notes || '')}</textarea>`)}
+        <p style="font-size:12px;color:var(--muted);margin:4px 0 14px">Item lines, totals and payments can’t be changed here — they’re part of the financial record.</p>
+        <div style="display:flex;gap:8px;justify-content:flex-end">
+          <button id="inv-edit-cancel" class="btn btn-outline">Cancel</button>
+          <button id="inv-edit-save" class="btn btn-primary">Save changes</button>
+        </div>
+        <p id="inv-edit-status" style="font-size:12px;color:var(--danger);margin:8px 0 0;text-align:right"></p>
+      </div>
+    </div>`
+  document.body.appendChild(ov)
+  const close = () => ov.remove()
+  ov.addEventListener('click', e => { if (e.target === ov) close() })
+  ov.querySelector('#invoice-edit-close').addEventListener('click', close)
+  ov.querySelector('#inv-edit-cancel').addEventListener('click', () => { close(); openInvoiceDetail(orderId) })
+  ov.querySelector('#inv-edit-save').addEventListener('click', () => saveInvoiceEdit(orderId))
+}
+
+async function saveInvoiceEdit (orderId) {
+  const o = (allOrders || []).find(x => x.id === orderId)
+  if (!o) return
+  const status = document.getElementById('inv-edit-status')
+  const waiterSel = document.getElementById('inv-edit-waiter')
+  const waiterOpt = waiterSel?.selectedOptions?.[0]
+  const body = {
+    order_type:       document.getElementById('inv-edit-type')?.value || o.order_type,
+    waiter_id:        waiterSel?.value || null,
+    waiter_name:      waiterOpt ? (waiterOpt.dataset.name || '') : '',
+    customer_name:    document.getElementById('inv-edit-cust')?.value ?? '',
+    customer_phone:   document.getElementById('inv-edit-phone')?.value ?? '',
+    customer_address: document.getElementById('inv-edit-addr')?.value ?? '',
+    notes:            document.getElementById('inv-edit-notes')?.value ?? '',
+  }
+  const saveBtn = document.getElementById('inv-edit-save')
+  if (saveBtn) { saveBtn.disabled = true; saveBtn.textContent = 'Saving…' }
+  try {
+    const res = await apiFetch('PUT', `/orders/${orderId}`, body)
+    const updated = res.order || { ...o, ...body }
+    const idx = allOrders.findIndex(x => x.id === orderId)
+    if (idx >= 0) allOrders[idx] = { ...allOrders[idx], ...updated }
+    renderOrdersView()
+    document.getElementById('invoice-edit-overlay')?.remove()
+    openInvoiceDetail(orderId)
+    showToast(res.changed ? 'Invoice updated' : 'No changes made', 'success')
+  } catch (e) {
+    if (status) status.textContent = 'Save failed: ' + e.message
+    if (saveBtn) { saveBtn.disabled = false; saveBtn.textContent = 'Save changes' }
+  }
 }
 
 // ─── REPORT DATE PRESETS & FILTERS ──────────────────────────────
