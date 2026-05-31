@@ -46,7 +46,8 @@ module.exports = function kitchenRouter (sql) {
           'modifiers',    oi.modifiers,
           'quantity',     oi.quantity,
           'notes',        oi.notes,
-          'done',         COALESCE(oi.done, false)
+          'done',         COALESCE(oi.done, false),
+          'prep_status',  COALESCE(oi.prep_status, CASE WHEN oi.done THEN 'ready' ELSE 'pending' END)
         )`
 
       const orders = outlet_id
@@ -101,9 +102,39 @@ module.exports = function kitchenRouter (sql) {
       if (outlet_id && item.outlet_id && item.outlet_id !== outlet_id)
         return res.status(403).json({ error: 'Item belongs to another outlet' })
 
-      await sql`UPDATE order_items SET done = ${done} WHERE id = ${itemId}`
+      await sql`UPDATE order_items SET done = ${done}, prep_status = ${done ? 'ready' : 'pending'} WHERE id = ${itemId}`
       req.io?.to('rest:' + brand_id).emit('kitchen:item_done', { orderId: item.order_id, itemId, done })
       res.json({ ok: true })
+    } catch (e) { serverError(res, e) }
+  })
+
+  // PATCH /kitchen/items/:itemId/status — advance a single item through the
+  // kitchen workflow: pending → preparing → ready. `done` is kept in sync.
+  const PREP_STATES = new Set(['pending', 'preparing', 'ready'])
+  router.patch('/items/:itemId/status', authAny, async (req, res) => {
+    const { itemId } = req.params
+    const status = (req.body || {}).status
+    const { brand_id, outlet_id } = scope(req)
+    if (!PREP_STATES.has(status))
+      return res.status(400).json({ error: 'status must be pending, preparing or ready' })
+    try {
+      const [item] = outlet_id
+        ? await sql`
+            SELECT oi.id, oi.order_id, o.outlet_id
+            FROM order_items oi JOIN orders o ON o.id = oi.order_id
+            WHERE oi.id = ${itemId} AND o.brand_id = ${brand_id} AND o.outlet_id = ${outlet_id}`
+        : await sql`
+            SELECT oi.id, oi.order_id, o.outlet_id
+            FROM order_items oi JOIN orders o ON o.id = oi.order_id
+            WHERE oi.id = ${itemId} AND o.brand_id = ${brand_id}`
+      if (!item) return res.status(404).json({ error: 'Item not found' })
+      if (outlet_id && item.outlet_id && item.outlet_id !== outlet_id)
+        return res.status(403).json({ error: 'Item belongs to another outlet' })
+
+      const done = status === 'ready'
+      await sql`UPDATE order_items SET prep_status = ${status}, done = ${done} WHERE id = ${itemId}`
+      req.io?.to('rest:' + brand_id).emit('kitchen:item_status', { orderId: item.order_id, itemId, status })
+      res.json({ ok: true, status })
     } catch (e) { serverError(res, e) }
   })
 

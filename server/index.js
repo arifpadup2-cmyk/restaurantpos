@@ -556,7 +556,7 @@ const ORDER_COLS = [
   'business_date','section_name','aggregator_order_id',
   'waiter_id','waiter_name','completed_at','comp_amount','cancelled_amount',
 ]
-const ITEM_COLS    = ['id','order_id','item_id','item_name','item_name_ar','category_name','quantity','unit_price','total_price','notes','void_reason','voided_by','voided_at','cancelled']
+const ITEM_COLS    = ['id','order_id','item_id','item_name','item_name_ar','category_name','quantity','unit_price','total_price','notes','void_reason','voided_by','voided_at','cancelled','prep_status']
 const PAYMENT_COLS = ['id','order_id','method','amount','reference','created_at','outlet_id','brand_id','synced']
 const EXPENSE_COLS = ['id','category','description','amount','cashier_id','cashier_name','shift_id','terminal_id','created_at','synced']
 const SHIFT_COLS   = ['id','cashier_id','cashier_name','opening_cash','closing_cash','notes','status','terminal_id','opened_at','closed_at','synced']

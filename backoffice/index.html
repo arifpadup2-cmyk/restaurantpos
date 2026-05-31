@@ -896,6 +896,28 @@ input:checked+.toggle-slider:before{transform:translateX(17px)}
 .kds-item-notes{font-size:10px;color:#f97316;padding:2px 0 4px 28px;font-style:italic}
 .kds-card-foot{display:flex;align-items:center;justify-content:space-between;margin-top:8px;padding-top:6px;border-top:1px solid rgba(255,255,255,.05)}
 .kds-progress{height:4px;background:rgba(255,255,255,.06);border-radius:4px;overflow:hidden;flex:1;margin:0 10px}
+/* KDS order-status + item-status breakdown */
+.kds-ostatus{font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:.4px;padding:2px 8px;border-radius:5px}
+.kds-ostatus-pending{background:rgba(59,130,246,.18);color:#60a5fa}
+.kds-ostatus-preparing{background:rgba(249,115,22,.18);color:#fb923c}
+.kds-ostatus-ready{background:rgba(34,197,94,.18);color:#4ade80}
+.kds-counts{display:flex;gap:6px;margin:8px 0 4px;flex-wrap:wrap}
+.kds-count{font-size:10px;font-weight:600;padding:3px 8px;border-radius:6px;border:1px solid transparent}
+.kds-count b{font-weight:800}
+.kds-count-pending{background:rgba(59,130,246,.1);color:#93c5fd;border-color:rgba(59,130,246,.25)}
+.kds-count-preparing{background:rgba(249,115,22,.1);color:#fdba74;border-color:rgba(249,115,22,.25)}
+.kds-count-ready{background:rgba(34,197,94,.1);color:#86efac;border-color:rgba(34,197,94,.25)}
+.kds-count-zero{opacity:.4}
+.kds-expand{margin-top:2px}
+.kds-items{margin-top:4px}
+.kds-item-badge{font-size:9px;font-weight:700;padding:2px 6px;border-radius:4px;text-transform:uppercase;letter-spacing:.3px}
+.kds-badge-pending{background:rgba(59,130,246,.18);color:#60a5fa}
+.kds-badge-preparing{background:rgba(249,115,22,.18);color:#fb923c}
+.kds-badge-ready{background:rgba(34,197,94,.18);color:#4ade80}
+.kds-adv-btn{font-size:10px;font-weight:700;padding:3px 9px;border-radius:5px;border:none;cursor:pointer;color:#fff;white-space:nowrap;font-family:inherit}
+.kds-adv-preparing{background:#f97316}.kds-adv-preparing:hover{background:#ea670c}
+.kds-adv-ready{background:#22c55e}.kds-adv-ready:hover{background:#16a34a}
+.kds-adv-undo{background:rgba(255,255,255,.08);color:#94a3b8}.kds-adv-undo:hover{background:rgba(255,255,255,.15)}
 .kds-progress-fill{height:100%;border-radius:4px;transition:width .4s ease}
 .kds-done-lbl{font-size:10px;color:#475569;white-space:nowrap}
 .kds-footer{padding:7px 16px;background:#0a1020;display:flex;align-items:center;gap:8px;font-size:10px;color:#334155;flex-shrink:0;border-top:1px solid rgba(255,255,255,.05)}
@@ -939,6 +961,17 @@ input:checked+.toggle-slider:before{transform:translateX(17px)}
 .kds-card-foot{border-top-color:var(--border)!important}
 .kds-progress{background:#e5e7eb!important}
 .kds-done-lbl{color:var(--muted)!important}.kds-empty{color:var(--muted)!important}
+.kds-ostatus-pending{background:#dbeafe!important;color:#2563eb!important}
+.kds-ostatus-preparing{background:#ffedd5!important;color:#ea580c!important}
+.kds-ostatus-ready{background:#dcfce7!important;color:#16a34a!important}
+.kds-count-pending{background:#eff6ff!important;color:#2563eb!important;border-color:#bfdbfe!important}
+.kds-count-preparing{background:#fff7ed!important;color:#ea580c!important;border-color:#fed7aa!important}
+.kds-count-ready{background:#f0fdf4!important;color:#16a34a!important;border-color:#bbf7d0!important}
+.kds-badge-pending{background:#dbeafe!important;color:#2563eb!important}
+.kds-badge-preparing{background:#ffedd5!important;color:#ea580c!important}
+.kds-badge-ready{background:#dcfce7!important;color:#16a34a!important}
+.kds-expand{background:#f1f5f9!important;border-color:var(--border)!important;color:var(--muted)!important}
+.kds-expand:hover{background:#e8edf3!important;color:var(--text)!important}
 /* ── OUTLET CONTEXT BAR ─────────────────────────────────────── */
 /* ── Outlet gate overlay (hard block) ── */
 #outlet-gate-overlay{position:absolute;inset:0;background:rgba(241,245,249,.96);display:none;align-items:center;justify-content:center;z-index:40;flex-direction:column;gap:14px;text-align:center;padding:40px 24px}
@@ -9021,6 +9054,39 @@ function stopLiveRefresh () {
 // ─── KITCHEN KDS VIEW ────────────────────────────────────────────────────────
 let _kdsTimer = null
 let _kdsOrders = []
+let _kdsExpanded = new Set()   // KDS card ids whose item list is expanded
+
+function kdsItemStatus (it) { return it.prep_status || (it.done ? 'ready' : 'pending') }
+function kdsCounts (items) {
+  const c = { pending: 0, preparing: 0, ready: 0 }
+  items.forEach(it => { const s = kdsItemStatus(it); c[s] = (c[s] || 0) + 1 })
+  return c
+}
+function kdsOrderStatus (items) {
+  if (!items.length) return { key: 'pending', label: 'Pending' }
+  const c = kdsCounts(items)
+  if (c.ready === items.length) return { key: 'ready', label: 'Ready to serve' }
+  if (c.preparing > 0 || c.ready > 0) return { key: 'preparing', label: 'Preparing' }
+  return { key: 'pending', label: 'Pending' }
+}
+
+function toggleKdsItems (orderId, btn) {
+  const open = _kdsExpanded.has(orderId)
+  if (open) _kdsExpanded.delete(orderId); else _kdsExpanded.add(orderId)
+  const box = document.getElementById('kds-items-' + orderId)
+  if (box) box.style.display = open ? 'none' : 'block'
+  const caret = btn && btn.querySelector('.lo-expand-caret')
+  if (caret) caret.classList.toggle('open', !open)
+}
+
+async function advanceKdsItem (orderId, itemId, status) {
+  try {
+    await apiFetch('PATCH', `/kitchen/items/${itemId}/status`, { status })
+    const o = _kdsOrders.find(x => x.id === orderId)
+    if (o) { const it = (o.items || []).find(i => i.id === itemId); if (it) { it.prep_status = status; it.done = (status === 'ready') } }
+    renderKdsBoard()
+  } catch (e) { showToast('Update failed: ' + e.message, 'error') }
+}
 
 async function loadKdsView () {
   try {
@@ -9068,22 +9134,47 @@ function renderKdsBoard () {
   grid.innerHTML = _kdsOrders.map(o => renderKdsCard(o)).join('')
 }
 
-function renderKdsCard (order) {
-  const items   = order.items || []
-  const done    = items.filter(i => i.done).length
-  const pct     = items.length ? Math.round((done / items.length) * 100) : 0
-  const elapsed = elapsedStr(order.created_at)
-  const age     = Math.floor((Date.now() - new Date(+order.created_at).getTime()) / 60000)
-  const typeLbl = (order.order_type || 'Dine-in').replace(/-/g,' ').replace(/\b\w/g,c=>c.toUpperCase())
+const KDS_STATUS_LABEL = { pending: 'Start', preparing: 'Mark ready', ready: 'Ready' }
+const KDS_NEXT = { pending: 'preparing', preparing: 'ready' }
 
-  const urgency  = age >= 20 ? 'kds-urgent' : age >= 10 ? 'kds-warn' : ''
-  const delayBdg = age >= 20
+function renderKdsCard (order) {
+  const items    = order.items || []
+  const expanded = _kdsExpanded.has(order.id)
+  const c        = kdsCounts(items)
+  const ost      = kdsOrderStatus(items)
+  const ready    = c.ready
+  const pct      = items.length ? Math.round((ready / items.length) * 100) : 0
+  const elapsed  = elapsedStr(order.created_at)
+  const age      = Math.floor((Date.now() - new Date(+order.created_at).getTime()) / 60000)
+  const typeLbl  = (order.order_type || 'Dine-in').replace(/-/g,' ').replace(/\b\w/g,c=>c.toUpperCase())
+
+  const urgency  = ost.key === 'ready' ? '' : age >= 20 ? 'kds-urgent' : age >= 10 ? 'kds-warn' : ''
+  const delayBdg = ost.key !== 'ready' && age >= 20
     ? `<span class="kds-delay-badge kds-delay-red">⚠ ${age}m URGENT</span>`
-    : age >= 10
+    : ost.key !== 'ready' && age >= 10
     ? `<span class="kds-delay-badge kds-delay-yellow">⏱ ${age}m Delayed</span>`
     : ''
-
   const progressColor = pct === 100 ? '#22c55e' : pct > 0 ? '#f97316' : '#3b82f6'
+
+  const chip = (label, n, cls) => `<span class="kds-count ${cls} ${n ? '' : 'kds-count-zero'}">${label} <b>${n}</b></span>`
+
+  const itemsHtml = items.map(it => {
+    const displayName = it.kitchen_name || it.item_name
+    const st = kdsItemStatus(it)
+    let mods = []; try { if (it.modifiers) mods = JSON.parse(it.modifiers) } catch (_) {}
+    const variantLine = it.variant_name ? `<div style="font-size:10px;color:#f97316;padding:0 0 2px 28px">${it.variant_name}</div>` : ''
+    const modsLine    = mods.length ? `<div style="font-size:10px;color:#8b5cf6;padding:0 0 2px 28px">${mods.map(m => m.name).join(', ')}</div>` : ''
+    const next = KDS_NEXT[st]
+    const advBtn = next
+      ? `<button class="kds-adv-btn kds-adv-${next}" onclick="advanceKdsItem('${order.id}','${it.id}','${next}')">${KDS_STATUS_LABEL[st]}</button>`
+      : `<button class="kds-adv-btn kds-adv-undo" onclick="advanceKdsItem('${order.id}','${it.id}','preparing')" title="Move back to preparing">↩ Undo</button>`
+    return `<div class="kds-item kds-item-${st}">
+        <span class="kds-item-qty">${it.quantity}×</span>
+        <span class="kds-item-name">${displayName}</span>
+        <span class="kds-item-badge kds-badge-${st}">${st === 'ready' ? 'Ready' : st === 'preparing' ? 'Preparing' : 'Pending'}</span>
+        ${advBtn}
+      </div>${variantLine}${modsLine}${it.notes ? `<div class="kds-item-notes">Note: ${it.notes}</div>` : ''}`
+  }).join('')
 
   return `<div class="kds-card ${urgency}">
     <div class="kds-card-hdr">
@@ -9094,33 +9185,26 @@ function renderKdsCard (order) {
       <span class="lo-type ${orderTypeCls(order.order_type)}">${typeLbl}</span>
       ${order.table_name ? `<span class="lo-table">${order.table_name}</span>` : ''}
       ${order.customer_name ? `<span class="lo-table">${order.customer_name}</span>` : ''}
+      <span class="kds-ostatus kds-ostatus-${ost.key}">${ost.label}</span>
       ${delayBdg}
     </div>
-    ${order.cashier_name ? `<div class="kds-staff"><svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="#64748b" stroke-width="2.5"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>${order.cashier_name}</div>` : ''}
-    <div class="kds-items-hdr">
-      <span>Items (${items.length})</span>
-      <span>${done}/${items.length} done</span>
+    ${order.cashier_name || order.waiter_name ? `<div class="kds-staff"><svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="#64748b" stroke-width="2.5"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>${[order.cashier_name, order.waiter_name && ('Waiter: ' + order.waiter_name)].filter(Boolean).join(' · ')}</div>` : ''}
+    <div class="kds-counts">
+      ${chip('Pending', c.pending, 'kds-count-pending')}
+      ${chip('Preparing', c.preparing, 'kds-count-preparing')}
+      ${chip('Ready', c.ready, 'kds-count-ready')}
     </div>
-    ${items.map(it => {
-      const displayName = it.kitchen_name || it.item_name;
-      let mods = [];
-      try { if (it.modifiers) mods = JSON.parse(it.modifiers); } catch (_) {}
-      const variantLine = it.variant_name ? `<div style="font-size:10px;color:#f97316;padding:0 0 2px 28px">${it.variant_name}</div>` : '';
-      const modsLine    = mods.length ? `<div style="font-size:10px;color:#8b5cf6;padding:0 0 2px 28px">${mods.map(m => m.name).join(', ')}</div>` : '';
-      return `<div class="kds-item ${it.done ? 'kds-item-done' : ''}">
-        <span class="kds-item-qty">${it.quantity}×</span>
-        <span class="kds-item-name">${displayName}</span>
-        <div class="kds-item-status ${it.done ? 'done' : 'pending'}">
-          ${it.done ? '<svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="#4ade80" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>' : ''}
-        </div>
-      </div>
-      ${variantLine}${modsLine}
-      ${it.notes ? `<div class="kds-item-notes">Note: ${it.notes}</div>` : ''}`;
-    }).join('')}
+    <button class="lo-expand kds-expand" onclick="toggleKdsItems('${order.id}',this)">
+      <span class="lo-expand-caret ${expanded ? 'open' : ''}">▸</span>
+      <span>${items.length} item${items.length === 1 ? '' : 's'} — tap to ${expanded ? 'hide' : 'view'} &amp; update</span>
+    </button>
+    <div class="kds-items" id="kds-items-${order.id}" style="display:${expanded ? 'block' : 'none'}">
+      ${itemsHtml}
+    </div>
     <div class="kds-card-foot">
       <span class="kds-done-lbl">${pct}%</span>
       <div class="kds-progress"><div class="kds-progress-fill" style="width:${pct}%;background:${progressColor}"></div></div>
-      <span class="kds-done-lbl">${done}/${items.length}</span>
+      <span class="kds-done-lbl">${ready}/${items.length} ready</span>
     </div>
   </div>`
 }
