@@ -4093,9 +4093,9 @@ async function acceptOnlineOrder() {
      cashier.name, cashier.name, shift.id, now, now, 0]);
 
   for (const item of (o.items||[])) {
-    await db.run(`INSERT INTO order_items (id,order_id,item_id,item_name,category_name,quantity,unit_price,total_price,variant_name,modifiers,comp)
-      VALUES (?,?,?,?,?,?,?,?,?,?,?)`,
-      [uid(), orderId, item.item_id||uid(), item.item_name, item.category_name||'', item.quantity||1,
+    await db.run(`INSERT INTO order_items (id,order_id,item_id,item_name,item_name_ar,category_name,quantity,unit_price,total_price,variant_name,modifiers,comp)
+      VALUES (?,?,?,?,?,?,?,?,?,?,?,?)`,
+      [uid(), orderId, item.item_id||uid(), item.item_name, item.item_name_ar||item.name_ar||null, item.category_name||'', item.quantity||1,
        item.unit_price||0, item.total_price||0, item.variant_name||null, item.modifiers||null, 0]);
   }
 
@@ -5526,9 +5526,9 @@ async function saveCartToOrder() {
   await db.run('DELETE FROM order_items WHERE order_id=?', [cart.orderId]);
   for (const item of cart.items) {
     const dispName = item.comp ? `[COMP] ${item.name}` : item.name;
-    await db.run(`INSERT INTO order_items (id,order_id,item_id,item_name,category_name,quantity,unit_price,total_price,variant_name,modifiers,comp)
-      VALUES (?,?,?,?,?,?,?,?,?,?,?)`,
-      [uid(), cart.orderId, item.itemId, dispName, item.categoryName, item.qty, item.price, item.total,
+    await db.run(`INSERT INTO order_items (id,order_id,item_id,item_name,item_name_ar,category_name,quantity,unit_price,total_price,variant_name,modifiers,comp)
+      VALUES (?,?,?,?,?,?,?,?,?,?,?,?)`,
+      [uid(), cart.orderId, item.itemId, dispName, item.name_ar || null, item.categoryName, item.qty, item.price, item.total,
        item.variantName || null, item.modifiers?.length ? JSON.stringify(item.modifiers) : null, item.comp ? 1 : 0]);
   }
   await db.run(`UPDATE orders SET subtotal=?,tax_rate=?,tax_amount=?,discount_type=?,discount_value=?,
@@ -6675,9 +6675,9 @@ async function confirmPayment() {
 
     for (const item of cart.items) {
       const dispName = item.comp ? `[COMP] ${item.name}` : item.name;
-      await db.run(`INSERT INTO order_items (id,order_id,item_id,item_name,category_name,quantity,unit_price,total_price,variant_name,modifiers,comp)
-        VALUES (?,?,?,?,?,?,?,?,?,?,?)`,
-        [uid(), orderId, item.itemId, dispName,
+      await db.run(`INSERT INTO order_items (id,order_id,item_id,item_name,item_name_ar,category_name,quantity,unit_price,total_price,variant_name,modifiers,comp)
+        VALUES (?,?,?,?,?,?,?,?,?,?,?,?)`,
+        [uid(), orderId, item.itemId, dispName, item.name_ar || null,
          item.categoryName, item.qty, item.price, item.total,
          item.variantName || null, item.modifiers?.length ? JSON.stringify(item.modifiers) : null, item.comp ? 1 : 0]);
     }
