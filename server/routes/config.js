@@ -957,7 +957,7 @@ module.exports = function configRouter (sql) {
   // GET /config/design-fields — field metadata + defaults for the editor UI.
   router.get('/design-fields', (_req, res) => {
     if (!_tpl) return res.status(500).json({ error: 'Templates unavailable on server' })
-    const map = list => list.map(([key, label, size, show]) => ({ key, label, size, show }))
+    const map = list => list.map(([key, label, size, show, bold, italic]) => ({ key, label, size, show, bold: !!bold, italic: !!italic }))
     res.json({ bill: map(_tpl.BILL_FIELDS), kot: map(_tpl.KOT_FIELDS) })
   })
 

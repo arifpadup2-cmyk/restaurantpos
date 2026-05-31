@@ -849,6 +849,10 @@ input:checked+.toggle-slider:before{transform:translateX(17px)}
 .de-field input[type=number]{width:58px;padding:4px 6px;border:1px solid var(--border);border-radius:5px;font-size:12px;background:var(--card);color:var(--text)}
 .de-field-px{font-size:11px;color:var(--muted)}
 .de-field.de-off .de-field-label{color:var(--muted);text-decoration:line-through;opacity:.6}
+.de-style-btn{width:24px;height:24px;border:1px solid var(--border);border-radius:5px;background:var(--card);color:var(--muted);cursor:pointer;font-size:12px;line-height:1;padding:0;display:flex;align-items:center;justify-content:center}
+.de-style-btn:hover{border-color:var(--primary)}
+.de-style-btn.on{background:var(--primary);color:#fff;border-color:var(--primary)}
+.de-italic{font-style:italic}
 .lo-item-qty{font-weight:700;color:#e2e8f0;min-width:16px}
 .lo-item-name{flex:1;color:#94a3b8}
 .lo-item-done .lo-item-name{text-decoration:line-through;opacity:.45}
@@ -1404,6 +1408,9 @@ input:checked+.toggle-slider:before{transform:translateX(17px)}
           </div>
           <div class="nav-sub" id="navsub-kitchens" onclick="showConfigTab('kitchens')" role="button" tabindex="0">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2v20M18 2v20M3 12h18M3 6h18M3 18h18"/></svg><span>Kitchens</span>
+          </div>
+          <div class="nav-sub" id="navsub-designs" onclick="showConfigTab('designs')" role="button" tabindex="0">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg><span>Receipt &amp; KOT Designs</span>
           </div>
           <div class="nav-sub" id="navsub-designations" onclick="showConfigTab('designations')" role="button" tabindex="0">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg><span>Designations</span>
@@ -2907,45 +2914,6 @@ input:checked+.toggle-slider:before{transform:translateX(17px)}
       </div>
     </div>
 
-    <div class="card" style="max-width:880px;margin-top:20px" id="design-editor-card">
-      <div class="card-header"><h3>Receipt &amp; KOT Designs</h3></div>
-      <div class="card-body">
-        <p style="font-size:13px;color:var(--muted);margin-bottom:14px">Choose a ready-made design or fully customise one — show/hide each field and set its font size. This applies to what the POS prints.</p>
-        <div style="display:flex;gap:8px;margin-bottom:16px">
-          <button class="btn btn-sm btn-primary" id="de-tab-bill" onclick="switchDesignTab('bill')">🧾 Bill</button>
-          <button class="btn btn-sm btn-outline" id="de-tab-kot" onclick="switchDesignTab('kot')">🍳 KOT</button>
-        </div>
-        <div style="display:flex;gap:20px;flex-wrap:wrap;align-items:flex-start">
-          <div style="flex:1;min-width:300px">
-            <div class="form-group">
-              <label>Design</label>
-              <select id="de-mode" onchange="onDesignModeChange()">
-                <option value="custom">✨ Custom (edit fields)</option>
-                <option value="1">Classic</option>
-                <option value="2">Modern</option>
-                <option value="3">Detailed</option>
-              </select>
-            </div>
-            <div id="de-fields-wrap">
-              <div style="font-size:12px;color:var(--muted);margin:10px 0 6px;display:flex;justify-content:space-between;align-items:center">
-                <span>Fields — toggle visibility &amp; font size (px)</span>
-                <button class="btn btn-sm btn-outline" onclick="resetDesignFields()" style="padding:2px 8px;font-size:11px">Reset</button>
-              </div>
-              <div id="de-fields" style="border:1px solid var(--border);border-radius:8px;max-height:340px;overflow:auto"></div>
-            </div>
-            <div style="margin-top:14px">
-              <button class="btn btn-primary" onclick="saveDesign()"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/></svg> Save design</button>
-              <span id="de-status" style="font-size:12px;color:var(--muted);margin-left:10px"></span>
-            </div>
-          </div>
-          <div style="width:344px">
-            <div style="font-size:12px;color:var(--muted);margin-bottom:4px">Live preview (80mm)</div>
-            <div class="design-preview-box"><iframe id="de-preview" class="design-preview-frame" title="Design preview"></iframe></div>
-          </div>
-        </div>
-      </div>
-    </div>
-
     <div class="card" style="max-width:680px;margin-top:20px">
       <div class="card-header"><h3>Image Search</h3></div>
       <div class="card-body">
@@ -3282,6 +3250,48 @@ input:checked+.toggle-slider:before{transform:translateX(17px)}
         <div class="page-header"><h2>Backoffice Users</h2><button class="btn" id="cfg-bo-users-add-btn" onclick="cfgAddBoUser()">+ Add User</button></div>
         <p style="font-size:13px;color:var(--muted);margin-bottom:16px">Manage staff who can log in to this backoffice. Assign outlet access and feature permissions per user.</p>
         <div id="cfg-bo-users-list"></div>
+      </div>
+
+      <div id="cfg-designs" class="cfg-section">
+        <div class="card" style="max-width:880px;margin-top:20px" id="design-editor-card">
+      <div class="card-header"><h3>Receipt &amp; KOT Designs</h3></div>
+      <div class="card-body">
+        <p style="font-size:13px;color:var(--muted);margin-bottom:4px">Choose a ready-made design or fully customise one — show/hide each field, set its font size and style (bold/italic). This applies to what the POS prints.</p>
+        <p id="de-scope" style="font-size:12px;color:var(--primary);margin-bottom:14px;font-weight:600"></p>
+        <div style="display:flex;gap:8px;margin-bottom:16px">
+          <button class="btn btn-sm btn-primary" id="de-tab-bill" onclick="switchDesignTab('bill')">🧾 Bill</button>
+          <button class="btn btn-sm btn-outline" id="de-tab-kot" onclick="switchDesignTab('kot')">🍳 KOT</button>
+        </div>
+        <div style="display:flex;gap:20px;flex-wrap:wrap;align-items:flex-start">
+          <div style="flex:1;min-width:300px">
+            <div class="form-group">
+              <label>Design</label>
+              <select id="de-mode" onchange="onDesignModeChange()">
+                <option value="custom">✨ Custom (edit fields)</option>
+                <option value="1">Classic</option>
+                <option value="2">Modern</option>
+                <option value="3">Detailed</option>
+              </select>
+            </div>
+            <div id="de-fields-wrap">
+              <div style="font-size:12px;color:var(--muted);margin:10px 0 6px;display:flex;justify-content:space-between;align-items:center">
+                <span>Fields — toggle visibility &amp; font size (px)</span>
+                <button class="btn btn-sm btn-outline" onclick="resetDesignFields()" style="padding:2px 8px;font-size:11px">Reset</button>
+              </div>
+              <div id="de-fields" style="border:1px solid var(--border);border-radius:8px;max-height:340px;overflow:auto"></div>
+            </div>
+            <div style="margin-top:14px">
+              <button class="btn btn-primary" onclick="saveDesign()"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/></svg> Save design</button>
+              <span id="de-status" style="font-size:12px;color:var(--muted);margin-left:10px"></span>
+            </div>
+          </div>
+          <div style="width:344px">
+            <div style="font-size:12px;color:var(--muted);margin-bottom:4px">Live preview (80mm)</div>
+            <div class="design-preview-box"><iframe id="de-preview" class="design-preview-frame" title="Design preview"></iframe></div>
+          </div>
+        </div>
+      </div>
+    </div>
       </div>
 
     </div><!-- cfg-content -->
@@ -5107,7 +5117,6 @@ async function loadBOSettings () {
   const ukEl  = document.getElementById('bos-unsplash-key'); if (ukEl) { const k = localStorage.getItem('unsplash_key') || ''; ukEl.value = k; const st = document.getElementById('unsplash-key-status'); if (st) st.textContent = k ? '✓ Key saved to browser.' : '' }
   const txSys = document.getElementById('bos-tax-system'); if (txSys) txSys.value = boSettings.tax_system || 'GST'
   const txLbl = document.getElementById('bos-tax-label');  if (txLbl) txLbl.value = boSettings.tax_label  || ''
-  initDesignEditor()
 }
 
 // ─── RECEIPT / KOT DESIGN EDITOR ─────────────────────────────────
@@ -5129,16 +5138,23 @@ async function initDesignEditor () {
       _de.fields.bill = f.bill || []
       _de.fields.kot  = f.kot || []
     }
-    // Seed working config from saved settings (or defaults).
+    // Designs are per-outlet — load THIS outlet's design settings.
+    const qs = _ctxOutlet ? `?outlet_id=${encodeURIComponent(_ctxOutlet)}` : ''
+    const data = await apiFetch('GET', `/settings${qs}`)
+    const s = data.settings || {}
     for (const t of ['bill', 'kot']) {
-      const raw = boSettings[t + '_design_config']
+      const raw = s[t + '_design_config']
       let cfg = null
       if (raw) { try { cfg = JSON.parse(raw) } catch (_) { cfg = null } }
       if (cfg && cfg.fields) { _de.config[t] = cfg; _de.mode[t] = 'custom' }
-      else { _de.config[t] = _defaultDesignConfig(t); _de.mode[t] = String(boSettings[t + '_design'] || 1) }
+      else { _de.config[t] = _defaultDesignConfig(t); _de.mode[t] = String(s[t + '_design'] || 1) }
     }
     _de.loaded = true
-    switchDesignTab(_de.type)
+    const scope = document.getElementById('de-scope')
+    if (scope) scope.textContent = _ctxOutlet
+      ? 'Applies to the selected outlet.'
+      : '⚠ Select an outlet (top bar) — designs are saved per outlet.'
+    switchDesignTab('bill')
   } catch (e) {
     card.style.display = 'none'   // server too old / templates unavailable
   }
@@ -5146,7 +5162,7 @@ async function initDesignEditor () {
 
 function _defaultDesignConfig (type) {
   const fields = {}
-  for (const f of _de.fields[type]) fields[f.key] = { show: f.show, size: f.size }
+  for (const f of _de.fields[type]) fields[f.key] = { show: f.show, size: f.size, bold: !!f.bold, italic: !!f.italic }
   return { fields }
 }
 
@@ -5171,7 +5187,7 @@ function renderDesignFields () {
   const t = _de.type
   const cfg = _de.config[t].fields || {}
   document.getElementById('de-fields').innerHTML = _de.fields[t].map(f => {
-    const c = cfg[f.key] || { show: f.show, size: f.size }
+    const c = cfg[f.key] || { show: f.show, size: f.size, bold: f.bold, italic: f.italic }
     const off = c.show === false ? ' de-off' : ''
     return `<div class="de-field${off}" id="def-row-${f.key}">
       <label class="toggle-switch" style="margin:0" title="Show/hide">
@@ -5179,19 +5195,28 @@ function renderDesignFields () {
         <span class="toggle-slider"></span>
       </label>
       <span class="de-field-label">${esc(f.label)}</span>
+      <button class="de-style-btn${c.bold ? ' on' : ''}" data-style="bold" title="Bold" onclick="toggleDeStyle('${f.key}','bold',this)"><b>B</b></button>
+      <button class="de-style-btn de-italic${c.italic ? ' on' : ''}" data-style="italic" title="Italic" onclick="toggleDeStyle('${f.key}','italic',this)"><i>I</i></button>
       <input type="number" min="6" max="60" value="${parseInt(c.size)||f.size}" onchange="deFieldChanged('${f.key}')" oninput="deFieldChanged('${f.key}')">
       <span class="de-field-px">px</span>
     </div>`
   }).join('')
 }
 
+function toggleDeStyle (key, style, btn) {
+  btn.classList.toggle('on')
+  deFieldChanged(key)
+}
+
 function deFieldChanged (key) {
   const row = document.getElementById('def-row-' + key)
   if (!row) return
-  const show = row.querySelector('input[type=checkbox]').checked
-  const size = parseInt(row.querySelector('input[type=number]').value) || 12
+  const show   = row.querySelector('input[type=checkbox]').checked
+  const size   = parseInt(row.querySelector('input[type=number]').value) || 12
+  const bold   = row.querySelector('.de-style-btn[data-style=bold]').classList.contains('on')
+  const italic = row.querySelector('.de-style-btn[data-style=italic]').classList.contains('on')
   if (!_de.config[_de.type].fields) _de.config[_de.type].fields = {}
-  _de.config[_de.type].fields[key] = { show, size }
+  _de.config[_de.type].fields[key] = { show, size, bold, italic }
   row.classList.toggle('de-off', !show)
   clearTimeout(_de.debounce)
   _de.debounce = setTimeout(refreshDesignPreview, 250)
@@ -9468,7 +9493,7 @@ function showCfgTab (tab) {
     payment: cfgLoadPayment, delivery: cfgLoadDelivery,
     kitchens: cfgLoadKitchens, designations: cfgLoadDesignations, tax: cfgLoadTax,
     'pos-layout': cfgLoadPosLayout, 'modifier-groups': cfgLoadModifierGroups,
-    'bo-users': cfgLoadBoUsers,
+    'bo-users': cfgLoadBoUsers, designs: initDesignEditor,
   }
   refreshForceOutletGate()
   if (loaders[tab]) loaders[tab]()

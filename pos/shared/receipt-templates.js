@@ -153,51 +153,51 @@ ${d.serviceChargeAmount>0?`<tr><td>Service charge</td><td align="right">${d.curr
 //  font size. Field metadata below is also consumed by the Back Office editor.
 // ══════════════════════════════════════════════════════════════════════════
 
-// [key, label, default px, default visible]
+// [key, label, default px, default visible, default bold, default italic]
 const BILL_FIELDS = [
-  ['restaurantName', 'Restaurant name',      18, true],
-  ['taxInvoice',     '"TAX INVOICE" label',  13, true],
-  ['invoiceNumber',  'Invoice number',       11, true],
-  ['orderTime',      'Order time',           11, true],
-  ['completedTime',  'Completed time',       11, false],
-  ['paymentTime',    'Payment time',         11, true],
-  ['orderType',      'Order type',           11, true],
-  ['cashier',        'Cashier',              11, true],
-  ['waiter',         'Waiter',               11, true],
-  ['customer',       'Customer name',        11, true],
-  ['phone',          'Customer phone',       11, true],
-  ['table',          'Table',                11, true],
-  ['items',          'Item lines',           12, true],
-  ['itemArabic',     'Arabic item name',     12, true],
-  ['subtotal',       'Gross / subtotal',     12, true],
-  ['discount',       'Discount',             12, true],
-  ['comp',           'Complimentary',        12, true],
-  ['cancelled',      'Cancelled amount',     12, true],
-  ['tax',            'Tax',                  12, true],
-  ['serviceCharge',  'Service charge',       12, true],
-  ['total',          'Total',                15, true],
-  ['payments',       'Payment breakdown',    12, true],
-  ['footer',         'Footer text',          11, true],
+  ['restaurantName', 'Restaurant name',      18, true,  true,  false],
+  ['taxInvoice',     '"TAX INVOICE" label',  13, true,  true,  false],
+  ['invoiceNumber',  'Invoice number',       11, true,  false, false],
+  ['orderTime',      'Order time',           11, true,  false, false],
+  ['completedTime',  'Completed time',       11, false, false, false],
+  ['paymentTime',    'Payment time',         11, true,  false, false],
+  ['orderType',      'Order type',           11, true,  false, false],
+  ['cashier',        'Cashier',              11, true,  false, false],
+  ['waiter',         'Waiter',               11, true,  false, false],
+  ['customer',       'Customer name',        11, true,  false, false],
+  ['phone',          'Customer phone',       11, true,  false, false],
+  ['table',          'Table',                11, true,  false, false],
+  ['items',          'Item lines',           12, true,  false, false],
+  ['itemArabic',     'Arabic item name',     12, true,  true,  false],
+  ['subtotal',       'Gross / subtotal',     12, true,  false, false],
+  ['discount',       'Discount',             12, true,  false, false],
+  ['comp',           'Complimentary',        12, true,  false, false],
+  ['cancelled',      'Cancelled amount',     12, true,  false, true ],
+  ['tax',            'Tax',                  12, true,  false, false],
+  ['serviceCharge',  'Service charge',       12, true,  false, false],
+  ['total',          'Total',                15, true,  true,  false],
+  ['payments',       'Payment breakdown',    12, true,  false, false],
+  ['footer',         'Footer text',          11, true,  false, false],
 ];
 const KOT_FIELDS = [
-  ['title',         'Title (KOT/Kitchen)',  20, true],
-  ['kotNumber',     'KOT number',           18, true],
-  ['orderNumber',   'Order number',         12, true],
-  ['orderType',     'Order type',           12, true],
-  ['time',          'Time',                 12, true],
-  ['table',         'Table',                15, true],
-  ['customer',      'Customer name',        12, true],
-  ['items',         'Item lines',           16, true],
-  ['itemArabic',    'Arabic item name',     14, true],
-  ['itemVariant',   'Variant',              11, true],
-  ['itemModifiers', 'Modifiers',            11, true],
-  ['itemNotes',     'Item notes',           11, true],
-  ['cashier',       'Cashier',              12, true],
+  ['title',         'Title (KOT/Kitchen)',  20, true,  true,  false],
+  ['kotNumber',     'KOT number',           18, true,  true,  false],
+  ['orderNumber',   'Order number',         12, true,  false, false],
+  ['orderType',     'Order type',           12, true,  false, false],
+  ['time',          'Time',                 12, true,  false, false],
+  ['table',         'Table',                15, true,  true,  false],
+  ['customer',      'Customer name',        12, true,  false, false],
+  ['items',         'Item lines',           16, true,  true,  false],
+  ['itemArabic',    'Arabic item name',     14, true,  true,  false],
+  ['itemVariant',   'Variant',              11, true,  false, false],
+  ['itemModifiers', 'Modifiers',            11, true,  false, false],
+  ['itemNotes',     'Item notes',           11, true,  false, true ],
+  ['cashier',       'Cashier',              12, true,  false, false],
 ];
 
 function defaultConfig(fieldList) {
   const fields = {};
-  for (const [key, , size, show] of fieldList) fields[key] = { show: show, size: size };
+  for (const [key, , size, show, bold, italic] of fieldList) fields[key] = { show, size, bold: !!bold, italic: !!italic };
   return { fields };
 }
 function getDefaultBillConfig() { return defaultConfig(BILL_FIELDS); }
@@ -205,21 +205,29 @@ function getDefaultKotConfig()  { return defaultConfig(KOT_FIELDS); }
 
 function _merge(cfg, fieldList) {
   const out = {};
-  for (const [key, , size, show] of fieldList) {
+  for (const [key, , size, show, bold, italic] of fieldList) {
     const c = (cfg && cfg.fields && cfg.fields[key]) || {};
     out[key] = {
-      show: c.show === undefined ? show : c.show !== false,
-      size: parseInt(c.size, 10) || size,
+      show:   c.show   === undefined ? show   : c.show   !== false,
+      size:   parseInt(c.size, 10) || size,
+      bold:   c.bold   === undefined ? !!bold   : !!c.bold,
+      italic: c.italic === undefined ? !!italic : !!c.italic,
     };
   }
   return out;
+}
+
+// Inline style string for a configured field.
+function _fs(F, key, extra) {
+  const f = F[key] || {};
+  return `font-size:${f.size || 12}px;font-weight:${f.bold ? 'bold' : 'normal'};font-style:${f.italic ? 'italic' : 'normal'};${extra || ''}`;
 }
 
 function billConfigurable(d, cfg) {
   const F   = _merge(cfg, BILL_FIELDS);
   const cur = d.currency || '';
   const sh  = k => F[k].show;
-  const sz  = k => F[k].size;
+  const st  = (k, extra) => _fs(F, k, extra);
   const money = v => `${cur}${parseFloat(v || 0).toFixed(2)}`;
 
   const meta = [
@@ -234,10 +242,10 @@ function billConfigurable(d, cfg) {
     ['phone',         'Phone',        d.customerPhone],
     ['table',         'Table',        d.tableName],
   ].filter(([k, , v]) => sh(k) && v)
-   .map(([k, label, v]) => `<tr style="font-size:${sz(k)}px"><td style="color:#555">${label}</td><td align="right">${_esc(v)}</td></tr>`).join('');
+   .map(([k, label, v]) => `<tr style="${st(k)}"><td style="color:#555">${label}</td><td align="right">${_esc(v)}</td></tr>`).join('');
 
   const itemRows = (d.items || []).map(i =>
-    `<tr style="border-bottom:1px dotted #ccc;font-size:${sz('items')}px"><td style="padding:3px 0">${_itemName(i)}${sh('itemArabic') ? _arName(i) : ''}${i.variantName ? ` [${_esc(i.variantName)}]` : ''}</td><td align="center">${i.quantity}</td><td align="right">${money(i.unit_price)}</td><td align="right">${money(i.total_price)}</td></tr>`).join('');
+    `<tr style="border-bottom:1px dotted #ccc;${st('items')}"><td style="padding:3px 0">${_itemName(i)}${sh('itemArabic') ? `<span style="${_fs(F,'itemArabic')}">${_arName(i)}</span>` : ''}${i.variantName ? ` [${_esc(i.variantName)}]` : ''}</td><td align="center">${i.quantity}</td><td align="right">${money(i.unit_price)}</td><td align="right">${money(i.total_price)}</td></tr>`).join('');
 
   const totals = [
     ['subtotal',      'Gross',                    d.subtotal,            false, true],
@@ -247,42 +255,42 @@ function billConfigurable(d, cfg) {
     ['tax',           `Tax (${d.taxRate || 0}%)`, d.taxAmount,           false, d.taxAmount > 0],
     ['serviceCharge', 'Service charge',           d.serviceChargeAmount, false, d.serviceChargeAmount > 0],
   ].filter(([k, , , , cond]) => sh(k) && cond)
-   .map(([k, label, v, neg]) => `<tr style="font-size:${sz(k)}px"><td>${label}</td><td align="right">${neg ? '-' : ''}${money(v)}</td></tr>`).join('');
+   .map(([k, label, v, neg]) => `<tr style="${st(k)}"><td>${label}</td><td align="right">${neg ? '-' : ''}${money(v)}</td></tr>`).join('');
 
-  const totalRow = sh('total') ? `<tr style="font-size:${sz('total')}px;font-weight:800;border-top:1px solid #000"><td>TOTAL</td><td align="right">${money(d.total)}</td></tr>` : '';
-  const pay = sh('payments') ? `<table style="font-size:${sz('payments')}px;margin-top:2px">${_payLines(d)}</table>` : '';
+  const totalRow = sh('total') ? `<tr style="${st('total', 'border-top:1px solid #000')}"><td>TOTAL</td><td align="right">${money(d.total)}</td></tr>` : '';
+  const pay = sh('payments') ? `<table style="${st('payments', 'margin-top:2px')}">${_payLines(d)}</table>` : '';
 
   return `<!DOCTYPE html><html><head><meta charset="UTF-8"><style>body{font-family:'Segoe UI',Arial,sans-serif;font-size:11px;padding:10px;width:300px;margin:0}
-table{width:100%;border-collapse:collapse}td,th{padding:1px 2px}.c{text-align:center}.bold{font-weight:bold}</style></head><body>
-${sh('restaurantName') ? `<div class="c bold" style="font-size:${sz('restaurantName')}px">${_esc(d.restaurantName)}</div>` : ''}
-${sh('taxInvoice') ? `<div class="c bold" style="font-size:${sz('taxInvoice')}px;margin:4px 0">TAX INVOICE</div>` : ''}
-${d.isDraft ? `<div class="c bold">** DRAFT **</div>` : ''}
+table{width:100%;border-collapse:collapse}td,th{padding:1px 2px}.c{text-align:center}</style></head><body>
+${sh('restaurantName') ? `<div class="c" style="${st('restaurantName')}">${_esc(d.restaurantName)}</div>` : ''}
+${sh('taxInvoice') ? `<div class="c" style="${st('taxInvoice', 'margin:4px 0')}">TAX INVOICE</div>` : ''}
+${d.isDraft ? `<div class="c" style="font-weight:bold">** DRAFT **</div>` : ''}
 <table style="margin:6px 0">${meta}</table>
-<table style="border-top:1px solid #000;border-bottom:1px solid #000;margin-top:4px"><tr class="bold" style="font-size:${sz('items')}px"><th align="left">Item</th><th>Qty</th><th align="right">Rate</th><th align="right">Amt</th></tr>${itemRows}</table>
+<table style="border-top:1px solid #000;border-bottom:1px solid #000;margin-top:4px"><tr style="${st('items', 'font-weight:bold')}"><th align="left">Item</th><th>Qty</th><th align="right">Rate</th><th align="right">Amt</th></tr>${itemRows}</table>
 <table style="margin-top:6px">${totals}${totalRow}</table>
 ${pay}
-${sh('footer') ? `<div class="c" style="margin-top:8px;font-size:${sz('footer')}px">${_esc(d.receiptFooter)}</div>` : ''}
+${sh('footer') ? `<div class="c" style="${st('footer', 'margin-top:8px')}">${_esc(d.receiptFooter)}</div>` : ''}
 </body></html>`;
 }
 
 function kotConfigurable(d, cfg) {
   const F  = _merge(cfg, KOT_FIELDS);
   const sh = k => F[k].show;
-  const sz = k => F[k].size;
+  const st = (k, extra) => _fs(F, k, extra);
   const type = (d.orderType || '').toUpperCase().replace('-', ' ');
 
   const rows = (d.items || []).map(i => `<tr style="border-bottom:1px dashed #aaa">
-    <td style="font-size:${sz('items')}px;font-weight:bold;padding:5px 3px">${_itemName(i)}${sh('itemVariant') && i.variantName ? ` [${_esc(i.variantName)}]` : ''}${sh('itemArabic') ? _arName(i) : ''}${sh('itemModifiers') && _mods(i) ? `<br><span style="font-size:${sz('itemModifiers')}px;font-weight:normal">${_mods(i)}</span>` : ''}${sh('itemNotes') && i.notes ? `<br><span style="font-size:${sz('itemNotes')}px;font-style:italic">* ${_esc(i.notes)}</span>` : ''}</td>
-    <td style="font-size:${sz('items')}px;font-weight:bold;text-align:right;padding:5px 3px;white-space:nowrap">x${i.qty || i.quantity}</td></tr>`).join('');
+    <td style="${st('items', 'padding:5px 3px')}">${_itemName(i)}${sh('itemVariant') && i.variantName ? ` [${_esc(i.variantName)}]` : ''}${sh('itemArabic') ? `<span style="${_fs(F,'itemArabic')}">${_arName(i)}</span>` : ''}${sh('itemModifiers') && _mods(i) ? `<br><span style="${_fs(F,'itemModifiers')}">${_mods(i)}</span>` : ''}${sh('itemNotes') && i.notes ? `<br><span style="${_fs(F,'itemNotes')}">* ${_esc(i.notes)}</span>` : ''}</td>
+    <td style="${st('items', 'text-align:right;padding:5px 3px;white-space:nowrap')}">x${i.qty || i.quantity}</td></tr>`).join('');
 
-  return _kotShell(`${sh('title') ? `<div class="c b" style="font-size:${sz('title')}px;margin:6px 0">★ K O T ★</div>` : ''}
-${sh('kotNumber') && d.kotNumber ? `<p class="c b" style="font-size:${sz('kotNumber')}px;margin:3px 0">KOT #${d.kotNumber}</p>` : ''}
-${sh('orderNumber') || sh('orderType') ? `<p class="c" style="font-size:${sz('orderNumber')}px;margin:3px 0">${sh('orderNumber') ? `Order #${d.orderNumber}` : ''}${sh('orderNumber') && sh('orderType') ? ' — ' : ''}${sh('orderType') ? type : ''}</p>` : ''}
-${sh('time') ? `<p class="c" style="font-size:${sz('time')}px;margin:3px 0">${new Date(d.createdAt).toLocaleTimeString()}</p>` : ''}
-${sh('table') && d.tableName ? `<p class="c b" style="font-size:${sz('table')}px;margin:3px 0">TABLE: ${_esc(d.tableName)}</p>` : ''}
-${sh('customer') && d.customerName ? `<p class="c" style="font-size:${sz('customer')}px;margin:3px 0">${_esc(d.customerName)}</p>` : ''}
+  return _kotShell(`${sh('title') ? `<div class="c" style="${st('title', 'margin:6px 0')}">★ K O T ★</div>` : ''}
+${sh('kotNumber') && d.kotNumber ? `<p class="c" style="${st('kotNumber', 'margin:3px 0')}">KOT #${d.kotNumber}</p>` : ''}
+${sh('orderNumber') || sh('orderType') ? `<p class="c" style="${st('orderNumber', 'margin:3px 0')}">${sh('orderNumber') ? `Order #${d.orderNumber}` : ''}${sh('orderNumber') && sh('orderType') ? ' — ' : ''}${sh('orderType') ? type : ''}</p>` : ''}
+${sh('time') ? `<p class="c" style="${st('time', 'margin:3px 0')}">${new Date(d.createdAt).toLocaleTimeString()}</p>` : ''}
+${sh('table') && d.tableName ? `<p class="c" style="${st('table', 'margin:3px 0')}">TABLE: ${_esc(d.tableName)}</p>` : ''}
+${sh('customer') && d.customerName ? `<p class="c" style="${st('customer', 'margin:3px 0')}">${_esc(d.customerName)}</p>` : ''}
 <div class="div"></div><table>${rows}</table><div class="div"></div>
-${sh('cashier') ? `<p class="c" style="font-size:${sz('cashier')}px">Cashier: ${_esc(d.cashierName)}</p>` : ''}`);
+${sh('cashier') ? `<p class="c" style="${st('cashier')}">Cashier: ${_esc(d.cashierName)}</p>` : ''}`);
 }
 
 const _api = {
