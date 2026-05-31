@@ -3357,6 +3357,7 @@ input:checked+.toggle-slider:before{transform:translateX(17px)}
                   <div class="form-group" style="flex:2">
                     <label>Item Name *</label>
                     <input id="ie-name" type="text" placeholder="e.g. Grilled Chicken" oninput="ieAutoCode();ieUpdateSummary();ieAutoKdsName()">
+                    <input id="ie-name-ar" type="text" dir="rtl" lang="ar" placeholder="الاسم بالعربية (اختياري)" style="margin-top:6px;font-family:'Tahoma',Arial,sans-serif">
                   </div>
                   <div class="form-group" style="flex:1">
                     <label>Item Code</label>
@@ -6165,6 +6166,7 @@ async function showItemEditor (item) {
   const s = v => v || ''
   document.getElementById('ie-id').value       = s(item?.id)
   document.getElementById('ie-name').value     = s(item?.name)
+  document.getElementById('ie-name-ar').value  = s(item?.name_ar)
   document.getElementById('ie-code').value     = s(item?.item_code)
   document.getElementById('ie-subcat').value   = s(item?.sub_category)
   document.getElementById('ie-desc').value     = s(item?.description || item?.short_description)
@@ -6295,6 +6297,7 @@ async function saveItemEditor (addAnother) {
     printer_group:     document.getElementById('ie-printer-grp').value.trim() || null,
     kitchen_id:        document.getElementById('ie-kitchen-id').value || null,
     print_kot:         document.getElementById('ie-print-kot')?.checked ? 1 : 0,
+    name_ar:           document.getElementById('ie-name-ar')?.value.trim() || null,
     tags:              document.getElementById('ie-tags').value.trim() || null,
     active:           document.getElementById('ie-active').checked ? 1 : 0,
     dine_in_price:    parseFloat(document.getElementById('ie-ch-dine_in-price').value) || null,

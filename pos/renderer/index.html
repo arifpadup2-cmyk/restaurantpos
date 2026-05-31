@@ -6282,6 +6282,7 @@ function pushToCart(item, variantId, variantName, variantPrice, modifiers) {
       categoryName: (menu.categories.find(c => c.id === item.category_id) || {}).name || '',
       kitchenId:   item.kitchen_id || null,
       printKot:    item.print_kot !== 0 && item.print_kot !== false,  // per-item: does this item need a KOT?
+      name_ar:     item.name_ar || null,   // Arabic name (for Arabic-capable prints)
       variantId:   variantId   || null,
       variantName: variantName || null,
       modifiers:   modifiers   || [],
@@ -6688,7 +6689,7 @@ async function confirmPayment() {
     posAPI.notifyServer('order:paid', { orderId, tableId: cart.tableId || null });
 
     const orderData = (await db.get('SELECT * FROM orders WHERE id=?', [orderId])).data;
-    printReceipt({ ...orderData, items: cart.items.map(i=>({item_name:i.name,quantity:i.qty,unit_price:i.price,total_price:i.total})) });
+    printReceipt({ ...orderData, items: cart.items.map(i=>({item_name:i.name,name_ar:i.name_ar,quantity:i.qty,unit_price:i.price,total_price:i.total})) });
 
     clearCart();
     closeModal('modal-payment');
@@ -6720,7 +6721,7 @@ async function printDraftBill() {
     cashierName:     cashier.name,
     billedAt:        Date.now(),
     items:           cart.items.map(i => ({
-      item_name: i.name, quantity: i.qty, unit_price: i.price, total_price: i.total
+      item_name: i.name, name_ar: i.name_ar, quantity: i.qty, unit_price: i.price, total_price: i.total
     })),
     subtotal, taxRate: settings.tax_rate, taxAmount: taxAmt,
     discountAmount:  discAmt, total,
@@ -7439,9 +7440,9 @@ async function _doPlaceOrder() {
 
     for (const item of cart.items) {
       const dispName = item.comp ? `[COMP] ${item.name}` : item.name;
-      await db.run(`INSERT INTO order_items (id,order_id,item_id,item_name,category_name,quantity,unit_price,total_price,variant_name,modifiers,comp)
-        VALUES (?,?,?,?,?,?,?,?,?,?,?)`,
-        [uid(), activeOrderId, item.itemId, dispName, item.categoryName, item.qty, item.price, item.total,
+      await db.run(`INSERT INTO order_items (id,order_id,item_id,item_name,item_name_ar,category_name,quantity,unit_price,total_price,variant_name,modifiers,comp)
+        VALUES (?,?,?,?,?,?,?,?,?,?,?,?)`,
+        [uid(), activeOrderId, item.itemId, dispName, item.name_ar || null, item.categoryName, item.qty, item.price, item.total,
          item.variantName || null, item.modifiers?.length ? JSON.stringify(item.modifiers) : null, item.comp ? 1 : 0]);
     }
 

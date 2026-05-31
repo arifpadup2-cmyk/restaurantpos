@@ -1182,7 +1182,7 @@ module.exports = function setupRouter (sql) {
         FROM categories WHERE brand_id = ${brandId}`
       const menu_items = await sql`
         SELECT id, category_id, name, price, description, active, synced_at, brand_id, outlet_id, kitchen_id, tax_group_id,
-               dine_in_price, takeaway_price, delivery_price, online_price, print_kot
+               dine_in_price, takeaway_price, delivery_price, online_price, print_kot, name_ar
         FROM menu_items WHERE brand_id = ${brandId}`
       const item_variants = await sql`
         SELECT id, item_id, name, size, price, active, sort_order

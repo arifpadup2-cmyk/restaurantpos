@@ -286,7 +286,7 @@ app.get('/sync/menu', apiKey, async (_req, res) => {
       SELECT id, name, sort_order, color, active, synced_at
       FROM categories ORDER BY sort_order, name`
     const items = await sql`
-      SELECT id, category_id, name, price, description, active, synced_at
+      SELECT id, category_id, name, name_ar, price, description, active, synced_at, print_kot
       FROM menu_items ORDER BY name`
     res.json({ categories, items })
   } catch (e) { serverError(res, e) }
@@ -531,7 +531,7 @@ const ORDER_COLS = [
   'void_reason','voided_by','approved_by','service_charge_rate','service_charge_amount','customer_id',
   'business_date','section_name','aggregator_order_id',
 ]
-const ITEM_COLS    = ['id','order_id','item_id','item_name','category_name','quantity','unit_price','total_price','notes','void_reason','voided_by','voided_at','cancelled']
+const ITEM_COLS    = ['id','order_id','item_id','item_name','item_name_ar','category_name','quantity','unit_price','total_price','notes','void_reason','voided_by','voided_at','cancelled']
 const EXPENSE_COLS = ['id','category','description','amount','cashier_id','cashier_name','shift_id','terminal_id','created_at','synced']
 const SHIFT_COLS   = ['id','cashier_id','cashier_name','opening_cash','closing_cash','notes','status','terminal_id','opened_at','closed_at','synced']
 const DAY_COLS     = ['id','date','total_orders','total_sales','cash_sales','card_sales','online_payment_sales','total_expenses','net_sales','dine_in_count','takeaway_count','delivery_count','online_count','closed_by','closed_at','notes','synced']
