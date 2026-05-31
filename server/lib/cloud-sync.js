@@ -198,8 +198,8 @@ async function pullFromCloud () {
         }
         for (const it of items) {
           await t`
-            INSERT INTO menu_items (id, category_id, name, name_ar, price, description, active, print_kot, synced_at)
-            VALUES (${it.id}, ${it.category_id}, ${it.name}, ${it.name_ar ?? null}, ${it.price}, ${it.description ?? null}, ${it.active ?? 1}, ${it.print_kot ?? 1}, ${now})
+            INSERT INTO menu_items (id, category_id, brand_id, name, name_ar, price, description, active, print_kot, synced_at)
+            VALUES (${it.id}, ${it.category_id}, ${bid}, ${it.name}, ${it.name_ar ?? null}, ${it.price}, ${it.description ?? null}, ${it.active ?? 1}, ${it.print_kot ?? 1}, ${now})
             ON CONFLICT (id) DO UPDATE SET
               category_id = EXCLUDED.category_id, name = EXCLUDED.name, name_ar = EXCLUDED.name_ar,
               price = EXCLUDED.price, description = EXCLUDED.description,
