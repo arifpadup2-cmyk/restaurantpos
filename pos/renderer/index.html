@@ -8172,9 +8172,17 @@ async function loadPrinterAssignments() {
       return;
     }
 
-    const resp = await apiFetch('GET', `/config/kitchens?outlet_id=${outletId}`);
-    const kitchens = (resp && resp.rows) ? resp.rows : [];
-    const cats = (await db.all('SELECT id,name,kitchen_id FROM categories WHERE active=1 ORDER BY name')).data || [];
+    // Read kitchens straight from the local DB — this config is local-only and
+    // the /config API requires a Back Office JWT the POS doesn't carry (it uses
+    // an x-api-key), so an API call here 401s and the list shows empty.
+    const brandId = window._posConfig?.brandId || '';
+    const kres = await db.all(
+      'SELECT * FROM kitchens WHERE brand_id=? AND (outlet_id=? OR outlet_id IS NULL) ORDER BY sort_order, name',
+      [brandId, outletId]);
+    const kitchens = kres.ok ? kres.data : [];
+    const cats = (await db.all(
+      'SELECT id,name,kitchen_id FROM categories WHERE active=1 AND brand_id=? AND (outlet_id=? OR outlet_id IS NULL) ORDER BY name',
+      [brandId, outletId])).data || [];
     const kitchenPrinters = cfg.kitchenPrinters || {};
 
     if (kitchens.length === 0) {
