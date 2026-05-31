@@ -837,6 +837,10 @@ input:checked+.toggle-slider:before{transform:translateX(17px)}
 .lo-table{font-size:11px;color:#64748b}
 .lo-items{border-top:1px solid rgba(255,255,255,.05);padding-top:6px;margin-bottom:6px}
 .lo-item{display:flex;align-items:center;gap:6px;padding:2px 0;font-size:11px}
+.lo-expand{display:flex;align-items:center;gap:6px;width:100%;margin:2px 0 6px;padding:5px 7px;border:1px solid rgba(255,255,255,.08);border-radius:6px;background:rgba(255,255,255,.03);color:#94a3b8;font-size:10px;font-weight:600;cursor:pointer;font-family:inherit;transition:.12s}
+.lo-expand:hover{background:rgba(255,255,255,.07);color:#cbd5e1}
+.lo-expand-caret{display:inline-block;transition:transform .15s;font-size:11px}
+.lo-expand-caret.open{transform:rotate(90deg)}
 .lo-item-qty{font-weight:700;color:#e2e8f0;min-width:16px}
 .lo-item-name{flex:1;color:#94a3b8}
 .lo-item-done .lo-item-name{text-decoration:line-through;opacity:.45}
@@ -912,6 +916,8 @@ input:checked+.toggle-slider:before{transform:translateX(17px)}
 .lo-table{color:var(--muted)!important}
 .lo-items{border-top-color:var(--border)!important}
 .lo-item-qty{color:var(--text)!important}.lo-item-name{color:#475569!important}
+.lo-expand{background:#f1f5f9!important;border-color:var(--border)!important;color:var(--muted)!important}
+.lo-expand:hover{background:#e8edf3!important;color:var(--text)!important}
 .lo-progress{background:#e5e7eb!important}
 .lo-total{color:var(--text)!important}.lo-age{color:var(--muted)!important}
 .live-right{background:#f8fafc!important;border-left-color:var(--border)!important}
@@ -8841,6 +8847,7 @@ async function runHealthCheck () {
 // ─── LIVE ORDERS ─────────────────────────────────────────────────
 let _liveTimer = null
 let _liveOrders = []
+let _liveExpanded = new Set()   // order ids whose item list is expanded on the board
 let _liveCompleted = []
 
 function elapsedStr (createdAt) {
@@ -8879,6 +8886,7 @@ function orderTypeCls (type) {
 function renderOrderCard (order, status) {
   const cur   = boSettings.currency
   const items = order.items || []
+  const expanded = _liveExpanded.has(order.id)
   const done  = items.filter(i => i.done).length
   const pct   = items.length ? Math.round((done / items.length) * 100) : 0
   const elapsed = elapsedStr(order.created_at)
@@ -8909,7 +8917,12 @@ function renderOrderCard (order, status) {
       ${order.customer_name ? `<span class="lo-table">${order.customer_name}</span>` : ''}
     </div>
     ${order.cashier_name ? `<div style="font-size:10px;color:#475569;margin-bottom:5px;display:flex;align-items:center;gap:4px"><svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="#64748b" stroke-width="2.5"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>${order.cashier_name}</div>` : ''}
-    <div class="lo-items">
+    ${order.waiter_name ? `<div style="font-size:10px;color:#475569;margin-bottom:5px;display:flex;align-items:center;gap:4px"><svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="#64748b" stroke-width="2.5"><path d="M18 6 6 18M6 6l12 12"/></svg>Waiter: ${order.waiter_name}</div>` : ''}
+    <button class="lo-expand" onclick="toggleLiveItems('${order.id}',this)">
+      <span class="lo-expand-caret ${expanded ? 'open' : ''}">▸</span>
+      <span>${items.length} item${items.length===1?'':'s'} · ${done}/${items.length} done</span>
+    </button>
+    <div class="lo-items" id="lo-items-${order.id}" style="display:${expanded ? 'block' : 'none'}">
       ${items.map(it => `
         <div class="lo-item ${it.done ? 'lo-item-done' : ''}">
           <span class="lo-item-qty">${it.quantity}×</span>
@@ -8923,6 +8936,17 @@ function renderOrderCard (order, status) {
       <span class="lo-age">${done}/${items.length} done</span>
     </div>
   </div>`
+}
+
+// Expand/collapse a live order card's item list (state survives the 30s refresh).
+function toggleLiveItems (orderId, btn) {
+  const open = _liveExpanded.has(orderId)
+  if (open) _liveExpanded.delete(orderId)
+  else _liveExpanded.add(orderId)
+  const box = document.getElementById('lo-items-' + orderId)
+  if (box) box.style.display = open ? 'none' : 'block'
+  const caret = btn && btn.querySelector('.lo-expand-caret')
+  if (caret) caret.classList.toggle('open', !open)
 }
 
 async function loadLiveOrders () {

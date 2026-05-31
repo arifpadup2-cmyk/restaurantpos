@@ -52,7 +52,8 @@ module.exports = function kitchenRouter (sql) {
       const orders = outlet_id
         ? await sql`
             SELECT o.id, o.order_number, o.order_type, o.table_name, o.customer_name,
-                   o.status, o.created_at, o.terminal_id, o.cashier_name, o.outlet_id, o.brand_id,
+                   o.status, o.created_at, o.terminal_id, o.cashier_name, o.waiter_name,
+                   o.total, o.outlet_id, o.brand_id,
                    json_agg(${itemFields} ORDER BY oi.item_name) AS items
             FROM orders o
             JOIN order_items oi ON oi.order_id = o.id
@@ -64,7 +65,8 @@ module.exports = function kitchenRouter (sql) {
             ORDER BY o.created_at ASC`
         : await sql`
             SELECT o.id, o.order_number, o.order_type, o.table_name, o.customer_name,
-                   o.status, o.created_at, o.terminal_id, o.cashier_name, o.outlet_id, o.brand_id,
+                   o.status, o.created_at, o.terminal_id, o.cashier_name, o.waiter_name,
+                   o.total, o.outlet_id, o.brand_id,
                    json_agg(${itemFields} ORDER BY oi.item_name) AS items
             FROM orders o
             JOIN order_items oi ON oi.order_id = o.id
